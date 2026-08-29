@@ -1,3 +1,5 @@
+ARCHIVE.EXE v0.9.9 — composition / cohesion pass
+
 # ARCHIVE.EXE v0.9.8 — UI pass
 
 Built from v0.9.7-density. Functional behavior is preserved.

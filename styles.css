@@ -342,3 +342,87 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 
 /* Keep supporting text readable: mono is for labels, sans is for instructions/content. */
 .card-short,.card-hashtags button,.card-hashtags span,.searchbar input{font-family:Arial,sans-serif}
+
+/* v0.9.9 — composition / cohesion pass */
+:root{--ui:"Segoe UI",Arial,sans-serif}
+
+@media (min-width:1021px){
+  /* One visual frame: controls, tags, result meta and cards now belong to the same archive surface. */
+  main{max-width:1500px;padding:0 24px 66px}
+  .archive-shell{
+    position:relative;z-index:12;margin-top:-42px;padding:13px 14px 20px;
+    border:1px solid #2f352e;border-radius:10px;
+    background:linear-gradient(180deg,rgba(17,20,17,.95),rgba(13,15,13,.985) 185px);
+    box-shadow:0 18px 48px rgba(0,0,0,.25),inset 0 1px 0 rgba(201,190,161,.025);
+    backdrop-filter:blur(9px)
+  }
+
+  /* Align the hero copy to the right edge of the content system below. */
+  .hero-copy{right:max(calc((100vw - 1452px)/2 + 18px),34px);width:min(390px,29vw)}
+  .hero{border-bottom-color:#262b25}
+
+  /* Toolbar is now a quiet top row inside the shell, not a separate horizontal slab. */
+  .toolbar{margin:0;padding:0;border:0;background:none;backdrop-filter:none}
+  .toolbar-row{gap:6px;align-items:center;justify-content:flex-start}
+  .searchbar{flex:0 1 390px;width:390px;min-width:280px;height:32px;background:#101310;border-color:#343a33}
+  .searchbar input{font:12px/1.2 var(--ui)}
+  .control{height:32px;min-height:32px;padding:0 8px;border-radius:6px;font:600 8px/1 var(--mono);letter-spacing:.045em;background:#131613;border-color:#343a33;color:#8d9589}
+  .control:hover{background:#191e19;border-color:#525b4d;color:#d3ccb8}
+  .control-primary{padding-inline:10px;border-color:#4a5246;color:#cfc5aa;background:#161a16}
+  .filter-group{gap:5px}.secondary-group{padding-left:6px;margin-left:1px;border-left:1px solid #2c322b}
+  .icon-toggle{width:32px;padding:0}
+  .random-trigger{margin-left:7px;padding-inline:11px;background:#20261c;border-color:#697257;color:#d4c9a4;box-shadow:inset 0 0 0 1px rgba(156,168,121,.04)}
+  .random-trigger:hover{background:#293124;border-color:#8d9870;color:#eee5c8}
+
+  /* Tags are a contained module instead of a second full-width toolbar. */
+  .tag-zone{
+    margin-top:10px;padding:9px 10px 10px;border:1px solid #282e27;border-radius:7px;
+    background:rgba(12,15,12,.64)
+  }
+  .tag-strip-head{justify-content:flex-start;align-items:center;gap:12px;margin-bottom:7px}
+  .tag-strip-head>div:first-child{gap:7px}
+  .tag-label{font-size:9px!important;color:#a7af92}
+  .tag-strip-head small{font:600 8px/1 var(--ui)!important;letter-spacing:.055em!important;color:#687067!important}
+  .tag-actions{gap:8px;margin-left:0}
+  .tag-actions button{padding:2px 3px;font-size:7px;color:#677064}
+  #toggleAllTags{color:#818a79}
+  .quick-list{gap:5px;padding:0;scrollbar-width:none!important}
+  .quick-list::-webkit-scrollbar{display:none!important}
+  .quick-list button{
+    padding:5px 8px!important;border-radius:5px!important;
+    border-color:#34312d!important;background:#161514!important;color:#a88f80!important;
+    font:500 9px/1.2 var(--ui)!important;box-shadow:none!important
+  }
+  .quick-list button:hover{background:#1c1916!important;border-color:#5d4b40!important;color:#cfb09e!important;transform:none}
+  .quick-list button.active{background:#2d221b!important;border-color:#986245!important;color:#f0d2c0!important;box-shadow:inset 0 -2px 0 rgba(176,103,65,.30)!important}
+
+  /* Result status visually bridges filters and the grid. */
+  .catalog-meta{padding:8px 4px 7px;margin:0;border:0;color:#6d756b}
+  .catalog-meta span,.catalog-meta button{font-size:8px}
+  .catalog-meta button{margin-left:14px}
+
+  /* Cards share the same rhythm and feel like records inside the archive frame. */
+  .grid{gap:19px 13px}
+  .card{padding:5px;border:1px solid transparent;border-radius:9px;transition:background .18s,border-color .18s}
+  .card:hover{background:rgba(24,28,24,.5);border-color:#242a23}
+  .card-media{border-radius:7px;aspect-ratio:3/3.82}
+  .card:hover .card-media{transform:translateY(-2px);box-shadow:0 12px 27px rgba(0,0,0,.24)}
+  .card-body{padding:8px 1px 2px}
+  .card-title{font-size:13px;letter-spacing:-.01em}.card-title span{font-size:7px}
+  .card-author{margin-top:5px;font-size:8px}
+  .card-meta{margin-top:6px}
+  .meta-token{padding:3px 5px;font-size:7px}
+  .card-short{margin-top:7px;font-size:10px;color:#7f887d}
+  .card-tags{margin-top:7px;gap:4px}.card-tags button,.card-tags span{padding:4px 6px;font-size:8px}
+  .card-hashtags{margin-top:5px;gap:5px}.card-hashtags button,.card-hashtags span{font-size:8px;color:#596259}
+  .download-hover{right:7px;bottom:7px;min-width:54px;height:25px;padding-inline:8px;font-size:7px}
+  .new-badge{left:7px;top:7px;padding:4px 6px}
+}
+
+/* Cohesive tablet/mobile: keep the shell idea but avoid squeezing controls. */
+@media (max-width:1020px){
+  .archive-shell{position:relative;z-index:12;margin-top:-25px;padding:10px;border:1px solid #2d332c;border-radius:8px;background:rgba(15,18,15,.96)}
+  .toolbar{margin:0;padding:0;border:0;background:none;backdrop-filter:none}
+  .tag-zone{margin-top:9px;padding:9px;border:1px solid #282e27;border-radius:7px;background:#101310}
+  .tag-strip-head{justify-content:flex-start;gap:10px}.tag-actions{margin-left:0}
+}

@@ -87,12 +87,11 @@ function renderQuickTags(){
 }
 
 function renderActiveFilters(){
+  // Direct toggles (tags / POV / lorebook) already show their state on the controls themselves.
+  // Keep this row only for filters that otherwise have no persistent visible state.
   const chips = [];
   state.authors.forEach(v=>chips.push(["author",v,`@ ${v}`]));
   state.universes.forEach(v=>chips.push(["universe",v,`UNIVERSE / ${v}`]));
-  state.tags.forEach(v=>chips.push(["tag",v,tagLabel(v)]));
-  state.povs.forEach(v=>chips.push(["pov",v,povLabel(v)]));
-  if(state.lorebook) chips.push(["lorebook","1","LOREBOOK"]);
   const box = $("#activeFilters");
   box.classList.toggle("has", chips.length>0);
   box.innerHTML = chips.map(([type,value,label])=>`<button class="filter-chip" data-remove="${type}" data-value="${esc(value)}">${esc(label)} ×</button>`).join("");
@@ -212,9 +211,20 @@ $("#clearQuickTags").onclick=()=>{state.tags.clear();render()};
 const tagRail=$("#tagQuick");
 tagRail.addEventListener("wheel",e=>{if(tagsExpanded)return;if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){e.preventDefault();tagRail.scrollLeft+=e.deltaY}}, {passive:false});
 let drag=false,startX=0,startScroll=0;
-tagRail.addEventListener("pointerdown",e=>{if(tagsExpanded)return;drag=true;startX=e.clientX;startScroll=tagRail.scrollLeft;tagRail.setPointerCapture(e.pointerId)});
+tagRail.addEventListener("pointerdown",e=>{
+  if(tagsExpanded || e.target.closest("button")) return;
+  drag=true;startX=e.clientX;startScroll=tagRail.scrollLeft;tagRail.setPointerCapture(e.pointerId);
+});
 tagRail.addEventListener("pointermove",e=>{if(!drag||tagsExpanded)return;tagRail.scrollLeft=startScroll-(e.clientX-startX)});
 tagRail.addEventListener("pointerup",()=>drag=false);tagRail.addEventListener("pointercancel",()=>drag=false);
+// Handle quick tags directly on the rail so drag scrolling can never swallow button clicks.
+tagRail.addEventListener("click",e=>{
+  const btn=e.target.closest("[data-quick-tag]");
+  if(!btn)return;
+  e.stopPropagation();
+  toggle("tag",btn.dataset.quickTag);
+  render();
+});
 
 $("#searchInput").oninput=e=>{state.q=e.target.value;render()};
 $("#resetBtn").onclick=resetAll;
@@ -228,7 +238,6 @@ document.addEventListener("click",e=>{
   const rem=e.target.closest("[data-remove]");if(rem){const m={author:"authors",universe:"universes",tag:"tags",pov:"povs"};m[rem.dataset.remove]?state[m[rem.dataset.remove]].delete(rem.dataset.value):state.lorebook=false;render();return}
   const au=e.target.closest("[data-author]");if(au){e.stopPropagation();state.authors.clear();state.authors.add(au.dataset.author);closeModal();render();return}
   const tg=e.target.closest("[data-tag]");if(tg){e.stopPropagation();toggle("tag",tg.dataset.tag);closeModal();render();return}
-  const qt=e.target.closest("[data-quick-tag]");if(qt){toggle("tag",qt.dataset.quickTag);render();return}
   const hs=e.target.closest("[data-hashtag]");if(hs){e.stopPropagation();state.q=hs.dataset.hashtag;$("#searchInput").value=hs.dataset.hashtag;closeModal();render();return}
   const qu=e.target.closest("[data-quick-universe]");if(qu){toggle("universe",qu.dataset.quickUniverse);closeModal();render();return}
   const card=e.target.closest(".card");if(card)openModal(B.find(b=>b.id===card.dataset.id));
@@ -253,7 +262,8 @@ function openModal(b){
   $("#modalAuthorBadge").dataset.author=b.author;
   $("#modalUniverse").innerHTML=`${globeSvg}<span>UNIVERSE / ${esc(b.universe)}</span>`;
   $("#modalUniverse").dataset.quickUniverse=b.universe;
-  $("#modalLoreFlag").innerHTML=b.lorebook?`${bookSvg}<span>LOREBOOK AVAILABLE</span>`:"";
+  $("#modalLoreFlag").innerHTML=b.lorebook?bookSvg:"";
+  $("#modalLoreFlag").title=b.lorebook?"Lorebook available":"";
   $("#modalPov").textContent=povLabel(b.pov);
   $("#modalTags").innerHTML=`<div class="modal-primary-tags">${(b.tags||[]).map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}</div>${(b.hashtags||[]).length?`<div class="modal-hashtags">${(b.hashtags||[]).map(h=>`<button data-hashtag="${esc(h)}">#${esc(h)}</button>`).join("")}</div>`:''}`;
   $("#openBot").href=b.url;
@@ -311,7 +321,7 @@ $$('.modal-tab').forEach(t=>t.onclick=()=>{
 
 // Small archive anomalies: decorative only, never block interaction.
 const anomalyTargets=["#catalogOpen","#moreTrigger","#sortTrigger","#loreToggle","#povCycle","#randomBtn"];
-anomalyTargets.forEach(sel=>{const el=$(sel);if(!el)return;el.addEventListener("mouseenter",()=>{if(Math.random()<.16){el.classList.add("archive-flicker");setTimeout(()=>el.classList.remove("archive-flicker"),1050)}})});
+anomalyTargets.forEach(sel=>{const el=$(sel);if(!el)return;el.addEventListener("mouseenter",()=>{if(Math.random()<.30){el.classList.add("archive-flicker");setTimeout(()=>el.classList.remove("archive-flicker"),1050)}})});
 
 // Easter egg
 const terminalScripts=[

@@ -1,4 +1,4 @@
-# ARCHIVE.EXE v0.9.5-functional
+# ARCHIVE.EXE v0.9.6-functional
 
 Functional/readability patch built on v0.9.4-functional.
 
@@ -15,3 +15,12 @@ Functional/readability patch built on v0.9.4-functional.
 - compact FILES/SOURCE actions; downloads visually primary
 - RANDOM made more visually distinct
 - archive hover anomaly made brighter, longer and more frequent
+
+
+## v0.9.6 functional cleanup
+- fixed quick tag button clicks / multi-select
+- reduced empty toolbar space and balanced Random placement
+- primary tags and hashtags are separated in modal
+- lorebook availability is icon-only
+- invisible tag scrollbar
+- slightly stronger archive glitch

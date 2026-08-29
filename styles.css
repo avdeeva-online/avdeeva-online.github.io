@@ -212,3 +212,44 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 
 @media(max-width:900px){.searchbar{flex:1 1 320px;width:auto;max-width:none}}
 @media(max-width:760px){.searchbar{order:10;flex:1 0 100%;width:100%;min-width:100%}.modal-action-group{grid-template-columns:1fr}.modal-action-group>small{margin:0}.modal-actions a{flex:1 1 auto}}
+
+
+/* v0.9.6 functional cleanup */
+/* Keep the toolbar visually balanced on wide screens without making search huge again. */
+.toolbar-row{width:100%}
+.random-trigger{margin-left:auto}
+.searchbar{flex:0 1 500px;width:min(500px,38vw)}
+.active-filters:not(.has){display:none}
+
+/* Quick tag buttons must behave like buttons; scrolling is invisible but still available. */
+.quick-list{cursor:grab;touch-action:pan-y}
+.quick-list:active{cursor:grabbing}
+.quick-list button{cursor:pointer;touch-action:manipulation;position:relative;z-index:1;color:#d2ad98;border-color:#4a3d34;background:#1b1815}
+.quick-list button:hover{color:#f0cdb8;border-color:#815840;background:#241b17}
+.quick-list button.active{color:#fff0e4;border-color:#b06d49;background:#342219;box-shadow:inset 0 -2px 0 rgba(189,112,72,.34),0 0 0 1px rgba(176,109,73,.07)}
+.tag-zone{padding-top:12px;padding-bottom:9px}
+.tag-strip-head{margin-bottom:7px}
+.tag-scroll-hint{display:none}
+
+/* Modal tags: primary Janitor tags always occupy their own row; hashtags stay below and quieter. */
+.modal-tags{display:block!important;margin-top:8px}
+.modal-primary-tags{display:flex;gap:5px;flex-wrap:wrap;width:100%}
+.modal-primary-tags button{font:500 10px/1.2 Arial,sans-serif!important;padding:5px 7px!important;color:#d2a68e!important}
+.modal-hashtags{display:flex;gap:7px;flex-wrap:wrap;width:100%;margin-top:8px;padding-top:7px;border-top:1px solid #282d28}
+.modal-hashtags button{font-size:10px!important;color:#667066!important}
+
+/* The lorebook hint is icon-only and cannot overflow into the title. */
+#modalLoreFlag{overflow:hidden;flex:0 0 24px}
+#modalLoreFlag span{display:none!important}
+
+/* Slightly more visible archive glitch, still decorative and never blocks interaction. */
+.hero-title{position:relative;animation:heroSignal 11s infinite}
+@keyframes heroSignal{
+  0%,91%,100%{text-shadow:0 2px 18px rgba(0,0,0,.45);transform:none;filter:none}
+  92%{text-shadow:2px 0 #8b453a,-2px 0 #667258,0 2px 18px rgba(0,0,0,.45);transform:translateX(1px)}
+  93%{text-shadow:-1px 0 #8b453a,2px 0 #667258;transform:translateX(-1px);filter:brightness(1.14)}
+  94%{text-shadow:0 2px 18px rgba(0,0,0,.45);transform:none;filter:none}
+}
+.archive-flicker{outline:1px solid rgba(182,77,63,.32);outline-offset:-2px}
+
+@media(max-width:1250px){.random-trigger{margin-left:5px}.searchbar{flex:1 1 360px;width:auto}}

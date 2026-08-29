@@ -83,3 +83,91 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 .archive-whisper{position:fixed;right:18px;bottom:18px;z-index:180;display:flex;align-items:center;gap:8px;min-height:34px;max-width:min(360px,calc(100vw - 36px));padding:0 12px;border:1px solid #42483e;border-radius:5px;background:rgba(15,18,15,.94);box-shadow:0 12px 35px rgba(0,0,0,.35);color:#92998b;font:8px var(--mono);letter-spacing:.08em;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}.archive-whisper[hidden]{display:none}.archive-whisper.show{opacity:1;transform:none}.archive-whisper.rare{border-color:#68483f;color:#b98572}.whisper-dot{width:5px;height:5px;border-radius:50%;background:#7d866d;box-shadow:0 0 8px rgba(125,134,109,.35)}.archive-whisper.rare .whisper-dot{background:#a65f50;box-shadow:0 0 9px rgba(166,95,80,.42)}
 .hero-title{cursor:default;user-select:none}
 @media(max-width:760px){.modal-actions{grid-template-columns:1fr 1fr}.footer-growth{right:-55px}.archive-whisper{right:12px;bottom:12px}.card-lore-icon{width:24px;height:24px}}
+
+/* v0.9.2 — overgrown archive patch */
+/* Replace the abstract v0.9.1 growth shapes with restrained botanical line art. */
+.catalog-drawer:before,.catalog-drawer:after,.site-footer:before,.footer-growth{content:none!important;display:none!important}
+
+/* Search: a small vine grows from the lower-right edge, never across the text field. */
+.searchbar{position:relative;isolation:isolate;overflow:visible}
+.searchbar:after{content:"";position:absolute;right:-2px;bottom:-15px;width:148px;height:46px;background:url('assets/decor/vine-search.svg') right bottom/contain no-repeat;opacity:.25;pointer-events:none;z-index:2;transition:opacity .2s,transform .2s}
+.searchbar:focus-within:after{opacity:.42;transform:translateY(-1px)}
+.searchbar:before{content:"INDEX / SEARCH";position:absolute;right:12px;top:-12px;color:#424941;font:6px var(--mono);letter-spacing:.15em;pointer-events:none}
+
+/* Drawer: one coherent overgrown corner, plus archival marks. */
+.catalog-drawer{position:fixed!important;isolation:isolate;background:
+  linear-gradient(180deg,rgba(17,20,17,.98),rgba(12,15,12,.99)),
+  repeating-linear-gradient(0deg,transparent 0 27px,rgba(116,127,105,.025) 28px)!important}
+.catalog-drawer:after{content:""!important;display:block!important;position:absolute;right:-18px;bottom:-25px;width:170px;height:260px;background:url('assets/decor/vine-corner.svg') right bottom/contain no-repeat;opacity:.27;pointer-events:none;z-index:0}
+.drawer-head,.drawer-tabs,.drawer-search,.drawer-list{position:relative;z-index:2}
+.drawer-head:before{content:"DIRECTORY / RECOVERED";position:absolute;left:0;bottom:5px;color:#414940;font:6px var(--mono);letter-spacing:.14em}
+.drawer-head:after{content:none!important}
+.drawer-tabs{border-bottom:1px solid #252c25}
+.drawer-list{background:linear-gradient(90deg,rgba(117,127,106,.018),transparent 34%)}
+.drawer-item{position:relative}
+.drawer-item:before{content:"";position:absolute;left:-1px;top:50%;width:3px;height:0;background:#6d765f;opacity:.65;transition:height .15s,top .15s}
+.drawer-item:hover:before{height:52%;top:24%}
+
+/* Cards: lorebook icon stays visible and reads as a book. */
+.card-lore-icon{width:27px;height:27px;border-color:#485143;background:#151a15;color:#aab398;box-shadow:inset 0 0 0 1px rgba(151,164,132,.035)}
+.card-lore-icon svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.45;stroke-linejoin:round}
+.card-meta .meta-token svg,.modal-topline svg{fill:none;stroke:currentColor;stroke-width:1.25}
+
+/* Modal gets a small botanical corner, but content stays clean. */
+.modal-card{position:relative;isolation:isolate}
+.modal-card:after{content:"";position:absolute;right:-15px;bottom:-25px;width:125px;height:185px;background:url('assets/decor/vine-corner.svg') right bottom/contain no-repeat;opacity:.13;pointer-events:none;z-index:0}
+.modal-cover,.modal-content,.modal-close{position:relative;z-index:1}
+.modal-tabs{gap:18px}
+.modal-text-wrap{max-height:205px}
+
+/* INTRO tab: single message is shown directly; multiple messages behave as an accordion. */
+.intro-panel{padding:10px 3px 4px}
+.intro-panel[hidden]{display:none}
+.intro-switches{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+.intro-switch{height:29px;border:1px solid #394037;border-radius:5px;background:#151915;color:#858d80;padding:0 9px;font:7px var(--mono);letter-spacing:.06em;cursor:pointer;display:flex;align-items:center;gap:9px;transition:border-color .15s,color .15s,background .15s,transform .15s}
+.intro-switch:hover{border-color:#596351;color:#b7bda9;transform:translateY(-1px)}
+.intro-switch.active{border-color:#6d775f;background:#1b2119;color:#d0c8ae}
+.intro-switch span{color:#697260;font-size:11px}
+.intro-content,.intro-single{border:1px solid #30372f;border-radius:5px;background:linear-gradient(135deg,rgba(31,36,30,.8),rgba(19,22,19,.88));padding:12px 13px;animation:introReveal .16s ease-out}
+@keyframes introReveal{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.intro-kicker{color:#687160;font:7px var(--mono);letter-spacing:.12em;margin-bottom:8px}
+.intro-content p,.intro-single p{margin:0;color:#a6ab9f;font-size:11px;line-height:1.58;white-space:pre-wrap}
+.intro-empty{padding:13px;border:1px dashed #343a33;color:#626a60;font:8px var(--mono);letter-spacing:.08em}
+
+/* Clearly separated file downloads and source links. */
+.modal-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px!important;margin-top:auto;padding-top:13px;position:relative;z-index:2}
+.action-group{min-width:0;padding-top:8px;border-top:1px solid #30362f}
+.action-group-label{display:flex;align-items:center;gap:5px;margin-bottom:7px;color:#919989;font:7px var(--mono);letter-spacing:.11em}
+.action-group-label span{color:#4f574e;font-size:6px}
+.action-group-buttons{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.modal-actions .action-group a{min-height:34px;height:auto!important;padding:7px 8px;border-radius:5px;display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;font:7px/1.25 var(--mono);letter-spacing:.05em}
+.files-group .download-action{background:#171b17;color:#a3aa9d;border:1px solid #394137}
+.files-group .download-action:hover:not(.disabled){border-color:#66715b;color:#d0c8b2;background:#1c221b}
+.download-action.disabled{opacity:1!important;pointer-events:none!important;border-style:dashed!important;color:#5c645a!important;background:#121512!important}
+.source-group .open-platform{background:#242d20;color:#d1c9b2;border:1px solid #65705a}
+.source-group .author-action{background:#171b17;color:#aeb4a5;border:1px solid #3c4439}
+.source-group .author-action:hover{border-color:#5f6957;color:#d3ccb7}
+
+/* Footer: a real thin overgrown wire/branch instead of floating leaf blobs. */
+.site-footer{position:relative;overflow:hidden;min-height:105px;padding-top:35px;padding-bottom:32px;background-image:linear-gradient(180deg,rgba(14,17,14,0),rgba(18,21,17,.38))}
+.site-footer:after{content:"";position:absolute;left:0;right:0;top:2px;height:72px;background:url('assets/decor/footer-wire.svg') center top/900px 90px repeat-x;opacity:.34;pointer-events:none}
+.footer-left,.lost-file,.footer-archive-mark{position:relative;z-index:2}
+.footer-archive-mark{position:absolute;right:26px;bottom:12px;color:#353d35;font:6px var(--mono);letter-spacing:.16em}
+.site-footer .lost-file{border:1px solid transparent;border-radius:4px;transition:border-color .18s,color .18s,background .18s}
+.site-footer .lost-file:hover{border-color:#30382f;background:rgba(30,35,29,.42)}
+
+/* Easter-egg whisper: unmistakably part of the archive UI, not a browser/network error. */
+.archive-whisper{border-left:2px solid #778069!important;padding-left:11px!important}
+.archive-whisper:before{content:"ARCHIVE NOTICE";position:absolute;left:10px;top:-6px;padding:0 4px;background:#0f120f;color:#4b5448;font:5px var(--mono);letter-spacing:.14em}
+.archive-whisper.rare{border-color:#644238!important;border-left-color:#9b5d4c!important;background:rgba(24,17,15,.96)!important;color:#bc8876!important}
+.archive-whisper.rare:before{content:"ARCHIVE ANOMALY";color:#754a40;background:#18110f}
+
+@media(max-width:760px){
+  .searchbar:after{width:108px;height:37px;bottom:-12px;opacity:.2}
+  .modal-actions{grid-template-columns:1fr!important;gap:8px!important}
+  .action-group-buttons{grid-template-columns:1fr 1fr}
+  .modal-text-wrap{max-height:250px}
+  .catalog-drawer:after{width:135px;height:220px;opacity:.22}
+  .site-footer{min-height:125px;padding-top:38px}
+  .footer-archive-mark{right:14px;bottom:10px}
+}

@@ -348,3 +348,21 @@ let logoClicks=0,logoTimer;$(".hero-title").addEventListener("click",()=>{logoCl
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();closeDrawer();$("#popover").hidden=true;$("#sortMenu").hidden=true;hideTerminal()}if(!$("#modal").hidden&&["ArrowRight","ArrowLeft"].includes(e.key))randomModal()});
 
 render();
+
+// v0.9.12: occasional archive-frame corruption on bot cards.
+// It is intentionally brief and decorative; interaction always remains available.
+function wireCardGlitches(){
+  $$("#grid .card").forEach(card=>{
+    if(card.dataset.glitchWired) return;
+    card.dataset.glitchWired="1";
+    card.addEventListener("mouseenter",()=>{
+      if(Math.random()<.34 && !card.classList.contains("archive-card-glitch")){
+        card.classList.add("archive-card-glitch");
+        setTimeout(()=>card.classList.remove("archive-card-glitch"),520);
+      }
+    });
+  });
+}
+const _renderV0912 = render;
+render = function(){ _renderV0912(); wireCardGlitches(); };
+wireCardGlitches();

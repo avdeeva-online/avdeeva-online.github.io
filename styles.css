@@ -475,3 +475,86 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 .universe-trigger em:not(:empty){display:inline-flex;min-width:14px;height:14px;align-items:center;justify-content:center;border-radius:50%;background:#a7b47a;color:#11150f;font:700 8px Arial,sans-serif;margin-left:1px}
 @media(max-width:1020px){.controls-block{margin-top:-18px;padding:8px 9px 9px}.secondary-group{flex-wrap:wrap}}
 @media(max-width:760px){.controls-block{margin-inline:0;border-radius:6px;padding:8px}}
+
+/* v0.9.12 — visual polish: quieter controls module, unified icon rhythm, richer archive glitches */
+.controls-block{
+  margin-top:-22px;
+  padding:8px 10px 9px;
+  border:1px solid rgba(70,78,67,.24);
+  border-radius:6px;
+  background:linear-gradient(180deg,rgba(15,18,15,.64),rgba(12,15,12,.48));
+  box-shadow:inset 0 1px 0 rgba(205,214,188,.025);
+  backdrop-filter:blur(2px);
+}
+.toolbar-row{gap:5px}
+.tag-zone{margin-top:7px!important;padding-top:7px!important;border-top:1px solid rgba(62,69,59,.34)!important}
+.catalog-meta{margin-top:5px!important;padding-top:6px!important;border-top:1px solid rgba(55,62,53,.30)!important}
+
+/* Every toolbar pictogram occupies the same optical box. */
+.control .hamb,
+.control .at,
+.control .hash-mark,
+.control .universe-mark,
+.control .sort-mark,
+.control .random-mark,
+.control .pov-cycle-icon,
+.control > .ui-icon{
+  width:14px!important;
+  height:14px!important;
+  min-width:14px!important;
+  flex:0 0 14px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  margin:0!important;
+  padding:0!important;
+  line-height:14px!important;
+  font-family:Arial,sans-serif!important;
+  font-size:12px!important;
+  font-weight:500!important;
+  letter-spacing:0!important;
+  color:#8e9789;
+  vertical-align:middle;
+}
+.control > .ui-icon{stroke:currentColor!important;fill:none!important;stroke-width:1.7!important}
+.control .at{font-size:13px!important;font-weight:600!important}
+.control .hamb{font-size:12px!important}
+.control .hash-mark{font-size:13px!important;font-weight:600!important}
+.control .universe-mark{font-size:12px!important}
+.control .sort-mark{font-size:11px!important}
+.control .random-mark{font-size:11px!important}
+.control .pov-cycle-icon{font-size:12px!important}
+.control:hover .hamb,.control:hover .at,.control:hover .hash-mark,.control:hover .universe-mark,.control:hover .sort-mark,.control:hover .random-mark,.control:hover .pov-cycle-icon,.control:hover>.ui-icon{color:currentColor}
+
+/* Secondary controls recede; random remains the one deliberate accent. */
+.control{border-color:rgba(62,70,60,.72);background:rgba(17,20,17,.78)}
+.subtle-control,.icon-toggle{background:rgba(14,17,14,.58);color:#858d80;border-color:rgba(58,65,56,.62)}
+.subtle-control:hover,.icon-toggle:hover{background:rgba(22,26,22,.84)}
+.random-trigger{border-color:rgba(116,126,91,.78);background:linear-gradient(180deg,rgba(37,44,31,.92),rgba(27,33,25,.92));color:#d3c9aa;box-shadow:0 0 0 1px rgba(164,176,119,.04),0 5px 16px rgba(0,0,0,.10)}
+.random-trigger:hover{border-color:#8d9970;background:linear-gradient(180deg,#2b3425,#22291e);box-shadow:0 0 18px rgba(150,166,103,.10)}
+
+.tag-strip-head{margin-bottom:6px!important}
+.tag-strip-head small,.tag-actions button{opacity:.7}
+.quick-list button{border-color:#342f2b!important;background:rgba(24,22,19,.72)!important;color:#aa9081!important}
+.quick-list button:hover{border-color:#5e4d42!important;background:#1e1916!important;color:#d2b2a0!important}
+.quick-list button.active{border-color:#9d6548!important;background:#312219!important;color:#f0d0bd!important;box-shadow:inset 0 -2px 0 rgba(180,103,64,.34),0 0 10px rgba(139,76,48,.06)!important}
+
+/* Card anomaly: looks like a damaged archive frame, never like a broken site. */
+.card-media{isolation:isolate}
+.card-media::before,.card-media::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;z-index:4}
+.card-media::before{background:linear-gradient(180deg,transparent 0 42%,rgba(174,88,66,.17) 42.5% 43.2%,transparent 43.8% 67%,rgba(116,139,97,.11) 67.5% 68%,transparent 68.5%);mix-blend-mode:screen}
+.card-media::after{background:repeating-linear-gradient(180deg,rgba(230,232,217,.035) 0 1px,transparent 1px 5px)}
+.card.archive-card-glitch .card-media::before{animation:archiveCardSlice .46s steps(2,end)}
+.card.archive-card-glitch .card-media::after{animation:archiveCardScan .46s steps(3,end)}
+.card.archive-card-glitch .card-media img{animation:archiveCardImage .46s steps(2,end)}
+.card.archive-card-glitch .card-title{animation:archiveCardText .46s steps(2,end)}
+@keyframes archiveCardSlice{0%,100%{opacity:0;transform:none}18%{opacity:.85;clip-path:inset(35% 0 49% 0);transform:translateX(4px)}39%{opacity:.6;clip-path:inset(62% 0 22% 0);transform:translateX(-3px)}61%{opacity:.42;clip-path:inset(15% 0 72% 0);transform:translateX(2px)}}
+@keyframes archiveCardScan{0%,100%{opacity:0}22%,70%{opacity:.7}}
+@keyframes archiveCardImage{0%,100%{transform:scale(1.028);filter:brightness(.88)}25%{transform:scale(1.028) translateX(2px);filter:brightness(.94) contrast(1.12)}48%{transform:scale(1.028) translateX(-2px);filter:brightness(.82) saturate(.82)}72%{transform:scale(1.028) translateX(1px)}}
+@keyframes archiveCardText{0%,100%{text-shadow:none;transform:none}30%{text-shadow:1px 0 #8e4c3e,-1px 0 #63755a;transform:translateX(1px)}55%{text-shadow:-1px 0 #8e4c3e,1px 0 #63755a;transform:translateX(-1px)}}
+
+/* More legible, more noticeable button anomaly. */
+@keyframes archiveFlickerStrong{0%,100%{opacity:1;filter:none;text-shadow:none}12%{opacity:.72;filter:contrast(1.4) brightness(1.16)}24%{opacity:1;box-shadow:inset 2px 0 0 rgba(170,74,58,.72),inset -1px 0 0 rgba(109,135,91,.58)}36%{transform:translateX(1px)}48%{transform:translateX(-1px);text-shadow:1px 0 rgba(170,74,58,.75),-1px 0 rgba(109,135,91,.62)}62%{transform:none;box-shadow:inset -2px 0 0 rgba(170,74,58,.5)}76%{box-shadow:none;text-shadow:none}}
+.archive-flicker{animation:archiveFlickerStrong .88s steps(2,end)!important;outline:1px solid rgba(177,79,61,.36)!important;outline-offset:-2px}
+
+@media(max-width:1020px){.controls-block{margin-top:-16px;padding:8px;border-radius:6px}}

@@ -18,6 +18,10 @@ const uniq = key => [...new Set(B.map(x => x[key]).filter(Boolean))].sort((a,b)=
 const allTags = () => TAG_ORDER.filter(t => TAG_META[t]);
 const allHashtags = () => [...new Set(B.flatMap(b => b.hashtags || []))].sort((a,b)=>a.localeCompare(b));
 
+function selectionCoversAll(set, values){
+  return values.length > 0 && values.every(v => set.has(v));
+}
+
 function count(kind, val){
   if(kind === "tag") return B.filter(b => (b.tags||[]).includes(val)).length;
   if(kind === "author") return B.filter(b => b.author === val).length;
@@ -32,8 +36,10 @@ function applyFilters(){
   let list = B.filter(b => {
     const hay = [b.nameRu,b.nameEn,b.author,b.universe,b.pov,b.short,b.full,...(b.tags||[]),...(b.hashtags||[])].join(" ").toLowerCase();
     if(q && !hay.includes(q)) return false;
-    if(state.authors.size && !state.authors.has(b.author)) return false;
-    if(state.universes.size && !state.universes.has(b.universe)) return false;
+    const allAuthorsSelected = selectionCoversAll(state.authors, uniq("author"));
+    const allUniversesSelected = selectionCoversAll(state.universes, uniq("universe"));
+    if(state.authors.size && !allAuthorsSelected && !state.authors.has(b.author)) return false;
+    if(state.universes.size && !allUniversesSelected && !state.universes.has(b.universe)) return false;
     if(state.povs.size && !state.povs.has(b.pov)) return false;
     if(state.lorebook && !b.lorebook) return false;
     if([...state.tags].some(t => !(b.tags||[]).includes(t))) return false; // AND logic
@@ -241,7 +247,15 @@ function renderDrawer(){
   }
   list.innerHTML=vals.map((v,i)=>`<button class="drawer-item drawer-world-item ${state.universes.has(v)?'selected':''}" data-drawer-value="${esc(v)}"><span class="drawer-world-id">WORLD_${String(i+1).padStart(2,"0")}</span><span class="drawer-world-copy"><b>${esc(v)}</b><small>${String(count("universe",v)).padStart(2,"0")} RECORDS</small></span><i>→</i></button>`).join("");
 }
-$("#drawerList").onclick=e=>{const b=e.target.closest("[data-drawer-value]");if(!b)return;const v=b.dataset.drawerValue;if(drawerTab==="author")state.authors.add(v);if(drawerTab==="universe")state.universes.add(v);if(drawerTab==="tag")state.tags.add(v);render();closeDrawer()};
+$("#drawerList").onclick=e=>{
+  const b=e.target.closest("[data-drawer-value]"); if(!b)return;
+  e.stopPropagation();
+  const v=b.dataset.drawerValue;
+  if(drawerTab==="author") toggle("author",v);
+  if(drawerTab==="universe") toggle("universe",v);
+  if(drawerTab==="tag") toggle("tag",v);
+  render();
+};
 
 // Tag rail scroll + expansion
 $("#toggleAllTags").onclick=()=>{tagsExpanded=!tagsExpanded;renderQuickTags()};
@@ -613,3 +627,58 @@ render=function(){
 wireCardGlitches();
 wireInteractiveAnomalies();
 wireHashtagGhosts();
+
+/* v0.9.17 — persistent catalog multi-select
+   Catalog stays open while toggling filters. Clicking a selected entry again removes it.
+   It closes only by X, Escape, or a click outside the drawer. */
+(function(){
+  const drawer = document.querySelector('#catalogDrawer');
+  const list = document.querySelector('#drawerList');
+  const shade = document.querySelector('#drawerShade');
+  if(!drawer || !list) return;
+
+  function drawerIsOpen(){ return drawer.classList.contains('open'); }
+
+  // Replace the inherited delegated handler with a capture-phase handler so no
+  // older click behavior can close the drawer after a selection.
+  list.addEventListener('click', function(e){
+    const item = e.target.closest('[data-drawer-value]');
+    if(!item || !list.contains(item)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    const value = item.dataset.drawerValue;
+    if(drawerTab === 'author') toggle('author', value);
+    else if(drawerTab === 'universe') toggle('universe', value);
+    else if(drawerTab === 'tag') toggle('tag', value);
+
+    // Update the main catalog and all counters, then explicitly preserve drawer state.
+    const wasOpen = drawerIsOpen();
+    render();
+    if(wasOpen){
+      drawer.classList.add('open');
+      drawer.setAttribute('aria-hidden','false');
+      if(shade) shade.hidden = false;
+    }
+  }, true);
+
+  // Clicking anywhere outside the drawer closes it. Clicks inside never do.
+  document.addEventListener('pointerdown', function(e){
+    if(!drawerIsOpen()) return;
+    if(drawer.contains(e.target)) return;
+    if(e.target.closest('#catalogOpen')) return;
+    closeDrawer();
+  });
+
+  // Make selected rows explicitly toggle-like for accessibility and visual state.
+  const oldRenderDrawer = renderDrawer;
+  renderDrawer = function(){
+    oldRenderDrawer();
+    document.querySelectorAll('#drawerList [data-drawer-value]').forEach(btn=>{
+      btn.setAttribute('aria-pressed', btn.classList.contains('selected') ? 'true' : 'false');
+      btn.title = btn.classList.contains('selected') ? 'Click again to remove filter' : 'Click to add filter';
+    });
+  };
+  renderDrawer();
+})();

@@ -809,3 +809,88 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   .drawer-list[data-layout="tag"]{grid-template-columns:1fr}
   .drawer-tag-item:nth-child(odd){border-right:0!important}
 }
+
+
+/* =========================================================
+   v0.9.16 — CATALOG MULTISELECT + READABILITY PASS
+   Smaller drawer footprint, larger/readable type, persistent
+   multi-select until X / ESC / outside click.
+   ========================================================= */
+.catalog-drawer{
+  width:min(372px,90vw)!important;
+  padding:12px 13px 9px!important;
+}
+.drawer-head{padding:1px 0 8px!important}
+.drawer-head small{font-size:7.5px!important;letter-spacing:.14em!important}
+.drawer-head strong{margin-top:3px!important;font-size:14px!important;letter-spacing:.045em!important}
+.drawer-head-copy>span{margin-top:3px!important;font-size:6.7px!important;letter-spacing:.13em!important;color:#596158!important}
+.drawer-head button{width:27px!important;height:27px!important;font-size:16px!important}
+
+.drawer-status{
+  min-height:23px!important;margin-bottom:6px!important;
+  font-size:7px!important;letter-spacing:.10em!important;
+}
+.drawer-tabs .drawer-tab{
+  padding:7px 3px 8px!important;
+  font-size:7.6px!important;letter-spacing:.055em!important;
+}
+.drawer-tab em{font-size:6.5px!important}
+.drawer-stats{
+  padding:6px 2px 4px!important;
+  font-size:7px!important;letter-spacing:.075em!important;
+}
+.drawer-search{
+  height:32px!important;margin:4px 0 8px!important;padding:0 8px!important;
+}
+.drawer-search input{font-size:8.8px!important;letter-spacing:.045em!important}
+.drawer-search input::placeholder{color:#687167!important}
+
+.drawer-tag-item{
+  height:30px!important;padding:0 6px!important;
+  font-size:9px!important;color:#9aa295!important;
+}
+.drawer-tag-item small{font-size:7px!important;color:#687166!important}
+.drawer-author-item{
+  min-height:42px!important;padding:6px 7px!important;
+}
+.drawer-author-copy{gap:2px!important}
+.drawer-author-copy b{font-size:9.7px!important;color:#bbc0b2!important;max-width:245px!important}
+.drawer-author-copy small{font-size:6.8px!important;color:#626c62!important;letter-spacing:.09em!important}
+.drawer-author-item>i{font-size:10px!important}
+.drawer-world-item{
+  grid-template-columns:52px minmax(0,1fr) 12px!important;gap:7px!important;
+  min-height:45px!important;padding:6px 7px!important;
+}
+.drawer-world-id{font-size:6.4px!important;color:#606960!important}
+.drawer-world-copy{gap:2px!important}
+.drawer-world-copy b{font-size:9.6px!important;color:#b4baac!important}
+.drawer-world-copy small{font-size:6.8px!important;color:#626c62!important;letter-spacing:.085em!important}
+.drawer-world-item>i{font-size:10px!important}
+.drawer-foot{height:22px!important;margin-top:4px!important;font-size:6.4px!important;color:#505951!important}
+
+/* Make selected rows obvious without making the panel noisy. */
+.drawer-item.selected{
+  background:rgba(132,145,104,.085)!important;
+  box-shadow:inset 2px 0 0 #99a37c!important;
+}
+.drawer-author-item.selected .drawer-author-copy b,
+.drawer-world-item.selected .drawer-world-copy b{color:#d5cfbd!important}
+.drawer-tag-item.selected{color:#d5cfbd!important}
+
+@media (max-width:560px){
+  .catalog-drawer{width:min(92vw,372px)!important;padding:11px 11px 8px!important}
+  .drawer-tag-item{font-size:8.7px!important}
+}
+
+/* v0.9.17 — clearer toggle state inside the persistent catalog */
+.catalog-drawer .drawer-item{cursor:pointer}
+.catalog-drawer .drawer-item.selected{
+  background:rgba(174,190,139,.085);
+  box-shadow:inset 2px 0 0 rgba(190,207,151,.82);
+}
+.catalog-drawer .drawer-item.selected .drawer-item-name,
+.catalog-drawer .drawer-item.selected b{
+  color:rgba(226,234,209,.96);
+}
+.catalog-drawer .drawer-item.selected i{opacity:.9}
+.catalog-drawer .drawer-item.selected i::after{content:' ✓';font-style:normal;font-size:9px}

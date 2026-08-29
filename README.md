@@ -1,3 +1,12 @@
+# ARCHIVE.EXE v0.9.16 — Catalog Multiselect
+
+Changes in this patch:
+- Catalog drawer is narrower and denser, while text is larger and higher-contrast for readability.
+- Catalog selections no longer close the drawer. Pick as many tags/authors/universes as needed, then close with X, Esc, or by clicking outside.
+- Drawer items now toggle on/off instead of only adding.
+- Selecting every author (or every universe) is treated as an unrestricted dimension, so all matching bots remain visible.
+- Existing anomaly/glitch behavior is preserved.
+
 # ARCHIVE.EXE — v0.9.15 Catalog Index
 
 Catalog-only redesign based on v0.9.14 Anomaly Pass.
@@ -16,3 +25,9 @@ Catalog-only redesign based on v0.9.14 Anomaly Pass.
 - Catalog anomaly can also briefly miscount the index total by +1.
 
 No changes to bot data, modal behavior, search logic, or the main catalog grid.
+
+## v0.9.17 — Catalog Toggle
+- Catalog stays open while selecting/deselecting tags, authors and universes.
+- Clicking the same selected item again removes that filter.
+- Drawer closes only with X, Escape, or clicking outside.
+- Selected state is clearer and includes aria-pressed.

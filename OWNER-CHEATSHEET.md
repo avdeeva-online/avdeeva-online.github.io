@@ -19,3 +19,10 @@ Not intended for public-facing explanation.
 - Footer `UNKNOWN FILES: 01`: opens the LOST_DIRECTORY terminal; Recovery Attempt cycles its hidden fragments.
 
 Hidden motif: the archive occasionally behaves as if an unindexed `RECORD_000` exists, despite the visible catalog count.
+
+
+## v0.9.15 Catalog Index notes
+- Catalog was visually rebuilt as an archive/database index.
+- TAGS are a compact two-column index; AUTHORS and UNIVERSES deliberately use different record layouts.
+- Existing missing-tab and impossible-author anomalies remain.
+- A small additional Catalog anomaly may briefly report one extra index entry in the compact stats line.

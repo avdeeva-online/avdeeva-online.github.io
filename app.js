@@ -208,10 +208,38 @@ function closeDrawer(){$("#catalogDrawer").classList.remove("open");$("#catalogD
 $("#catalogOpen").onclick=openDrawer;$("#catalogClose").onclick=closeDrawer;$("#drawerShade").onclick=closeDrawer;
 $$('.drawer-tab').forEach(b=>b.onclick=()=>{drawerTab=b.dataset.drawerTab;$$('.drawer-tab').forEach(x=>x.classList.toggle('active',x===b));$("#drawerSearch").value="";renderDrawer()});
 $("#drawerSearch").oninput=renderDrawer;
+function drawerSelectionCount(){
+  if(drawerTab==="tag") return state.tags.size;
+  if(drawerTab==="author") return state.authors.size;
+  if(drawerTab==="universe") return state.universes.size;
+  return 0;
+}
+function drawerActiveCount(vals){
+  return vals.filter(v=>count(drawerTab,v)>0).length;
+}
 function renderDrawer(){
-  const q=($("#drawerSearch").value||"").toLowerCase();
-  const vals=(drawerTab==="tag"?allTags():drawerTab==="author"?uniq("author"):uniq("universe")).filter(v=>v.toLowerCase().includes(q));
-  $("#drawerList").innerHTML=vals.map(v=>`<button class="drawer-item" data-drawer-value="${esc(v)}"><span>${esc(drawerTab==="tag"?tagLabel(v):drawerTab==="author"?'@'+v:v)}</span><small>${count(drawerTab,v)}</small></button>`).join("");
+  const q=($("#drawerSearch").value||"").trim().toLowerCase();
+  const allVals=(drawerTab==="tag"?allTags():drawerTab==="author"?uniq("author"):uniq("universe"));
+  const vals=allVals.filter(v=>v.toLowerCase().includes(q));
+  const list=$("#drawerList");
+  if(!list) return;
+  list.dataset.layout=drawerTab;
+  $("#drawerTotal").textContent=`${String(B.length).padStart(3,"0")} RECORDS`;
+  const label=drawerTab==="tag"?"TAGS":drawerTab==="author"?"AUTHORS":"WORLDS";
+  $("#drawerStatPrimary").textContent=`${String(allVals.length).padStart(2,"0")} ${label}`;
+  $("#drawerStatSecondary").textContent=`${String(drawerActiveCount(allVals)).padStart(2,"0")} ACTIVE`;
+  $("#drawerStatSelected").textContent=`${String(drawerSelectionCount()).padStart(2,"0")} SELECTED`;
+  $("#drawerFootStatus").textContent=q?`${String(vals.length).padStart(2,"0")} MATCHES`:"STABLE";
+
+  if(drawerTab==="tag"){
+    list.innerHTML=vals.map(v=>`<button class="drawer-item drawer-tag-item ${state.tags.has(v)?'selected':''}" data-drawer-value="${esc(v)}"><span class="drawer-item-name">${esc(tagLabel(v))}</span><small>${String(count("tag",v)).padStart(2,"0")}</small></button>`).join("");
+    return;
+  }
+  if(drawerTab==="author"){
+    list.innerHTML=vals.map(v=>`<button class="drawer-item drawer-author-item ${state.authors.has(v)?'selected':''}" data-drawer-value="${esc(v)}"><span class="drawer-author-copy"><b>@${esc(v)}</b><small>${String(count("author",v)).padStart(2,"0")} RECORDS</small></span><i>→</i></button>`).join("");
+    return;
+  }
+  list.innerHTML=vals.map((v,i)=>`<button class="drawer-item drawer-world-item ${state.universes.has(v)?'selected':''}" data-drawer-value="${esc(v)}"><span class="drawer-world-id">WORLD_${String(i+1).padStart(2,"0")}</span><span class="drawer-world-copy"><b>${esc(v)}</b><small>${String(count("universe",v)).padStart(2,"0")} RECORDS</small></span><i>→</i></button>`).join("");
 }
 $("#drawerList").onclick=e=>{const b=e.target.closest("[data-drawer-value]");if(!b)return;const v=b.dataset.drawerValue;if(drawerTab==="author")state.authors.add(v);if(drawerTab==="universe")state.universes.add(v);if(drawerTab==="tag")state.tags.add(v);render();closeDrawer()};
 
@@ -470,18 +498,31 @@ function catalogLabelAnomaly(){
   if(!tabs.length) return;
   if(Math.random()<.22){
     const tab=tabs[Math.floor(Math.random()*tabs.length)];
-    const old=tab.textContent;
-    tab.classList.add('archive-corrupt-label');
-    tab.textContent=Math.random()<.5?'???????':'[MISSING]';
-    setTimeout(()=>{tab.textContent=old;tab.classList.remove('archive-corrupt-label')},520);
+    const label=tab.querySelector('span');
+    if(label){
+      const old=label.textContent;
+      tab.classList.add('archive-corrupt-label');
+      label.textContent=Math.random()<.5?'???????':'[MISSING]';
+      setTimeout(()=>{label.textContent=old;tab.classList.remove('archive-corrupt-label')},520);
+    }
   }
   if(drawerTab==='author' && Math.random()<.16){
     const list=$('#drawerList');
     const ghost=document.createElement('button');
-    ghost.type='button';ghost.className='drawer-item drawer-ghost';ghost.innerHTML='<span>@██████</span><small>?</small>';
+    ghost.type='button';ghost.className='drawer-item drawer-author-item drawer-ghost';ghost.innerHTML='<span class="drawer-author-copy"><b>@██████</b><small>?? RECORDS</small></span><i>?</i>';
     list.prepend(ghost);
     setTimeout(()=>ghost.classList.add('vanish'),520);
     setTimeout(()=>ghost.remove(),820);
+  }
+  if(Math.random()<.09){
+    const stat=$('#drawerStatPrimary');
+    if(stat){
+      const old=stat.textContent;
+      stat.classList.add('archive-corrupt-label');
+      const n=parseInt(old,10);
+      if(Number.isFinite(n)) stat.textContent=old.replace(/^\d+/,String(n+1).padStart(2,'0'))+' ?';
+      setTimeout(()=>{stat.textContent=old;stat.classList.remove('archive-corrupt-label')},430);
+    }
   }
 }
 $('#catalogOpen')?.addEventListener('click',()=>setTimeout(catalogLabelAnomaly,120));

@@ -93,14 +93,20 @@
 
 <div id="drawerShade" class="drawer-shade" hidden></div>
 <aside id="catalogDrawer" class="catalog-drawer" aria-hidden="true">
-  <div class="drawer-head"><div><small>INDEX_00</small><strong>BROWSE CATALOG</strong></div><button id="catalogClose">×</button></div>
-  <div class="drawer-tabs">
-    <button class="drawer-tab active" data-drawer-tab="tag">TAGS</button>
-    <button class="drawer-tab" data-drawer-tab="author">AUTHORS</button>
-    <button class="drawer-tab" data-drawer-tab="universe">UNIVERSES</button>
+  <div class="drawer-head">
+    <div class="drawer-head-copy"><small>INDEX_00 / ACTIVE</small><strong>BROWSE CATALOG</strong><span>RECOVERED DATABASE INDEX</span></div>
+    <button id="catalogClose" aria-label="Close catalog">×</button>
   </div>
-  <label class="drawer-search"><span>⌕</span><input id="drawerSearch" placeholder="Filter list..."></label>
-  <div id="drawerList" class="drawer-list"></div>
+  <div class="drawer-status"><span><i></i> DATABASE ONLINE</span><b id="drawerTotal">000 RECORDS</b></div>
+  <div class="drawer-tabs">
+    <button class="drawer-tab active" data-drawer-tab="tag"><em>01</em><span>TAGS</span></button>
+    <button class="drawer-tab" data-drawer-tab="author"><em>02</em><span>AUTHORS</span></button>
+    <button class="drawer-tab" data-drawer-tab="universe"><em>03</em><span>UNIVERSES</span></button>
+  </div>
+  <div class="drawer-stats"><span id="drawerStatPrimary">00 TAGS</span><span id="drawerStatSecondary">00 ACTIVE</span><span id="drawerStatSelected">00 SELECTED</span></div>
+  <label class="drawer-search"><span>⌕</span><input id="drawerSearch" placeholder="SEARCH INDEX..."></label>
+  <div id="drawerList" class="drawer-list" data-layout="tag"></div>
+  <div class="drawer-foot"><span>NODE_00 / INDEX CACHE</span><span id="drawerFootStatus">STABLE</span></div>
 </aside>
 
 <div id="modal" class="modal" hidden>

@@ -34,20 +34,20 @@
       </label>
 
       <div class="filter-group primary-group">
-        <button class="control filter-trigger" data-filter="author"><span class="at">@</span><span>AUTHOR</span><em id="authorCount"></em></button>
+        <button class="control filter-trigger" data-filter="author"><span>AUTHOR</span><em id="authorCount"></em></button>
         <button id="loreToggle" class="control icon-toggle lore-toggle" title="Lorebook filter: off" aria-label="Show only bots with lorebooks" aria-pressed="false">
           <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3.2-.9 5.7-.6 8.5 1.1v12c-2.8-1.7-5.3-2-8.5-1.1zM20.5 5.5c-3.2-.9-5.7-.6-8.5 1.1v12c2.8-1.7 5.3-2 8.5-1.1z"/></svg>
         </button>
-        <button id="povCycle" class="control icon-toggle pov-cycle" title="POV: AnyPOV" aria-label="POV filter: AnyPOV" data-pov="AnyPOV"><span class="pov-cycle-icon">◌</span></button>
+        <button id="povCycle" class="control pov-cycle" title="POV: AnyPOV" aria-label="POV filter: AnyPOV" data-pov="AnyPOV"><span class="pov-cycle-label">ANY POV</span></button>
       </div>
 
       <div class="filter-group secondary-group">
         <button class="control subtle-control filter-trigger hashtag-trigger" data-filter="hashtag" title="Filter by hashtags"><span class="hash-mark">#</span><span>HASHTAGS</span><em id="hashtagCount"></em></button>
-        <button class="control subtle-control filter-trigger universe-trigger" data-filter="universe" title="Filter by universe"><span class="universe-mark">◎</span><span>UNIVERSE</span><em id="universeCount"></em></button>
+        <button class="control subtle-control filter-trigger universe-trigger" data-filter="universe" title="Filter by universe"><span>UNIVERSE</span><em id="universeCount"></em></button>
         <button id="sortTrigger" class="control subtle-control"><span class="sort-mark">↕</span><span id="sortLabel">NEWEST</span><span class="chev">⌄</span></button>
       </div>
 
-      <button id="randomBtn" class="control random-trigger"><span class="random-mark">✦</span><span>RANDOM</span></button>
+      <button id="randomBtn" class="control random-trigger"><span class="random-mark" aria-hidden="true"><svg class="dice-icon" viewBox="0 0 24 24" focusable="false"><rect x="4" y="4" width="16" height="16" rx="2.5"/><circle cx="8.5" cy="8.5" r="1"/><circle cx="15.5" cy="8.5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="8.5" cy="15.5" r="1"/><circle cx="15.5" cy="15.5" r="1"/></svg></span><span>RANDOM</span></button>
     </div>
     <div id="activeFilters" class="active-filters"></div>
   </section>

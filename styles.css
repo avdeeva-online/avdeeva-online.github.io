@@ -1040,3 +1040,71 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
     padding:9px 9px 7px!important;
   }
 }
+
+
+/* =========================================================
+   v0.9.21 — TOOLBAR CONSISTENCY PASS
+   Keep icons only where they carry real meaning. Unicode
+   ornaments are removed from Author / POV / Universe; the
+   lorebook stays icon-only, hashtags keep #, Random gets a
+   quiet monochrome dice SVG.
+   ========================================================= */
+.toolbar-row .filter-trigger[data-filter="author"] .at,
+.toolbar-row .universe-trigger .universe-mark{display:none!important}
+
+#povCycle{
+  width:auto!important;
+  min-width:58px!important;
+  padding:0 9px!important;
+  justify-content:center!important;
+}
+.pov-cycle-label{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:auto!important;
+  min-width:0!important;
+  height:auto!important;
+  font:600 8px/1 var(--mono)!important;
+  letter-spacing:.045em!important;
+  white-space:nowrap!important;
+}
+#povCycle.active .pov-cycle-label{color:#d3d8c4!important}
+
+.random-mark{
+  width:14px!important;
+  height:14px!important;
+  min-width:14px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.random-mark .dice-icon{
+  width:13px!important;
+  height:13px!important;
+  display:block!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:1.35!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+  opacity:.9!important;
+}
+.random-mark .dice-icon circle{
+  fill:currentColor!important;
+  stroke:none!important;
+}
+.random-trigger:hover .dice-icon,.random-trigger.active .dice-icon{opacity:1!important}
+
+/* The book remains the one deliberately icon-only filter. */
+#loreToggle .ui-icon{width:14px!important;height:14px!important}
+
+/* Do not let the text-only buttons feel visually smaller than icon buttons. */
+.toolbar-row .filter-trigger[data-filter="author"],
+.toolbar-row .universe-trigger,
+#povCycle{min-height:31px!important}
+
+@media (max-width:760px){
+  #povCycle{min-width:54px!important;padding-inline:7px!important}
+  .pov-cycle-label{font-size:7.5px!important}
+}

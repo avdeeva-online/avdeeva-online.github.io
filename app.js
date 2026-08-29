@@ -194,8 +194,8 @@ function currentPov(){ return state.povs.size ? [...state.povs][0] : "AnyPOV"; }
 function renderPovCycle(){
   const btn=$("#povCycle"); if(!btn)return;
   const pov=currentPov();
-  const symbol=pov==="MalePOV"?"♂":pov==="FemPOV"?"♀":"◌";
-  btn.dataset.pov=pov; btn.querySelector(".pov-cycle-icon").textContent=symbol;
+  const label=pov==="MalePOV"?"MALE POV":pov==="FemPOV"?"FEM POV":"ANY POV";
+  btn.dataset.pov=pov; btn.querySelector(".pov-cycle-label").textContent=label;
   btn.title=`POV: ${pov}`; btn.setAttribute("aria-label",`POV filter: ${pov}`);
   btn.classList.toggle("active",pov!=="AnyPOV");
 }
@@ -457,7 +457,7 @@ const GLITCH_SELECTORS=['.control','.quick-list button','.drawer-tab','.drawer-i
 function transientCorruption(el){
   if(!el || el.dataset.corrupting==='1') return;
   el.dataset.corrupting='1';
-  const target=el.querySelector('.ui-icon,.hamb,.at,.hash-mark,.universe-mark,.sort-mark,.random-mark,.pov-cycle-icon') || el.querySelector('span') || el;
+  const target=el.querySelector('.ui-icon,.hamb,.at,.hash-mark,.universe-mark,.sort-mark,.random-mark,.pov-cycle-label') || el.querySelector('span') || el;
   const old=target.innerHTML;
   target.dataset.corruptOld=old;
   target.textContent='?';

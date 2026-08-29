@@ -1,7 +1,17 @@
-ARCHIVE.EXE v0.9.4-functional
+# ARCHIVE.EXE v0.9.5-functional
 
-Functional patch based on v0.9.3-functional: fixed lorebook toggle, robust INTRO accordion, demo intro counts 7/5/2/3/1/1, and clearer separated modal FILES/SOURCE controls.
+Functional/readability patch built on v0.9.4-functional.
 
-# ARCHIVE.EXE v0.9.1
-
-Small polish patch: lorebook card icon, author links in modal, subtle archive easter eggs, and restrained overgrowth details in the catalog drawer/footer. Header artwork intentionally unchanged for the next design pass.
+- compact lorebook icon toggle
+- compact POV cycle: AnyPOV → MalePOV → FemPOV → AnyPOV
+- POV removed from MORE; MORE keeps Universe
+- tag rail scrollbar hidden; wheel/drag still works
+- more readable tag typography
+- shorter search bar on desktop
+- restored secondary hashtags on bot cards and modal
+- hashtags participate in search and are clickable
+- intro variants rendered as selector buttons with smooth content reveal
+- modal lorebook status reduced to icon-only hint
+- compact FILES/SOURCE actions; downloads visually primary
+- RANDOM made more visually distinct
+- archive hover anomaly made brighter, longer and more frequent

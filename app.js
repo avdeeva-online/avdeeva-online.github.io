@@ -28,7 +28,7 @@ function count(kind, val){
 function applyFilters(){
   const q = state.q.trim().toLowerCase();
   let list = B.filter(b => {
-    const hay = [b.nameRu,b.nameEn,b.author,b.universe,b.pov,b.short,b.full,...(b.tags||[])].join(" ").toLowerCase();
+    const hay = [b.nameRu,b.nameEn,b.author,b.universe,b.pov,b.short,b.full,...(b.tags||[]),...(b.hashtags||[])].join(" ").toLowerCase();
     if(q && !hay.includes(q)) return false;
     if(state.authors.size && !state.authors.has(b.author)) return false;
     if(state.universes.size && !state.universes.has(b.universe)) return false;
@@ -72,6 +72,7 @@ function cardHtml(b,i){
       </div>
       <p class="card-short">${esc(b.short)}</p>
       <div class="card-tags">${shown.map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}${more>0?`<span class="tag-more">+${more}</span>`:''}</div>
+      ${(b.hashtags||[]).length?`<div class="card-hashtags">${(b.hashtags||[]).slice(0,3).map(h=>`<button data-hashtag="${esc(h)}">#${esc(h)}</button>`).join("")}${(b.hashtags||[]).length>3?`<span>+${(b.hashtags||[]).length-3}</span>`:''}</div>`:''}
     </div>
   </article>`;
 }
@@ -99,11 +100,12 @@ function renderActiveFilters(){
 
 function renderCounts(){
   setCount("#authorCount", state.authors.size);
-  setCount("#moreCount", state.universes.size + state.povs.size);
+  setCount("#moreCount", state.universes.size);
   $$('.filter-trigger[data-filter="author"]').forEach(b=>b.classList.toggle("active",state.authors.size>0));
   $("#loreToggle").classList.toggle("active",state.lorebook);
   $("#loreToggle").setAttribute("aria-pressed",state.lorebook?"true":"false");
-  $("#moreTrigger").classList.toggle("active", state.universes.size+state.povs.size>0);
+  $("#moreTrigger").classList.toggle("active", state.universes.size>0);
+  renderPovCycle();
 }
 function setCount(sel,n){const e=$(sel);if(!e)return;e.textContent=n||"";e.classList.toggle("has-count",!!n)}
 
@@ -159,17 +161,32 @@ $("#loreToggle").addEventListener("click",e=>{
   render();
 });
 
+// POV is a compact cycle: Any -> Male -> Fem -> Any. It layers with every other filter.
+const POV_CYCLE=["AnyPOV","MalePOV","FemPOV"];
+function currentPov(){ return state.povs.size ? [...state.povs][0] : "AnyPOV"; }
+function renderPovCycle(){
+  const btn=$("#povCycle"); if(!btn)return;
+  const pov=currentPov();
+  const symbol=pov==="MalePOV"?"♂":pov==="FemPOV"?"♀":"◌";
+  btn.dataset.pov=pov; btn.querySelector(".pov-cycle-icon").textContent=symbol;
+  btn.title=`POV: ${pov}`; btn.setAttribute("aria-label",`POV filter: ${pov}`);
+  btn.classList.toggle("active",pov!=="AnyPOV");
+}
+$("#povCycle").onclick=e=>{
+  e.preventDefault(); e.stopPropagation();
+  const cur=currentPov(), next=POV_CYCLE[(POV_CYCLE.indexOf(cur)+1)%POV_CYCLE.length];
+  state.povs.clear(); if(next!=="AnyPOV")state.povs.add(next); render();
+};
+
 // Secondary filters: POV + Universe
 $("#moreTrigger").onclick=e=>{e.stopPropagation();const m=$("#moreMenu"),r=e.currentTarget.getBoundingClientRect();m.hidden=!m.hidden;m.style.left=Math.max(8,Math.min(r.left+scrollX,scrollX+innerWidth-340))+"px";m.style.top=(r.bottom+scrollY+7)+"px";renderMoreMenu()};
 function renderMoreMenu(){
-  $("#morePov").innerHTML=["AnyPOV","FemPOV","MalePOV"].map(v=>`<button class="${state.povs.has(v)?'active':''}" data-more-pov="${v}"><span>${esc(povLabel(v))}</span></button>`).join("");
   const q=($("#moreUniverseSearch")?.value||"").toLowerCase();
   $("#moreUniverse").innerHTML=uniq("universe").filter(v=>v.toLowerCase().includes(q)).map(v=>`<button class="${state.universes.has(v)?'active':''}" data-more-universe="${esc(v)}"><span>${esc(v)}</span><small>${count('universe',v)}</small></button>`).join("");
 }
-$("#morePov").onclick=e=>{const b=e.target.closest("[data-more-pov]");if(!b)return;const v=b.dataset.morePov;const was=state.povs.has(v);state.povs.clear();if(!was)state.povs.add(v);render()};
 $("#moreUniverse").onclick=e=>{const b=e.target.closest("[data-more-universe]");if(!b)return;toggle("universe",b.dataset.moreUniverse);render()};
 $("#moreUniverseSearch").oninput=renderMoreMenu;
-$("#moreReset").onclick=()=>{state.povs.clear();state.universes.clear();render()};
+$("#moreReset").onclick=()=>{state.universes.clear();render()};
 $("#moreDone").onclick=()=>$("#moreMenu").hidden=true;
 
 // Sort
@@ -212,6 +229,7 @@ document.addEventListener("click",e=>{
   const au=e.target.closest("[data-author]");if(au){e.stopPropagation();state.authors.clear();state.authors.add(au.dataset.author);closeModal();render();return}
   const tg=e.target.closest("[data-tag]");if(tg){e.stopPropagation();toggle("tag",tg.dataset.tag);closeModal();render();return}
   const qt=e.target.closest("[data-quick-tag]");if(qt){toggle("tag",qt.dataset.quickTag);render();return}
+  const hs=e.target.closest("[data-hashtag]");if(hs){e.stopPropagation();state.q=hs.dataset.hashtag;$("#searchInput").value=hs.dataset.hashtag;closeModal();render();return}
   const qu=e.target.closest("[data-quick-universe]");if(qu){toggle("universe",qu.dataset.quickUniverse);closeModal();render();return}
   const card=e.target.closest(".card");if(card)openModal(B.find(b=>b.id===card.dataset.id));
   if(e.target.matches("[data-close]"))closeModal();
@@ -220,7 +238,7 @@ document.addEventListener("click",e=>{
 // Random + modal
 const randomWhispers=["RECOVERING LOST RECORD...","UNINDEXED TRACE DETECTED","ARCHIVE ROUTE SHIFTED","FOUND BETWEEN DIRECTORIES","SIGNAL FROM NODE_??"];
 function archiveWhisper(text,rare=false){const box=$("#archiveWhisper");$("#whisperText").textContent=text;box.classList.toggle("rare",rare);box.hidden=false;requestAnimationFrame(()=>box.classList.add("show"));clearTimeout(archiveWhisper.timer);archiveWhisper.timer=setTimeout(()=>{box.classList.remove("show");setTimeout(()=>box.hidden=true,220)},2600)}
-$("#randomBtn").onclick=()=>{const btn=$("#randomBtn");btn.classList.add("active");btn.querySelector("span:last-child").textContent="SEARCHING...";if(Math.random()<.22)archiveWhisper(randomWhispers[Math.floor(Math.random()*randomWhispers.length)],true);setTimeout(()=>{btn.classList.remove("active");btn.querySelector("span:last-child").textContent="RANDOM";randomModal()},240)};
+$("#randomBtn").onclick=()=>{const btn=$("#randomBtn");btn.classList.add("active");btn.querySelector("span:last-child").textContent="SEARCHING...";if(Math.random()<.38)archiveWhisper(randomWhispers[Math.floor(Math.random()*randomWhispers.length)],true);setTimeout(()=>{btn.classList.remove("active");btn.querySelector("span:last-child").textContent="RANDOM";randomModal()},240)};
 $("#prevBot").onclick=randomModal;$("#nextBot").onclick=randomModal;
 function randomModal(){let pool=applyFilters().filter(b=>!current||b.id!==current.id);if(!pool.length)pool=B.filter(b=>!current||b.id!==current.id);if(pool.length)openModal(pool[Math.floor(Math.random()*pool.length)])}
 function openModal(b){
@@ -237,7 +255,7 @@ function openModal(b){
   $("#modalUniverse").dataset.quickUniverse=b.universe;
   $("#modalLoreFlag").innerHTML=b.lorebook?`${bookSvg}<span>LOREBOOK AVAILABLE</span>`:"";
   $("#modalPov").textContent=povLabel(b.pov);
-  $("#modalTags").innerHTML=(b.tags||[]).map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("");
+  $("#modalTags").innerHTML=`<div class="modal-primary-tags">${(b.tags||[]).map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}</div>${(b.hashtags||[]).length?`<div class="modal-hashtags">${(b.hashtags||[]).map(h=>`<button data-hashtag="${esc(h)}">#${esc(h)}</button>`).join("")}</div>`:''}`;
   $("#openBot").href=b.url;
   $("#openBot").textContent=`OPEN ON ${b.platform} ↗`;
   $("#openAuthor").href=b.authorUrl||b.url;
@@ -272,7 +290,9 @@ function renderModalPanel(){
     return;
   }
   const intros=(current.intros&&current.intros.length?current.intros:["No intro message added."]);
-  panel.innerHTML=`<div class="modal-intros">${intros.map((text,i)=>`<div class="intro-item ${openIntro===i?'open':''}"><button class="intro-toggle" data-intro-index="${i}"><span>INTRO ${String(i+1).padStart(2,'0')}</span><span class="intro-state">${openIntro===i?'−':'+'}</span></button><div class="intro-body" ${openIntro===i?'':'hidden'}>${esc(text)}</div></div>`).join("")}</div>`;
+  const buttons=intros.map((_,i)=>`<button class="intro-choice ${openIntro===i?'active':''}" data-intro-index="${i}">INTRO ${String(i+1).padStart(2,'0')}</button>`).join("");
+  const body=openIntro>=0?`<div class="intro-display show">${esc(intros[openIntro])}</div>`:`<div class="intro-display intro-empty">SELECT AN INTRO</div>`;
+  panel.innerHTML=`<div class="modal-intros"><div class="intro-choices">${buttons}</div>${body}</div>`;
 }
 $("#modalPanel").addEventListener("click",e=>{
   const b=e.target.closest("[data-intro-index]");
@@ -290,8 +310,8 @@ $$('.modal-tab').forEach(t=>t.onclick=()=>{
 });
 
 // Small archive anomalies: decorative only, never block interaction.
-const anomalyTargets=["#catalogOpen","#moreTrigger","#sortTrigger","#loreToggle"];
-anomalyTargets.forEach(sel=>{const el=$(sel);if(!el)return;el.addEventListener("mouseenter",()=>{if(Math.random()<.055){el.classList.add("archive-flicker");setTimeout(()=>el.classList.remove("archive-flicker"),720)}})});
+const anomalyTargets=["#catalogOpen","#moreTrigger","#sortTrigger","#loreToggle","#povCycle","#randomBtn"];
+anomalyTargets.forEach(sel=>{const el=$(sel);if(!el)return;el.addEventListener("mouseenter",()=>{if(Math.random()<.16){el.classList.add("archive-flicker");setTimeout(()=>el.classList.remove("archive-flicker"),1050)}})});
 
 // Easter egg
 const terminalScripts=[

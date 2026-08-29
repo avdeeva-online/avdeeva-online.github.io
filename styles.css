@@ -142,3 +142,73 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 .source-actions .open-platform:hover{background:#34402d;border-color:#98a77e}
 .source-actions .author-action{background:#151815;color:#aeb5a8;border:1px solid #3d463b}
 .source-actions .author-action:hover{border-color:#66725e;color:#e3dcc8}
+
+/* v0.9.5 functional/readability patch */
+/* Search is deliberately compact instead of swallowing the toolbar. */
+.searchbar{flex:0 1 420px;width:min(420px,34vw);min-width:260px}
+
+/* Quick tags: readable, high-contrast, and scrollbar-free while wheel/drag scrolling still works. */
+.quick-list{scrollbar-width:none!important;padding-bottom:3px}
+.quick-list::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
+.quick-list button{font:500 10px/1.2 Arial,sans-serif;color:#c0a18e;padding:6px 9px}
+.quick-list button.active{color:#f2d8c8}
+.tag-strip-head .tag-label{font-size:10px}.tag-strip-head small{font-size:9px;color:#818a7d}
+.tag-scroll-hint{font-size:8px;color:#4f574f;opacity:.72}
+
+/* Compact direct toggles. */
+.icon-toggle{width:36px;min-width:36px;padding:0;justify-content:center}
+.lore-toggle.active:after{display:none!important}
+.pov-cycle-icon{font:600 16px/1 Arial,sans-serif;color:#a2aa98}.pov-cycle.active .pov-cycle-icon{color:#e2dbc5}
+
+/* Random should read as a separate action, not another dull filter. */
+.random-trigger{border-color:#817354;background:linear-gradient(180deg,#29281f,#20231c);color:#e1d1aa;box-shadow:0 0 0 1px rgba(190,165,105,.08),0 7px 22px rgba(0,0,0,.18)}
+.random-trigger:hover{border-color:#b19c6d;background:#302d21;color:#fff0c8;box-shadow:0 0 18px rgba(174,146,82,.12)}
+
+/* Primary tags remain readable; hashtags are deliberately quieter. */
+.card-tags button,.card-tags span{font:500 9px/1.2 Arial,sans-serif;color:#c0957d;padding:5px 7px}
+.card-hashtags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.card-hashtags button,.card-hashtags span{border:0;background:none;padding:0;color:#616a61;font:9px/1.25 Arial,sans-serif;cursor:pointer}
+.card-hashtags button:hover{color:#929b8e;text-decoration:underline;text-underline-offset:2px}
+.modal-primary-tags,.modal-hashtags{display:flex;gap:5px;flex-wrap:wrap}.modal-hashtags{margin-top:7px}
+.modal-hashtags button{border:0!important;background:none!important;padding:0!important;color:#70796e!important;font:10px Arial,sans-serif!important}.modal-hashtags button:hover{color:#a8b0a2!important;text-decoration:underline}
+
+/* Intro variants are actual selector buttons with a smooth content reveal. */
+.modal-intros{max-height:205px;overflow:auto;padding:8px 2px 3px}
+.intro-choices{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+.intro-choice{border:1px solid #3b4338;border-radius:5px;background:#171a17;color:#858e82;padding:6px 8px;font:600 9px/1 Arial,sans-serif;cursor:pointer;transition:background .18s,border-color .18s,color .18s,transform .18s}
+.intro-choice:hover{border-color:#596451;color:#c4cbb8;transform:translateY(-1px)}
+.intro-choice.active{background:#283022;border-color:#788567;color:#e4ddc7}
+.intro-display{border-top:1px solid #2d332d;padding:10px 2px 4px;font:12px/1.6 Arial,sans-serif;color:#a9afa5;white-space:pre-wrap;animation:introReveal .24s ease both}
+.intro-empty{color:#5f675e;font:9px var(--mono);letter-spacing:.08em}
+@keyframes introReveal{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+
+/* Lorebook availability inside the modal is an icon-only hint. */
+#modalLoreFlag{width:24px;height:24px;min-height:24px;padding:0;justify-content:center;border-radius:5px}
+#modalLoreFlag .ui-icon{width:14px;height:14px}
+
+/* Compact modal actions: downloads are the clear primary actions; source links are secondary. */
+.modal-action-groups{grid-template-columns:1fr;gap:9px;padding-top:10px}
+.modal-action-group{display:grid;grid-template-columns:58px 1fr;align-items:start;gap:8px}
+.modal-action-group>small{margin:8px 0 0;font-size:8px}
+.modal-actions{display:flex;gap:6px;flex-wrap:wrap}
+.modal-actions a{min-height:30px!important;height:30px!important;padding:0 10px!important;border-radius:5px!important;font:600 9px/1 Arial,sans-serif!important;letter-spacing:.01em!important;flex:0 1 auto}
+.files-actions .download-action{background:#303828;color:#eee6d2;border-color:#788469;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12)}
+.files-actions .download-action:hover{background:#3a4530;border-color:#9aa77f}
+.files-actions .download-action.disabled{background:#171a17;color:#6c746b;border-color:#363d35;box-shadow:none}
+.source-actions .open-platform,.source-actions .author-action{background:transparent;color:#9ca497;border-color:#394138;font-weight:500}
+.source-actions .open-platform:hover,.source-actions .author-action:hover{background:#181c18;color:#d4cdbb;border-color:#5a6453}
+
+/* Stronger but still clearly in-site archive anomaly. */
+@keyframes archiveFlickerStrong{
+  0%,100%{filter:none;transform:none;box-shadow:inherit}
+  12%{filter:brightness(1.35) contrast(1.2);box-shadow:inset 3px 0 0 #b64d3f,0 0 12px rgba(182,77,63,.12)}
+  22%{transform:translateX(1px)}
+  34%{filter:brightness(.72);box-shadow:inset -3px 0 0 #b64d3f}
+  48%{transform:translateX(-1px);color:#d88b78}
+  63%{filter:brightness(1.18);box-shadow:0 0 10px rgba(182,77,63,.16)}
+  78%{transform:none}
+}
+.archive-flicker{animation:archiveFlickerStrong 1.05s steps(2,end)!important}
+
+@media(max-width:900px){.searchbar{flex:1 1 320px;width:auto;max-width:none}}
+@media(max-width:760px){.searchbar{order:10;flex:1 0 100%;width:100%;min-width:100%}.modal-action-group{grid-template-columns:1fr}.modal-action-group>small{margin:0}.modal-actions a{flex:1 1 auto}}

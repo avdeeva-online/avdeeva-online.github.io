@@ -5,7 +5,7 @@ const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-const state = { q:"", authors:new Set(), universes:new Set(), tags:new Set(), povs:new Set(), lorebook:false, sort:"newest" };
+const state = { q:"", authors:new Set(), universes:new Set(), tags:new Set(), hashtags:new Set(), povs:new Set(), lorebook:false, sort:"newest" };
 let activeFilter = null, drawerTab = "tag", current = null, modalTab = "description", tagsExpanded = false, openIntro = 0;
 
 const bookSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3.2-.9 5.7-.6 8.5 1.1v12c-2.8-1.7-5.3-2-8.5-1.1zM20.5 5.5c-3.2-.9-5.7-.6-8.5 1.1v12c2.8-1.7 5.3-2 8.5-1.1z"/></svg>`;
@@ -16,12 +16,14 @@ const tagLabel = t => `${TAG_META[t] || ""} ${t}`.trim();
 const povLabel = p => p === "AnyPOV" ? "◌ AnyPOV" : p === "FemPOV" ? "♀ FemPOV" : p === "MalePOV" ? "♂ MalePOV" : p;
 const uniq = key => [...new Set(B.map(x => x[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
 const allTags = () => TAG_ORDER.filter(t => TAG_META[t]);
+const allHashtags = () => [...new Set(B.flatMap(b => b.hashtags || []))].sort((a,b)=>a.localeCompare(b));
 
 function count(kind, val){
   if(kind === "tag") return B.filter(b => (b.tags||[]).includes(val)).length;
   if(kind === "author") return B.filter(b => b.author === val).length;
   if(kind === "universe") return B.filter(b => b.universe === val).length;
   if(kind === "pov") return B.filter(b => b.pov === val).length;
+  if(kind === "hashtag") return B.filter(b => (b.hashtags||[]).includes(val)).length;
   return 0;
 }
 
@@ -35,6 +37,7 @@ function applyFilters(){
     if(state.povs.size && !state.povs.has(b.pov)) return false;
     if(state.lorebook && !b.lorebook) return false;
     if([...state.tags].some(t => !(b.tags||[]).includes(t))) return false; // AND logic
+    if([...state.hashtags].some(h => !(b.hashtags||[]).includes(h))) return false; // hashtag AND logic
     return true;
   });
   if(state.sort === "az") list.sort((a,b)=>a.nameEn.localeCompare(b.nameEn));
@@ -54,7 +57,7 @@ function render(){
   renderActiveFilters();
   renderCounts();
   renderDrawer();
-  renderMoreMenu();
+
 }
 
 function cardHtml(b,i){
@@ -92,6 +95,7 @@ function renderActiveFilters(){
   const chips = [];
   state.authors.forEach(v=>chips.push(["author",v,`@ ${v}`]));
   state.universes.forEach(v=>chips.push(["universe",v,`UNIVERSE / ${v}`]));
+  state.hashtags.forEach(v=>chips.push(["hashtag",v,`#${v}`]));
   const box = $("#activeFilters");
   box.classList.toggle("has", chips.length>0);
   box.innerHTML = chips.map(([type,value,label])=>`<button class="filter-chip" data-remove="${type}" data-value="${esc(value)}">${esc(label)} ×</button>`).join("");
@@ -99,17 +103,17 @@ function renderActiveFilters(){
 
 function renderCounts(){
   setCount("#authorCount", state.authors.size);
-  setCount("#moreCount", state.universes.size);
+  setCount("#hashtagCount", state.hashtags.size);
   $$('.filter-trigger[data-filter="author"]').forEach(b=>b.classList.toggle("active",state.authors.size>0));
   $("#loreToggle").classList.toggle("active",state.lorebook);
   $("#loreToggle").setAttribute("aria-pressed",state.lorebook?"true":"false");
-  $("#moreTrigger").classList.toggle("active", state.universes.size>0);
+  const ht=$(".hashtag-trigger"); if(ht) ht.classList.toggle("active",state.hashtags.size>0);
   renderPovCycle();
 }
 function setCount(sel,n){const e=$(sel);if(!e)return;e.textContent=n||"";e.classList.toggle("has-count",!!n)}
 
 function toggle(kind,val){
-  const map={tag:"tags",author:"authors",universe:"universes",pov:"povs"};
+  const map={tag:"tags",author:"authors",universe:"universes",pov:"povs",hashtag:"hashtags"};
   const set=state[map[kind]]; if(!set)return;
   set.has(val)?set.delete(val):set.add(val);
 }
@@ -119,10 +123,17 @@ function valuesForFilter(kind){
   if(kind === "author") return uniq("author");
   if(kind === "universe") return uniq("universe");
   if(kind === "pov") return ["AnyPOV","FemPOV","MalePOV"];
+  if(kind === "hashtag") return allHashtags();
   return [];
 }
 
+function closeFloatingMenus(except=""){
+  if(except!=="popover") $("#popover").hidden=true;
+  if(except!=="sort") $("#sortMenu").hidden=true;
+}
+
 function openPopover(btn,kind){
+  closeFloatingMenus("popover");
   activeFilter=kind;
   const pop=$("#popover");
   const r=btn.getBoundingClientRect();
@@ -135,8 +146,8 @@ function openPopover(btn,kind){
 function renderPopover(){
   const q=($("#popoverSearch").value||"").toLowerCase();
   const vals=valuesForFilter(activeFilter).filter(v=>v.toLowerCase().includes(q));
-  const selected = activeFilter==="tag"?state.tags:activeFilter==="author"?state.authors:activeFilter==="universe"?state.universes:state.povs;
-  $("#popoverList").innerHTML=vals.map(v=>`<button class="${selected.has(v)?'active':''}" data-option="${esc(v)}"><span>${esc(activeFilter==="tag"?tagLabel(v):activeFilter==="pov"?povLabel(v):activeFilter==="author"?'@ '+v:v)}</span><small>${count(activeFilter,v)}</small></button>`).join("");
+  const selected = activeFilter==="tag"?state.tags:activeFilter==="author"?state.authors:activeFilter==="universe"?state.universes:activeFilter==="hashtag"?state.hashtags:state.povs;
+  $("#popoverList").innerHTML=vals.map(v=>`<button class="${selected.has(v)?'active':''}" data-option="${esc(v)}"><span>${esc(activeFilter==="tag"?tagLabel(v):activeFilter==="pov"?povLabel(v):activeFilter==="author"?'@ '+v:activeFilter==="hashtag"?'#'+v:v)}</span><small>${count(activeFilter,v)}</small></button>`).join("");
 }
 
 $$('.filter-trigger').forEach(b=>b.onclick=e=>{e.stopPropagation();openPopover(b,b.dataset.filter)});
@@ -150,6 +161,7 @@ $("#popoverReset").onclick=()=>{
   if(activeFilter==="author")state.authors.clear();
   if(activeFilter==="universe")state.universes.clear();
   if(activeFilter==="pov")state.povs.clear();
+  if(activeFilter==="hashtag")state.hashtags.clear();
   render();renderPopover();
 };
 
@@ -177,19 +189,15 @@ $("#povCycle").onclick=e=>{
   state.povs.clear(); if(next!=="AnyPOV")state.povs.add(next); render();
 };
 
-// Secondary filters: POV + Universe
-$("#moreTrigger").onclick=e=>{e.stopPropagation();const m=$("#moreMenu"),r=e.currentTarget.getBoundingClientRect();m.hidden=!m.hidden;m.style.left=Math.max(8,Math.min(r.left+scrollX,scrollX+innerWidth-340))+"px";m.style.top=(r.bottom+scrollY+7)+"px";renderMoreMenu()};
-function renderMoreMenu(){
-  const q=($("#moreUniverseSearch")?.value||"").toLowerCase();
-  $("#moreUniverse").innerHTML=uniq("universe").filter(v=>v.toLowerCase().includes(q)).map(v=>`<button class="${state.universes.has(v)?'active':''}" data-more-universe="${esc(v)}"><span>${esc(v)}</span><small>${count('universe',v)}</small></button>`).join("");
-}
-$("#moreUniverse").onclick=e=>{const b=e.target.closest("[data-more-universe]");if(!b)return;toggle("universe",b.dataset.moreUniverse);render()};
-$("#moreUniverseSearch").oninput=renderMoreMenu;
-$("#moreReset").onclick=()=>{state.universes.clear();render()};
-$("#moreDone").onclick=()=>$("#moreMenu").hidden=true;
-
 // Sort
-$("#sortTrigger").onclick=e=>{e.stopPropagation();const r=e.currentTarget.getBoundingClientRect(),m=$("#sortMenu");m.hidden=!m.hidden;m.style.left=Math.max(8,Math.min(r.left+scrollX,scrollX+innerWidth-178))+"px";m.style.top=(r.bottom+scrollY+7)+"px"};
+$("#sortTrigger").onclick=e=>{
+  e.stopPropagation();
+  closeFloatingMenus("sort");
+  const r=e.currentTarget.getBoundingClientRect(),m=$("#sortMenu");
+  m.hidden=!m.hidden;
+  m.style.left=Math.max(8,Math.min(r.left+scrollX,scrollX+innerWidth-178))+"px";
+  m.style.top=(r.bottom+scrollY+7)+"px";
+};
 $("#sortMenu").onclick=e=>{const b=e.target.closest("[data-sort]");if(!b)return;state.sort=b.dataset.sort;$("#sortLabel").textContent={newest:"NEWEST",az:"A → Z",za:"Z → A",author:"AUTHOR"}[state.sort];$("#sortMenu").hidden=true;render()};
 
 // Drawer
@@ -228,17 +236,16 @@ tagRail.addEventListener("click",e=>{
 
 $("#searchInput").oninput=e=>{state.q=e.target.value;render()};
 $("#resetBtn").onclick=resetAll;
-function resetAll(){state.q="";state.authors.clear();state.universes.clear();state.tags.clear();state.povs.clear();state.lorebook=false;state.sort="newest";$("#searchInput").value="";$("#sortLabel").textContent="NEWEST";render()}
+function resetAll(){state.q="";state.authors.clear();state.universes.clear();state.tags.clear();state.hashtags.clear();state.povs.clear();state.lorebook=false;state.sort="newest";$("#searchInput").value="";$("#sortLabel").textContent="NEWEST";render()}
 
 document.addEventListener("click",e=>{
   if(!e.target.closest("#popover")&&!e.target.closest(".filter-trigger"))$("#popover").hidden=true;
   if(!e.target.closest("#sortMenu")&&!e.target.closest("#sortTrigger"))$("#sortMenu").hidden=true;
-  if(!e.target.closest("#moreMenu")&&!e.target.closest("#moreTrigger"))$("#moreMenu").hidden=true;
   if(e.target.closest("[data-stop]")){e.stopPropagation();return}
-  const rem=e.target.closest("[data-remove]");if(rem){const m={author:"authors",universe:"universes",tag:"tags",pov:"povs"};m[rem.dataset.remove]?state[m[rem.dataset.remove]].delete(rem.dataset.value):state.lorebook=false;render();return}
+  const rem=e.target.closest("[data-remove]");if(rem){const m={author:"authors",universe:"universes",tag:"tags",pov:"povs",hashtag:"hashtags"};m[rem.dataset.remove]?state[m[rem.dataset.remove]].delete(rem.dataset.value):state.lorebook=false;render();return}
   const au=e.target.closest("[data-author]");if(au){e.stopPropagation();state.authors.clear();state.authors.add(au.dataset.author);closeModal();render();return}
   const tg=e.target.closest("[data-tag]");if(tg){e.stopPropagation();toggle("tag",tg.dataset.tag);closeModal();render();return}
-  const hs=e.target.closest("[data-hashtag]");if(hs){e.stopPropagation();state.q=hs.dataset.hashtag;$("#searchInput").value=hs.dataset.hashtag;closeModal();render();return}
+  const hs=e.target.closest("[data-hashtag]");if(hs){e.stopPropagation();toggle("hashtag",hs.dataset.hashtag);closeModal();render();return}
   const qu=e.target.closest("[data-quick-universe]");if(qu){toggle("universe",qu.dataset.quickUniverse);closeModal();render();return}
   const card=e.target.closest(".card");if(card)openModal(B.find(b=>b.id===card.dataset.id));
   if(e.target.matches("[data-close]"))closeModal();
@@ -320,7 +327,7 @@ $$('.modal-tab').forEach(t=>t.onclick=()=>{
 });
 
 // Small archive anomalies: decorative only, never block interaction.
-const anomalyTargets=["#catalogOpen","#moreTrigger","#sortTrigger","#loreToggle","#povCycle","#randomBtn"];
+const anomalyTargets=["#catalogOpen",".hashtag-trigger","#sortTrigger","#loreToggle","#povCycle","#randomBtn"];
 anomalyTargets.forEach(sel=>{const el=$(sel);if(!el)return;el.addEventListener("mouseenter",()=>{if(Math.random()<.30){el.classList.add("archive-flicker");setTimeout(()=>el.classList.remove("archive-flicker"),1050)}})});
 
 // Easter egg
@@ -336,6 +343,6 @@ function renderTerminal(){const lines=terminalScripts[terminalIndex%terminalScri
 $("#lostFileBtn").onclick=showTerminal;
 let logoClicks=0,logoTimer;$(".hero-title").addEventListener("click",()=>{logoClicks++;clearTimeout(logoTimer);logoTimer=setTimeout(()=>logoClicks=0,1800);if(logoClicks===5){logoClicks=0;archiveWhisper("NODE_00 REMEMBERS YOU.",true)}});$("#terminalRetry").onclick=()=>{terminalIndex++;renderTerminal()};$$('[data-terminal-close]').forEach(x=>x.onclick=hideTerminal);
 
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();closeDrawer();$("#popover").hidden=true;$("#sortMenu").hidden=true;$("#moreMenu").hidden=true;hideTerminal()}if(!$("#modal").hidden&&["ArrowRight","ArrowLeft"].includes(e.key))randomModal()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();closeDrawer();$("#popover").hidden=true;$("#sortMenu").hidden=true;hideTerminal()}if(!$("#modal").hidden&&["ArrowRight","ArrowLeft"].includes(e.key))randomModal()});
 
 render();

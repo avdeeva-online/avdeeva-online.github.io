@@ -426,3 +426,19 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   .tag-zone{margin-top:9px;padding:9px;border:1px solid #282e27;border-radius:7px;background:#101310}
   .tag-strip-head{justify-content:flex-start;gap:10px}.tag-actions{margin-left:0}
 }
+
+/* v0.9.10 — open composition + hashtag filter */
+.archive-shell{margin-top:-25px!important;padding:10px 0 0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.tag-zone{margin-top:8px!important;padding:8px 0 9px!important;border:0!important;border-radius:0!important;background:transparent!important;border-bottom:1px solid rgba(53,60,52,.72)!important}
+.toolbar{border-top:1px solid rgba(55,62,53,.58)!important;padding-top:8px!important}
+.hash-mark{font-family:Arial,sans-serif;font-size:14px;font-weight:500;line-height:1;color:#9ba58f}
+.hashtag-trigger.active .hash-mark{color:#d8dfa9;text-shadow:0 0 9px rgba(191,205,133,.28)}
+.hashtag-trigger em.has-count{display:inline-flex;min-width:14px;height:14px;align-items:center;justify-content:center;border-radius:50%;background:#a7b47a;color:#11150f;font:700 8px Arial,sans-serif;margin-left:1px}
+/* Hashtag/author popovers stay compact and only one floating menu is allowed by JS. */
+.popover{max-height:min(430px,70vh)}
+.popover-list{max-height:300px}
+/* Universe belongs to the catalog drawer, not the primary toolbar. */
+.catalog-drawer{z-index:120}.drawer-shade{z-index:110}
+/* Make the hierarchy feel like one page, not nested windows. */
+.catalog-meta{border-bottom:0!important;padding-top:9px!important}
+.grid{padding-top:2px!important}

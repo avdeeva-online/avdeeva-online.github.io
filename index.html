@@ -41,10 +41,7 @@
       </div>
 
       <div class="filter-group secondary-group">
-        <button id="moreTrigger" class="control subtle-control">
-          <svg class="ui-icon sliders" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M7 14v6"/></svg>
-          <span>MORE</span><em id="moreCount"></em>
-        </button>
+        <button class="control subtle-control filter-trigger hashtag-trigger" data-filter="hashtag" title="Filter by hashtags"><span class="hash-mark">#</span><span>HASHTAGS</span><em id="hashtagCount"></em></button>
         <button id="sortTrigger" class="control subtle-control"><span class="sort-mark">↕</span><span id="sortLabel">NEWEST</span><span class="chev">⌄</span></button>
       </div>
 
@@ -82,19 +79,6 @@
   <div class="popover-search-wrap"><span>⌕</span><input id="popoverSearch" placeholder="Find..."></div>
   <div id="popoverList" class="popover-list"></div>
   <div class="popover-foot"><button id="popoverReset">RESET</button><button id="popoverDone">DONE</button></div>
-</div>
-
-<div id="moreMenu" class="more-menu" hidden>
-  <div class="more-head"><span>SECONDARY FILTERS</span><button id="moreReset">RESET</button></div>
-  <div class="more-section">
-    <div class="more-title">
-      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.2 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.7 8.6 12s1.2 6.1 3.4 8.5"/></svg>
-      UNIVERSE
-    </div>
-    <label class="mini-search"><span>⌕</span><input id="moreUniverseSearch" placeholder="Find universe..."></label>
-    <div id="moreUniverse" class="more-options universe-options"></div>
-  </div>
-  <button id="moreDone" class="more-done">DONE</button>
 </div>
 
 <div id="sortMenu" class="sort-menu" hidden>

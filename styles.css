@@ -83,3 +83,30 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 .archive-whisper{position:fixed;right:18px;bottom:18px;z-index:180;display:flex;align-items:center;gap:8px;min-height:34px;max-width:min(360px,calc(100vw - 36px));padding:0 12px;border:1px solid #42483e;border-radius:5px;background:rgba(15,18,15,.94);box-shadow:0 12px 35px rgba(0,0,0,.35);color:#92998b;font:8px var(--mono);letter-spacing:.08em;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}.archive-whisper[hidden]{display:none}.archive-whisper.show{opacity:1;transform:none}.archive-whisper.rare{border-color:#68483f;color:#b98572}.whisper-dot{width:5px;height:5px;border-radius:50%;background:#7d866d;box-shadow:0 0 8px rgba(125,134,109,.35)}.archive-whisper.rare .whisper-dot{background:#a65f50;box-shadow:0 0 9px rgba(166,95,80,.42)}
 .hero-title{cursor:default;user-select:none}
 @media(max-width:760px){.modal-actions{grid-template-columns:1fr 1fr}.footer-growth{right:-55px}.archive-whisper{right:12px;bottom:12px}.card-lore-icon{width:24px;height:24px}}
+
+/* v0.9.3 functional patch — intentionally no new decorative artwork */
+/* Popovers belong to the document, not the viewport: they stay with their trigger when the page scrolls. */
+.popover,.sort-menu,.more-menu{position:absolute}
+
+/* Readability: keep the archive mono for identity, use a clean UI face for helper copy. */
+.tag-strip-head small,.tag-scroll-hint,.popover-foot button,.more-head button,.more-title,.more-done,.modal-tab,.modal-action-group>small{font-family:Arial,sans-serif;font-weight:600;letter-spacing:.06em}
+.tag-strip-head small{font-size:9px;color:#737b70}.tag-scroll-hint{font-size:8px;color:#626a60;margin-top:4px}
+
+/* The quick-tag rail keeps a scrollbar, but it is deliberately tiny and quiet. */
+.quick-list{scrollbar-width:thin;scrollbar-color:#3b4139 transparent;padding-bottom:5px}
+.quick-list::-webkit-scrollbar{height:3px}.quick-list::-webkit-scrollbar-track{background:transparent}.quick-list::-webkit-scrollbar-thumb{background:#3b4139;border-radius:3px}.quick-list::-webkit-scrollbar-thumb:hover{background:#596154}
+
+/* Lorebook is a direct toggle, not a dropdown/search filter. */
+.lore-toggle{min-width:auto}.lore-toggle.active{border-color:#657059;background:#252d21;color:#d6cfb8}.lore-toggle.active .ui-icon{stroke:#cbd3b6}
+
+/* POV is one compact vertical choice list. */
+#morePov.more-options{display:flex;flex-direction:column;gap:3px}#morePov.more-options button{width:100%}
+
+/* Modal functionality: tabs + grouped file/source actions + intro accordion. */
+.modal-action-groups{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:auto;padding-top:13px;border-top:1px solid #2d332d}.modal-action-group>small{display:block;color:#697166;font-size:8px;margin-bottom:6px}.modal-actions{margin:0;padding:0;display:grid;grid-template-columns:1fr;gap:5px}.modal-actions a{min-height:33px;height:auto;padding:7px 8px;text-align:center}.author-action{background:#171a17;color:#a5ad98;border:1px solid #353c34}.modal-intros{overflow:auto;max-height:190px;padding-right:4px}.intro-item{border-bottom:1px solid #2d332d}.intro-toggle{width:100%;border:0;background:none;color:#969e90;padding:9px 2px;display:flex;justify-content:space-between;cursor:pointer;font:8px var(--mono);letter-spacing:.05em}.intro-item.open .intro-toggle{color:#c7c0aa}.intro-body{padding:1px 2px 11px;color:#9ca296;font-size:11px;line-height:1.55;white-space:pre-wrap}.intro-body[hidden]{display:none}
+
+/* Tiny in-theme anomaly. It never disables or moves a control. */
+@keyframes archiveFlicker{0%,100%{opacity:1;filter:none}18%{opacity:.68;filter:contrast(1.25)}30%{opacity:1}47%{box-shadow:inset 2px 0 0 #744536}56%{box-shadow:inset -2px 0 0 #744536}70%{box-shadow:none}}
+.archive-flicker{animation:archiveFlicker .72s steps(2,end)}
+
+@media(max-width:760px){.modal-action-groups{grid-template-columns:1fr}.lore-toggle-label{display:none}.lore-toggle{width:36px;padding:0;justify-content:center}}

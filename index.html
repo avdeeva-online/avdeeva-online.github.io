@@ -33,9 +33,9 @@
 
       <div class="filter-group primary-group">
         <button class="control filter-trigger" data-filter="author"><span class="at">@</span><span>AUTHOR</span><em id="authorCount"></em></button>
-        <button class="control filter-trigger" data-filter="lorebook">
+        <button id="loreToggle" class="control lore-toggle" title="Show bots with lorebooks" aria-label="Show bots with lorebooks">
           <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3.2-.9 5.7-.6 8.5 1.1v12c-2.8-1.7-5.3-2-8.5-1.1zM20.5 5.5c-3.2-.9-5.7-.6-8.5 1.1v12c2.8-1.7 5.3-2 8.5-1.1z"/></svg>
-          <span>LOREBOOK</span><em id="loreCount"></em>
+          <span class="lore-toggle-label">LOREBOOK</span>
         </button>
       </div>
 
@@ -58,7 +58,7 @@
       <div class="tag-actions"><button id="clearQuickTags" hidden>CLEAR</button><button id="toggleAllTags">ALL TAGS +</button></div>
     </div>
     <div id="tagQuick" class="quick-list quick-collapsed"></div>
-    <div class="tag-scroll-hint">SHIFT + WHEEL / DRAG TO SCROLL</div>
+    <div class="tag-scroll-hint">SCROLL HORIZONTALLY · DRAG TO BROWSE</div>
   </section>
 
   <section class="catalog-meta">
@@ -131,10 +131,13 @@
       <div class="modal-topline"><button id="modalUniverse" class="universe-link"></button><span id="modalLoreFlag"></span></div>
       <h2 id="modalTitle"></h2>
       <div class="modal-author-row">AUTHOR <button id="modalAuthor"></button> <span id="modalPov" class="pov-label"></span></div>
-      <div class="modal-tabs"><button class="modal-tab active" data-modal-tab="description">DESCRIPTION</button><button class="modal-tab" data-modal-tab="scenario">SCENARIO</button></div>
-      <div class="modal-text-wrap"><p id="modalText"></p></div>
+      <div class="modal-tabs"><button class="modal-tab active" data-modal-tab="description">DESCRIPTION</button><button class="modal-tab" data-modal-tab="scenario">SCENARIO</button><button class="modal-tab" data-modal-tab="intro">INTRO</button></div>
+      <div class="modal-text-wrap"><p id="modalText"></p><div id="modalIntros" class="modal-intros" hidden></div></div>
       <div id="modalTags" class="modal-tags"></div>
-      <div class="modal-actions"><a id="openBot" class="open-platform" target="_blank" rel="noopener">OPEN BOT ↗</a><a id="openAuthor" class="author-action" target="_blank" rel="noopener">AUTHOR ↗</a><a id="downloadBot" class="download-action" download>BOT CARD ↓</a><a id="downloadLore" class="download-action" download>LOREBOOK ↓</a></div>
+      <div class="modal-action-groups">
+        <div class="modal-action-group"><small>FILES</small><div class="modal-actions files-actions"><a id="downloadBot" class="download-action" download>BOT CARD ↓</a><a id="downloadLore" class="download-action" download>LOREBOOK ↓</a></div></div>
+        <div class="modal-action-group"><small>SOURCE</small><div class="modal-actions source-actions"><a id="openBot" class="open-platform" target="_blank" rel="noopener">OPEN BOT ↗</a><a id="openAuthor" class="author-action" target="_blank" rel="noopener">AUTHOR ↗</a></div></div>
+      </div>
     </div>
   </article>
   <button class="modal-nav modal-next" id="nextBot">›</button>

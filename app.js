@@ -104,10 +104,12 @@ function renderActiveFilters(){
 function renderCounts(){
   setCount("#authorCount", state.authors.size);
   setCount("#hashtagCount", state.hashtags.size);
+  setCount("#universeCount", state.universes.size);
   $$('.filter-trigger[data-filter="author"]').forEach(b=>b.classList.toggle("active",state.authors.size>0));
   $("#loreToggle").classList.toggle("active",state.lorebook);
   $("#loreToggle").setAttribute("aria-pressed",state.lorebook?"true":"false");
   const ht=$(".hashtag-trigger"); if(ht) ht.classList.toggle("active",state.hashtags.size>0);
+  const ut=$(".universe-trigger"); if(ut) ut.classList.toggle("active",state.universes.size>0);
   renderPovCycle();
 }
 function setCount(sel,n){const e=$(sel);if(!e)return;e.textContent=n||"";e.classList.toggle("has-count",!!n)}
@@ -327,7 +329,7 @@ $$('.modal-tab').forEach(t=>t.onclick=()=>{
 });
 
 // Small archive anomalies: decorative only, never block interaction.
-const anomalyTargets=["#catalogOpen",".hashtag-trigger","#sortTrigger","#loreToggle","#povCycle","#randomBtn"];
+const anomalyTargets=["#catalogOpen",".hashtag-trigger",".universe-trigger","#sortTrigger","#loreToggle","#povCycle","#randomBtn"];
 anomalyTargets.forEach(sel=>{const el=$(sel);if(!el)return;el.addEventListener("mouseenter",()=>{if(Math.random()<.30){el.classList.add("archive-flicker");setTimeout(()=>el.classList.remove("archive-flicker"),1050)}})});
 
 // Easter egg

@@ -23,6 +23,7 @@
 
 <main>
   <div class="archive-shell">
+  <section class="controls-block">
   <section class="toolbar">
     <div class="toolbar-row">
       <button id="catalogOpen" class="control control-primary"><span class="hamb">☰</span><span>CATALOG</span></button>
@@ -42,6 +43,7 @@
 
       <div class="filter-group secondary-group">
         <button class="control subtle-control filter-trigger hashtag-trigger" data-filter="hashtag" title="Filter by hashtags"><span class="hash-mark">#</span><span>HASHTAGS</span><em id="hashtagCount"></em></button>
+        <button class="control subtle-control filter-trigger universe-trigger" data-filter="universe" title="Filter by universe"><span class="universe-mark">◎</span><span>UNIVERSE</span><em id="universeCount"></em></button>
         <button id="sortTrigger" class="control subtle-control"><span class="sort-mark">↕</span><span id="sortLabel">NEWEST</span><span class="chev">⌄</span></button>
       </div>
 
@@ -58,6 +60,7 @@
     <div id="tagQuick" class="quick-list quick-collapsed"></div>
     <div class="tag-scroll-hint">SCROLL HORIZONTALLY · DRAG TO BROWSE</div>
   </section>
+  </section><!-- /controls-block -->
 
   <section class="catalog-meta">
     <span><i></i><b id="resultCount">0</b> RECORDS</span>

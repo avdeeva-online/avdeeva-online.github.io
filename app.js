@@ -1,4 +1,10 @@
-const B = window.BOTS || [];
+let B = [];
+function syncBots(){
+  const source = window.BOTS;
+  if(Array.isArray(source)) B = source;
+  return B;
+}
+syncBots();
 const TAG_META = window.TAG_META || {};
 const TAG_ORDER = window.TAG_ORDER || Object.keys(TAG_META);
 const $ = s => document.querySelector(s);
@@ -32,6 +38,7 @@ function count(kind, val){
 }
 
 function applyFilters(){
+  syncBots();
   const q = state.q.trim().toLowerCase();
   let list = B.filter(b => {
     const hay = [b.nameRu,b.nameEn,b.author,b.universe,b.pov,b.short,b.full,...(b.tags||[]),...(b.hashtags||[])].join(" ").toLowerCase();
@@ -54,6 +61,7 @@ function applyFilters(){
 }
 
 function render(){
+  syncBots();
   const list = applyFilters();
   $("#resultCount").textContent = list.length;
   $("#totalMeta").textContent = `${String(B.length).padStart(3,"0")} RECORDS`;
@@ -684,6 +692,18 @@ wireHashtagGhosts();
 })();
 
 
-/* v0.9.18 — guaranteed initial paint.
-   The grid used to stay at 0 RECORDS until any interaction called render(). */
-render();
+/* v0.9.19 — robust boot/data sync.
+   Never snapshot an empty window.BOTS forever. Re-read the data source on every render
+   and retry boot briefly in case the browser serves scripts in an odd cached order. */
+(function bootArchive(){
+  let attempts = 0;
+  function paint(){
+    syncBots();
+    render();
+    attempts++;
+    if(B.length===0 && attempts<12) setTimeout(paint, 80);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paint, {once:true});
+  else paint();
+  window.addEventListener('load', ()=>{ syncBots(); render(); }, {once:true});
+})();

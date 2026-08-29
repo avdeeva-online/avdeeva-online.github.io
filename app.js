@@ -6,7 +6,7 @@ const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const state = { q:"", authors:new Set(), universes:new Set(), tags:new Set(), povs:new Set(), lorebook:false, sort:"newest" };
-let activeFilter = null, drawerTab = "tag", current = null, modalTab = "description", tagsExpanded = false;
+let activeFilter = null, drawerTab = "tag", current = null, modalTab = "description", tagsExpanded = false, openIntro = 0;
 
 const bookSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3.2-.9 5.7-.6 8.5 1.1v12c-2.8-1.7-5.3-2-8.5-1.1zM20.5 5.5c-3.2-.9-5.7-.6-8.5 1.1v12c2.8-1.7 5.3-2 8.5-1.1z"/></svg>`;
 const globeSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.2 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.7 8.6 12s1.2 6.1 3.4 8.5"/></svg>`;
@@ -99,10 +99,10 @@ function renderActiveFilters(){
 
 function renderCounts(){
   setCount("#authorCount", state.authors.size);
-  setCount("#loreCount", state.lorebook?1:0);
   setCount("#moreCount", state.universes.size + state.povs.size);
   $$('.filter-trigger[data-filter="author"]').forEach(b=>b.classList.toggle("active",state.authors.size>0));
-  $$('.filter-trigger[data-filter="lorebook"]').forEach(b=>b.classList.toggle("active",state.lorebook));
+  $("#loreToggle").classList.toggle("active",state.lorebook);
+  $("#loreToggle").setAttribute("aria-pressed",state.lorebook?"true":"false");
   $("#moreTrigger").classList.toggle("active", state.universes.size+state.povs.size>0);
 }
 function setCount(sel,n){const e=$(sel);if(!e)return;e.textContent=n||"";e.classList.toggle("has-count",!!n)}
@@ -126,16 +126,12 @@ function openPopover(btn,kind){
   const pop=$("#popover");
   const r=btn.getBoundingClientRect();
   pop.hidden=false;
-  pop.style.left=Math.max(8,Math.min(r.left,innerWidth-270))+"px";
-  pop.style.top=(r.bottom+7)+"px";
+  pop.style.left=Math.max(8,Math.min(r.left + scrollX,scrollX+innerWidth-270))+"px";
+  pop.style.top=(r.bottom + scrollY + 7)+"px";
   $("#popoverSearch").value="";
   renderPopover();
 }
 function renderPopover(){
-  if(activeFilter === "lorebook"){
-    $("#popoverList").innerHTML=`<button data-lore-option class="${state.lorebook?'active':''}"><span>${bookSvg} LOREBOOK AVAILABLE</span><small>${B.filter(b=>b.lorebook).length}</small></button>`;
-    return;
-  }
   const q=($("#popoverSearch").value||"").toLowerCase();
   const vals=valuesForFilter(activeFilter).filter(v=>v.toLowerCase().includes(q));
   const selected = activeFilter==="tag"?state.tags:activeFilter==="author"?state.authors:activeFilter==="universe"?state.universes:state.povs;
@@ -145,7 +141,6 @@ function renderPopover(){
 $$('.filter-trigger').forEach(b=>b.onclick=e=>{e.stopPropagation();openPopover(b,b.dataset.filter)});
 $("#popoverSearch").oninput=renderPopover;
 $("#popoverList").onclick=e=>{
-  const lore=e.target.closest("[data-lore-option]"); if(lore){state.lorebook=!state.lorebook;render();renderPopover();return;}
   const b=e.target.closest("[data-option]"); if(!b)return; toggle(activeFilter,b.dataset.option);render();renderPopover();
 };
 $("#popoverDone").onclick=()=>$("#popover").hidden=true;
@@ -154,25 +149,31 @@ $("#popoverReset").onclick=()=>{
   if(activeFilter==="author")state.authors.clear();
   if(activeFilter==="universe")state.universes.clear();
   if(activeFilter==="pov")state.povs.clear();
-  if(activeFilter==="lorebook")state.lorebook=false;
   render();renderPopover();
 };
 
+$("#loreToggle").addEventListener("click",e=>{
+  e.preventDefault();
+  e.stopPropagation();
+  state.lorebook=!state.lorebook;
+  render();
+});
+
 // Secondary filters: POV + Universe
-$("#moreTrigger").onclick=e=>{e.stopPropagation();const m=$("#moreMenu"),r=e.currentTarget.getBoundingClientRect();m.hidden=!m.hidden;m.style.left=Math.max(8,Math.min(r.left,innerWidth-340))+"px";m.style.top=(r.bottom+7)+"px";renderMoreMenu()};
+$("#moreTrigger").onclick=e=>{e.stopPropagation();const m=$("#moreMenu"),r=e.currentTarget.getBoundingClientRect();m.hidden=!m.hidden;m.style.left=Math.max(8,Math.min(r.left+scrollX,scrollX+innerWidth-340))+"px";m.style.top=(r.bottom+scrollY+7)+"px";renderMoreMenu()};
 function renderMoreMenu(){
   $("#morePov").innerHTML=["AnyPOV","FemPOV","MalePOV"].map(v=>`<button class="${state.povs.has(v)?'active':''}" data-more-pov="${v}"><span>${esc(povLabel(v))}</span></button>`).join("");
   const q=($("#moreUniverseSearch")?.value||"").toLowerCase();
   $("#moreUniverse").innerHTML=uniq("universe").filter(v=>v.toLowerCase().includes(q)).map(v=>`<button class="${state.universes.has(v)?'active':''}" data-more-universe="${esc(v)}"><span>${esc(v)}</span><small>${count('universe',v)}</small></button>`).join("");
 }
-$("#morePov").onclick=e=>{const b=e.target.closest("[data-more-pov]");if(!b)return;toggle("pov",b.dataset.morePov);render()};
+$("#morePov").onclick=e=>{const b=e.target.closest("[data-more-pov]");if(!b)return;const v=b.dataset.morePov;const was=state.povs.has(v);state.povs.clear();if(!was)state.povs.add(v);render()};
 $("#moreUniverse").onclick=e=>{const b=e.target.closest("[data-more-universe]");if(!b)return;toggle("universe",b.dataset.moreUniverse);render()};
 $("#moreUniverseSearch").oninput=renderMoreMenu;
 $("#moreReset").onclick=()=>{state.povs.clear();state.universes.clear();render()};
 $("#moreDone").onclick=()=>$("#moreMenu").hidden=true;
 
 // Sort
-$("#sortTrigger").onclick=e=>{e.stopPropagation();const r=e.currentTarget.getBoundingClientRect(),m=$("#sortMenu");m.hidden=!m.hidden;m.style.left=Math.max(8,Math.min(r.left,innerWidth-178))+"px";m.style.top=(r.bottom+7)+"px"};
+$("#sortTrigger").onclick=e=>{e.stopPropagation();const r=e.currentTarget.getBoundingClientRect(),m=$("#sortMenu");m.hidden=!m.hidden;m.style.left=Math.max(8,Math.min(r.left+scrollX,scrollX+innerWidth-178))+"px";m.style.top=(r.bottom+scrollY+7)+"px"};
 $("#sortMenu").onclick=e=>{const b=e.target.closest("[data-sort]");if(!b)return;state.sort=b.dataset.sort;$("#sortLabel").textContent={newest:"NEWEST",az:"A → Z",za:"Z → A",author:"AUTHOR"}[state.sort];$("#sortMenu").hidden=true;render()};
 
 // Drawer
@@ -218,21 +219,79 @@ document.addEventListener("click",e=>{
 
 // Random + modal
 const randomWhispers=["RECOVERING LOST RECORD...","UNINDEXED TRACE DETECTED","ARCHIVE ROUTE SHIFTED","FOUND BETWEEN DIRECTORIES","SIGNAL FROM NODE_??"];
-function archiveWhisper(text,rare=false){const box=$("#archiveWhisper");$("#whisperText").textContent=text;box.classList.toggle("rare",rare);box.hidden=false;requestAnimationFrame(()=>box.classList.add("show"));clearTimeout(archiveWhisper.timer);archiveWhisper.timer=setTimeout(()=>{box.classList.remove("show");setTimeout(()=>box.hidden=true,220)},1250)}
+function archiveWhisper(text,rare=false){const box=$("#archiveWhisper");$("#whisperText").textContent=text;box.classList.toggle("rare",rare);box.hidden=false;requestAnimationFrame(()=>box.classList.add("show"));clearTimeout(archiveWhisper.timer);archiveWhisper.timer=setTimeout(()=>{box.classList.remove("show");setTimeout(()=>box.hidden=true,220)},2600)}
 $("#randomBtn").onclick=()=>{const btn=$("#randomBtn");btn.classList.add("active");btn.querySelector("span:last-child").textContent="SEARCHING...";if(Math.random()<.22)archiveWhisper(randomWhispers[Math.floor(Math.random()*randomWhispers.length)],true);setTimeout(()=>{btn.classList.remove("active");btn.querySelector("span:last-child").textContent="RANDOM";randomModal()},240)};
 $("#prevBot").onclick=randomModal;$("#nextBot").onclick=randomModal;
 function randomModal(){let pool=applyFilters().filter(b=>!current||b.id!==current.id);if(!pool.length)pool=B.filter(b=>!current||b.id!==current.id);if(pool.length)openModal(pool[Math.floor(Math.random()*pool.length)])}
 function openModal(b){
-  current=b;modalTab="description";$("#modalImage").src=b.image;$("#modalTitle").innerHTML=`${esc(b.nameEn)}<span>${esc(b.nameRu)}</span>`;
-  $("#modalAuthor").textContent=`@${b.author}`;$("#modalAuthor").dataset.author=b.author;$("#modalAuthorBadge").textContent=`@${b.author}`;$("#modalAuthorBadge").dataset.author=b.author;
-  $("#modalUniverse").innerHTML=`${globeSvg}<span>UNIVERSE / ${esc(b.universe)}</span>`;$("#modalUniverse").dataset.quickUniverse=b.universe;
-  $("#modalLoreFlag").innerHTML=b.lorebook?`${bookSvg} LOREBOOK AVAILABLE`:"";$("#modalPov").textContent=povLabel(b.pov);$("#modalText").textContent=b.short;
-  $("#modalTags").innerHTML=(b.tags||[]).map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("");$("#openBot").href=b.url;$("#openBot").textContent=`OPEN ON ${b.platform} →`;$("#openAuthor").href=b.authorUrl||b.url;$("#openAuthor").textContent=`@${b.author} ↗`;$("#downloadBot").href=b.download;
-  const l=$("#downloadLore");if(b.lorebook){l.href=b.lorebook;l.classList.remove("disabled");l.textContent="LOREBOOK ↓"}else{l.removeAttribute("href");l.classList.add("disabled");l.textContent="NO LOREBOOK"}
-  $$('.modal-tab').forEach(t=>t.classList.toggle('active',t.dataset.modalTab==='description'));$("#modal").hidden=false;document.body.style.overflow="hidden";
+  current=b;
+  modalTab="description";
+  openIntro=0;
+  $("#modalImage").src=b.image;
+  $("#modalTitle").innerHTML=`${esc(b.nameEn)}<span>${esc(b.nameRu)}</span>`;
+  $("#modalAuthor").textContent=`@${b.author}`;
+  $("#modalAuthor").dataset.author=b.author;
+  $("#modalAuthorBadge").textContent=`@${b.author}`;
+  $("#modalAuthorBadge").dataset.author=b.author;
+  $("#modalUniverse").innerHTML=`${globeSvg}<span>UNIVERSE / ${esc(b.universe)}</span>`;
+  $("#modalUniverse").dataset.quickUniverse=b.universe;
+  $("#modalLoreFlag").innerHTML=b.lorebook?`${bookSvg}<span>LOREBOOK AVAILABLE</span>`:"";
+  $("#modalPov").textContent=povLabel(b.pov);
+  $("#modalTags").innerHTML=(b.tags||[]).map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("");
+  $("#openBot").href=b.url;
+  $("#openBot").textContent=`OPEN ON ${b.platform} ↗`;
+  $("#openAuthor").href=b.authorUrl||b.url;
+  $("#openAuthor").textContent=`@${b.author} ↗`;
+  $("#downloadBot").href=b.download;
+  const l=$("#downloadLore");
+  if(b.lorebook){
+    l.href=b.lorebook;
+    l.classList.remove("disabled");
+    l.textContent="DOWNLOAD LOREBOOK ↓";
+  }else{
+    l.removeAttribute("href");
+    l.classList.add("disabled");
+    l.textContent="LOREBOOK — NOT AVAILABLE";
+  }
+  $("#downloadBot").textContent="DOWNLOAD BOT CARD ↓";
+  $$('.modal-tab').forEach(t=>t.classList.toggle('active',t.dataset.modalTab==='description'));
+  renderModalPanel();
+  $("#modal").hidden=false;
+  document.body.style.overflow="hidden";
 }
 function closeModal(){$("#modal").hidden=true;document.body.style.overflow=""}
-$$('.modal-tab').forEach(t=>t.onclick=()=>{if(!current)return;modalTab=t.dataset.modalTab;$$('.modal-tab').forEach(x=>x.classList.toggle('active',x===t));$("#modalText").textContent=modalTab==="description"?current.short:current.full});
+function renderModalPanel(){
+  const panel=$("#modalPanel");
+  if(!current){panel.innerHTML="";return}
+  if(modalTab==="description"){
+    panel.innerHTML=`<p class="modal-copy">${esc(current.short)}</p>`;
+    return;
+  }
+  if(modalTab==="scenario"){
+    panel.innerHTML=`<p class="modal-copy">${esc(current.full)}</p>`;
+    return;
+  }
+  const intros=(current.intros&&current.intros.length?current.intros:["No intro message added."]);
+  panel.innerHTML=`<div class="modal-intros">${intros.map((text,i)=>`<div class="intro-item ${openIntro===i?'open':''}"><button class="intro-toggle" data-intro-index="${i}"><span>INTRO ${String(i+1).padStart(2,'0')}</span><span class="intro-state">${openIntro===i?'−':'+'}</span></button><div class="intro-body" ${openIntro===i?'':'hidden'}>${esc(text)}</div></div>`).join("")}</div>`;
+}
+$("#modalPanel").addEventListener("click",e=>{
+  const b=e.target.closest("[data-intro-index]");
+  if(!b)return;
+  const i=Number(b.dataset.introIndex);
+  openIntro=openIntro===i?-1:i;
+  renderModalPanel();
+});
+$$('.modal-tab').forEach(t=>t.onclick=()=>{
+  if(!current)return;
+  modalTab=t.dataset.modalTab;
+  if(modalTab==="intro" && openIntro<0) openIntro=0;
+  $$('.modal-tab').forEach(x=>x.classList.toggle('active',x===t));
+  renderModalPanel();
+});
+
+// Small archive anomalies: decorative only, never block interaction.
+const anomalyTargets=["#catalogOpen","#moreTrigger","#sortTrigger","#loreToggle"];
+anomalyTargets.forEach(sel=>{const el=$(sel);if(!el)return;el.addEventListener("mouseenter",()=>{if(Math.random()<.055){el.classList.add("archive-flicker");setTimeout(()=>el.classList.remove("archive-flicker"),720)}})});
 
 // Easter egg
 const terminalScripts=[

@@ -110,3 +110,35 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 .archive-flicker{animation:archiveFlicker .72s steps(2,end)}
 
 @media(max-width:760px){.modal-action-groups{grid-template-columns:1fr}.lore-toggle-label{display:none}.lore-toggle{width:36px;padding:0;justify-content:center}}
+
+
+/* v0.9.4 functional fixes */
+.lore-toggle{position:relative}
+.lore-toggle.active{background:#293122!important;border-color:#7f8d67!important;color:#e2dbc5!important;box-shadow:inset 0 -2px 0 rgba(156,168,121,.32),0 0 0 1px rgba(156,168,121,.08)}
+.lore-toggle.active:after{content:"✓";font:700 10px Arial,sans-serif;color:#c8d0a7;margin-left:2px}
+
+.modal-topline{justify-content:flex-start;padding-right:36px;flex-wrap:wrap}
+#modalLoreFlag{display:inline-flex;align-items:center;gap:5px;min-height:22px;padding:4px 7px;border:1px solid #46503f;border-radius:5px;background:#1a2018;color:#aeb89a;font:600 9px Arial,sans-serif;letter-spacing:.02em;white-space:nowrap}
+#modalLoreFlag:empty{display:none}
+#modalLoreFlag .ui-icon{width:13px;height:13px}
+
+.modal-text-wrap{min-height:86px;max-height:190px}
+.modal-copy{margin:0;padding:9px 0 4px;font:12px/1.55 Arial,sans-serif;color:#a8aea4}
+.modal-intros{overflow:auto;max-height:190px;padding-right:3px}
+.intro-item{border-bottom:1px solid #2d332d}
+.intro-toggle{font:600 10px Arial,sans-serif;letter-spacing:.035em;color:#9fa69a;padding:10px 3px}
+.intro-item.open .intro-toggle{color:#d2cab4}
+.intro-state{font-size:14px;font-weight:400;color:#7f8977}
+.intro-body{font:12px/1.58 Arial,sans-serif;color:#a9afa5;padding:2px 4px 12px;white-space:pre-wrap}
+
+.modal-action-groups{gap:14px}
+.modal-action-group>small{font:700 9px Arial,sans-serif;letter-spacing:.12em;color:#747d70;margin-bottom:7px}
+.modal-actions{gap:7px}
+.modal-actions a{min-height:38px;padding:9px 10px;font:600 10px/1.2 Arial,sans-serif;letter-spacing:.025em;border-radius:6px}
+.files-actions .download-action{background:#151a15;color:#c4cbb8;border-color:#485344}
+.files-actions .download-action:hover{background:#1c241a;border-color:#718064;color:#ece5d3}
+.files-actions .download-action.disabled{opacity:.52;color:#757c72;border-style:dashed;pointer-events:none}
+.source-actions .open-platform{background:#2a3425;color:#eee6cf;border:1px solid #748264;font-weight:700}
+.source-actions .open-platform:hover{background:#34402d;border-color:#98a77e}
+.source-actions .author-action{background:#151815;color:#aeb5a8;border:1px solid #3d463b}
+.source-actions .author-action:hover{border-color:#66725e;color:#e3dcc8}

@@ -3,110 +3,150 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#111318">
+  <meta name="theme-color" content="#0e100e">
   <title>ARCHIVE.EXE</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="noise"></div>
 
-<header class="mast">
-  <div class="mast-art" aria-hidden="true">
-    <div class="orb orb-a"></div><div class="orb orb-b"></div>
-    <div class="scan"></div>
-    <div class="terminal-lines">ARCHIVE NODE 00<br>CHARACTER STORAGE<br>STATUS: ONLINE</div>
+<header class="hero">
+  <div class="hero-art">
+    <div class="hero-fade"></div>
+    <div class="hero-grid"></div>
   </div>
-  <div class="mast-content">
-    <a class="brand" href="#" data-reset>
-      <span class="brand-main">ARCHIVE.EXE<span class="cursor">_</span></span>
-      <span class="brand-sub">character database</span>
-    </a>
-    <div class="mast-copy">
-      <span>INDEX_00 / CHARACTER ARCHIVE</span>
-      <span id="totalMeta">000 RECORDS</span>
-    </div>
+  <div class="hero-copy">
+    <div class="brand">ARCHIVE.EXE<span>_</span></div>
+    <div class="brand-sub">CHARACTER DATABASE</div>
+    <div class="brand-note">lost files / recovered stories / active records</div>
   </div>
 </header>
 
-<main class="layout">
-  <aside class="catalog-sidebar" id="catalogSidebar">
-    <div class="sidebar-head">
-      <div>
-        <div class="sidebar-kicker">CATALOG_</div>
-        <div class="sidebar-title">BROWSE INDEX</div>
-      </div>
-      <button class="sidebar-close" id="sidebarClose" aria-label="Hide catalog">‹</button>
+<main>
+  <section class="toolbar">
+    <div class="toolbar-row">
+      <button id="catalogOpen" class="icon-pill catalog-button">☰ <span>CATALOG</span></button>
+
+      <label class="searchbar">
+        <span class="search-icon">⌕</span>
+        <input id="searchInput" placeholder="Search by name, author, universe or tag..." autocomplete="off">
+      </label>
+
+      <button class="icon-pill filter-trigger" data-filter="tag"># <span>TAGS</span><em id="tagCount"></em></button>
+      <button class="icon-pill filter-trigger" data-filter="author">◎ <span>AUTHOR</span><em id="authorCount"></em></button>
+      <button class="icon-pill filter-trigger" data-filter="universe">⌁ <span>UNIVERSE</span><em id="universeCount"></em></button>
+      <button class="icon-pill filter-trigger" data-filter="lorebook">▤ <span>LOREBOOK</span><em id="loreCount"></em></button>
+
+      <button id="sortTrigger" class="icon-pill sort-trigger">↕ <span id="sortLabel">NEWEST</span>⌄</button>
+      <button id="randomBtn" class="icon-pill random-trigger">✦ <span>RANDOM</span></button>
     </div>
 
-    <div class="sidebar-tabs">
-      <button class="sidebar-tab active" data-side-tab="author">AUTHORS</button>
-      <button class="sidebar-tab" data-side-tab="universe">UNIVERSES</button>
-      <button class="sidebar-tab" data-side-tab="genre">GENRES</button>
-    </div>
-
-    <label class="sidebar-search">
-      <span>FIND_</span>
-      <input id="sidebarSearch" placeholder="Filter list...">
-    </label>
-
-    <div class="sidebar-list" id="sidebarList"></div>
-  </aside>
-
-  <div class="catalog-main">
-  <button class="sidebar-open" id="sidebarOpen">☰ CATALOG</button>
-  <section class="controls">
-    <label class="search">
-      <span>SEARCH_</span>
-      <input id="searchInput" autocomplete="off" placeholder="Search by name, author, universe or tag...">
-    </label>
-    <div class="filter-row">
-      <button class="select-like" id="authorBtn"><b>◉</b> AUTHOR <span>ALL</span></button>
-      <button class="select-like" id="universeBtn"><b>⌁</b> UNIVERSE <span>ALL</span></button>
-      <button class="select-like" id="tagBtn"><b>#</b> TAG <span>ALL</span></button>
-      <button class="select-like" id="loreBtn"><b>▤</b> LOREBOOK <span>ALL</span></button>
-      <button class="select-like" id="sortBtn"><b>↕</b> SORT <span>NEWEST</span></button>
-      <button class="ghost" id="clearBtn">RESET</button>
-    </div>
     <div id="activeFilters" class="active-filters"></div>
   </section>
 
-  <section class="catalog-head">
-    <div><span class="dot"></span><span id="resultCount">0</span> RECORDS FOUND</div>
-    <button id="randomBtn" class="random-btn">RANDOM_01 ↝</button>
+  <section class="universe-strip">
+    <span>UNIVERSES:</span>
+    <div id="universeQuick" class="quick-list"></div>
+  </section>
+
+  <section class="catalog-meta">
+    <span><i></i><b id="resultCount">0</b> RECORDS</span>
+    <button id="resetBtn">RESET FILTERS</button>
   </section>
 
   <section id="grid" class="grid"></section>
-  <div id="empty" class="empty" hidden>NO MATCHES</div>
-  </div>
+  <div id="empty" class="empty" hidden>NO MATCHING RECORDS</div>
 </main>
 
-<footer><span>ARCHIVE.EXE / INDEX_00</span><span>v0.2 / ONLINE</span></footer>
-<div id="menu" class="menu" hidden></div>
+<footer>
+  <span>ARCHIVE.EXE / NODE_00</span>
+  <span id="totalMeta">000 RECORDS</span>
+</footer>
+
+<div id="popover" class="popover" hidden>
+  <div class="popover-search-wrap">
+    <span>⌕</span>
+    <input id="popoverSearch" placeholder="Find...">
+  </div>
+  <div id="popoverList" class="popover-list"></div>
+  <div class="popover-foot">
+    <button id="popoverReset">RESET</button>
+    <button id="popoverDone">DONE</button>
+  </div>
+</div>
+
+<div id="sortMenu" class="sort-menu" hidden>
+  <button data-sort="newest">▣ NEWEST FIRST</button>
+  <button data-sort="az">A → Z</button>
+  <button data-sort="za">Z → A</button>
+  <button data-sort="author">◎ BY AUTHOR</button>
+</div>
+
+<div id="drawerShade" class="drawer-shade" hidden></div>
+<aside id="catalogDrawer" class="catalog-drawer" aria-hidden="true">
+  <div class="drawer-head">
+    <div>
+      <small>INDEX_00</small>
+      <strong>BROWSE CATALOG</strong>
+    </div>
+    <button id="catalogClose">×</button>
+  </div>
+  <div class="drawer-tabs">
+    <button class="drawer-tab active" data-drawer-tab="author">AUTHORS</button>
+    <button class="drawer-tab" data-drawer-tab="universe">UNIVERSES</button>
+    <button class="drawer-tab" data-drawer-tab="genre">GENRES</button>
+  </div>
+  <label class="drawer-search">
+    <span>⌕</span>
+    <input id="drawerSearch" placeholder="Filter list...">
+  </label>
+  <div id="drawerList" class="drawer-list"></div>
+</aside>
 
 <div id="modal" class="modal" hidden>
   <div class="modal-backdrop" data-close></div>
-  <button class="modal-nav modal-prev" id="prevBot" aria-label="Previous random character">‹</button>
-  <article class="modal-card" role="dialog" aria-modal="true">
+  <button class="modal-nav modal-prev" id="prevBot">‹</button>
+
+  <article class="modal-card">
     <button class="modal-close" data-close>×</button>
-    <div class="modal-media"><img id="modalImage" alt=""></div>
-    <div class="modal-body">
-      <button class="modal-kicker" id="modalUniverse"></button>
+
+    <div class="modal-cover">
+      <img id="modalImage" alt="">
+      <button id="modalAuthorBadge" class="author-badge"></button>
+    </div>
+
+    <div class="modal-content">
+      <div class="modal-topline">
+        <button id="modalUniverse" class="universe-link"></button>
+        <span id="modalLoreFlag"></span>
+      </div>
+
       <h2 id="modalTitle"></h2>
-      <button class="author-link" id="modalAuthor"></button>
-      <p class="modal-short" id="modalShort"></p>
-      <div class="divider"></div>
-      <div class="section-label">SCENARIO</div>
-      <p class="modal-full" id="modalFull"></p>
-      <div class="tag-list" id="modalTags"></div>
+      <div class="modal-author-row">AUTHOR <button id="modalAuthor"></button></div>
+
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-modal-tab="description">DESCRIPTION</button>
+        <button class="modal-tab" data-modal-tab="scenario">SCENARIO</button>
+      </div>
+
+      <div class="modal-text-wrap">
+        <p id="modalText"></p>
+      </div>
+
+      <div id="modalTags" class="modal-tags"></div>
+
       <div class="modal-actions">
-        <a class="primary-action" id="openBot" target="_blank" rel="noopener">OPEN BOT ↗</a>
-        <a class="secondary-action" id="downloadBot" download>BOT CARD ↓</a>
-        <a class="secondary-action" id="downloadLore" download>LOREBOOK ↓</a>
+        <a id="openBot" class="open-platform" target="_blank" rel="noopener">OPEN BOT ↗</a>
+        <a id="downloadBot" class="download-action" download>BOT CARD ↓</a>
+        <a id="downloadLore" class="download-action" download>LOREBOOK ↓</a>
       </div>
     </div>
   </article>
-  <button class="modal-nav modal-next" id="nextBot" aria-label="Next random character">›</button>
+
+  <button class="modal-nav modal-next" id="nextBot">›</button>
 </div>
 
-<script src="data.js"></script><script src="app.js"></script>
-</body></html>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

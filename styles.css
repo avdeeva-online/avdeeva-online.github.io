@@ -558,3 +558,27 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 .archive-flicker{animation:archiveFlickerStrong .88s steps(2,end)!important;outline:1px solid rgba(177,79,61,.36)!important;outline-offset:-2px}
 
 @media(max-width:1020px){.controls-block{margin-top:-16px;padding:8px;border-radius:6px}}
+
+
+/* v0.9.13 — restrained signal anomalies. */
+.hero-title{animation:heroSignalQuiet 19s infinite!important;will-change:transform,filter,text-shadow}
+@keyframes heroSignalQuiet{
+  0%,95%,100%{text-shadow:0 2px 18px rgba(0,0,0,.45);transform:none;filter:none}
+  95.5%{text-shadow:3px 0 rgba(151,67,55,.72),-2px 0 rgba(111,132,89,.65),0 2px 18px rgba(0,0,0,.45);transform:translateX(1px);filter:contrast(1.14)}
+  96%{text-shadow:-2px 0 rgba(151,67,55,.78),3px 0 rgba(111,132,89,.55);transform:translateX(-2px);filter:brightness(1.12)}
+  96.45%{text-shadow:1px 0 rgba(151,67,55,.55),-1px 0 rgba(111,132,89,.48);transform:translateX(1px)}
+  97%{text-shadow:0 2px 18px rgba(0,0,0,.45);transform:none;filter:none}
+}
+.hero-title.hero-glitch-now{animation:heroGlitchNow .72s steps(2,end)!important}
+@keyframes heroGlitchNow{
+  0%,100%{transform:none;filter:none;text-shadow:0 2px 18px rgba(0,0,0,.45)}
+  14%{transform:translateX(3px);text-shadow:-4px 0 rgba(174,75,58,.88),3px 0 rgba(111,138,88,.78);filter:brightness(1.2) contrast(1.12)}
+  29%{transform:translateX(-2px);clip-path:inset(18% 0 48% 0)}
+  43%{transform:translateX(1px);clip-path:inset(58% 0 16% 0);text-shadow:3px 0 rgba(174,75,58,.72),-3px 0 rgba(111,138,88,.68)}
+  59%{transform:none;clip-path:none;filter:brightness(.84)}
+  78%{transform:translateX(-1px);filter:none}
+}
+.hero-title>span{cursor:pointer}
+.hero-kicker.kicker-secret{color:#a96c5a;text-shadow:0 0 10px rgba(169,108,90,.18)}
+.archive-flicker{animation-duration:.76s!important}
+.card.archive-card-glitch .card-media::before,.card.archive-card-glitch .card-media::after{animation-duration:.42s!important}

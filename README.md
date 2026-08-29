@@ -1,12 +1,3 @@
-# ARCHIVE.EXE v0.9.12 — Polish / Glitch pass
+# ARCHIVE.EXE v0.9.13 — Glitch & Easter Eggs
 
-Based on v0.9.11.
-
-Changes:
-- Quieter unified controls block: softer frame/background, smaller internal visual weight.
-- Toolbar icons/glyphs normalized into the same 14×14 optical box.
-- Secondary controls made more subdued; RANDOM remains the intentional accent.
-- Tags made calmer when inactive and clearer when selected.
-- More noticeable but still decorative archive glitch on toolbar controls.
-- New occasional card-image corruption/scanline glitch on hover.
-- No functional filtering changes.
+Patch based on v0.9.12. Card/control glitches are rarer, ARCHIVE.EXE has its own restrained signal glitch, and several hidden in-theme archive reactions were added. No catalog/filter functionality was intentionally changed.

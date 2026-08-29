@@ -256,7 +256,7 @@ document.addEventListener("click",e=>{
 // Random + modal
 const randomWhispers=["RECOVERING LOST RECORD...","UNINDEXED TRACE DETECTED","ARCHIVE ROUTE SHIFTED","FOUND BETWEEN DIRECTORIES","SIGNAL FROM NODE_??"];
 function archiveWhisper(text,rare=false){const box=$("#archiveWhisper");$("#whisperText").textContent=text;box.classList.toggle("rare",rare);box.hidden=false;requestAnimationFrame(()=>box.classList.add("show"));clearTimeout(archiveWhisper.timer);archiveWhisper.timer=setTimeout(()=>{box.classList.remove("show");setTimeout(()=>box.hidden=true,220)},2600)}
-$("#randomBtn").onclick=()=>{const btn=$("#randomBtn");btn.classList.add("active");btn.querySelector("span:last-child").textContent="SEARCHING...";if(Math.random()<.38)archiveWhisper(randomWhispers[Math.floor(Math.random()*randomWhispers.length)],true);setTimeout(()=>{btn.classList.remove("active");btn.querySelector("span:last-child").textContent="RANDOM";randomModal()},240)};
+$("#randomBtn").onclick=()=>{const btn=$("#randomBtn");btn.classList.add("active");btn.querySelector("span:last-child").textContent="SEARCHING...";if(Math.random()<.22)archiveWhisper(randomWhispers[Math.floor(Math.random()*randomWhispers.length)],true);setTimeout(()=>{btn.classList.remove("active");btn.querySelector("span:last-child").textContent="RANDOM";randomModal()},240)};
 $("#prevBot").onclick=randomModal;$("#nextBot").onclick=randomModal;
 function randomModal(){let pool=applyFilters().filter(b=>!current||b.id!==current.id);if(!pool.length)pool=B.filter(b=>!current||b.id!==current.id);if(pool.length)openModal(pool[Math.floor(Math.random()*pool.length)])}
 function openModal(b){
@@ -330,7 +330,7 @@ $$('.modal-tab').forEach(t=>t.onclick=()=>{
 
 // Small archive anomalies: decorative only, never block interaction.
 const anomalyTargets=["#catalogOpen",".hashtag-trigger",".universe-trigger","#sortTrigger","#loreToggle","#povCycle","#randomBtn"];
-anomalyTargets.forEach(sel=>{const el=$(sel);if(!el)return;el.addEventListener("mouseenter",()=>{if(Math.random()<.30){el.classList.add("archive-flicker");setTimeout(()=>el.classList.remove("archive-flicker"),1050)}})});
+anomalyTargets.forEach(sel=>{const el=$(sel);if(!el)return;el.addEventListener("mouseenter",()=>{if(Math.random()<.11){el.classList.add("archive-flicker");setTimeout(()=>el.classList.remove("archive-flicker"),760)}})});
 
 // Easter egg
 const terminalScripts=[
@@ -347,6 +347,65 @@ let logoClicks=0,logoTimer;$(".hero-title").addEventListener("click",()=>{logoCl
 
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();closeDrawer();$("#popover").hidden=true;$("#sortMenu").hidden=true;hideTerminal()}if(!$("#modal").hidden&&["ArrowRight","ArrowLeft"].includes(e.key))randomModal()});
 
+// v0.9.13 — quieter glitches + hidden archive responses.
+const heroTitle=$('.hero-title');
+function pulseHeroGlitch(){
+  if(!heroTitle || heroTitle.classList.contains('hero-glitch-now')) return;
+  heroTitle.classList.add('hero-glitch-now');
+  setTimeout(()=>heroTitle.classList.remove('hero-glitch-now'),720);
+}
+if(heroTitle){
+  heroTitle.addEventListener('mouseenter',()=>{ if(Math.random()<.16) pulseHeroGlitch(); });
+  setInterval(()=>{ if(document.visibilityState==='visible' && Math.random()<.42) pulseHeroGlitch(); },23000);
+}
+
+let randomArchiveClicks=0;
+const randomButton=$('#randomBtn');
+if(randomButton){
+  randomButton.addEventListener('click',()=>{
+    randomArchiveClicks++;
+    if(randomArchiveClicks%13===0){
+      setTimeout(()=>{pulseHeroGlitch();archiveWhisper('RECORD 13 // CLASSIFICATION WITHHELD',true)},320);
+    }
+  });
+}
+
+const searchEggs={
+  '404':'RECORD 404 // NOT INDEXED',
+  'lost':'LOST DIRECTORY // SIGNAL RECEIVED',
+  'node_00':'NODE_00 // ACTIVE',
+  'archive.exe':'YOU ARE ALREADY INSIDE THE ARCHIVE'
+};
+let lastSearchEgg='';
+$('#searchInput')?.addEventListener('input',e=>{
+  const q=e.target.value.trim().toLowerCase();
+  if(searchEggs[q] && q!==lastSearchEgg){
+    lastSearchEgg=q;
+    setTimeout(()=>archiveWhisper(searchEggs[q],q==='404'),180);
+    if(q==='archive.exe') pulseHeroGlitch();
+  } else if(!searchEggs[q]) lastSearchEgg='';
+});
+
+const heroCursor=heroTitle?.querySelector('span');
+let cursorClicks=0,cursorTimer;
+heroCursor?.addEventListener('click',e=>{
+  e.stopPropagation();
+  cursorClicks++;
+  clearTimeout(cursorTimer);
+  cursorTimer=setTimeout(()=>cursorClicks=0,1500);
+  if(cursorClicks===3){
+    cursorClicks=0;
+    pulseHeroGlitch();
+    const kicker=$('.hero-kicker');
+    if(kicker){
+      const old=kicker.textContent;
+      kicker.textContent='SIGNAL LOCKED / NODE_13';
+      kicker.classList.add('kicker-secret');
+      setTimeout(()=>{kicker.textContent=old;kicker.classList.remove('kicker-secret')},2800);
+    }
+  }
+});
+
 render();
 
 // v0.9.12: occasional archive-frame corruption on bot cards.
@@ -356,9 +415,9 @@ function wireCardGlitches(){
     if(card.dataset.glitchWired) return;
     card.dataset.glitchWired="1";
     card.addEventListener("mouseenter",()=>{
-      if(Math.random()<.34 && !card.classList.contains("archive-card-glitch")){
+      if(Math.random()<.12 && !card.classList.contains("archive-card-glitch")){
         card.classList.add("archive-card-glitch");
-        setTimeout(()=>card.classList.remove("archive-card-glitch"),520);
+        setTimeout(()=>card.classList.remove("archive-card-glitch"),460);
       }
     });
   });

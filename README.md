@@ -1,10 +1,9 @@
-# ARCHIVE.EXE v0.4
+# ARCHIVE.EXE v0.5
 
 Changes:
-- new left-side catalog browser
-- tabs: AUTHORS / UNIVERSES / GENRES
-- searchable sidebar lists with record counts
-- clicking an item filters the card grid
-- responsive mobile drawer
-- cleaner post-apocalypse palette: charcoal, muted olive, parchment, warm rust/amber accents
-- six-card desktop grid preserved
+- sidebar reduced to 205px and visually blended into the page
+- sidebar can be collapsed on desktop and reopened with CATALOG
+- mobile sidebar remains a slide-out drawer
+- thin custom scrollbar without white arrows
+- compact pill-style filter buttons with small symbols
+- six-card grid and all catalog/lorebook/random behavior preserved

@@ -35,7 +35,7 @@
         <div class="sidebar-kicker">CATALOG_</div>
         <div class="sidebar-title">BROWSE INDEX</div>
       </div>
-      <button class="sidebar-close" id="sidebarClose">×</button>
+      <button class="sidebar-close" id="sidebarClose" aria-label="Hide catalog">‹</button>
     </div>
 
     <div class="sidebar-tabs">
@@ -53,18 +53,18 @@
   </aside>
 
   <div class="catalog-main">
-  <button class="sidebar-open" id="sidebarOpen">☰ BROWSE CATALOG</button>
+  <button class="sidebar-open" id="sidebarOpen">☰ CATALOG</button>
   <section class="controls">
     <label class="search">
       <span>SEARCH_</span>
       <input id="searchInput" autocomplete="off" placeholder="Search by name, author, universe or tag...">
     </label>
     <div class="filter-row">
-      <button class="select-like" id="authorBtn">AUTHOR <span>ALL</span></button>
-      <button class="select-like" id="universeBtn">UNIVERSE <span>ALL</span></button>
-      <button class="select-like" id="tagBtn">TAG <span>ALL</span></button>
-      <button class="select-like" id="loreBtn">LOREBOOK <span>ALL</span></button>
-      <button class="select-like" id="sortBtn">SORT <span>NEWEST</span></button>
+      <button class="select-like" id="authorBtn"><b>◉</b> AUTHOR <span>ALL</span></button>
+      <button class="select-like" id="universeBtn"><b>⌁</b> UNIVERSE <span>ALL</span></button>
+      <button class="select-like" id="tagBtn"><b>#</b> TAG <span>ALL</span></button>
+      <button class="select-like" id="loreBtn"><b>▤</b> LOREBOOK <span>ALL</span></button>
+      <button class="select-like" id="sortBtn"><b>↕</b> SORT <span>NEWEST</span></button>
       <button class="ghost" id="clearBtn">RESET</button>
     </div>
     <div id="activeFilters" class="active-filters"></div>

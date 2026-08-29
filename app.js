@@ -47,7 +47,7 @@ $("#sidebarList").onclick=e=>{
   else if(sideTab==="universe") state.universe=v;
   else state.tag=v;
   render();
-  $("#catalogSidebar").classList.remove("open");
+  if(innerWidth<=900) $("#catalogSidebar").classList.remove("open");
 };
 $("#sidebarOpen").onclick=()=>$("#catalogSidebar").classList.add("open");
 $("#sidebarClose").onclick=()=>$("#catalogSidebar").classList.remove("open");

@@ -11,21 +11,21 @@ footer{max-width:1500px;margin:auto;border-top:1px solid var(--line);padding:20p
 .badge{color:#e9ddc9;border-color:rgba(138,90,63,.45);background:rgba(44,31,23,.82)}
 .random-btn:hover{border-color:var(--rust)}
 
-.layout{max-width:1500px;margin:0 auto;padding:24px 0 0;display:grid;grid-template-columns:238px minmax(0,1fr);gap:24px}
+.layout{max-width:1500px;margin:0 auto;padding:24px 0 0;display:grid;grid-template-columns:205px minmax(0,1fr);gap:18px}
 .catalog-main{min-width:0}
-.catalog-sidebar{position:sticky;top:18px;height:calc(100vh - 36px);border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#121612,#0f120f);overflow:hidden;display:flex;flex-direction:column}
-.sidebar-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 16px 14px;border-bottom:1px solid var(--line)}
+.catalog-sidebar{position:sticky;top:18px;height:calc(100vh - 36px);border-right:1px solid var(--line);background:linear-gradient(180deg,rgba(17,21,17,.78),rgba(13,16,13,.48));overflow:hidden;display:flex;flex-direction:column;border-radius:0;transition:opacity .18s ease,transform .18s ease}
+.sidebar-head{display:flex;align-items:flex-start;justify-content:space-between;padding:15px 12px 12px;border-bottom:1px solid var(--line)}
 .sidebar-kicker{font:9px "Courier New",monospace;letter-spacing:.14em;color:var(--accent)}
-.sidebar-title{font:700 14px "Courier New",monospace;letter-spacing:.05em;margin-top:5px}
-.sidebar-close{display:none;border:0;background:none;color:var(--muted);font-size:22px;cursor:pointer}
+.sidebar-title{font:700 12px "Courier New",monospace;letter-spacing:.05em;margin-top:5px}
+.sidebar-close{display:block;border:1px solid transparent;background:transparent;color:#6f766b;width:28px;height:28px;border-radius:8px;font-size:20px;line-height:1;cursor:pointer}
 .sidebar-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--line)}
-.sidebar-tab{border:0;border-right:1px solid var(--line);background:#111511;color:#777e72;padding:11px 4px;cursor:pointer;font:8px "Courier New",monospace;letter-spacing:.06em}
+.sidebar-tab{border:0;border-right:1px solid var(--line);background:#111511;color:#777e72;padding:9px 3px;cursor:pointer;font:8px "Courier New",monospace;letter-spacing:.06em}
 .sidebar-tab:last-child{border-right:0}.sidebar-tab.active{background:#1b211b;color:var(--sand);box-shadow:inset 0 -2px 0 var(--accent2)}
-.sidebar-search{margin:12px 12px 6px;height:36px;border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;gap:7px;padding:0 9px;background:#0d100d}
+.sidebar-search{margin:10px 8px 5px;height:36px;border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;gap:7px;padding:0 9px;background:#0d100d}
 .sidebar-search span{font:8px "Courier New",monospace;color:var(--accent2)}
 .sidebar-search input{min-width:0;flex:1;border:0;outline:0;background:none;color:var(--text);font-size:10px}
-.sidebar-list{overflow:auto;padding:6px 8px 14px}
-.sidebar-item{width:100%;border:0;background:transparent;color:#9da294;text-align:left;border-radius:9px;padding:9px 10px;cursor:pointer;font:10px "Courier New",monospace;display:flex;justify-content:space-between;gap:8px}
+.sidebar-list{overflow:auto;padding:5px 5px 12px}
+.sidebar-item{width:100%;border:0;background:transparent;color:#9da294;text-align:left;border-radius:9px;padding:8px 8px;cursor:pointer;font:9px "Courier New",monospace;display:flex;justify-content:space-between;gap:8px}
 .sidebar-item:hover{background:#1b211b;color:var(--text)}
 .sidebar-item.active{background:#232a22;color:var(--sand)}
 .sidebar-count{color:#666d61}
@@ -48,8 +48,35 @@ footer{max-width:1500px;margin:auto;border-top:1px solid var(--line);padding:20p
 @media(max-width:1420px){.layout{margin-left:24px;margin-right:24px}}
 @media(max-width:900px){
   .layout{display:block;margin:0;padding:16px 12px 0}
-  .catalog-sidebar{position:fixed;left:0;top:0;bottom:0;width:min(310px,86vw);height:100vh;z-index:120;border-radius:0 16px 16px 0;transform:translateX(-105%);transition:transform .2s ease;box-shadow:20px 0 60px rgba(0,0,0,.45)}
+  .catalog-sidebar{position:fixed;left:0;top:0;bottom:0;width:min(280px,82vw);height:100vh;z-index:120;border-radius:0 16px 16px 0;transform:translateX(-105%);transition:transform .2s ease;box-shadow:20px 0 60px rgba(0,0,0,.45)}
   .catalog-sidebar.open{transform:translateX(0)}
   .sidebar-close{display:block}
   .sidebar-open{display:block}
+}
+
+.sidebar-close:hover{color:var(--text);background:#1a1f1a;border-color:var(--line)}
+
+.sidebar-list{scrollbar-width:thin;scrollbar-color:#606a55 transparent}
+.sidebar-list::-webkit-scrollbar{width:5px}
+.sidebar-list::-webkit-scrollbar-track{background:transparent}
+.sidebar-list::-webkit-scrollbar-thumb{background:#5f6954;border-radius:999px}
+.sidebar-list::-webkit-scrollbar-thumb:hover{background:#7c886c}
+.sidebar-list::-webkit-scrollbar-button{display:none;width:0;height:0}
+
+.select-like,.ghost,.random-btn{
+  border-radius:999px;
+  padding:8px 11px;
+  background:#141814;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.01)
+}
+.select-like b{font-weight:400;color:var(--accent2);margin-right:5px}
+.select-like:hover b{color:var(--sand)}
+.ghost{padding-left:14px;padding-right:14px}
+.random-btn{padding-left:14px;padding-right:14px}
+
+.layout.sidebar-collapsed{grid-template-columns:1fr}
+.layout.sidebar-collapsed .catalog-sidebar{display:none}
+.layout.sidebar-collapsed .sidebar-open{display:inline-flex;align-items:center;justify-content:center;width:auto;margin-bottom:10px}
+@media(min-width:901px){
+  .sidebar-open{display:none}
 }

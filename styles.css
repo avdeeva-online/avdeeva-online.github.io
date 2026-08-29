@@ -1215,3 +1215,117 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   .hero-art,.hero-dust,.hero-scan{animation:none!important}
   .hero.hero-image-glitch .hero-art:after{animation:none!important}
 }
+
+/* =========================================================
+   v0.9.23 — HERO MOTION / TERMINAL VISIBILITY FIX
+   Bring the dead terminal back into the crop and make the
+   atmospheric motion readable without turning it into video.
+   ========================================================= */
+.hero-art{
+  background-position:center 70%!important;
+  filter:brightness(.48) saturate(.76) contrast(1.04)!important;
+  animation:heroDriftV0923 22s ease-in-out infinite alternate!important;
+}
+@keyframes heroDriftV0923{
+  0%{transform:scale(1.035) translate3d(0,0,0)}
+  100%{transform:scale(1.052) translate3d(-.22%,-.35%,0)}
+}
+
+/* Keep the title readable, but preserve actual scene detail on the right. */
+.hero-dark{
+  background:linear-gradient(90deg,
+    rgba(8,10,8,.10) 0%,
+    rgba(8,10,8,.13) 47%,
+    rgba(8,10,8,.28) 63%,
+    rgba(8,10,8,.53) 81%,
+    rgba(8,10,8,.70) 100%)!important;
+}
+.hero-dark:after{
+  width:35%!important;
+  background:linear-gradient(90deg,rgba(11,13,11,.03),rgba(11,13,11,.25))!important;
+  backdrop-filter:none!important;
+}
+
+/* The dust is now visible if you look at the light beam, but still calm. */
+.hero-dust{
+  opacity:.23!important;
+  background-size:101px 91px,157px 139px,223px 181px!important;
+  animation:heroDustFloatV0923 16s linear infinite!important;
+  mix-blend-mode:screen;
+}
+@keyframes heroDustFloatV0923{
+  0%{transform:translate3d(-.4%,2%,0);background-position:12px 12px,53px 38px,101px 74px}
+  50%{transform:translate3d(.35%,-.4%,0);background-position:27px -24px,68px 3px,117px 37px}
+  100%{transform:translate3d(.8%,-2.4%,0);background-position:42px -62px,83px -34px,133px -2px}
+}
+
+/* Slow light haze passes through the ruined opening. */
+.hero-light-haze{
+  position:absolute;
+  z-index:1;
+  pointer-events:none;
+  left:5%;
+  top:-18%;
+  width:50%;
+  height:125%;
+  opacity:.18;
+  transform:rotate(-7deg);
+  background:linear-gradient(103deg,transparent 25%,rgba(228,201,139,.18) 45%,rgba(238,215,163,.08) 54%,transparent 69%);
+  filter:blur(9px);
+  mix-blend-mode:screen;
+  animation:heroHazeV0923 13s ease-in-out infinite alternate;
+}
+@keyframes heroHazeV0923{
+  from{transform:translate3d(-2%,0,0) rotate(-7deg);opacity:.11}
+  to{transform:translate3d(4%,1%,0) rotate(-5deg);opacity:.24}
+}
+
+/* A tiny green pulse sits where the dead monitor is in the photograph.
+   It reads as the terminal waking up, not as a new UI element. */
+.hero-terminal-signal{
+  position:absolute;
+  z-index:1;
+  pointer-events:none;
+  left:69.1%;
+  top:58%;
+  width:6.7%;
+  height:10%;
+  border-radius:2px;
+  opacity:0;
+  background:rgba(143,171,136,.08);
+  box-shadow:0 0 14px rgba(143,171,136,.08),inset 0 0 9px rgba(175,196,160,.07);
+  mix-blend-mode:screen;
+  animation:terminalWakeV0923 12.5s steps(1,end) infinite;
+}
+.hero-terminal-signal:after{
+  content:"";
+  position:absolute;
+  inset:12% 8%;
+  background:repeating-linear-gradient(180deg,rgba(190,210,177,.22) 0 1px,transparent 1px 4px);
+  opacity:.35;
+}
+@keyframes terminalWakeV0923{
+  0%,60%,100%{opacity:0}
+  62%{opacity:.19}
+  63%{opacity:.05}
+  64%{opacity:.24}
+  67%{opacity:.09}
+  69%{opacity:.17}
+  73%{opacity:0}
+}
+
+.hero-scan{opacity:.11!important;animation-duration:12s!important}
+
+@media(max-width:1020px){
+  .hero-art{background-position:center 68%!important}
+  .hero-terminal-signal{left:68%;top:57%;width:7.5%;height:9%}
+}
+@media(max-width:760px){
+  .hero-art{background-position:39% 66%!important}
+  .hero-dust{opacity:.14!important}
+  .hero-light-haze{opacity:.13}
+  .hero-terminal-signal{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero-light-haze,.hero-terminal-signal{animation:none!important}
+}

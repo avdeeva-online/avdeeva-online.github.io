@@ -582,3 +582,64 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 .hero-kicker.kicker-secret{color:#a96c5a;text-shadow:0 0 10px rgba(169,108,90,.18)}
 .archive-flicker{animation-duration:.76s!important}
 .card.archive-card-glitch .card-media::before,.card.archive-card-glitch .card-media::after{animation-duration:.42s!important}
+
+/* v0.9.14 — anomaly / easter-egg pass */
+/* Signal glitch = RGB displacement, not an "error" state. */
+@keyframes archiveSignalGlitch{
+  0%,100%{transform:none;filter:none;text-shadow:none}
+  18%{transform:translateX(1px);text-shadow:-2px 0 rgba(86,150,155,.68),2px 0 rgba(158,96,116,.66)}
+  36%{transform:translateX(-1px);filter:contrast(1.18);text-shadow:2px 0 rgba(86,150,155,.55),-2px 0 rgba(158,96,116,.58)}
+  58%{transform:none;filter:brightness(.86);text-shadow:1px 0 rgba(86,150,155,.45)}
+  76%{filter:none;text-shadow:none}
+}
+.archive-signal-glitch{animation:archiveSignalGlitch .43s steps(2,end)!important}
+
+/* Corruption = a very brief in-world damaged-file state. */
+@keyframes archiveCorrupt{
+  0%,100%{background:inherit;color:inherit;box-shadow:inherit;filter:none}
+  16%{background:#3a1715!important;color:#f0a193!important;border-color:#8e433b!important;box-shadow:inset 2px 0 0 #bd5c4e,0 0 9px rgba(150,52,42,.12)!important}
+  42%{background:#241514!important;color:#e48777!important;filter:contrast(1.22)}
+  68%{background:#351816!important;color:#f0a193!important;box-shadow:inset -2px 0 0 #8e433b!important}
+}
+.archive-corrupt{animation:archiveCorrupt .36s steps(2,end)!important}
+.archive-corrupt .ui-icon{display:none!important}
+.archive-corrupt-label{color:#e58a7b!important;text-shadow:1px 0 rgba(204,72,58,.45)}
+
+/* Logo: noticeably more present, longer, but still intermittent. */
+.hero-title{animation:heroSignalV0914 13.8s infinite!important}
+@keyframes heroSignalV0914{
+  0%,88%,100%{text-shadow:0 2px 18px rgba(0,0,0,.45);transform:none;filter:none;clip-path:none}
+  89%{text-shadow:-4px 0 rgba(75,151,158,.72),4px 0 rgba(178,78,94,.74),0 2px 18px rgba(0,0,0,.45);transform:translateX(2px);filter:contrast(1.16)}
+  90%{transform:translateX(-2px);clip-path:inset(12% 0 51% 0);text-shadow:3px 0 rgba(75,151,158,.68),-3px 0 rgba(178,78,94,.7)}
+  91.2%{transform:translateX(1px);clip-path:inset(55% 0 13% 0);filter:brightness(1.2)}
+  92.2%{clip-path:none;transform:none;text-shadow:1px 0 rgba(75,151,158,.48),-1px 0 rgba(178,78,94,.5)}
+  93.2%{text-shadow:0 2px 18px rgba(0,0,0,.45);filter:none}
+}
+.hero-title.hero-glitch-now{animation:heroGlitchV0914 1.25s steps(3,end)!important}
+@keyframes heroGlitchV0914{
+  0%,100%{transform:none;clip-path:none;filter:none;text-shadow:0 2px 18px rgba(0,0,0,.45)}
+  10%{transform:translateX(4px);text-shadow:-5px 0 rgba(75,151,158,.82),4px 0 rgba(184,74,91,.84);filter:brightness(1.22)}
+  22%{transform:translateX(-3px);clip-path:inset(18% 0 48% 0)}
+  36%{transform:translateX(2px);clip-path:inset(60% 0 12% 0);text-shadow:4px 0 rgba(75,151,158,.72),-4px 0 rgba(184,74,91,.76)}
+  50%{clip-path:none;transform:none;filter:brightness(.78)}
+  64%{transform:translateX(-2px);text-shadow:-2px 0 rgba(75,151,158,.62),2px 0 rgba(184,74,91,.64)}
+  82%{transform:translateX(1px);filter:contrast(1.14)}
+}
+
+/* UNKNOWN RECORD overlay — looks like an archive object, never a browser/network error. */
+.unknown-record{position:fixed;inset:0;z-index:180;display:grid;place-items:center;pointer-events:none;background:rgba(4,6,5,.18);opacity:0;transition:opacity .18s ease}
+.unknown-record[hidden]{display:none!important}.unknown-record.show{opacity:1}.unknown-record.dropping{opacity:.22;filter:contrast(1.35)}
+.unknown-record-card{position:relative;width:min(420px,78vw);min-height:250px;padding:22px;border:1px solid rgba(122,75,66,.72);border-radius:5px;background:linear-gradient(145deg,#111511,#171315);box-shadow:0 24px 80px rgba(0,0,0,.58),inset 0 0 0 1px rgba(126,143,109,.06);overflow:hidden;font-family:var(--mono);color:#a7aa9d}
+.unknown-record-noise{position:absolute;inset:0;opacity:.22;background:repeating-linear-gradient(180deg,transparent 0 4px,rgba(220,225,211,.035) 4px 5px),linear-gradient(90deg,transparent 0 43%,rgba(150,69,58,.13) 43.5% 44%,transparent 44.5% 70%,rgba(86,123,105,.10) 70.5% 71%,transparent 71.5%);animation:unknownScan .5s steps(2,end) infinite}
+.unknown-record-code{font-size:9px;letter-spacing:.12em;color:#6d746a;margin-bottom:45px}.unknown-record-id{font-size:34px;letter-spacing:.08em;color:#c6b9a3;text-shadow:-2px 0 rgba(76,148,151,.42),2px 0 rgba(164,72,88,.45);animation:unknownTitle .7s steps(2,end) infinite}.unknown-record-meta{margin-top:22px;font-size:10px;line-height:1.8;color:#777e73}.unknown-record-status{position:absolute;right:18px;bottom:16px;font-size:9px;letter-spacing:.12em;color:#b45e53}
+@keyframes unknownScan{0%,100%{transform:none}50%{transform:translateY(3px)}}
+@keyframes unknownTitle{0%,100%{transform:none}45%{transform:translateX(2px)}55%{transform:translateX(-2px)}}
+
+/* Tiny contextual anomalies. */
+.count-anomaly{color:#d06d60!important;text-shadow:1px 0 rgba(208,109,96,.28)}
+.hashtag-ghost{color:#a95b50!important;text-shadow:1px 0 rgba(169,91,80,.25)}
+.drawer-ghost{color:#a95f55!important;border-color:rgba(140,68,59,.45)!important;background:rgba(53,24,22,.34)!important;transition:opacity .25s ease,transform .25s ease}
+.drawer-ghost.vanish{opacity:0;transform:translateX(8px)}
+.card.record-zero-flash{position:relative}
+.card.record-zero-flash::after{content:attr(data-record-ghost);position:absolute;left:10px;top:10px;z-index:12;padding:4px 6px;border:1px solid rgba(151,73,63,.46);border-radius:3px;background:rgba(22,11,11,.88);color:#ce7c70;font:8px var(--mono);letter-spacing:.09em;pointer-events:none;animation:recordZero .52s steps(2,end)}
+@keyframes recordZero{0%,100%{opacity:0}15%,76%{opacity:1}40%{transform:translateX(2px)}58%{transform:translateX(-1px)}}

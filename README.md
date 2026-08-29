@@ -1,3 +1,5 @@
-# ARCHIVE.EXE v0.9.13 — Glitch & Easter Eggs
+# ARCHIVE.EXE v0.9.14 — Anomaly Pass
 
-Patch based on v0.9.12. Card/control glitches are rarer, ARCHIVE.EXE has its own restrained signal glitch, and several hidden in-theme archive reactions were added. No catalog/filter functionality was intentionally changed.
+Dedicated glitch/easter-egg patch based on v0.9.13. No intentional catalog/filter layout redesign in this patch.
+
+Public-facing behavior remains fully functional; anomalies are decorative and non-blocking.

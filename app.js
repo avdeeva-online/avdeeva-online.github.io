@@ -256,7 +256,18 @@ document.addEventListener("click",e=>{
 // Random + modal
 const randomWhispers=["RECOVERING LOST RECORD...","UNINDEXED TRACE DETECTED","ARCHIVE ROUTE SHIFTED","FOUND BETWEEN DIRECTORIES","SIGNAL FROM NODE_??"];
 function archiveWhisper(text,rare=false){const box=$("#archiveWhisper");$("#whisperText").textContent=text;box.classList.toggle("rare",rare);box.hidden=false;requestAnimationFrame(()=>box.classList.add("show"));clearTimeout(archiveWhisper.timer);archiveWhisper.timer=setTimeout(()=>{box.classList.remove("show");setTimeout(()=>box.hidden=true,220)},2600)}
-$("#randomBtn").onclick=()=>{const btn=$("#randomBtn");btn.classList.add("active");btn.querySelector("span:last-child").textContent="SEARCHING...";if(Math.random()<.22)archiveWhisper(randomWhispers[Math.floor(Math.random()*randomWhispers.length)],true);setTimeout(()=>{btn.classList.remove("active");btn.querySelector("span:last-child").textContent="RANDOM";randomModal()},240)};
+$("#randomBtn").onclick=()=>{
+  const btn=$("#randomBtn");
+  btn.classList.add("active");
+  btn.querySelector("span:last-child").textContent="SEARCHING...";
+  const unknownHit=Math.random()<.01;
+  if(unknownHit){
+    setTimeout(()=>showUnknownRecord(()=>{btn.classList.remove("active");btn.querySelector("span:last-child").textContent="RANDOM";randomModal()}),180);
+    return;
+  }
+  if(Math.random()<.12)archiveWhisper(randomWhispers[Math.floor(Math.random()*randomWhispers.length)],true);
+  setTimeout(()=>{btn.classList.remove("active");btn.querySelector("span:last-child").textContent="RANDOM";randomModal()},240);
+};
 $("#prevBot").onclick=randomModal;$("#nextBot").onclick=randomModal;
 function randomModal(){let pool=applyFilters().filter(b=>!current||b.id!==current.id);if(!pool.length)pool=B.filter(b=>!current||b.id!==current.id);if(pool.length)openModal(pool[Math.floor(Math.random()*pool.length)])}
 function openModal(b){
@@ -330,7 +341,7 @@ $$('.modal-tab').forEach(t=>t.onclick=()=>{
 
 // Small archive anomalies: decorative only, never block interaction.
 const anomalyTargets=["#catalogOpen",".hashtag-trigger",".universe-trigger","#sortTrigger","#loreToggle","#povCycle","#randomBtn"];
-anomalyTargets.forEach(sel=>{const el=$(sel);if(!el)return;el.addEventListener("mouseenter",()=>{if(Math.random()<.11){el.classList.add("archive-flicker");setTimeout(()=>el.classList.remove("archive-flicker"),760)}})});
+anomalyTargets.forEach(sel=>{const el=$(sel);if(!el)return;el.addEventListener("mouseenter",()=>{if(Math.random()<.045){el.classList.add("archive-flicker");setTimeout(()=>el.classList.remove("archive-flicker"),620)}})});
 
 // Easter egg
 const terminalScripts=[
@@ -347,18 +358,188 @@ let logoClicks=0,logoTimer;$(".hero-title").addEventListener("click",()=>{logoCl
 
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();closeDrawer();$("#popover").hidden=true;$("#sortMenu").hidden=true;hideTerminal()}if(!$("#modal").hidden&&["ArrowRight","ArrowLeft"].includes(e.key))randomModal()});
 
-// v0.9.13 — quieter glitches + hidden archive responses.
+// v0.9.14 — dedicated anomaly / easter-egg pass.
+// Decorative only: no anomaly blocks a real click, changes a filter, or fakes a browser/network error.
 const heroTitle=$('.hero-title');
 function pulseHeroGlitch(){
   if(!heroTitle || heroTitle.classList.contains('hero-glitch-now')) return;
   heroTitle.classList.add('hero-glitch-now');
-  setTimeout(()=>heroTitle.classList.remove('hero-glitch-now'),720);
+  setTimeout(()=>heroTitle.classList.remove('hero-glitch-now'),1250);
 }
 if(heroTitle){
-  heroTitle.addEventListener('mouseenter',()=>{ if(Math.random()<.16) pulseHeroGlitch(); });
-  setInterval(()=>{ if(document.visibilityState==='visible' && Math.random()<.42) pulseHeroGlitch(); },23000);
+  heroTitle.addEventListener('mouseenter',()=>{ if(Math.random()<.34) pulseHeroGlitch(); });
+  // Noticeable during normal browsing without becoming a constant animation.
+  setInterval(()=>{ if(document.visibilityState==='visible' && Math.random()<.72) pulseHeroGlitch(); },14500);
 }
 
+// UNKNOWN RECORD: extremely rare RANDOM anomaly. It cannot be opened or found in the catalog.
+function ensureUnknownRecord(){
+  let el=$('#unknownRecord');
+  if(el) return el;
+  el=document.createElement('div');
+  el.id='unknownRecord';
+  el.className='unknown-record';
+  el.hidden=true;
+  el.innerHTML=`<div class="unknown-record-card">
+    <div class="unknown-record-noise"></div>
+    <div class="unknown-record-code">ARCHIVE.EXE / RECORD_000</div>
+    <div class="unknown-record-id">UNKNOWN</div>
+    <div class="unknown-record-meta">SOURCE: UNINDEXED<br>AUTHOR: @██████<br>CHECKSUM: MISMATCH</div>
+    <div class="unknown-record-status">RECORD LOST</div>
+  </div>`;
+  document.body.appendChild(el);
+  return el;
+}
+function showUnknownRecord(done){
+  const el=ensureUnknownRecord();
+  el.hidden=false;
+  requestAnimationFrame(()=>el.classList.add('show'));
+  pulseHeroGlitch();
+  setTimeout(()=>el.classList.add('dropping'),1450);
+  setTimeout(()=>{
+    el.classList.remove('show','dropping');
+    el.hidden=true;
+    archiveWhisper('RECORD_000 // INDEX LOST',true);
+    if(done) setTimeout(done,260);
+  },2050);
+}
+
+// A tiny distinction: "signal glitch" is RGB/slice noise; "corruption" is a brief red ? state.
+const CORRUPT_SELECTORS=['#catalogOpen','.filter-trigger','.hashtag-trigger','.universe-trigger','#sortTrigger','#loreToggle','#povCycle','#randomBtn','.drawer-tab','.drawer-item','.quick-list button'];
+const GLITCH_SELECTORS=['.control','.quick-list button','.drawer-tab','.drawer-item','.card-tags button','.card-hashtags button'];
+
+function transientCorruption(el){
+  if(!el || el.dataset.corrupting==='1') return;
+  el.dataset.corrupting='1';
+  const target=el.querySelector('.ui-icon,.hamb,.at,.hash-mark,.universe-mark,.sort-mark,.random-mark,.pov-cycle-icon') || el.querySelector('span') || el;
+  const old=target.innerHTML;
+  target.dataset.corruptOld=old;
+  target.textContent='?';
+  el.classList.add('archive-corrupt');
+  setTimeout(()=>{
+    target.innerHTML=target.dataset.corruptOld ?? old;
+    delete target.dataset.corruptOld;
+    el.classList.remove('archive-corrupt');
+    delete el.dataset.corrupting;
+  },360);
+}
+function transientSignalGlitch(el){
+  if(!el || el.classList.contains('archive-signal-glitch')) return;
+  el.classList.add('archive-signal-glitch');
+  setTimeout(()=>el.classList.remove('archive-signal-glitch'),430);
+}
+function wireInteractiveAnomalies(root=document){
+  CORRUPT_SELECTORS.forEach(sel=>root.querySelectorAll(sel).forEach(el=>{
+    if(el.dataset.corruptionWired) return;
+    el.dataset.corruptionWired='1';
+    el.addEventListener('mouseenter',()=>{ if(Math.random()<.065) transientCorruption(el); });
+  }));
+  GLITCH_SELECTORS.forEach(sel=>root.querySelectorAll(sel).forEach(el=>{
+    if(el.dataset.signalWired) return;
+    el.dataset.signalWired='1';
+    el.addEventListener('mouseenter',()=>{ if(Math.random()<.035) transientSignalGlitch(el); });
+  }));
+}
+
+// Card glitches are intentionally rarer than before.
+function wireCardGlitches(){
+  $$('#grid .card').forEach(card=>{
+    if(card.dataset.glitchWired) return;
+    card.dataset.glitchWired='1';
+    card.addEventListener('mouseenter',()=>{
+      if(Math.random()<.045 && !card.classList.contains('archive-card-glitch')){
+        card.classList.add('archive-card-glitch');
+        setTimeout(()=>card.classList.remove('archive-card-glitch'),430);
+      }
+      // RECORD_000 occasionally overlays a normal archive id without changing the actual bot.
+      if(Math.random()<.018){
+        const title=card.querySelector('.card-title');
+        if(title && !card.classList.contains('record-zero-flash')){
+          card.classList.add('record-zero-flash');
+          card.dataset.recordGhost='RECORD_000';
+          setTimeout(()=>{card.classList.remove('record-zero-flash');delete card.dataset.recordGhost},520);
+        }
+      }
+    });
+  });
+}
+
+// Catalog-only anomalies: labels can briefly be "forgotten", and an impossible author can flash in the list.
+function catalogLabelAnomaly(){
+  const tabs=$$('.drawer-tab');
+  if(!tabs.length) return;
+  if(Math.random()<.22){
+    const tab=tabs[Math.floor(Math.random()*tabs.length)];
+    const old=tab.textContent;
+    tab.classList.add('archive-corrupt-label');
+    tab.textContent=Math.random()<.5?'???????':'[MISSING]';
+    setTimeout(()=>{tab.textContent=old;tab.classList.remove('archive-corrupt-label')},520);
+  }
+  if(drawerTab==='author' && Math.random()<.16){
+    const list=$('#drawerList');
+    const ghost=document.createElement('button');
+    ghost.type='button';ghost.className='drawer-item drawer-ghost';ghost.innerHTML='<span>@██████</span><small>?</small>';
+    list.prepend(ghost);
+    setTimeout(()=>ghost.classList.add('vanish'),520);
+    setTimeout(()=>ghost.remove(),820);
+  }
+}
+$('#catalogOpen')?.addEventListener('click',()=>setTimeout(catalogLabelAnomaly,120));
+$$('.drawer-tab').forEach(t=>t.addEventListener('click',()=>setTimeout(catalogLabelAnomaly,90)));
+
+// Small count anomaly: the archive occasionally counts one record that is not actually returned.
+let countGhostTimer;
+function maybeGhostRecordCount(){
+  if(Math.random()>=.035 || document.visibilityState!=='visible') return;
+  const el=$('#resultCount'); if(!el) return;
+  const real=el.textContent;
+  const n=Number(real);
+  if(!Number.isFinite(n)) return;
+  el.classList.add('count-anomaly');
+  el.textContent=String(n+1);
+  clearTimeout(countGhostTimer);
+  countGhostTimer=setTimeout(()=>{el.textContent=real;el.classList.remove('count-anomaly')},760);
+}
+setInterval(maybeGhostRecordCount,18000);
+
+// Hashtag ghosts: visual only; their actual filter value never changes.
+function wireHashtagGhosts(){
+  $$('[data-hashtag]').forEach(el=>{
+    if(el.dataset.hashtagGhostWired) return;
+    el.dataset.hashtagGhostWired='1';
+    el.addEventListener('mouseenter',()=>{
+      if(Math.random()>=.025 || el.dataset.ghosting==='1') return;
+      el.dataset.ghosting='1';
+      const old=el.textContent;
+      const pool=['#unknown','#missing','#do-not-index','#still-here','#record-000'];
+      el.textContent=pool[Math.floor(Math.random()*pool.length)];
+      el.classList.add('hashtag-ghost');
+      setTimeout(()=>{el.textContent=old;el.classList.remove('hashtag-ghost');delete el.dataset.ghosting},650);
+    });
+  });
+}
+
+// Owner-known search easter eggs. Normal search still behaves normally.
+const searchEggs={
+  '404':'RECORD 404 // NOT INDEXED',
+  '???':'QUERY RETURNED AN UNCOUNTED RECORD',
+  'lost':'LOST DIRECTORY // SIGNAL RECEIVED',
+  'node_00':'NODE_00 // ACTIVE',
+  'archive':'INDEX IS WATCHING',
+  'archive.exe':'YOU ARE ALREADY INSIDE THE ARCHIVE',
+  'record_000':'NO SUCH RECORD'
+};
+let lastSearchEgg='';
+$('#searchInput')?.addEventListener('input',e=>{
+  const q=e.target.value.trim().toLowerCase();
+  if(searchEggs[q] && q!==lastSearchEgg){
+    lastSearchEgg=q;
+    setTimeout(()=>archiveWhisper(searchEggs[q],['404','record_000'].includes(q)),180);
+    if(['archive.exe','record_000','???'].includes(q)) pulseHeroGlitch();
+  } else if(!searchEggs[q]) lastSearchEgg='';
+});
+
+// Existing hidden logo sequence remains, plus the cursor sequence.
 let randomArchiveClicks=0;
 const randomButton=$('#randomBtn');
 if(randomButton){
@@ -369,59 +550,25 @@ if(randomButton){
     }
   });
 }
-
-const searchEggs={
-  '404':'RECORD 404 // NOT INDEXED',
-  'lost':'LOST DIRECTORY // SIGNAL RECEIVED',
-  'node_00':'NODE_00 // ACTIVE',
-  'archive.exe':'YOU ARE ALREADY INSIDE THE ARCHIVE'
-};
-let lastSearchEgg='';
-$('#searchInput')?.addEventListener('input',e=>{
-  const q=e.target.value.trim().toLowerCase();
-  if(searchEggs[q] && q!==lastSearchEgg){
-    lastSearchEgg=q;
-    setTimeout(()=>archiveWhisper(searchEggs[q],q==='404'),180);
-    if(q==='archive.exe') pulseHeroGlitch();
-  } else if(!searchEggs[q]) lastSearchEgg='';
-});
-
 const heroCursor=heroTitle?.querySelector('span');
 let cursorClicks=0,cursorTimer;
 heroCursor?.addEventListener('click',e=>{
-  e.stopPropagation();
-  cursorClicks++;
-  clearTimeout(cursorTimer);
-  cursorTimer=setTimeout(()=>cursorClicks=0,1500);
+  e.stopPropagation();cursorClicks++;clearTimeout(cursorTimer);cursorTimer=setTimeout(()=>cursorClicks=0,1500);
   if(cursorClicks===3){
-    cursorClicks=0;
-    pulseHeroGlitch();
+    cursorClicks=0;pulseHeroGlitch();
     const kicker=$('.hero-kicker');
-    if(kicker){
-      const old=kicker.textContent;
-      kicker.textContent='SIGNAL LOCKED / NODE_13';
-      kicker.classList.add('kicker-secret');
-      setTimeout(()=>{kicker.textContent=old;kicker.classList.remove('kicker-secret')},2800);
-    }
+    if(kicker){const old=kicker.textContent;kicker.textContent='SIGNAL LOCKED / NODE_13';kicker.classList.add('kicker-secret');setTimeout(()=>{kicker.textContent=old;kicker.classList.remove('kicker-secret')},2800)}
   }
 });
 
-render();
-
-// v0.9.12: occasional archive-frame corruption on bot cards.
-// It is intentionally brief and decorative; interaction always remains available.
-function wireCardGlitches(){
-  $$("#grid .card").forEach(card=>{
-    if(card.dataset.glitchWired) return;
-    card.dataset.glitchWired="1";
-    card.addEventListener("mouseenter",()=>{
-      if(Math.random()<.12 && !card.classList.contains("archive-card-glitch")){
-        card.classList.add("archive-card-glitch");
-        setTimeout(()=>card.classList.remove("archive-card-glitch"),460);
-      }
-    });
-  });
-}
-const _renderV0912 = render;
-render = function(){ _renderV0912(); wireCardGlitches(); };
+// Rewire dynamic content after every render without changing filtering logic.
+const _renderV0914=render;
+render=function(){
+  _renderV0914();
+  wireCardGlitches();
+  wireInteractiveAnomalies();
+  wireHashtagGhosts();
+};
 wireCardGlitches();
+wireInteractiveAnomalies();
+wireHashtagGhosts();

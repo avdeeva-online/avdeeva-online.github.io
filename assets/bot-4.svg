@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200">
+<rect width="900" height="1200" fill="#2c3330"/>
+<rect x="70" y="70" width="760" height="1060" rx="24" fill="none" stroke="#8b929c" stroke-opacity=".35"/>
+<circle cx="450" cy="420" r="160" fill="#747b84" fill-opacity=".28"/>
+<rect x="270" y="590" width="360" height="260" rx="130" fill="#747b84" fill-opacity=".20"/>
+<text x="450" y="1010" fill="#b7bdc5" font-family="monospace" font-size="34" text-anchor="middle">ARCHIVE.EXE / DEMO_04</text>
+</svg>

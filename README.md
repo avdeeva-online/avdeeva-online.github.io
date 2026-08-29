@@ -1,16 +1,17 @@
-## Hi there 👋
+# ARCHIVE.EXE v0.1
 
-<!--
-**avdeeva-online/avdeeva-online** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+Статический прототип каталога ботов для GitHub Pages.
 
-Here are some ideas to get you started:
+## Файлы
+- `index.html` — главная страница
+- `styles.css` — внешний вид
+- `app.js` — поиск, фильтры, модальное окно
+- `data.js` — данные тестовых ботов
+- `assets/` — изображения
+- `downloads/` — скачиваемые карточки
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+## Как заменить тестового бота
+Открой `data.js` и замени поля нужного объекта:
+`nameRu`, `nameEn`, `author`, `universe`, `tags`, `short`, `full`, `image`, `platform`, `url`, `download`.
+
+Все авторы, теги и вселенные автоматически становятся кликабельными фильтрами.

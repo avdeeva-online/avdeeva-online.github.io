@@ -1,0 +1,21 @@
+{
+  "id": "matvey-kalinin",
+  "nameRu": "Матвей Калинин",
+  "nameEn": "Matvey Kalinin",
+  "author": "CrimsonGem",
+  "universe": "The Pace of Death",
+  "tags": [
+    "male",
+    "oc",
+    "zombie",
+    "apocalypse",
+    "survival"
+  ],
+  "short": "Пятеро подростков украли лодку, чтобы увидеть затопленный город. Матвей — тот, кто уговорил остальных отправиться.",
+  "full": "После катастрофы город медленно уходит под воду, а оставшиеся районы отрезаны друг от друга. Матвей привык говорить так, будто всё под контролем, даже когда решение уже стало ошибкой. История начинается после опасной вылазки, которая должна была стать обычным приключением.",
+  "image": "assets/bot-1.svg",
+  "platform": "JANITOR",
+  "url": "https://example.com/",
+  "download": "downloads/matvey-kalinin.json",
+  "isNew": true
+}

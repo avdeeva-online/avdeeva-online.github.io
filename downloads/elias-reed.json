@@ -1,0 +1,20 @@
+{
+  "id": "elias-reed",
+  "nameRu": "Элиас Рид",
+  "nameEn": "Elias Reed",
+  "author": "StaticBloom",
+  "universe": "Small Town Static",
+  "tags": [
+    "male",
+    "small-town",
+    "slice-of-life",
+    "second-chance"
+  ],
+  "short": "Элиас держит автомастерскую на окраине и делает вид, что не помнит вашу последнюю встречу. Он помнит всё.",
+  "full": "Город маленький, слухи быстрые, а некоторые истории невозможно оставить в прошлом. Элиас остался здесь, пока остальные уезжали, и теперь вынужден столкнуться с возвращением человека, которого не ожидал увидеть снова.",
+  "image": "assets/bot-6.svg",
+  "platform": "TAVO",
+  "url": "https://example.com/",
+  "download": "downloads/elias-reed.json",
+  "isNew": false
+}

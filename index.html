@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#111317" />
+  <title>ARCHIVE.EXE</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="noise"></div>
+  <header class="topbar">
+    <a class="brand" href="#" data-reset>
+      <span class="brand-main">ARCHIVE.EXE<span class="cursor">_</span></span>
+      <span class="brand-sub">character database / архив ботов</span>
+    </a>
+    <div class="system-meta"><span id="totalMeta">000 records</span><span>v0.1</span></div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <div class="eyebrow">INDEX_00 / ALL CHARACTERS</div>
+        <h1>Персонажи, сюжеты<br><span>и цифровые карточки.</span></h1>
+      </div>
+      <p class="hero-copy">Ищи по имени, автору, вселенной и тегам. Открывай подробности или скачивай карточку напрямую.</p>
+    </section>
+
+    <section class="controls" aria-label="Каталог">
+      <label class="search">
+        <span>SEARCH_</span>
+        <input id="searchInput" autocomplete="off" placeholder="имя / name / author / tag..." />
+      </label>
+      <div class="filter-row">
+        <button class="select-like" id="authorBtn">AUTHOR <span>ALL</span></button>
+        <button class="select-like" id="universeBtn">UNIVERSE <span>ALL</span></button>
+        <button class="select-like" id="tagBtn">TAG <span>ALL</span></button>
+        <button class="select-like" id="sortBtn">SORT <span>NEWEST</span></button>
+        <button class="ghost" id="clearBtn">RESET</button>
+      </div>
+      <div id="activeFilters" class="active-filters"></div>
+    </section>
+
+    <section class="catalog-head">
+      <div><span class="dot"></span><span id="resultCount">0</span> records found</div>
+      <button id="randomBtn" class="random-btn">RANDOM_01 ↝</button>
+    </section>
+
+    <section id="grid" class="grid"></section>
+    <div id="empty" class="empty" hidden>NO MATCHES / ничего не найдено</div>
+  </main>
+
+  <footer>
+    <span>ARCHIVE.EXE / INDEX_00</span>
+    <span>static build · github pages ready</span>
+  </footer>
+
+  <div id="menu" class="menu" hidden></div>
+
+  <div id="modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <article class="modal-card" role="dialog" aria-modal="true">
+      <button class="modal-close" data-close>×</button>
+      <div class="modal-media"><img id="modalImage" alt=""></div>
+      <div class="modal-body">
+        <div class="modal-kicker" id="modalUniverse"></div>
+        <h2 id="modalTitle"></h2>
+        <button class="author-link" id="modalAuthor"></button>
+        <p class="modal-short" id="modalShort"></p>
+        <div class="divider"></div>
+        <div class="section-label">SCENARIO / ОПИСАНИЕ</div>
+        <p class="modal-full" id="modalFull"></p>
+        <div class="tag-list" id="modalTags"></div>
+        <div class="modal-actions">
+          <a class="primary-action" id="openBot" target="_blank" rel="noopener">OPEN BOT ↗</a>
+          <a class="secondary-action" id="downloadBot" download>DOWNLOAD CARD ↓</a>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

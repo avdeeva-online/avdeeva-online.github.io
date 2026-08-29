@@ -1,0 +1,20 @@
+{
+  "id": "mira-seo",
+  "nameRu": "Мира Со",
+  "nameEn": "Mira Seo",
+  "author": "Lumen",
+  "universe": "Afterglow",
+  "tags": [
+    "female",
+    "idol",
+    "drama",
+    "friends-to-lovers"
+  ],
+  "short": "Бывшая айдол возвращается в Сеул под чужим именем. Единственный человек, который узнаёт её сразу, — старый друг.",
+  "full": "После внезапного ухода со сцены Мира исчезла из публичной жизни. Спустя два года она возвращается, надеясь начать сначала, но прошлое быстро догоняет её — сначала в лице старого друга, а затем и бывшего агентства.",
+  "image": "assets/bot-4.svg",
+  "platform": "TAVO",
+  "url": "https://example.com/",
+  "download": "downloads/mira-seo.json",
+  "isNew": false
+}

@@ -192,3 +192,23 @@ footer{max-width:1540px;margin:auto;padding:22px 26px 34px;border-top:1px solid 
   .modal-content{padding:16px 14px 18px}
   .modal-text-wrap{max-height:150px}
 }
+
+/* v0.8 */
+.hero{height:310px;background:#0d0f0d;border-bottom:0}
+.hero-art{inset:0;background-image:url('assets/header.png');background-size:cover;background-position:center 49%;filter:saturate(.92) contrast(.98)}
+.hero-fade{z-index:1;background:linear-gradient(180deg,rgba(7,9,7,.04) 50%,rgba(13,15,13,.34) 76%,var(--bg) 100%)}
+.hero-grid,.hero-copy{display:none}
+.toolbar{margin-top:-27px}
+.tag-strip{display:flex;gap:10px;align-items:flex-start;padding:15px 7px 12px;border-bottom:1px solid #262b25}
+.tag-strip-head{display:flex;align-items:center;gap:8px;padding-top:6px;flex:0 0 auto}
+.tag-strip-head>span{font:9px "Courier New",monospace;color:#666e64;letter-spacing:.08em}
+.tag-strip-head button{border:0;background:none;color:#8f654f;font:8px "Courier New",monospace;cursor:pointer;padding:0}
+.quick-list button{border-color:#3b4038;background:#171a17;color:#9ca294;padding:6px 9px;font:9px "Courier New",monospace}
+.quick-list button:hover,.quick-list button.active{border-color:#8b7057;background:#29231d;color:#e4c7aa;box-shadow:inset 0 -1px 0 #9f6544}
+.book-icon{font-size:14px;line-height:1;transform:rotate(-2deg);display:inline-block}
+.lore-badge{width:auto;height:25px;border-radius:7px;padding:0 7px;gap:4px;font:8px "Courier New",monospace;letter-spacing:.04em}
+.card-pov{margin-left:auto;color:#777f75;white-space:nowrap}
+.pov-label{margin-left:10px;color:#8d958a;letter-spacing:0}
+.drawer-tabs{grid-template-columns:repeat(3,1fr)}
+@media(max-width:850px){.hero{height:240px}}
+@media(max-width:620px){.hero{height:190px}.hero-art{background-position:42% center}.tag-strip{overflow:hidden}.quick-list{flex-wrap:nowrap;overflow:auto;padding-bottom:5px}.tag-strip-head{position:sticky;left:0;background:var(--bg);z-index:2}.toolbar{margin-top:-20px}}

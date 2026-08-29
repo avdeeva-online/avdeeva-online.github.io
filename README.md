@@ -1,10 +1,4 @@
-# ARCHIVE.EXE v0.7
+# ARCHIVE.EXE v0.8
+Character/bot archive prototype for GitHub Pages.
 
-Changes:
-- reduced excessive rounding across cards, filters, popovers, toolbar, drawer and modal
-- random/detail modal reduced to 690px wide and constrained to viewport height
-- modal cover reduced to 250px
-- modal content tightened so most information is visible at once
-- modal navigation arrows reduced in size
-- white browser scrollbar styling fixed inside modal/text content
-- compact custom dark scrollbar added where scrolling is still needed
+v0.8: new cinematic header, Janitor-oriented tag system with emoji and multi-select AND filtering, POV filter, Universe moved to filters, clearer Lorebook marker, compact six-column catalog preserved.

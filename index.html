@@ -73,6 +73,7 @@
 <footer class="site-footer">
   <div class="footer-left"><span>ARCHIVE.EXE / NODE_00</span><span id="totalMeta">000 RECORDS</span></div>
   <button id="lostFileBtn" class="lost-file">ARCHIVE STATUS: ONLINE&nbsp;&nbsp;•&nbsp;&nbsp;UNKNOWN FILES: 01</button>
+  <div class="footer-growth" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
 </footer>
 
 <div id="popover" class="popover" hidden>
@@ -133,11 +134,13 @@
       <div class="modal-tabs"><button class="modal-tab active" data-modal-tab="description">DESCRIPTION</button><button class="modal-tab" data-modal-tab="scenario">SCENARIO</button></div>
       <div class="modal-text-wrap"><p id="modalText"></p></div>
       <div id="modalTags" class="modal-tags"></div>
-      <div class="modal-actions"><a id="openBot" class="open-platform" target="_blank" rel="noopener">OPEN BOT ↗</a><a id="downloadBot" class="download-action" download>BOT CARD ↓</a><a id="downloadLore" class="download-action" download>LOREBOOK ↓</a></div>
+      <div class="modal-actions"><a id="openBot" class="open-platform" target="_blank" rel="noopener">OPEN BOT ↗</a><a id="openAuthor" class="author-action" target="_blank" rel="noopener">AUTHOR ↗</a><a id="downloadBot" class="download-action" download>BOT CARD ↓</a><a id="downloadLore" class="download-action" download>LOREBOOK ↓</a></div>
     </div>
   </article>
   <button class="modal-nav modal-next" id="nextBot">›</button>
 </div>
+
+<div id="archiveWhisper" class="archive-whisper" hidden><span class="whisper-dot"></span><span id="whisperText"></span></div>
 
 <div id="lostTerminal" class="lost-terminal" hidden>
   <div class="terminal-backdrop" data-terminal-close></div>

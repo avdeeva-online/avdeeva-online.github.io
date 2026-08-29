@@ -1,5 +1,3 @@
-# ARCHIVE.EXE v0.9
+# ARCHIVE.EXE v0.9.1
 
-Static GitHub Pages character archive prototype.
-
-v0.9: dimmed banner with HTML overlay title, compact toolbar hierarchy, proper book/globe SVG icons, full Janitor-style tag registry, horizontal/expandable multi-select tag rail, TAGS-first catalog drawer, secondary POV/Universe menu, micro-animations, and a footer easter egg.
+Small polish patch: lorebook card icon, author links in modal, subtle archive easter eggs, and restrained overgrowth details in the catalog drawer/footer. Header artwork intentionally unchanged for the next design pass.

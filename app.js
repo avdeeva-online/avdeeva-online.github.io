@@ -68,7 +68,7 @@ function cardHtml(b,i){
       <div class="card-author">BY <button data-author="${esc(b.author)}">@${esc(b.author)}</button></div>
       <div class="card-meta">
         <button class="meta-token" data-quick-universe="${esc(b.universe)}">${globeSvg}<span>${esc(b.universe)}</span></button>
-        ${b.lorebook?`<span class="meta-token lore-token">${bookSvg}<span>LORE</span></span>`:''}
+        ${b.lorebook?`<span class="card-lore-icon" title="Lorebook available" aria-label="Lorebook available">${bookSvg}</span>`:''}
       </div>
       <p class="card-short">${esc(b.short)}</p>
       <div class="card-tags">${shown.map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}${more>0?`<span class="tag-more">+${more}</span>`:''}</div>
@@ -217,7 +217,9 @@ document.addEventListener("click",e=>{
 });
 
 // Random + modal
-$("#randomBtn").onclick=()=>{const btn=$("#randomBtn");btn.classList.add("active");btn.querySelector("span:last-child").textContent="SEARCHING...";setTimeout(()=>{btn.classList.remove("active");btn.querySelector("span:last-child").textContent="RANDOM";randomModal()},240)};
+const randomWhispers=["RECOVERING LOST RECORD...","UNINDEXED TRACE DETECTED","ARCHIVE ROUTE SHIFTED","FOUND BETWEEN DIRECTORIES","SIGNAL FROM NODE_??"];
+function archiveWhisper(text,rare=false){const box=$("#archiveWhisper");$("#whisperText").textContent=text;box.classList.toggle("rare",rare);box.hidden=false;requestAnimationFrame(()=>box.classList.add("show"));clearTimeout(archiveWhisper.timer);archiveWhisper.timer=setTimeout(()=>{box.classList.remove("show");setTimeout(()=>box.hidden=true,220)},1250)}
+$("#randomBtn").onclick=()=>{const btn=$("#randomBtn");btn.classList.add("active");btn.querySelector("span:last-child").textContent="SEARCHING...";if(Math.random()<.22)archiveWhisper(randomWhispers[Math.floor(Math.random()*randomWhispers.length)],true);setTimeout(()=>{btn.classList.remove("active");btn.querySelector("span:last-child").textContent="RANDOM";randomModal()},240)};
 $("#prevBot").onclick=randomModal;$("#nextBot").onclick=randomModal;
 function randomModal(){let pool=applyFilters().filter(b=>!current||b.id!==current.id);if(!pool.length)pool=B.filter(b=>!current||b.id!==current.id);if(pool.length)openModal(pool[Math.floor(Math.random()*pool.length)])}
 function openModal(b){
@@ -225,7 +227,7 @@ function openModal(b){
   $("#modalAuthor").textContent=`@${b.author}`;$("#modalAuthor").dataset.author=b.author;$("#modalAuthorBadge").textContent=`@${b.author}`;$("#modalAuthorBadge").dataset.author=b.author;
   $("#modalUniverse").innerHTML=`${globeSvg}<span>UNIVERSE / ${esc(b.universe)}</span>`;$("#modalUniverse").dataset.quickUniverse=b.universe;
   $("#modalLoreFlag").innerHTML=b.lorebook?`${bookSvg} LOREBOOK AVAILABLE`:"";$("#modalPov").textContent=povLabel(b.pov);$("#modalText").textContent=b.short;
-  $("#modalTags").innerHTML=(b.tags||[]).map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("");$("#openBot").href=b.url;$("#openBot").textContent=`OPEN ON ${b.platform} →`;$("#downloadBot").href=b.download;
+  $("#modalTags").innerHTML=(b.tags||[]).map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("");$("#openBot").href=b.url;$("#openBot").textContent=`OPEN ON ${b.platform} →`;$("#openAuthor").href=b.authorUrl||b.url;$("#openAuthor").textContent=`@${b.author} ↗`;$("#downloadBot").href=b.download;
   const l=$("#downloadLore");if(b.lorebook){l.href=b.lorebook;l.classList.remove("disabled");l.textContent="LOREBOOK ↓"}else{l.removeAttribute("href");l.classList.add("disabled");l.textContent="NO LOREBOOK"}
   $$('.modal-tab').forEach(t=>t.classList.toggle('active',t.dataset.modalTab==='description'));$("#modal").hidden=false;document.body.style.overflow="hidden";
 }
@@ -242,7 +244,8 @@ let terminalIndex=0;
 function showTerminal(){renderTerminal();$("#lostTerminal").hidden=false}
 function hideTerminal(){$("#lostTerminal").hidden=true}
 function renderTerminal(){const lines=terminalScripts[terminalIndex%terminalScripts.length];$("#terminalLines").innerHTML=lines.map((x,i)=>`<div class="${i===1?'warn':i===2?'ok':''}">&gt; ${esc(x)}</div>`).join("")}
-$("#lostFileBtn").onclick=showTerminal;$("#terminalRetry").onclick=()=>{terminalIndex++;renderTerminal()};$$('[data-terminal-close]').forEach(x=>x.onclick=hideTerminal);
+$("#lostFileBtn").onclick=showTerminal;
+let logoClicks=0,logoTimer;$(".hero-title").addEventListener("click",()=>{logoClicks++;clearTimeout(logoTimer);logoTimer=setTimeout(()=>logoClicks=0,1800);if(logoClicks===5){logoClicks=0;archiveWhisper("NODE_00 REMEMBERS YOU.",true)}});$("#terminalRetry").onclick=()=>{terminalIndex++;renderTerminal()};$$('[data-terminal-close]').forEach(x=>x.onclick=hideTerminal);
 
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();closeDrawer();$("#popover").hidden=true;$("#sortMenu").hidden=true;$("#moreMenu").hidden=true;hideTerminal()}if(!$("#modal").hidden&&["ArrowRight","ArrowLeft"].includes(e.key))randomModal()});
 

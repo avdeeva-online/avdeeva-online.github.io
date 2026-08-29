@@ -40,3 +40,10 @@ Hidden motif: the archive occasionally behaves as if an unindexed `RECORD_000` e
 - Terminal image fragment is relocated left using a feathered copy of the same hero artwork.
 - Original terminal area is softly shadowed so it does not fight with ARCHIVE.EXE.
 - Deer overlay makes a 1–2 px slow shift every ~8.6 sec (intentionally subtle).
+
+
+## v0.9.25 HERO NO-LOOP
+- Background uses continuous sine motion; there is no CSS animation boundary.
+- Dust particles fall individually and respawn independently.
+- Deer overlay moves continuously by roughly 3–5 px on desktop.
+- Terminal pulse delay is randomized between roughly 5.5 and 19.5 sec.

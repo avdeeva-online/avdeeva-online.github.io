@@ -1477,3 +1477,113 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 @media(prefers-reduced-motion:reduce){
   .hero-deer-motion{animation:none!important}
 }
+
+
+/* =========================================================
+   v0.9.25 — HERO / NO OBVIOUS LOOP
+   ========================================================= */
+
+/* Disable old looping image drift from previous hero patches. */
+.hero-bg,
+.hero::before,
+.hero::after{
+  animation:none!important;
+}
+
+/* The hero artwork already contains the terminal on the left now. */
+.hero-bg{
+  background-image:url('assets/header.png')!important;
+  background-size:cover!important;
+  background-position:center 51%!important;
+  transform:scale(1.012);
+  will-change:transform;
+}
+
+/* Do not reuse old synthetic terminal/deer relocation layers. */
+.hero-terminal-cover,
+.hero-terminal-clone,
+.hero-deer-motion,
+.hero-dust{
+  display:none!important;
+}
+
+/* Dust is made from independent DOM particles instead of one tiled texture.
+   Each particle respawns at a different random time, so there is no global
+   "animation restarted" moment. */
+.hero-dust-particles{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  overflow:hidden;
+  pointer-events:none;
+  opacity:.68;
+}
+.hero-dust-particles i{
+  position:absolute;
+  top:-4%;
+  border-radius:999px;
+  background:rgba(227,211,165,.64);
+  box-shadow:0 0 7px rgba(215,193,139,.23);
+  pointer-events:none;
+  will-change:transform,opacity;
+}
+
+/* Deer crop: visible enough to read as a slight head/weight shift, but
+   feathered so it does not look like a sticker. JS drives continuous
+   sine-based motion, so there is no keyframe reset. */
+.hero-deer-live{
+  position:absolute;
+  left:40.1%;
+  top:45.5%;
+  width:13.3%;
+  aspect-ratio:255/205;
+  z-index:2;
+  pointer-events:none;
+  background:url('assets/deer-motion.png') center/100% 100% no-repeat;
+  opacity:.92;
+  transform-origin:53% 72%;
+  will-change:transform,filter;
+}
+
+/* Existing hero light stays, but no obvious repeating sweep. */
+.hero-light-haze{
+  animation:none!important;
+  opacity:.32!important;
+}
+
+/* The terminal pulse now targets the real terminal embedded at left. */
+.hero-terminal-signal{
+  display:block!important;
+  left:12.4%!important;
+  top:38%!important;
+  width:9.6%!important;
+  height:29%!important;
+  z-index:3!important;
+  border-radius:12px;
+  opacity:0;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at center,
+      rgba(116,153,103,.14),
+      rgba(74,111,67,.05) 48%,
+      transparent 72%);
+  mix-blend-mode:screen;
+  filter:blur(5px);
+}
+
+/* Keep text above environmental animation. */
+.hero-copy{z-index:5!important}
+.hero-dark,.hero-fade{z-index:3!important}
+.hero-scan{z-index:4!important}
+
+@media(max-width:1100px){
+  .hero-deer-live{left:38.5%;top:47%;width:15%}
+  .hero-terminal-signal{left:10%!important;width:12%!important}
+}
+@media(max-width:760px){
+  .hero-deer-live,.hero-dust-particles,.hero-terminal-signal{display:none!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero-deer-live,.hero-dust-particles{display:none!important}
+  .hero-bg{transform:none!important}
+}

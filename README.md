@@ -1,16 +1,10 @@
-# ARCHIVE.EXE v0.6
+# ARCHIVE.EXE v0.7
 
-Major UI pass inspired by the reference site's interaction patterns, without copying its design.
-
-- full-width 6-card catalog
-- hidden slide-out catalog drawer: AUTHORS / UNIVERSES / GENRES
-- searchable multi-select popovers for tags/authors/universes
-- dedicated lorebook filter
-- styled sort menu
-- compact rounded toolbar with small symbols
-- quick universe chips
-- smaller modal with DESCRIPTION / SCENARIO tabs
-- author badge, tags, platform CTA, bot-card + lorebook downloads
-- random previous/next arrows inside modal
-- thin custom dark scrollbars
-- all previous card/download/lorebook behavior preserved
+Changes:
+- reduced excessive rounding across cards, filters, popovers, toolbar, drawer and modal
+- random/detail modal reduced to 690px wide and constrained to viewport height
+- modal cover reduced to 250px
+- modal content tightened so most information is visible at once
+- modal navigation arrows reduced in size
+- white browser scrollbar styling fixed inside modal/text content
+- compact custom dark scrollbar added where scrolling is still needed

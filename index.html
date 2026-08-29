@@ -73,7 +73,7 @@
 <footer class="site-footer">
   <div class="footer-left"><span>ARCHIVE.EXE / NODE_00</span><span id="totalMeta">000 RECORDS</span></div>
   <button id="lostFileBtn" class="lost-file">ARCHIVE STATUS: ONLINE&nbsp;&nbsp;•&nbsp;&nbsp;UNKNOWN FILES: 01</button>
-  <div class="footer-archive-mark" aria-hidden="true">RECOVERED / OVERGROWN / STILL ACTIVE</div>
+  <div class="footer-growth" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
 </footer>
 
 <div id="popover" class="popover" hidden>
@@ -131,29 +131,10 @@
       <div class="modal-topline"><button id="modalUniverse" class="universe-link"></button><span id="modalLoreFlag"></span></div>
       <h2 id="modalTitle"></h2>
       <div class="modal-author-row">AUTHOR <button id="modalAuthor"></button> <span id="modalPov" class="pov-label"></span></div>
-      <div class="modal-tabs">
-        <button class="modal-tab active" data-modal-tab="description">DESCRIPTION</button>
-        <button class="modal-tab" data-modal-tab="scenario">SCENARIO</button>
-        <button class="modal-tab" data-modal-tab="intro">INTRO</button>
-      </div>
-      <div class="modal-text-wrap"><p id="modalText"></p><div id="introPanel" class="intro-panel" hidden></div></div>
+      <div class="modal-tabs"><button class="modal-tab active" data-modal-tab="description">DESCRIPTION</button><button class="modal-tab" data-modal-tab="scenario">SCENARIO</button></div>
+      <div class="modal-text-wrap"><p id="modalText"></p></div>
       <div id="modalTags" class="modal-tags"></div>
-      <div class="modal-actions">
-        <section class="action-group files-group">
-          <div class="action-group-label">FILES <span>/ LOCAL ARCHIVE</span></div>
-          <div class="action-group-buttons">
-            <a id="downloadBot" class="download-action" download>BOT CARD ↓</a>
-            <a id="downloadLore" class="download-action" download>LOREBOOK ↓</a>
-          </div>
-        </section>
-        <section class="action-group source-group">
-          <div class="action-group-label">SOURCE <span>/ ORIGINAL</span></div>
-          <div class="action-group-buttons">
-            <a id="openBot" class="open-platform" target="_blank" rel="noopener">OPEN BOT ↗</a>
-            <a id="openAuthor" class="author-action" target="_blank" rel="noopener">AUTHOR ↗</a>
-          </div>
-        </section>
-      </div>
+      <div class="modal-actions"><a id="openBot" class="open-platform" target="_blank" rel="noopener">OPEN BOT ↗</a><a id="openAuthor" class="author-action" target="_blank" rel="noopener">AUTHOR ↗</a><a id="downloadBot" class="download-action" download>BOT CARD ↓</a><a id="downloadLore" class="download-action" download>LOREBOOK ↓</a></div>
     </div>
   </article>
   <button class="modal-nav modal-next" id="nextBot">›</button>

@@ -6,7 +6,7 @@ const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const state = { q:"", authors:new Set(), universes:new Set(), tags:new Set(), povs:new Set(), lorebook:false, sort:"newest" };
-let activeFilter = null, drawerTab = "tag", current = null, modalTab = "description", tagsExpanded = false, openIntroIndex = -1, randomClicks = 0;
+let activeFilter = null, drawerTab = "tag", current = null, modalTab = "description", tagsExpanded = false;
 
 const bookSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3.2-.9 5.7-.6 8.5 1.1v12c-2.8-1.7-5.3-2-8.5-1.1zM20.5 5.5c-3.2-.9-5.7-.6-8.5 1.1v12c2.8-1.7 5.3-2 8.5-1.1z"/></svg>`;
 const globeSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.2 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.7 8.6 12s1.2 6.1 3.4 8.5"/></svg>`;
@@ -198,7 +198,7 @@ tagRail.addEventListener("pointerdown",e=>{if(tagsExpanded)return;drag=true;star
 tagRail.addEventListener("pointermove",e=>{if(!drag||tagsExpanded)return;tagRail.scrollLeft=startScroll-(e.clientX-startX)});
 tagRail.addEventListener("pointerup",()=>drag=false);tagRail.addEventListener("pointercancel",()=>drag=false);
 
-let search404Seen=false;$("#searchInput").oninput=e=>{state.q=e.target.value;render();if(e.target.value.trim()==="404"&&!search404Seen){search404Seen=true;archiveWhisper("RECORD 404 / DELIBERATELY UNFILED",true)}if(e.target.value.trim()!=="404")search404Seen=false};
+$("#searchInput").oninput=e=>{state.q=e.target.value;render()};
 $("#resetBtn").onclick=resetAll;
 function resetAll(){state.q="";state.authors.clear();state.universes.clear();state.tags.clear();state.povs.clear();state.lorebook=false;state.sort="newest";$("#searchInput").value="";$("#sortLabel").textContent="NEWEST";render()}
 
@@ -219,35 +219,20 @@ document.addEventListener("click",e=>{
 // Random + modal
 const randomWhispers=["RECOVERING LOST RECORD...","UNINDEXED TRACE DETECTED","ARCHIVE ROUTE SHIFTED","FOUND BETWEEN DIRECTORIES","SIGNAL FROM NODE_??"];
 function archiveWhisper(text,rare=false){const box=$("#archiveWhisper");$("#whisperText").textContent=text;box.classList.toggle("rare",rare);box.hidden=false;requestAnimationFrame(()=>box.classList.add("show"));clearTimeout(archiveWhisper.timer);archiveWhisper.timer=setTimeout(()=>{box.classList.remove("show");setTimeout(()=>box.hidden=true,220)},1250)}
-$("#randomBtn").onclick=()=>{const btn=$("#randomBtn");randomClicks++;btn.classList.add("active");btn.querySelector("span:last-child").textContent="SEARCHING...";if(Math.random()<.24)archiveWhisper(randomWhispers[Math.floor(Math.random()*randomWhispers.length)],Math.random()<.45);if(randomClicks===7)archiveWhisper("SEVENTH DRAW / ARCHIVE PATTERN NOTED",true);setTimeout(()=>{btn.classList.remove("active");btn.querySelector("span:last-child").textContent="RANDOM";randomModal()},240)};
+$("#randomBtn").onclick=()=>{const btn=$("#randomBtn");btn.classList.add("active");btn.querySelector("span:last-child").textContent="SEARCHING...";if(Math.random()<.22)archiveWhisper(randomWhispers[Math.floor(Math.random()*randomWhispers.length)],true);setTimeout(()=>{btn.classList.remove("active");btn.querySelector("span:last-child").textContent="RANDOM";randomModal()},240)};
 $("#prevBot").onclick=randomModal;$("#nextBot").onclick=randomModal;
 function randomModal(){let pool=applyFilters().filter(b=>!current||b.id!==current.id);if(!pool.length)pool=B.filter(b=>!current||b.id!==current.id);if(pool.length)openModal(pool[Math.floor(Math.random()*pool.length)])}
 function openModal(b){
-  current=b;modalTab="description";openIntroIndex=-1;$("#modalImage").src=b.image;$("#modalTitle").innerHTML=`${esc(b.nameEn)}<span>${esc(b.nameRu)}</span>`;
+  current=b;modalTab="description";$("#modalImage").src=b.image;$("#modalTitle").innerHTML=`${esc(b.nameEn)}<span>${esc(b.nameRu)}</span>`;
   $("#modalAuthor").textContent=`@${b.author}`;$("#modalAuthor").dataset.author=b.author;$("#modalAuthorBadge").textContent=`@${b.author}`;$("#modalAuthorBadge").dataset.author=b.author;
   $("#modalUniverse").innerHTML=`${globeSvg}<span>UNIVERSE / ${esc(b.universe)}</span>`;$("#modalUniverse").dataset.quickUniverse=b.universe;
-  $("#modalLoreFlag").innerHTML=b.lorebook?`${bookSvg} LOREBOOK AVAILABLE`:"";$("#modalPov").textContent=povLabel(b.pov);
-  $("#modalTags").innerHTML=(b.tags||[]).map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("");
-  $("#openBot").href=b.url;$("#openBot").textContent=`OPEN ON ${b.platform} →`;$("#openAuthor").href=b.authorUrl||b.url;$("#openAuthor").textContent=`@${b.author} ↗`;$("#downloadBot").href=b.download;
-  const l=$("#downloadLore");if(b.lorebook){l.href=b.lorebook;l.classList.remove("disabled");l.setAttribute("download","");l.textContent="LOREBOOK ↓"}else{l.removeAttribute("href");l.removeAttribute("download");l.classList.add("disabled");l.textContent="LOREBOOK — NOT AVAILABLE"}
-  $$('.modal-tab').forEach(t=>t.classList.toggle('active',t.dataset.modalTab==='description'));renderModalTab();$("#modal").hidden=false;document.body.style.overflow="hidden";
+  $("#modalLoreFlag").innerHTML=b.lorebook?`${bookSvg} LOREBOOK AVAILABLE`:"";$("#modalPov").textContent=povLabel(b.pov);$("#modalText").textContent=b.short;
+  $("#modalTags").innerHTML=(b.tags||[]).map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("");$("#openBot").href=b.url;$("#openBot").textContent=`OPEN ON ${b.platform} →`;$("#openAuthor").href=b.authorUrl||b.url;$("#openAuthor").textContent=`@${b.author} ↗`;$("#downloadBot").href=b.download;
+  const l=$("#downloadLore");if(b.lorebook){l.href=b.lorebook;l.classList.remove("disabled");l.textContent="LOREBOOK ↓"}else{l.removeAttribute("href");l.classList.add("disabled");l.textContent="NO LOREBOOK"}
+  $$('.modal-tab').forEach(t=>t.classList.toggle('active',t.dataset.modalTab==='description'));$("#modal").hidden=false;document.body.style.overflow="hidden";
 }
 function closeModal(){$("#modal").hidden=true;document.body.style.overflow=""}
-function renderModalTab(){
-  if(!current)return;
-  const text=$("#modalText"), panel=$("#introPanel");
-  if(modalTab==="description"){text.hidden=false;panel.hidden=true;text.textContent=current.short||"No description available.";return}
-  if(modalTab==="scenario"){text.hidden=false;panel.hidden=true;text.textContent=current.full||"No scenario available.";return}
-  text.hidden=true;panel.hidden=false;renderIntros();
-}
-function renderIntros(){
-  const panel=$("#introPanel"), intros=(current&&current.intros)||[];
-  if(!intros.length){panel.innerHTML='<div class="intro-empty">NO INTRO MESSAGES AVAILABLE</div>';return}
-  if(intros.length===1){panel.innerHTML=`<article class="intro-single"><div class="intro-kicker">INTRO 01</div><p>${esc(intros[0])}</p></article>`;return}
-  panel.innerHTML=`<div class="intro-switches">${intros.map((_,i)=>`<button class="intro-switch ${openIntroIndex===i?'active':''}" data-intro-index="${i}">INTRO ${String(i+1).padStart(2,'0')}<span>${openIntroIndex===i?'−':'+'}</span></button>`).join('')}</div>${openIntroIndex>=0?`<article class="intro-content"><div class="intro-kicker">FIRST MESSAGE / ${String(openIntroIndex+1).padStart(2,'0')}</div><p>${esc(intros[openIntroIndex])}</p></article>`:''}`;
-}
-$("#introPanel").onclick=e=>{const b=e.target.closest("[data-intro-index]");if(!b)return;const i=Number(b.dataset.introIndex);openIntroIndex=openIntroIndex===i?-1:i;renderIntros()};
-$$('.modal-tab').forEach(t=>t.onclick=()=>{if(!current)return;modalTab=t.dataset.modalTab;openIntroIndex=-1;$$('.modal-tab').forEach(x=>x.classList.toggle('active',x===t));renderModalTab()});
+$$('.modal-tab').forEach(t=>t.onclick=()=>{if(!current)return;modalTab=t.dataset.modalTab;$$('.modal-tab').forEach(x=>x.classList.toggle('active',x===t));$("#modalText").textContent=modalTab==="description"?current.short:current.full});
 
 // Easter egg
 const terminalScripts=[

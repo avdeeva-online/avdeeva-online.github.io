@@ -1,22 +1,155 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0e100e"><title>ARCHIVE.EXE</title><link rel="stylesheet" href="styles.css"></head><body>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0d0f0d">
+  <title>ARCHIVE.EXE</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
 <div class="noise"></div>
-<header class="hero"><div class="hero-art"></div><div class="hero-fade"></div></header>
+
+<header class="hero">
+  <div class="hero-art" aria-hidden="true"></div>
+  <div class="hero-dark" aria-hidden="true"></div>
+  <div class="hero-fade" aria-hidden="true"></div>
+  <div class="hero-copy">
+    <div class="hero-kicker">CHARACTER DATABASE / NODE_00</div>
+    <div class="hero-title">ARCHIVE.EXE<span>_</span></div>
+    <div class="hero-line">FILES / CHARACTERS / STORIES / WORLDS</div>
+  </div>
+</header>
+
 <main>
-<section class="toolbar"><div class="toolbar-row">
-<button id="catalogOpen" class="icon-pill catalog-button">☰ <span>CATALOG</span></button>
-<label class="searchbar"><span class="search-icon">⌕</span><input id="searchInput" placeholder="Search by name, author, universe or tag..." autocomplete="off"></label>
-<button class="icon-pill filter-trigger" data-filter="tag"># <span>TAGS</span><em id="tagCount"></em></button>
-<button class="icon-pill filter-trigger" data-filter="pov">◉ <span>POV</span><em id="povCount"></em></button>
-<button class="icon-pill filter-trigger" data-filter="author">◎ <span>AUTHOR</span><em id="authorCount"></em></button>
-<button class="icon-pill filter-trigger" data-filter="universe"><span class="svg-icon">◌</span><span>UNIVERSE</span><em id="universeCount"></em></button>
-<button class="icon-pill filter-trigger" data-filter="lorebook"><span class="book-icon">▱</span><span>LOREBOOK</span><em id="loreCount"></em></button>
-<button id="sortTrigger" class="icon-pill sort-trigger">↕ <span id="sortLabel">NEWEST</span>⌄</button><button id="randomBtn" class="icon-pill random-trigger">✦ <span>RANDOM</span></button>
-</div><div id="activeFilters" class="active-filters"></div></section>
-<section class="tag-strip"><div class="tag-strip-head"><span>TAGS:</span><button id="clearQuickTags" hidden>CLEAR</button></div><div id="tagQuick" class="quick-list"></div></section>
-<section class="catalog-meta"><span><i></i><b id="resultCount">0</b> RECORDS</span><button id="resetBtn">RESET FILTERS</button></section><section id="grid" class="grid"></section><div id="empty" class="empty" hidden>NO MATCHING RECORDS</div>
-</main><footer><span>ARCHIVE.EXE / NODE_00</span><span id="totalMeta">000 RECORDS</span></footer>
-<div id="popover" class="popover" hidden><div class="popover-search-wrap"><span>⌕</span><input id="popoverSearch" placeholder="Find..."></div><div id="popoverList" class="popover-list"></div><div class="popover-foot"><button id="popoverReset">RESET</button><button id="popoverDone">DONE</button></div></div>
-<div id="sortMenu" class="sort-menu" hidden><button data-sort="newest">▣ NEWEST FIRST</button><button data-sort="az">A → Z</button><button data-sort="za">Z → A</button><button data-sort="author">◎ BY AUTHOR</button></div>
-<div id="drawerShade" class="drawer-shade" hidden></div><aside id="catalogDrawer" class="catalog-drawer" aria-hidden="true"><div class="drawer-head"><div><small>INDEX_00</small><strong>BROWSE CATALOG</strong></div><button id="catalogClose">×</button></div><div class="drawer-tabs"><button class="drawer-tab active" data-drawer-tab="author">AUTHORS</button><button class="drawer-tab" data-drawer-tab="universe">UNIVERSES</button><button class="drawer-tab" data-drawer-tab="tag">TAGS</button></div><label class="drawer-search"><span>⌕</span><input id="drawerSearch" placeholder="Filter list..."></label><div id="drawerList" class="drawer-list"></div></aside>
-<div id="modal" class="modal" hidden><div class="modal-backdrop" data-close></div><button class="modal-nav modal-prev" id="prevBot">‹</button><article class="modal-card"><button class="modal-close" data-close>×</button><div class="modal-cover"><img id="modalImage" alt=""><button id="modalAuthorBadge" class="author-badge"></button></div><div class="modal-content"><div class="modal-topline"><button id="modalUniverse" class="universe-link"></button><span id="modalLoreFlag"></span></div><h2 id="modalTitle"></h2><div class="modal-author-row">AUTHOR <button id="modalAuthor"></button> <span id="modalPov" class="pov-label"></span></div><div class="modal-tabs"><button class="modal-tab active" data-modal-tab="description">DESCRIPTION</button><button class="modal-tab" data-modal-tab="scenario">SCENARIO</button></div><div class="modal-text-wrap"><p id="modalText"></p></div><div id="modalTags" class="modal-tags"></div><div class="modal-actions"><a id="openBot" class="open-platform" target="_blank" rel="noopener">OPEN BOT ↗</a><a id="downloadBot" class="download-action" download>BOT CARD ↓</a><a id="downloadLore" class="download-action" download>LOREBOOK ↓</a></div></div></article><button class="modal-nav modal-next" id="nextBot">›</button></div>
-<script src="data.js"></script><script src="app.js"></script></body></html>
+  <section class="toolbar">
+    <div class="toolbar-row">
+      <button id="catalogOpen" class="control control-primary"><span class="hamb">☰</span><span>CATALOG</span></button>
+
+      <label class="searchbar">
+        <span class="search-icon">⌕</span>
+        <input id="searchInput" placeholder="Search by name, author, universe or tag..." autocomplete="off">
+      </label>
+
+      <div class="filter-group primary-group">
+        <button class="control filter-trigger" data-filter="author"><span class="at">@</span><span>AUTHOR</span><em id="authorCount"></em></button>
+        <button class="control filter-trigger" data-filter="lorebook">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3.2-.9 5.7-.6 8.5 1.1v12c-2.8-1.7-5.3-2-8.5-1.1zM20.5 5.5c-3.2-.9-5.7-.6-8.5 1.1v12c2.8-1.7 5.3-2 8.5-1.1z"/></svg>
+          <span>LOREBOOK</span><em id="loreCount"></em>
+        </button>
+      </div>
+
+      <div class="filter-group secondary-group">
+        <button id="moreTrigger" class="control subtle-control">
+          <svg class="ui-icon sliders" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M7 14v6"/></svg>
+          <span>MORE</span><em id="moreCount"></em>
+        </button>
+        <button id="sortTrigger" class="control subtle-control"><span class="sort-mark">↕</span><span id="sortLabel">NEWEST</span><span class="chev">⌄</span></button>
+      </div>
+
+      <button id="randomBtn" class="control random-trigger"><span class="random-mark">✦</span><span>RANDOM</span></button>
+    </div>
+    <div id="activeFilters" class="active-filters"></div>
+  </section>
+
+  <section class="tag-zone">
+    <div class="tag-strip-head">
+      <div><span class="tag-label">TAGS</span><small>QUICK FILTER / MULTI-SELECT</small></div>
+      <div class="tag-actions"><button id="clearQuickTags" hidden>CLEAR</button><button id="toggleAllTags">ALL TAGS +</button></div>
+    </div>
+    <div id="tagQuick" class="quick-list quick-collapsed"></div>
+    <div class="tag-scroll-hint">SHIFT + WHEEL / DRAG TO SCROLL</div>
+  </section>
+
+  <section class="catalog-meta">
+    <span><i></i><b id="resultCount">0</b> RECORDS</span>
+    <button id="resetBtn">RESET FILTERS</button>
+  </section>
+
+  <section id="grid" class="grid"></section>
+  <div id="empty" class="empty" hidden>NO MATCHING RECORDS</div>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-left"><span>ARCHIVE.EXE / NODE_00</span><span id="totalMeta">000 RECORDS</span></div>
+  <button id="lostFileBtn" class="lost-file">ARCHIVE STATUS: ONLINE&nbsp;&nbsp;•&nbsp;&nbsp;UNKNOWN FILES: 01</button>
+</footer>
+
+<div id="popover" class="popover" hidden>
+  <div class="popover-search-wrap"><span>⌕</span><input id="popoverSearch" placeholder="Find..."></div>
+  <div id="popoverList" class="popover-list"></div>
+  <div class="popover-foot"><button id="popoverReset">RESET</button><button id="popoverDone">DONE</button></div>
+</div>
+
+<div id="moreMenu" class="more-menu" hidden>
+  <div class="more-head"><span>SECONDARY FILTERS</span><button id="moreReset">RESET</button></div>
+  <div class="more-section">
+    <div class="more-title">
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-5.5 9.5-5.5S21.5 12 21.5 12 18.2 17.5 12 17.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+      POV
+    </div>
+    <div id="morePov" class="more-options"></div>
+  </div>
+  <div class="more-section">
+    <div class="more-title">
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.2 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.7 8.6 12s1.2 6.1 3.4 8.5"/></svg>
+      UNIVERSE
+    </div>
+    <label class="mini-search"><span>⌕</span><input id="moreUniverseSearch" placeholder="Find universe..."></label>
+    <div id="moreUniverse" class="more-options universe-options"></div>
+  </div>
+  <button id="moreDone" class="more-done">DONE</button>
+</div>
+
+<div id="sortMenu" class="sort-menu" hidden>
+  <button data-sort="newest">NEWEST FIRST</button>
+  <button data-sort="az">A → Z</button>
+  <button data-sort="za">Z → A</button>
+  <button data-sort="author">@ BY AUTHOR</button>
+</div>
+
+<div id="drawerShade" class="drawer-shade" hidden></div>
+<aside id="catalogDrawer" class="catalog-drawer" aria-hidden="true">
+  <div class="drawer-head"><div><small>INDEX_00</small><strong>BROWSE CATALOG</strong></div><button id="catalogClose">×</button></div>
+  <div class="drawer-tabs">
+    <button class="drawer-tab active" data-drawer-tab="tag">TAGS</button>
+    <button class="drawer-tab" data-drawer-tab="author">AUTHORS</button>
+    <button class="drawer-tab" data-drawer-tab="universe">UNIVERSES</button>
+  </div>
+  <label class="drawer-search"><span>⌕</span><input id="drawerSearch" placeholder="Filter list..."></label>
+  <div id="drawerList" class="drawer-list"></div>
+</aside>
+
+<div id="modal" class="modal" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <button class="modal-nav modal-prev" id="prevBot">‹</button>
+  <article class="modal-card">
+    <button class="modal-close" data-close>×</button>
+    <div class="modal-cover"><img id="modalImage" alt=""><button id="modalAuthorBadge" class="author-badge"></button></div>
+    <div class="modal-content">
+      <div class="modal-topline"><button id="modalUniverse" class="universe-link"></button><span id="modalLoreFlag"></span></div>
+      <h2 id="modalTitle"></h2>
+      <div class="modal-author-row">AUTHOR <button id="modalAuthor"></button> <span id="modalPov" class="pov-label"></span></div>
+      <div class="modal-tabs"><button class="modal-tab active" data-modal-tab="description">DESCRIPTION</button><button class="modal-tab" data-modal-tab="scenario">SCENARIO</button></div>
+      <div class="modal-text-wrap"><p id="modalText"></p></div>
+      <div id="modalTags" class="modal-tags"></div>
+      <div class="modal-actions"><a id="openBot" class="open-platform" target="_blank" rel="noopener">OPEN BOT ↗</a><a id="downloadBot" class="download-action" download>BOT CARD ↓</a><a id="downloadLore" class="download-action" download>LOREBOOK ↓</a></div>
+    </div>
+  </article>
+  <button class="modal-nav modal-next" id="nextBot">›</button>
+</div>
+
+<div id="lostTerminal" class="lost-terminal" hidden>
+  <div class="terminal-backdrop" data-terminal-close></div>
+  <div class="terminal-card">
+    <button class="terminal-close" data-terminal-close>×</button>
+    <div class="terminal-title">ARCHIVE.EXE // LOST_DIRECTORY</div>
+    <div id="terminalLines" class="terminal-lines"></div>
+    <button id="terminalRetry" class="terminal-retry">RECOVERY ATTEMPT</button>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

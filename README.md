@@ -1,4 +1,5 @@
-# ARCHIVE.EXE v0.8
-Character/bot archive prototype for GitHub Pages.
+# ARCHIVE.EXE v0.9
 
-v0.8: new cinematic header, Janitor-oriented tag system with emoji and multi-select AND filtering, POV filter, Universe moved to filters, clearer Lorebook marker, compact six-column catalog preserved.
+Static GitHub Pages character archive prototype.
+
+v0.9: dimmed banner with HTML overlay title, compact toolbar hierarchy, proper book/globe SVG icons, full Janitor-style tag registry, horizontal/expandable multi-select tag rail, TAGS-first catalog drawer, secondary POV/Universe menu, micro-animations, and a footer easter egg.

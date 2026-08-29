@@ -284,3 +284,61 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   .catalog-meta{padding:9px 3px 8px}
   .grid{gap:19px 14px}
 }
+
+/* v0.9.8 — cohesive UI/UX pass */
+@media (min-width:1021px){
+  /* Keep the work area compact without shrinking the readable card content. */
+  main{max-width:1660px;padding-inline:28px}
+  .toolbar-row{gap:6px;justify-content:flex-start}
+  .searchbar{flex:0 1 430px;width:min(430px,34vw);min-width:300px}
+  .control{height:31px;padding-inline:8px;border-radius:6px}
+  .control-primary{padding-inline:10px}
+  .secondary-group{padding-left:6px;margin-left:1px}
+  .random-trigger{margin-left:8px}
+
+  /* Every icon gets the same visual box, so @ / book / POV / sliders no longer jump in size. */
+  .control .ui-icon,.control .hamb,.control .at,.control .pov-cycle-icon,.control .sort-mark,.control .random-mark{
+    width:14px;height:14px;min-width:14px;display:inline-flex;align-items:center;justify-content:center;
+    font-size:12px;line-height:14px;font-weight:500;box-sizing:border-box
+  }
+  .control .at{font-size:13px;font-weight:700}
+  .control .hamb{font-size:12px}.control .pov-cycle-icon{font-size:12px}.control .random-mark{font-size:10px}
+  .icon-toggle{width:34px;padding:0}
+
+  /* Tags read as one compact filter module rather than another oversized toolbar. */
+  .tag-zone{padding:9px 0 8px;border-bottom:1px solid #292e28}
+  .tag-strip-head{margin-bottom:6px;align-items:center}
+  .tag-strip-head>div:first-child{gap:7px}
+  .tag-label{font-size:9px!important;letter-spacing:.13em}
+  .tag-strip-head small{font:500 8px/1 Arial,sans-serif!important;letter-spacing:.07em!important;color:#626a61!important}
+  .quick-list{gap:5px;padding:1px 0 1px}
+  .quick-list button{padding:5px 8px!important;font-size:9px!important;border-color:#37332e!important;background:#171614!important;color:#a98f80!important}
+  .quick-list button:hover{border-color:#625044!important;background:#1d1916!important;color:#d5b6a4!important}
+  .quick-list button.active{border-color:#9a6548!important;background:#302119!important;color:#f0d2c1!important;box-shadow:inset 0 -2px 0 rgba(176,103,65,.35)!important}
+  .tag-actions button{font-size:7px;color:#596158}
+
+  /* Result line is intentionally close to the grid. */
+  .catalog-meta{padding:8px 2px 7px;border-bottom:0}
+  .catalog-meta button{font-size:8px}
+  .grid{gap:18px 14px}
+
+  /* Images remain important, but not so dominant that all useful info falls below the fold. */
+  .card-media{aspect-ratio:3/3.72}
+  .card-body{padding-top:8px}
+  .card-title{font-size:13px}.card-title span{margin-top:2px}
+  .card-author{margin-top:5px}
+  .card-meta{margin-top:6px}
+  .card-short{margin-top:7px;line-height:1.4}
+  .card-tags{margin-top:7px}
+  .card-hashtags{margin-top:5px}
+
+  /* Download is secondary to opening the character, so it becomes a small corner action. */
+  .download-hover{left:auto;right:8px;bottom:8px;width:auto;min-width:62px;height:27px;padding:0 9px;font:7px var(--mono);border-radius:5px;background:rgba(16,19,16,.94)}
+  .new-badge{background:#713b31;color:#e5cec4;padding:4px 6px;font-size:7px}
+}
+
+/* Remove the visual 'broken continuation' effect: the tag section owns one clean divider. */
+.tag-zone:after{display:none!important}.tag-strip-head:after,.tag-actions:after{display:none!important}
+
+/* Keep supporting text readable: mono is for labels, sans is for instructions/content. */
+.card-short,.card-hashtags button,.card-hashtags span,.searchbar input{font-family:Arial,sans-serif}

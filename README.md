@@ -31,3 +31,11 @@ No changes to bot data, modal behavior, search logic, or the main catalog grid.
 - Clicking the same selected item again removes that filter.
 - Drawer closes only with X, Escape, or clicking outside.
 - Selected state is clearer and includes aria-pressed.
+
+
+## v0.9.18 — Catalog scale + initial render fix
+- Fixed the refresh bug where the page started at 0 bots until RESET FILTERS was pressed.
+- Catalog drawer reduced to 340px desktop width and tightened vertically.
+- Kept item text readable while reducing decorative microcopy and spacing.
+- Replaced confusing `ACTIVE` stat with explicit `BOTS`. Stats now read like `24 TAGS / 06 BOTS / 00 SELECTED`.
+- Multi-select/toggle behavior from v0.9.17 is preserved.

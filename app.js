@@ -233,7 +233,7 @@ function renderDrawer(){
   $("#drawerTotal").textContent=`${String(B.length).padStart(3,"0")} RECORDS`;
   const label=drawerTab==="tag"?"TAGS":drawerTab==="author"?"AUTHORS":"WORLDS";
   $("#drawerStatPrimary").textContent=`${String(allVals.length).padStart(2,"0")} ${label}`;
-  $("#drawerStatSecondary").textContent=`${String(drawerActiveCount(allVals)).padStart(2,"0")} ACTIVE`;
+  $("#drawerStatSecondary").textContent=`${String(B.length).padStart(2,"0")} BOTS`;
   $("#drawerStatSelected").textContent=`${String(drawerSelectionCount()).padStart(2,"0")} SELECTED`;
   $("#drawerFootStatus").textContent=q?`${String(vals.length).padStart(2,"0")} MATCHES`:"STABLE";
 
@@ -682,3 +682,8 @@ wireHashtagGhosts();
   };
   renderDrawer();
 })();
+
+
+/* v0.9.18 — guaranteed initial paint.
+   The grid used to stay at 0 RECORDS until any interaction called render(). */
+render();

@@ -1,3 +1,11 @@
+# ARCHIVE.EXE v0.9.20 — Catalog Clean / Legibility
+
+- Removed the decorative catalog statistics row (`TAGS / BOTS / SELECTED`).
+- Narrowed the desktop catalog drawer to ~292 px.
+- Increased readable text sizes for tabs, search, tags, authors and universes.
+- Main entry names now use the readable site sans font; small archive metadata remains monospace.
+- Existing multi-select, toggle-off behavior, boot fix, filters and anomaly system are preserved.
+
 # ARCHIVE.EXE v0.9.19 — Boot Fix + Compact Catalog
 
 Changes:

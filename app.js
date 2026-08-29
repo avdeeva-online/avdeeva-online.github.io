@@ -239,10 +239,6 @@ function renderDrawer(){
   if(!list) return;
   list.dataset.layout=drawerTab;
   $("#drawerTotal").textContent=`${String(B.length).padStart(3,"0")} RECORDS`;
-  const label=drawerTab==="tag"?"TAGS":drawerTab==="author"?"AUTHORS":"WORLDS";
-  $("#drawerStatPrimary").textContent=`${String(allVals.length).padStart(2,"0")} ${label}`;
-  $("#drawerStatSecondary").textContent=`${String(B.length).padStart(2,"0")} BOTS`;
-  $("#drawerStatSelected").textContent=`${String(drawerSelectionCount()).padStart(2,"0")} SELECTED`;
   $("#drawerFootStatus").textContent=q?`${String(vals.length).padStart(2,"0")} MATCHES`:"STABLE";
 
   if(drawerTab==="tag"){

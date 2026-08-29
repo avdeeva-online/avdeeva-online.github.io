@@ -28,7 +28,32 @@
   </div>
 </header>
 
-<main>
+<main class="layout">
+  <aside class="catalog-sidebar" id="catalogSidebar">
+    <div class="sidebar-head">
+      <div>
+        <div class="sidebar-kicker">CATALOG_</div>
+        <div class="sidebar-title">BROWSE INDEX</div>
+      </div>
+      <button class="sidebar-close" id="sidebarClose">×</button>
+    </div>
+
+    <div class="sidebar-tabs">
+      <button class="sidebar-tab active" data-side-tab="author">AUTHORS</button>
+      <button class="sidebar-tab" data-side-tab="universe">UNIVERSES</button>
+      <button class="sidebar-tab" data-side-tab="genre">GENRES</button>
+    </div>
+
+    <label class="sidebar-search">
+      <span>FIND_</span>
+      <input id="sidebarSearch" placeholder="Filter list...">
+    </label>
+
+    <div class="sidebar-list" id="sidebarList"></div>
+  </aside>
+
+  <div class="catalog-main">
+  <button class="sidebar-open" id="sidebarOpen">☰ BROWSE CATALOG</button>
   <section class="controls">
     <label class="search">
       <span>SEARCH_</span>
@@ -52,6 +77,7 @@
 
   <section id="grid" class="grid"></section>
   <div id="empty" class="empty" hidden>NO MATCHES</div>
+  </div>
 </main>
 
 <footer><span>ARCHIVE.EXE / INDEX_00</span><span>v0.2 / ONLINE</span></footer>

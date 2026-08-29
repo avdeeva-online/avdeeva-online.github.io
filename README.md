@@ -1,9 +1,10 @@
-# ARCHIVE.EXE v0.3
+# ARCHIVE.EXE v0.4
 
 Changes:
-- cleaner post-apocalypse archive palette: charcoal, muted olive, rust, sand
-- restrained survival/archive atmosphere without grunge overload
-- six cards per row on wide desktop screens
-- smaller card typography and tighter spacing
-- responsive: 5 / 4 / 3 / 2 columns as the screen narrows
-- lorebook and random-card controls from v0.2 preserved
+- new left-side catalog browser
+- tabs: AUTHORS / UNIVERSES / GENRES
+- searchable sidebar lists with record counts
+- clicking an item filters the card grid
+- responsive mobile drawer
+- cleaner post-apocalypse palette: charcoal, muted olive, parchment, warm rust/amber accents
+- six-card desktop grid preserved

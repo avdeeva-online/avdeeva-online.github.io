@@ -1,17 +1,2 @@
-# ARCHIVE.EXE v0.1
-
-Статический прототип каталога ботов для GitHub Pages.
-
-## Файлы
-- `index.html` — главная страница
-- `styles.css` — внешний вид
-- `app.js` — поиск, фильтры, модальное окно
-- `data.js` — данные тестовых ботов
-- `assets/` — изображения
-- `downloads/` — скачиваемые карточки
-
-## Как заменить тестового бота
-Открой `data.js` и замени поля нужного объекта:
-`nameRu`, `nameEn`, `author`, `universe`, `tags`, `short`, `full`, `image`, `platform`, `url`, `download`.
-
-Все авторы, теги и вселенные автоматически становятся кликабельными фильтрами.
+# ARCHIVE.EXE v0.2
+Changes: compact illustrated header, English-only UI, softer rounded controls/cards, smaller typography, lorebook download support + lorebook filter, smaller modal, random-next/random-prev arrows.

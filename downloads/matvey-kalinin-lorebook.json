@@ -1,0 +1,11 @@
+{
+  "name": "Matvey Kalinin Lorebook",
+  "universe": "The Pace of Death",
+  "demo": true,
+  "entries": [
+    {
+      "key": "demo",
+      "content": "Demo lorebook placeholder for ARCHIVE.EXE v0.2"
+    }
+  ]
+}

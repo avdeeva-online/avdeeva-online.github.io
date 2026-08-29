@@ -18,7 +18,8 @@ window.BOTS = [
     "platform": "JANITOR",
     "url": "https://example.com/",
     "download": "downloads/matvey-kalinin.json",
-    "isNew": true
+    "isNew": true,
+    "lorebook": "downloads/matvey-kalinin-lorebook.json"
   },
   {
     "id": "arina-volkova",
@@ -38,7 +39,8 @@ window.BOTS = [
     "platform": "TAVO",
     "url": "https://example.com/",
     "download": "downloads/arina-volkova.json",
-    "isNew": true
+    "isNew": true,
+    "lorebook": null
   },
   {
     "id": "leo-hart",
@@ -58,7 +60,8 @@ window.BOTS = [
     "platform": "JANITOR",
     "url": "https://example.com/",
     "download": "downloads/leo-hart.json",
-    "isNew": false
+    "isNew": false,
+    "lorebook": "downloads/leo-hart-lorebook.json"
   },
   {
     "id": "mira-seo",
@@ -78,7 +81,8 @@ window.BOTS = [
     "platform": "TAVO",
     "url": "https://example.com/",
     "download": "downloads/mira-seo.json",
-    "isNew": false
+    "isNew": false,
+    "lorebook": null
   },
   {
     "id": "cassian-vale",
@@ -98,7 +102,8 @@ window.BOTS = [
     "platform": "JANITOR",
     "url": "https://example.com/",
     "download": "downloads/cassian-vale.json",
-    "isNew": true
+    "isNew": true,
+    "lorebook": "downloads/cassian-vale-lorebook.json"
   },
   {
     "id": "elias-reed",
@@ -118,6 +123,7 @@ window.BOTS = [
     "platform": "TAVO",
     "url": "https://example.com/",
     "download": "downloads/elias-reed.json",
-    "isNew": false
+    "isNew": false,
+    "lorebook": null
   }
 ];

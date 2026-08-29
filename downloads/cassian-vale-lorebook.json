@@ -1,0 +1,11 @@
+{
+  "name": "Cassian Vale Lorebook",
+  "universe": "Black Harbour",
+  "demo": true,
+  "entries": [
+    {
+      "key": "demo",
+      "content": "Demo lorebook placeholder for ARCHIVE.EXE v0.2"
+    }
+  ]
+}

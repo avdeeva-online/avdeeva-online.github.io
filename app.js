@@ -703,3 +703,27 @@ wireHashtagGhosts();
   else paint();
   window.addEventListener('load', ()=>{ syncBots(); render(); }, {once:true});
 })();
+
+/* v0.9.22 — subtle hero atmosphere signal.
+   A rare image-slice glitch ties the photographic banner to the archive UI
+   without turning the hero into a constantly animated background. */
+(function wireHeroImageSignal(){
+  const hero=document.querySelector('.hero');
+  if(!hero || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  let timer;
+  function schedule(){
+    const wait=30000 + Math.random()*22000;
+    timer=setTimeout(()=>{
+      if(!document.hidden){
+        hero.classList.add('hero-image-glitch');
+        setTimeout(()=>hero.classList.remove('hero-image-glitch'),320);
+      }
+      schedule();
+    },wait);
+  }
+  schedule();
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){ clearTimeout(timer); }
+    else { clearTimeout(timer); schedule(); }
+  });
+})();

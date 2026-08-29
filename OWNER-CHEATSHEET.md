@@ -26,3 +26,10 @@ Hidden motif: the archive occasionally behaves as if an unindexed `RECORD_000` e
 - TAGS are a compact two-column index; AUTHORS and UNIVERSES deliberately use different record layouts.
 - Existing missing-tab and impossible-author anomalies remain.
 - A small additional Catalog anomaly may briefly report one extra index entry in the compact stats line.
+
+## v0.9.22 hero atmosphere
+- Hero art now has a very slow 30s alternate drift/zoom.
+- Dust layer moves continuously but at ~10% opacity and is concentrated toward the scenic left/middle.
+- A faint scan haze crosses the hero occasionally on a 17s cycle.
+- The photographic hero itself gets a rare short horizontal slice glitch every ~30–52 seconds.
+- Existing ARCHIVE.EXE logo glitch behavior is unchanged and remains intentionally more noticeable than the image glitch.

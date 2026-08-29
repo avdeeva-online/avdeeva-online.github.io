@@ -1,3 +1,12 @@
+# ARCHIVE.EXE v0.9.22 — Hero Atmosphere
+
+- Replaced the header art with the dark summer post-apocalypse scene: reclaimed concrete, warm dusty light, deer, dead terminal.
+- Softened the right-side darkening so the hero stays integrated with the dark site instead of splitting into an obvious black panel.
+- Added very slow background drift, faint floating dust, and an occasional soft scan haze.
+- Added a rare 0.28s horizontal image-slice glitch roughly every 30–52 seconds to connect the landscape with the archive corruption language.
+- Motion respects `prefers-reduced-motion`.
+- No filters, catalog logic, boot logic, toolbar, bot data, or existing easter eggs were changed.
+
 # ARCHIVE.EXE v0.9.20 — Catalog Clean / Legibility
 
 - Removed the decorative catalog statistics row (`TAGS / BOTS / SELECTED`).

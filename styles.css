@@ -1108,3 +1108,110 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   #povCycle{min-width:54px!important;padding-inline:7px!important}
   .pov-cycle-label{font-size:7.5px!important}
 }
+
+/* =========================================================
+   v0.9.22 — HERO ATMOSPHERE PASS
+   New dark summer post-apocalypse artwork + restrained motion.
+   ========================================================= */
+.hero-art{
+  background-image:url('assets/header.png')!important;
+  background-position:center 54%!important;
+  filter:brightness(.44) saturate(.72) contrast(1.03)!important;
+  transform:scale(1.035)!important;
+  animation:heroDriftV0922 30s ease-in-out infinite alternate!important;
+  will-change:transform,filter;
+}
+@keyframes heroDriftV0922{
+  0%{transform:scale(1.035) translate3d(0,0,0)}
+  100%{transform:scale(1.055) translate3d(-.35%,.18%,0)}
+}
+
+/* Keep the site dark, but avoid a visible black "panel" split on the right. */
+.hero-dark{
+  background:linear-gradient(90deg,
+    rgba(8,10,8,.12) 0%,
+    rgba(8,10,8,.16) 46%,
+    rgba(8,10,8,.48) 67%,
+    rgba(8,10,8,.72) 82%,
+    rgba(8,10,8,.84) 100%)!important;
+}
+.hero-dark:after{
+  width:42%!important;
+  background:linear-gradient(90deg,rgba(11,13,11,.08),rgba(11,13,11,.42))!important;
+  backdrop-filter:blur(.25px)!important;
+}
+.hero-fade{
+  background:linear-gradient(180deg,rgba(13,15,13,.03) 48%,rgba(13,15,13,.45) 76%,var(--bg) 100%)!important;
+}
+
+/* Slow floating dust. Deliberately faint; it should be noticed, not watched. */
+.hero-dust{
+  position:absolute;
+  inset:-8%;
+  z-index:1;
+  pointer-events:none;
+  opacity:.105;
+  background-image:
+    radial-gradient(circle,rgba(232,210,156,.72) 0 1px,transparent 1.45px),
+    radial-gradient(circle,rgba(219,198,148,.48) 0 .8px,transparent 1.25px),
+    radial-gradient(circle,rgba(231,215,176,.34) 0 .65px,transparent 1.1px);
+  background-size:137px 113px,193px 157px,251px 211px;
+  background-position:12px 9px,63px 42px,117px 86px;
+  -webkit-mask-image:linear-gradient(90deg,rgba(0,0,0,.95),rgba(0,0,0,.78) 55%,rgba(0,0,0,.2) 82%,transparent 100%);
+  mask-image:linear-gradient(90deg,rgba(0,0,0,.95),rgba(0,0,0,.78) 55%,rgba(0,0,0,.2) 82%,transparent 100%);
+  animation:heroDustFloatV0922 24s linear infinite;
+  will-change:transform,background-position;
+}
+@keyframes heroDustFloatV0922{
+  from{transform:translate3d(0,1.2%,0);background-position:12px 9px,63px 42px,117px 86px}
+  to{transform:translate3d(.7%,-1.8%,0);background-position:30px -42px,79px -14px,141px 31px}
+}
+
+/* A nearly invisible scan haze links the landscape to ARCHIVE.EXE's signal language. */
+.hero-scan{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  opacity:.075;
+  background:linear-gradient(180deg,transparent 0%,transparent 44%,rgba(173,188,151,.11) 49.5%,transparent 52%,transparent 100%);
+  background-size:100% 210%;
+  animation:heroScanV0922 17s ease-in-out infinite;
+  mix-blend-mode:screen;
+}
+@keyframes heroScanV0922{
+  0%,18%{background-position:0 -90%;opacity:0}
+  24%{opacity:.07}
+  38%{background-position:0 120%;opacity:.035}
+  42%,100%{opacity:0}
+}
+
+/* Very rare image-slice glitch. The logo glitch remains the main obvious signal. */
+.hero-art:after{
+  content:"";
+  position:absolute;
+  inset:0;
+  opacity:0;
+  pointer-events:none;
+  background-image:url('assets/header.png');
+  background-size:cover;
+  background-position:center 54%;
+  filter:brightness(.47) saturate(.76) contrast(1.05);
+}
+.hero.hero-image-glitch .hero-art:after{animation:heroImageSliceV0922 .28s steps(2,end) both}
+@keyframes heroImageSliceV0922{
+  0%{opacity:0;clip-path:inset(31% 0 57% 0);transform:translateX(0)}
+  22%{opacity:.22;clip-path:inset(31% 0 57% 0);transform:translateX(6px)}
+  48%{opacity:.12;clip-path:inset(63% 0 23% 0);transform:translateX(-4px)}
+  74%{opacity:.18;clip-path:inset(18% 0 70% 0);transform:translateX(3px)}
+  100%{opacity:0;transform:translateX(0)}
+}
+
+@media(max-width:760px){
+  .hero-art{background-position:42% 54%!important;filter:brightness(.42) saturate(.7) contrast(1.03)!important}
+  .hero-dust{opacity:.07}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero-art,.hero-dust,.hero-scan{animation:none!important}
+  .hero.hero-image-glitch .hero-art:after{animation:none!important}
+}

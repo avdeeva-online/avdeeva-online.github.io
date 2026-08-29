@@ -1329,3 +1329,151 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 @media(prefers-reduced-motion:reduce){
   .hero-light-haze,.hero-terminal-signal{animation:none!important}
 }
+
+
+/* =========================================================
+   v0.9.24 — HERO LIVING SCENE
+   Dust falls/drifts instead of rising; the image terminal is
+   visually relocated to the left; the distant deer gets a
+   very small organic movement without turning the hero into
+   a video.
+   ========================================================= */
+
+/* Dust should feel like suspended debris slowly settling, not smoke. */
+.hero-dust{
+  animation:heroDustSettleV0924 19s linear infinite!important;
+}
+@keyframes heroDustSettleV0924{
+  0%{
+    transform:translate3d(-.35%,-2.2%,0);
+    background-position:12px -42px,53px -18px,101px -8px;
+  }
+  48%{
+    transform:translate3d(.18%,.45%,0);
+    background-position:25px 8px,68px 31px,118px 45px;
+  }
+  100%{
+    transform:translate3d(.65%,3.1%,0);
+    background-position:42px 69px,84px 93px,136px 112px;
+  }
+}
+
+/* Hide the terminal in its original right-side position so it does not
+   sit underneath the ARCHIVE.EXE copy. This is intentionally a soft
+   shadow, not a solid rectangle. */
+.hero-terminal-cover{
+  position:absolute;
+  z-index:1;
+  pointer-events:none;
+  left:62%;
+  top:13%;
+  width:27%;
+  height:76%;
+  background:
+    radial-gradient(ellipse at 47% 57%,
+      rgba(8,10,8,.84) 0%,
+      rgba(8,10,8,.74) 27%,
+      rgba(8,10,8,.42) 52%,
+      rgba(8,10,8,.08) 74%,
+      transparent 100%);
+  filter:blur(12px);
+  opacity:.86;
+}
+
+/* Softly duplicate only the terminal area from the actual hero artwork,
+   then move that piece to the left. Because it uses the same image and
+   crop as the background, it stays visually integrated with the scene. */
+.hero-terminal-clone{
+  position:absolute;
+  inset:-1.8%;
+  z-index:1;
+  pointer-events:none;
+  background-image:url('assets/header.png');
+  background-size:cover;
+  background-position:center 70%;
+  filter:brightness(.50) saturate(.78) contrast(1.04);
+  opacity:.96;
+  -webkit-mask-image:
+    radial-gradient(ellipse 12.5% 26% at 73.5% 61%,
+      #000 0 45%,
+      rgba(0,0,0,.96) 58%,
+      rgba(0,0,0,.58) 74%,
+      transparent 100%);
+  mask-image:
+    radial-gradient(ellipse 12.5% 26% at 73.5% 61%,
+      #000 0 45%,
+      rgba(0,0,0,.96) 58%,
+      rgba(0,0,0,.58) 74%,
+      transparent 100%);
+  transform:translate3d(-47.5%,0,0);
+}
+
+/* Put the green "wake" pulse on the relocated terminal. */
+.hero-terminal-signal{
+  left:21.25%!important;
+  top:57.5%!important;
+  width:6.3%!important;
+  height:10.5%!important;
+  opacity:0;
+}
+
+/* A second, feathered copy around the distant deer moves by only a few
+   pixels. At normal hero size this reads as a tiny weight/head shift,
+   while the surrounding feather hides the image seam. */
+.hero-deer-motion{
+  position:absolute;
+  inset:-1.8%;
+  z-index:1;
+  pointer-events:none;
+  background-image:url('assets/header.png');
+  background-size:cover;
+  background-position:center 70%;
+  filter:brightness(.49) saturate(.77) contrast(1.04);
+  opacity:.92;
+  transform-origin:22.3% 59%;
+  -webkit-mask-image:
+    radial-gradient(ellipse 3.3% 9.5% at 22.3% 59%,
+      #000 0 43%,
+      rgba(0,0,0,.78) 61%,
+      transparent 100%);
+  mask-image:
+    radial-gradient(ellipse 3.3% 9.5% at 22.3% 59%,
+      #000 0 43%,
+      rgba(0,0,0,.78) 61%,
+      transparent 100%);
+  animation:heroDeerV0924 8.6s ease-in-out infinite;
+  will-change:transform,filter;
+}
+@keyframes heroDeerV0924{
+  0%,18%,100%{transform:translate3d(0,0,0) scale(1)}
+  31%{transform:translate3d(1px,1px,0) scale(1.002)}
+  44%{transform:translate3d(2px,0,0) scale(1.003)}
+  56%{transform:translate3d(1px,-1px,0) scale(1.002)}
+  67%{transform:translate3d(0,0,0) scale(1)}
+}
+
+/* Keep terminal/deer motion below copy and UI. */
+.hero-copy{z-index:4!important}
+.hero-dark,.hero-fade{z-index:2!important}
+.hero-dust,.hero-light-haze,.hero-terminal-cover,
+.hero-terminal-clone,.hero-deer-motion,.hero-terminal-signal,.hero-scan{z-index:1!important}
+
+/* The relocated terminal is a little easier to notice on hover over the
+   hero without behaving like a button. */
+.hero:hover .hero-terminal-clone{
+  filter:brightness(.53) saturate(.80) contrast(1.04);
+  transition:filter 1.1s ease;
+}
+
+@media(max-width:1020px){
+  .hero-terminal-clone{transform:translate3d(-45%,0,0)}
+  .hero-terminal-cover{left:60%;width:30%}
+  .hero-terminal-signal{left:23%!important}
+}
+@media(max-width:760px){
+  .hero-terminal-clone,.hero-terminal-cover,.hero-deer-motion{display:none}
+  .hero-terminal-signal{display:none!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero-deer-motion{animation:none!important}
+}

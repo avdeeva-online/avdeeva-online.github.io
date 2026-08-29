@@ -33,3 +33,10 @@ Hidden motif: the archive occasionally behaves as if an unindexed `RECORD_000` e
 - A faint scan haze crosses the hero occasionally on a 17s cycle.
 - The photographic hero itself gets a rare short horizontal slice glitch every ~30–52 seconds.
 - Existing ARCHIVE.EXE logo glitch behavior is unchanged and remains intentionally more noticeable than the image glitch.
+
+
+## v0.9.24 HERO NOTES
+- Dust settles downward over ~19 seconds.
+- Terminal image fragment is relocated left using a feathered copy of the same hero artwork.
+- Original terminal area is softly shadowed so it does not fight with ARCHIVE.EXE.
+- Deer overlay makes a 1–2 px slow shift every ~8.6 sec (intentionally subtle).

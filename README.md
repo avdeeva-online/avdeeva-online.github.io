@@ -1,3 +1,11 @@
+# ARCHIVE.EXE v0.9.24 — Hero Living Scene
+
+- Hero dust now drifts/settles downward rather than rising.
+- The dead terminal is visually relocated from the right side to the left side of the hero.
+- Its green wake/glitch pulse follows the relocated terminal.
+- The distant deer now has a tiny, slow organic movement.
+- Existing catalog, filters, boot fixes, toolbar, glitches and easter eggs are unchanged.
+
 # ARCHIVE.EXE v0.9.23 — Hero Motion Fix
 
 - Reframed hero artwork so the dead terminal is visible in the banner crop.

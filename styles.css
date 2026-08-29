@@ -253,3 +253,34 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 .archive-flicker{outline:1px solid rgba(182,77,63,.32);outline-offset:-2px}
 
 @media(max-width:1250px){.random-trigger{margin-left:5px}.searchbar{flex:1 1 360px;width:auto}}
+
+/* v0.9.7 — density / spacing pass. No functional changes. */
+@media (min-width:1021px){
+  .hero{height:clamp(245px,23vw,325px)}
+  .hero-copy{width:min(390px,29vw)}
+  .hero-title{font-size:clamp(28px,2.65vw,43px);padding-bottom:10px}
+  .hero-line{margin-top:12px}
+
+  main{max-width:1600px;padding:0 26px 58px}
+  .toolbar{margin-top:-18px;padding-top:7px}
+  .toolbar-row{gap:6px}
+  .control{height:32px;padding:0 8px;font-size:8px;gap:5px}
+  .control-primary{padding-inline:10px}
+  .ui-icon{width:13px;height:13px}
+  .searchbar{height:32px;flex:0 1 390px;width:min(390px,31vw);min-width:250px;padding:0 10px}
+  .searchbar input{font-size:11px}
+  .filter-group{gap:5px}
+  .random-trigger{margin-left:10px;padding-inline:12px}
+
+  .tag-zone{padding:10px 0 7px}
+  .tag-strip-head{margin-bottom:5px;align-items:center}
+  .tag-strip-head>div:first-child{gap:8px}
+  .tag-strip-head small{font-size:8px}
+  .tag-actions{gap:6px}
+  .quick-list{gap:5px;padding:1px 1px 2px}
+  .quick-list button{padding:5px 8px!important;font-size:9px!important}
+  .tag-scroll-hint{display:none}
+
+  .catalog-meta{padding:9px 3px 8px}
+  .grid{gap:19px 14px}
+}

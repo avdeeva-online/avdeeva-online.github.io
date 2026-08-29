@@ -24,3 +24,7 @@ Functional/readability patch built on v0.9.4-functional.
 - lorebook availability is icon-only
 - invisible tag scrollbar
 - slightly stronger archive glitch
+
+
+## v0.9.7-density
+Visual density patch only: shorter hero, smaller toolbar controls, shorter search, tighter tag rail, reduced vertical whitespace before the card grid. Functionality is unchanged from v0.9.6-functional.

@@ -74,12 +74,6 @@
 
   const observer=new MutationObserver(()=>patchModal());
   const start=()=>{
-    if(!document.querySelector('link[href="modal-spacing.css"]')){
-      const link=document.createElement('link');
-      link.rel='stylesheet';
-      link.href='modal-spacing.css';
-      document.head.appendChild(link);
-    }
     const modal=document.getElementById('modal');
     const author=document.getElementById('modalAuthor');
     if(modal)observer.observe(modal,{attributes:true,attributeFilter:['hidden']});

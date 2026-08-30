@@ -1312,3 +1312,41 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
     background-position:34% center!important;
   }
 }
+
+
+/* =========================================================
+   v0.9.28 — NARROWER HERO
+   ========================================================= */
+
+.hero{
+  height:clamp(255px,15.5vw,300px)!important;
+}
+
+/* Match the flatter source crop more closely so cover cuts much less. */
+.hero-art{
+  background-size:cover!important;
+  background-position:center center!important;
+}
+
+/* Slightly soften the bottom merge because the header is now shorter. */
+.hero-fade{
+  background:
+    linear-gradient(180deg,
+      transparent 0%,
+      transparent 58%,
+      rgba(9,12,9,.08) 74%,
+      rgba(9,12,9,.30) 88%,
+      rgba(9,12,9,.78) 100%)!important;
+}
+
+/* Keep title visually centered inside the reduced hero. */
+.hero-copy{
+  top:48%!important;
+  transform:translateY(-50%)!important;
+}
+
+@media(max-width:760px){
+  .hero{
+    height:245px!important;
+  }
+}

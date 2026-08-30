@@ -87,7 +87,10 @@
 
 <footer class="site-footer">
   <div class="footer-left"><span>ARCHIVE.EXE / NODE_00</span><span id="totalMeta">000 RECORDS</span></div>
-  <button id="lostFileBtn" class="lost-file">ARCHIVE STATUS: ONLINE&nbsp;&nbsp;•&nbsp;&nbsp;UNKNOWN FILES: 01</button>
+  <div class="footer-right">
+    <button id="lostFileBtn" class="lost-file">ARCHIVE STATUS: ONLINE&nbsp;&nbsp;•&nbsp;&nbsp;UNKNOWN FILES: 01</button>
+    <a class="archive-credit" href="https://t.me/ne_avdeeva" target="_blank" rel="noopener noreferrer">CURATED BY NE AVDEEVA ↗</a>
+  </div>
   <div class="footer-growth" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
 </footer>
 
@@ -152,8 +155,9 @@
   <div class="terminal-backdrop" data-terminal-close></div>
   <div class="terminal-card">
     <button class="terminal-close" data-terminal-close>×</button>
-    <div class="terminal-title">ARCHIVE.EXE // LOST_DIRECTORY</div>
+    <div class="terminal-title"><span>ARCHIVE.EXE // LOST_DIRECTORY</span><span id="terminalSignal" class="terminal-signal">SIGNAL: UNSTABLE</span></div>
     <div id="terminalLines" class="terminal-lines"></div>
+    <div class="terminal-cursor-row" aria-hidden="true">&gt; <span class="terminal-cursor">_</span></div>
     <button id="terminalRetry" class="terminal-retry">RECOVERY ATTEMPT</button>
   </div>
 </div>

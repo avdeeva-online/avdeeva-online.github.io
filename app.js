@@ -377,7 +377,6 @@ function switchModalRecord(b,direction=1){
   const card=document.querySelector(".modal-card");
   if(!b) return;
 
-  // First opening: keep the normal modal entrance animation.
   if(modal.hidden || !current || !card){
     openModal(b);
     return;
@@ -385,22 +384,30 @@ function switchModalRecord(b,direction=1){
   if(modalSwitching) return;
   modalSwitching=true;
 
-  const outClass=direction>0?"record-out-left":"record-out-right";
-  const inClass=direction>0?"record-in-right":"record-in-left";
+  // Render once, then give the new record one very short directional nudge.
+  // No outgoing clone, no second image animation, no delayed duplicate state.
+  openModal(b,true);
 
-  card.classList.remove("record-out-left","record-out-right","record-in-left","record-in-right");
-  void card.offsetWidth;
-  card.classList.add(outClass);
+  if(card.getAnimations){
+    card.getAnimations().forEach(a=>{
+      if(a.animationName!=="modalIn") a.cancel();
+    });
+  }
 
-  setTimeout(()=>{
-    openModal(b,true);
-    card.classList.remove(outClass);
-    card.classList.add(inClass);
-    setTimeout(()=>{
-      card.classList.remove(inClass);
-      modalSwitching=false;
-    },230);
-  },145);
+  const fromX=direction>0?10:-10;
+  const anim=card.animate(
+    [
+      {opacity:.48, transform:`translate3d(${fromX}px,0,0) scale(.997)`},
+      {opacity:1, transform:"translate3d(0,0,0) scale(1)"}
+    ],
+    {
+      duration:145,
+      easing:"cubic-bezier(.2,.75,.25,1)",
+      fill:"both"
+    }
+  );
+  anim.onfinish=()=>{modalSwitching=false; anim.cancel()};
+  anim.oncancel=()=>{modalSwitching=false};
 }
 
 function openModal(b,keepOpen=false){
@@ -478,20 +485,162 @@ $$('.modal-tab').forEach(t=>t.onclick=()=>{
 const anomalyTargets=["#catalogOpen",".hashtag-trigger",".universe-trigger","#sortTrigger","#loreToggle","#povCycle","#randomBtn"];
 anomalyTargets.forEach(sel=>{const el=$(sel);if(!el)return;el.addEventListener("mouseenter",()=>{if(Math.random()<.045){el.classList.add("archive-flicker");setTimeout(()=>el.classList.remove("archive-flicker"),620)}})});
 
-// Easter egg
-const terminalScripts=[
-  ["ACCESSING LOST DIRECTORY...","FILE_001: CORRUPTED","RECOVERY STATUS: 17%","Someone left a record here. It does not belong to any known universe."],
-  ["SCANNING UNUSED INDEX...","SIGNAL DETECTED","SOURCE: UNKNOWN","The archive insists there are only " + B.length + " records. The archive is lying."],
-  ["RECOVERY ATTEMPT #07...","CHECKSUM MISMATCH","FRAGMENT: /stories/???","Come back when the directory remembers its own name."]
-];
-let terminalIndex=0;
-function showTerminal(){renderTerminal();$("#lostTerminal").hidden=false}
-function hideTerminal(){$("#lostTerminal").hidden=true}
-function renderTerminal(){const lines=terminalScripts[terminalIndex%terminalScripts.length];$("#terminalLines").innerHTML=lines.map((x,i)=>`<div class="${i===1?'warn':i===2?'ok':''}">&gt; ${esc(x)}</div>`).join("")}
-$("#lostFileBtn").onclick=showTerminal;
-let logoClicks=0,logoTimer;$(".hero-title").addEventListener("click",()=>{logoClicks++;clearTimeout(logoTimer);logoTimer=setTimeout(()=>logoClicks=0,1800);if(logoClicks===5){logoClicks=0;archiveWhisper("NODE_00 REMEMBERS YOU.",true)}});$("#terminalRetry").onclick=()=>{terminalIndex++;renderTerminal()};$$('[data-terminal-close]').forEach(x=>x.onclick=hideTerminal);
+// Easter egg — LOST DIRECTORY
+let terminalTypingToken=0;
+let terminalBusy=false;
 
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();closeDrawer();$("#popover").hidden=true;$("#sortMenu").hidden=true;hideTerminal()}if(!$("#modal").hidden&&["ArrowRight","ArrowLeft"].includes(e.key))randomModal()});
+function terminalSeenCount(){
+  try{return Number(localStorage.getItem("archiveLostDirectorySeen")||0)}catch(_){return 0}
+}
+function bumpTerminalSeen(){
+  const n=terminalSeenCount()+1;
+  try{localStorage.setItem("archiveLostDirectorySeen",String(n))}catch(_){}
+  return n;
+}
+function terminalIntroFor(seen){
+  if(seen>=5) return [
+    ["ACCESSING LOST DIRECTORY...","normal"],
+    ["You again?","warn"],
+    ["FILE_001 refuses recovery.","warn"],
+    ["FILE_002 detected.","ok"],
+    ["INDEX ACCESS: DENIED","warn"]
+  ];
+  if(seen===3 || seen===4) return [
+    ["ACCESSING LOST DIRECTORY...","normal"],
+    ["SESSION SIGNATURE RECOGNIZED","ok"],
+    ["You have been here before.","warn"],
+    ["RECOVERY STATUS: 17%","ok"],
+    ["Do not trust the percentage.","normal"]
+  ];
+  return [
+    ["ACCESSING LOST DIRECTORY...","normal"],
+    ["FILE_001: CORRUPTED","warn"],
+    ["RECOVERY STATUS: 17%","ok"],
+    ["Someone left a record here.","normal"],
+    ["It does not belong to any known universe.","normal"]
+  ];
+}
+function setTerminalSignal(text,hot=false){
+  const signal=$("#terminalSignal");
+  if(!signal)return;
+  signal.textContent=text;
+  signal.classList.toggle("hot",hot);
+}
+function wait(ms){return new Promise(r=>setTimeout(r,ms))}
+async function typeTerminalLines(lines,{clear=true,speed=17}={}){
+  const token=++terminalTypingToken;
+  const box=$("#terminalLines");
+  if(clear) box.innerHTML="";
+  terminalBusy=true;
+  $("#terminalRetry").disabled=true;
+
+  for(const [text,kind="normal"] of lines){
+    if(token!==terminalTypingToken)return;
+    const row=document.createElement("div");
+    row.className=kind;
+    row.innerHTML='<span class="terminal-prompt">&gt;</span> <span></span>';
+    box.appendChild(row);
+    const target=row.querySelector("span:last-child");
+    for(let i=0;i<text.length;i++){
+      if(token!==terminalTypingToken)return;
+      target.textContent+=text[i];
+      if(i%3===0) await wait(speed);
+    }
+    await wait(95);
+  }
+  terminalBusy=false;
+  $("#terminalRetry").disabled=false;
+}
+async function showTerminal(){
+  $("#lostTerminal").hidden=false;
+  const seen=bumpTerminalSeen();
+  setTerminalSignal("SIGNAL: UNSTABLE",false);
+  $(".terminal-card")?.classList.remove("terminal-hit","terminal-recovered");
+  await wait(120);
+  typeTerminalLines(terminalIntroFor(seen));
+}
+function hideTerminal(){
+  terminalTypingToken++;
+  terminalBusy=false;
+  $("#lostTerminal").hidden=true;
+}
+async function recoveryAttempt(){
+  if(terminalBusy)return;
+  const btn=$("#terminalRetry");
+  btn.disabled=true;
+  setTerminalSignal("RECOVERY: ACTIVE",true);
+
+  const box=$("#terminalLines");
+  box.innerHTML="";
+  const progress=document.createElement("div");
+  progress.className="terminal-progress-wrap ok";
+  progress.innerHTML='<span class="terminal-prompt">&gt;</span> RECOVERING FILE_001... <span id="terminalPct">0%</span><div class="terminal-progress"><i></i></div>';
+  box.appendChild(progress);
+  const bar=progress.querySelector("i");
+  const pct=progress.querySelector("#terminalPct");
+
+  const steps=[8,17,29,43,58,71,69,82,94];
+  for(const n of steps){
+    pct.textContent=n+"%";
+    bar.style.width=n+"%";
+    await wait(85+Math.random()*80);
+  }
+
+  const roll=Math.random();
+  let result;
+  const card=$(".terminal-card");
+
+  if(roll<.05){
+    result=[
+      ["RECOVERY COMPLETE.","ok"],
+      ["FILE_001","normal"],
+      ["OWNER: NE AVDEEVA","warn"],
+      ["You were not supposed to find this.","warn"]
+    ];
+    card?.classList.add("terminal-hit");
+  }else if(roll<.32){
+    const today=new Date().toLocaleDateString(undefined,{year:"numeric",month:"2-digit",day:"2-digit"});
+    result=[
+      ["RECOVERY COMPLETE.","ok"],
+      ["OWNER: UNKNOWN","normal"],
+      ["UNIVERSE: NULL","normal"],
+      ["CREATED: 00.00.0000","normal"],
+      ["LAST ACCESS: "+today,"warn"]
+    ];
+    card?.classList.add("terminal-recovered");
+  }else{
+    result=[
+      ["ERROR: CHECKSUM MISMATCH","warn"],
+      ["RECORD DOES NOT EXIST.","warn"],
+      ["Wait.","normal"],
+      ["Then who created it?","ok"]
+    ];
+    card?.classList.add("terminal-hit");
+  }
+
+  await wait(180);
+  await typeTerminalLines(result,{clear:true,speed:20});
+  setTerminalSignal("SIGNAL: LOST",false);
+  btn.disabled=false;
+}
+$("#lostFileBtn").onclick=showTerminal;
+let logoClicks=0,logoTimer;
+$(".hero-title").addEventListener("click",()=>{
+  logoClicks++;
+  clearTimeout(logoTimer);
+  logoTimer=setTimeout(()=>logoClicks=0,1800);
+  if(logoClicks===5){logoClicks=0;archiveWhisper("NODE_00 REMEMBERS YOU.",true)}
+});
+$("#terminalRetry").onclick=recoveryAttempt;
+$$('[data-terminal-close]').forEach(x=>x.onclick=hideTerminal);
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){
+    closeModal();closeDrawer();$("#popover").hidden=true;$("#sortMenu").hidden=true;hideTerminal();
+  }
+  if(!$("#modal").hidden&&e.key==="ArrowRight") browseModal(1);
+  if(!$("#modal").hidden&&e.key==="ArrowLeft") browseModal(-1);
+});
 
 // v0.9.14 — dedicated anomaly / easter-egg pass.
 // Decorative only: no anomaly blocks a real click, changes a filter, or fakes a browser/network error.
@@ -853,4 +1002,28 @@ wireHashtagGhosts();
   for(let i=0;i<11;i++) setTimeout(spawnDust, i*150);
 
   window.addEventListener('pagehide', ()=>clearInterval(timer), {once:true});
+})();
+
+
+// v1.0 final9 — deterministic hero moments.
+// These class pulses avoid the historical stack of animation overrides.
+// First events happen quickly after page load so the effect is actually visible.
+(function initGuaranteedHeroMoments(){
+  const flare=document.querySelector(".hero-light-sweep");
+  const terminal=document.querySelector(".hero-terminal-glitch");
+  if(!flare || !terminal) return;
+
+  function pulse(el,cls,duration){
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+    setTimeout(()=>el.classList.remove(cls),duration);
+  }
+  function flareNow(){ if(document.visibilityState==="visible") pulse(flare,"fx-flare-now",2200) }
+  function terminalNow(){ if(document.visibilityState==="visible") pulse(terminal,"fx-terminal-now",1500) }
+
+  setTimeout(flareNow,2200);
+  setTimeout(terminalNow,4700);
+  setInterval(flareNow,14500);
+  setInterval(terminalNow,10500);
 })();

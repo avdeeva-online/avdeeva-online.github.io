@@ -2569,3 +2569,371 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
     animation:none!important;
   }
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final9 BUNDLE
+   FX visibility + fast modal paging + footer credit + LOST DIRECTORY v2
+   ========================================================= */
+
+/* ---------- MODAL PAGING ----------
+   Disable old final8 record animation classes; switching is now handled
+   once via Web Animations API in app.js. */
+.modal-card.record-out-left,
+.modal-card.record-out-right,
+.modal-card.record-in-right,
+.modal-card.record-in-left,
+.record-in-right .modal-cover img,
+.record-in-left .modal-cover img{
+  animation:none!important;
+}
+
+/* ---------- FOOTER CREDIT ---------- */
+.footer-right{
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin-left:auto;
+}
+.archive-credit{
+  color:#555e52;
+  text-decoration:none;
+  font:7px var(--mono);
+  letter-spacing:.11em;
+  white-space:nowrap;
+  transition:color .18s ease,text-shadow .18s ease,transform .18s ease;
+}
+.archive-credit:hover{
+  color:#929d80;
+  text-shadow:0 0 10px rgba(155,169,119,.16);
+  transform:translateY(-1px);
+}
+@media(max-width:760px){
+  .footer-right{
+    width:100%;
+    align-items:flex-start;
+    flex-direction:column;
+    gap:6px;
+  }
+  .archive-credit{padding:3px 0}
+}
+
+/* ---------- LOST DIRECTORY V2 ---------- */
+.terminal-card{
+  overflow:hidden;
+  isolation:isolate;
+}
+.terminal-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.10;
+  z-index:0;
+  background:
+    repeating-linear-gradient(180deg,
+      rgba(190,220,165,.07) 0 1px,
+      transparent 1px 4px);
+  animation:lostScan 8s linear infinite;
+}
+.terminal-card>*{position:relative;z-index:1}
+@keyframes lostScan{
+  from{transform:translateY(-5px)}
+  to{transform:translateY(5px)}
+}
+.terminal-title{
+  display:flex!important;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+.terminal-signal{
+  color:#596253;
+  font-size:7px;
+  letter-spacing:.09em;
+  white-space:nowrap;
+}
+.terminal-signal.hot{
+  color:#9ca97f;
+  text-shadow:0 0 8px rgba(158,174,125,.24);
+  animation:terminalSignalBlink .48s steps(1,end) infinite;
+}
+@keyframes terminalSignalBlink{50%{opacity:.42}}
+.terminal-lines{
+  min-height:142px!important;
+}
+.terminal-lines>div{
+  opacity:0;
+  animation:terminalLineReveal .13s ease-out forwards;
+}
+@keyframes terminalLineReveal{
+  from{opacity:0;transform:translateX(-3px)}
+  to{opacity:1;transform:none}
+}
+.terminal-prompt{color:#77826d}
+.terminal-cursor-row{
+  margin:-4px 2px 12px;
+  color:#596252;
+  font:9px var(--mono);
+}
+.terminal-cursor{
+  color:#a3ad8b;
+  animation:terminalCursor .78s steps(1,end) infinite;
+}
+@keyframes terminalCursor{50%{opacity:0}}
+.terminal-retry:disabled{
+  opacity:.45;
+  cursor:wait;
+}
+.terminal-progress-wrap{line-height:1.6!important}
+.terminal-progress{
+  position:relative;
+  width:min(310px,80%);
+  height:3px;
+  margin:9px 0 4px 14px;
+  overflow:hidden;
+  background:#232a20;
+}
+.terminal-progress i{
+  display:block;
+  width:0;
+  height:100%;
+  background:#84936b;
+  box-shadow:0 0 8px rgba(143,160,108,.28);
+  transition:width .08s linear;
+}
+.terminal-card.terminal-hit{
+  animation:terminalHit .52s steps(1,end) 1;
+}
+@keyframes terminalHit{
+  0%,100%{transform:none;filter:none}
+  18%{transform:translateX(-2px);filter:brightness(1.18)}
+  34%{transform:translateX(2px)}
+  53%{transform:translateX(-1px);filter:contrast(1.15)}
+  72%{transform:translateX(1px)}
+}
+.terminal-card.terminal-hit::after{
+  content:"";
+  position:absolute;
+  left:-4%;
+  top:48%;
+  width:108%;
+  height:7px;
+  z-index:4;
+  pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(174,208,147,.25),transparent);
+  animation:lostTear .52s steps(1,end) 1;
+}
+@keyframes lostTear{
+  0%,100%{opacity:0;transform:translateX(0)}
+  22%{opacity:.7;transform:translateX(-8px)}
+  45%{opacity:.25;transform:translateX(6px)}
+  68%{opacity:.55;transform:translateX(-3px)}
+}
+.terminal-card.terminal-recovered{
+  box-shadow:0 24px 70px rgba(0,0,0,.55),0 0 28px rgba(121,145,96,.08);
+}
+
+/* ---------- GUARANTEED HERO FX ----------
+   Kill historical keyframe stack and only animate during JS-triggered moments. */
+.hero-live-fx{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  z-index:4!important;
+}
+.hero-light-sweep,
+.hero-terminal-glitch{
+  display:block!important;
+  visibility:visible!important;
+  animation:none!important;
+}
+
+/* Circular warm reflection near the opening. */
+.hero-light-sweep{
+  left:57.5%!important;
+  top:14%!important;
+  width:122px!important;
+  height:122px!important;
+  opacity:0!important;
+  border-radius:50%!important;
+  pointer-events:none!important;
+  mix-blend-mode:screen!important;
+  filter:none!important;
+  background:
+    radial-gradient(circle at 50% 50%,
+      rgba(255,249,224,.82) 0 2%,
+      rgba(255,229,158,.48) 3% 7%,
+      rgba(250,197,102,.22) 8% 16%,
+      rgba(235,162,60,.085) 17% 31%,
+      transparent 44%)!important;
+  box-shadow:
+    0 0 22px rgba(255,219,140,.18),
+    0 0 56px rgba(241,178,78,.11),
+    0 0 100px rgba(222,148,50,.055)!important;
+}
+.hero-light-sweep::before{
+  content:""!important;
+  position:absolute!important;
+  width:34px!important;
+  height:34px!important;
+  left:-52px!important;
+  top:57px!important;
+  border-radius:50%!important;
+  border:1px solid rgba(255,228,165,.34)!important;
+  background:rgba(255,211,121,.055)!important;
+  box-shadow:0 0 14px rgba(246,190,91,.12)!important;
+}
+.hero-light-sweep::after{
+  content:""!important;
+  position:absolute!important;
+  width:18px!important;
+  height:18px!important;
+  right:-61px!important;
+  top:35px!important;
+  border-radius:50%!important;
+  background:rgba(255,230,170,.27)!important;
+  box-shadow:0 0 12px rgba(246,190,91,.15)!important;
+}
+.hero-light-sweep.fx-flare-now{
+  animation:heroFlareMoment 2.2s ease-in-out 1!important;
+}
+@keyframes heroFlareMoment{
+  0%{opacity:0;transform:translate3d(-5px,3px,0) scale(.91)}
+  18%{opacity:.28}
+  43%{opacity:.78;transform:translate3d(0,0,0) scale(1)}
+  64%{opacity:.59;transform:translate3d(3px,-2px,0) scale(1.025)}
+  84%{opacity:.22}
+  100%{opacity:0;transform:translate3d(6px,-3px,0) scale(1.05)}
+}
+
+/* Local CRT tearing on the monitor, never a full green rectangle. */
+.hero-terminal-glitch{
+  left:7.35%!important;
+  top:1%!important;
+  width:14.85%!important;
+  height:54%!important;
+  opacity:0!important;
+  overflow:hidden!important;
+  border-radius:2px!important;
+  pointer-events:none!important;
+  mix-blend-mode:screen!important;
+  background:
+    repeating-linear-gradient(180deg,
+      transparent 0 3px,
+      rgba(162,255,126,.065) 3px 4px)!important;
+  box-shadow:inset 0 0 12px rgba(126,255,91,.09)!important;
+}
+.hero-terminal-glitch::before{
+  content:""!important;
+  position:absolute!important;
+  left:-4%!important;
+  top:31%!important;
+  width:108%!important;
+  height:10%!important;
+  opacity:.8!important;
+  background:linear-gradient(180deg,
+    transparent,
+    rgba(187,255,153,.16) 28%,
+    rgba(158,255,117,.36) 51%,
+    rgba(111,239,79,.10) 75%,
+    transparent)!important;
+}
+.hero-terminal-glitch::after{
+  content:""!important;
+  position:absolute!important;
+  left:4%!important;
+  top:67%!important;
+  width:92%!important;
+  height:5%!important;
+  opacity:.55!important;
+  background:rgba(180,255,145,.22)!important;
+}
+.hero-terminal-glitch.fx-terminal-now{
+  animation:heroTerminalMoment 1.5s steps(1,end) 1!important;
+}
+.hero-terminal-glitch.fx-terminal-now::before{
+  animation:heroTerminalBandA 1.5s steps(1,end) 1!important;
+}
+.hero-terminal-glitch.fx-terminal-now::after{
+  animation:heroTerminalBandB 1.5s steps(1,end) 1!important;
+}
+.hero-terminal-glitch .terminal-glitch-line{
+  display:block!important;
+  position:absolute!important;
+  height:1px!important;
+  opacity:0;
+  background:rgba(205,255,180,.62)!important;
+  box-shadow:0 0 4px rgba(140,255,104,.28)!important;
+}
+.hero-terminal-glitch.fx-terminal-now .terminal-glitch-line-a{
+  left:8%!important;width:72%!important;top:18%!important;
+  animation:heroTermLineA 1.5s steps(1,end) 1!important;
+}
+.hero-terminal-glitch.fx-terminal-now .terminal-glitch-line-b{
+  left:28%!important;width:63%!important;top:51%!important;
+  animation:heroTermLineB 1.5s steps(1,end) 1!important;
+}
+.hero-terminal-glitch.fx-terminal-now .terminal-glitch-line-c{
+  left:12%!important;width:77%!important;top:82%!important;
+  animation:heroTermLineC 1.5s steps(1,end) 1!important;
+}
+@keyframes heroTerminalMoment{
+  0%,100%{opacity:0;transform:translateX(0)}
+  12%{opacity:.42}
+  24%{opacity:.82;transform:translateX(1px)}
+  38%{opacity:.48;transform:translateX(-1px)}
+  52%{opacity:.78;transform:translateX(.7px)}
+  67%{opacity:.46;transform:translateX(-.5px)}
+  82%{opacity:.70}
+}
+@keyframes heroTerminalBandA{
+  0%,100%{transform:translateX(0);opacity:0}
+  18%{transform:translateX(-6px);opacity:.85}
+  36%{transform:translateX(5px);opacity:.38}
+  55%{transform:translateX(-3px);opacity:.78}
+  74%{transform:translateX(3px);opacity:.42}
+}
+@keyframes heroTerminalBandB{
+  0%,100%{transform:translateX(0);opacity:0}
+  24%{transform:translateX(5px);opacity:.58}
+  48%{transform:translateX(-4px);opacity:.30}
+  69%{transform:translateX(3px);opacity:.72}
+}
+@keyframes heroTermLineA{
+  0%,100%{opacity:0;transform:translateX(0)}
+  19%{opacity:.78;transform:translateX(5px)}
+  49%{opacity:.28;transform:translateX(-3px)}
+  73%{opacity:.64;transform:translateX(2px)}
+}
+@keyframes heroTermLineB{
+  0%,100%{opacity:0;transform:translateX(0)}
+  27%{opacity:.67;transform:translateX(-5px)}
+  56%{opacity:.31;transform:translateX(4px)}
+  81%{opacity:.55;transform:translateX(-2px)}
+}
+@keyframes heroTermLineC{
+  0%,100%{opacity:0;transform:translateX(0)}
+  31%{opacity:.58;transform:translateX(4px)}
+  61%{opacity:.25;transform:translateX(-3px)}
+  84%{opacity:.50;transform:translateX(2px)}
+}
+
+/* Even if an earlier breakpoint tried to hide the terminal, final bundle wins. */
+@media(max-width:1200px){
+  .hero-terminal-glitch{display:block!important}
+}
+@media(max-width:760px){
+  .hero-light-sweep{display:block!important;transform:scale(.72)}
+  .hero-terminal-glitch{display:none!important} /* terminal alignment stops matching after mobile crop */
+}
+
+/* Respect reduced motion for the stronger interactive easter egg, but leave
+   the static site fully usable. */
+@media(prefers-reduced-motion:reduce){
+  .terminal-card::before,
+  .terminal-cursor,
+  .terminal-signal.hot{animation:none!important}
+}

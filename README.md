@@ -66,3 +66,11 @@ Existing catalog, filters, random, modal, downloads, lorebooks, easter eggs and 
 - Switching records has a subtle directional slide + fade.
 - Cover image gets a very small independent drift/fade on entry.
 - Random button still chooses a random record.
+
+### v1.0 final9 bundle
+- Modal previous/next animation shortened to a single 145ms directional entrance; removed the duplicate/repeated new-card animation.
+- Arrow keys now browse in the correct direction.
+- Hero solar flare and terminal glitch use deterministic JS-triggered moments to avoid old CSS override conflicts. First flare appears ~2.2s after load; first terminal glitch ~4.7s after load.
+- LOST DIRECTORY now types its lines, remembers repeat visits, runs a recovery progress sequence, has multiple outcomes and a rare NE AVDEEVA result.
+- Footer now includes `CURATED BY NE AVDEEVA ↗`.
+- Telegram credit currently points to `https://t.me/ne_avdeeva`.

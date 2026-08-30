@@ -1,39 +1,12 @@
 <!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ARCHIVE IMPORT / DATACAT TEST</title>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ARCHIVE.EXE / IMPORT</title>
 <style>
-body{margin:0;background:#0b0e0b;color:#d8deca;font:14px Consolas,monospace}
-.wrap{max-width:1000px;margin:50px auto;padding:24px}
-h1{font-size:24px}p{color:#8d9a83}.row{display:flex;gap:10px}
-input{flex:1;background:#0a0e0a;border:1px solid #465340;color:#d8deca;padding:12px;font:inherit}
-button{background:#253020;border:1px solid #708161;color:#e1e8d4;padding:12px 16px;font:inherit;cursor:pointer}
-pre{margin-top:16px;background:#080b08;border:1px solid #35402f;padding:16px;min-height:280px;white-space:pre-wrap;overflow-wrap:anywhere}
-.state{margin-top:14px;color:#b2c19a}
-</style></head>
-<body><div class="wrap">
-<h1>ARCHIVE IMPORT / DATACAT TEST</h1>
-<p>Теперь проверяет ARCHIVE → затем публичную запись DataCat → если запись найдена, автоматически сохраняет её в D1.</p>
-<div class="row">
-<input id="url" value="https://janitorai.com/ru/characters/b8733047-869f-4cdc-afa3-20d253077b79_character-blaise-hale-u-titans">
-<button id="go">IMPORT / CHECK</button>
-</div>
-<div id="state" class="state">READY.</div>
-<pre id="out"></pre>
-</div>
+*{box-sizing:border-box}body{margin:0;background:#0b0e0b;color:#d8deca;font:14px Consolas,monospace}.wrap{max-width:900px;margin:45px auto;padding:24px}h1{font-size:24px;margin:0 0 8px}p{color:#8d9a83}.row,.actions{display:flex;gap:10px;flex-wrap:wrap}input{flex:1;min-width:280px;background:#080b08;border:1px solid #465340;color:#d8deca;padding:13px;font:inherit}button,a.btn{background:#253020;border:1px solid #708161;color:#e1e8d4;padding:11px 14px;font:inherit;cursor:pointer;text-decoration:none}.state{margin:16px 0;color:#b2c19a}.card{display:none;grid-template-columns:150px 1fr;gap:20px;background:#101510;border:1px solid #35402f;padding:16px}.card img{width:150px;height:210px;object-fit:cover;background:#080b08}.meta h2{margin:3px 0 7px;font-size:21px}.muted{color:#7e8c77}.actions{margin-top:18px}.debug{margin-top:18px}.debug summary{cursor:pointer;color:#7e8c77}pre{background:#080b08;border:1px solid #35402f;padding:14px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:360px;overflow:auto}.hide{display:none}@media(max-width:600px){.card{grid-template-columns:1fr}.card img{width:100%;height:auto;max-height:420px}.actions a{flex:1;text-align:center}}
+</style></head><body><div class="wrap"><h1>ARCHIVE.EXE / IMPORT</h1><p>Вставь публичную ссылку JanitorAI. После импорта можно скачать PNG-карточку, JSON или отдельный lorebook.</p><div class="row"><input id="url" value="https://janitorai.com/ru/characters/b8733047-869f-4cdc-afa3-20d253077b79_character-blaise-hale-u-titans"><button id="go">IMPORT</button></div><div id="state" class="state">READY.</div><section id="card" class="card"><img id="avatar" alt=""><div class="meta"><div class="muted">CHARACTER RECORD</div><h2 id="name"></h2><div id="author"></div><div id="tags" class="muted" style="margin-top:8px"></div><div class="actions"><a id="png" class="btn">PNG CARD</a><a id="json" class="btn">JSON CARD</a><a id="lore" class="btn">LOREBOOK</a><a id="janitor" class="btn" target="_blank">JANITOR</a><a id="datacat" class="btn" target="_blank">DATACAT</a></div></div></section><details id="debug" class="debug hide"><summary>DEBUG JSON</summary><pre id="out"></pre></details></div>
 <script>
-go.onclick=async()=>{
-  state.textContent="CHECKING ARCHIVE → DATACAT...";
-  out.textContent="";
-  try{
-    const r=await fetch("/api/import",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({url:url.value})});
-    const data=await r.json();
-    state.textContent=data.state||data.error||("HTTP "+r.status);
-    out.textContent=JSON.stringify(data,null,2);
-  }catch(e){
-    state.textContent="ERROR";
-    out.textContent=String(e);
-  }
-};
+const $=id=>document.getElementById(id);let pollTimer=null;
+function uuidFrom(v){return (String(v).match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i)||[])[0]||""}
+function show(data){const c=data.character;if(!c)return;$('card').style.display='grid';$('avatar').src=c.image_url||'';$('name').textContent=c.name||'Character';$('author').textContent=c.author?`BY ${c.author}`:'';let tags=[];try{tags=JSON.parse(c.tags||'[]')}catch{}$('tags').textContent=tags.join(' · ');const id=c.janitor_uuid||data.janitorUuid;$('png').href=`/api/characters/${id}/card.png`;$('json').href=`/api/characters/${id}/card`;$('lore').href=c.lorebook_url||`/api/characters/${id}/lorebook`;$('lore').classList.toggle('hide',!c.lorebook_url);$('janitor').href=c.janitor_url||'#';$('datacat').href=c.datacat_url||'#'}
+async function poll(statusUrl){clearTimeout(pollTimer);try{const r=await fetch(statusUrl),d=await r.json();$('out').textContent=JSON.stringify(d,null,2);if(d.ready||d.character){$('state').textContent=d.ready?'READY / CARD AVAILABLE':(d.state||'READY');show(d);return}if(r.status===202){$('state').textContent='RETRIEVING CHARACTER…';pollTimer=setTimeout(()=>poll(statusUrl),5000);return}$('state').textContent=d.state||d.error||`HTTP ${r.status}`}catch(e){$('state').textContent='STATUS ERROR';$('out').textContent=String(e)}}
+$('go').onclick=async()=>{clearTimeout(pollTimer);$('state').textContent='IMPORTING…';$('card').style.display='none';$('debug').classList.remove('hide');$('out').textContent='';try{const r=await fetch('/api/import',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:$('url').value})}),d=await r.json();$('out').textContent=JSON.stringify(d,null,2);$('state').textContent=d.state||d.error||`HTTP ${r.status}`;if(d.character)show(d);if(r.status===202&&d.statusUrl)poll(d.statusUrl)}catch(e){$('state').textContent='IMPORT ERROR';$('out').textContent=String(e)}};
 </script></body></html>

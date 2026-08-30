@@ -24,25 +24,6 @@ function render() {
   }
   $('#list').innerHTML = records.map((r,i) => `<label class="item"><input type="checkbox" data-i="${i}" ${r.selected?'checked':''}><span><b>${esc(r.name||r.id)}</b><small>${esc(r.id)}</small></span><span class="state ${r.state==='IMPORTED'?'ok':r.state==='FAILED'?'bad':r.state==='IMPORTING'?'work':''}">${esc(r.state)}</span></label>`).join('');
 }
-function parseCharacterLinks(text) {
-  const out = [], seen = new Set();
-  const patterns = [
-    /\[([^\]]+)\]\([^)]*\/characters\/(?:recent\/janitor\/)?([0-9a-f-]{36})[^)]*\)/ig,
-    /\/characters\/recent\/janitor\/([0-9a-f-]{36})/ig,
-    /janitorai\.com\/(?:characters|character)\/([0-9a-f-]{36})/ig
-  ];
-  patterns.forEach((re, pi) => {
-    let m;
-    while ((m = re.exec(text))) {
-      const id = (pi === 0 ? m[2] : m[1]).toLowerCase();
-      if (!seen.has(id)) {
-        seen.add(id);
-        out.push({id, name: pi === 0 ? m[1].trim() : id});
-      }
-    }
-  });
-  return out;
-}
 async function scanAuthor() {
   const raw = $('#authorInput').value.trim();
   const creator = uuidOf(raw);
@@ -60,33 +41,15 @@ async function scanAuthor() {
   }
 
   $('#scanAuthor').disabled = true;
-  $('#authorStatus').textContent = 'SCANNING DATACAT CREATOR PAGES...';
-  const found = new Map();
-  let emptyStreak = 0;
+  $('#authorStatus').textContent = 'SCANNING DATACAT CREATOR...';
   try {
-    for (let page = 1; page <= 50; page++) {
-      const target = new URL(base.toString());
-      target.searchParams.set('page', String(page));
-      $('#authorStatus').textContent = `SCANNING PAGE ${page}... · ${found.size} FOUND`;
-      const reader = `https://r.jina.ai/${target.toString()}`;
-      const r = await fetch(reader, {cache:'no-store'});
-      if (!r.ok) throw new Error(`READER_HTTP_${r.status}`);
-      const text = await r.text();
-      const items = parseCharacterLinks(text);
-      let added = 0;
-      items.forEach((x) => {
-        if (!found.has(x.id) && x.id !== creator) {
-          found.set(x.id, x);
-          added++;
-        }
-      });
-      emptyStreak = added ? 0 : emptyStreak + 1;
-      const range = text.match(/(\d+)\s*[-–]\s*(\d+)\s+of\s+(\d+)/i);
-      if (range && found.size >= Number(range[3])) break;
-      if (emptyStreak >= 2) break;
-    }
-    setRecords([...found.values()]);
-    $('#authorStatus').textContent = found.size ? `DONE. ${found.size} PUBLIC CHARACTERS FOUND.` : 'NO CHARACTERS FOUND. DataCat page loaded, but no character links were detected.';
+    const r = await fetch(`/api/admin/creator-scan?url=${encodeURIComponent(base.toString())}`, {cache:'no-store'});
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) throw new Error(d.error || d.message || `HTTP_${r.status}`);
+    setRecords(Array.isArray(d.characters) ? d.characters : []);
+    $('#authorStatus').textContent = d.count
+      ? `DONE. ${d.count} PUBLIC CHARACTERS FOUND · ${d.pagesScanned || 1} PAGE(S) SCANNED.`
+      : `NO CHARACTERS FOUND. Worker fetched DataCat directly, but no character UUIDs were present in the returned HTML.`;
   } catch (e) {
     $('#authorStatus').textContent = `SCAN FAILED: ${e.message}`;
   } finally {

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ARCHIVE IMPORT TEST</title>
+<style>
+body{margin:0;background:#0b0e0b;color:#d8deca;font:14px Consolas,monospace}
+.wrap{max-width:900px;margin:50px auto;padding:24px}
+h1{font-size:24px}
+p{color:#8d9a83}
+.row{display:flex;gap:10px}
+input{flex:1;background:#0a0e0a;border:1px solid #465340;color:#d8deca;padding:12px;font:inherit}
+button{background:#253020;border:1px solid #708161;color:#e1e8d4;padding:12px 16px;font:inherit;cursor:pointer}
+pre{margin-top:16px;background:#080b08;border:1px solid #35402f;padding:16px;min-height:180px;white-space:pre-wrap;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>ARCHIVE IMPORT / API TEST</h1>
+<p>Вставь Janitor-ссылку. Эта версия только проверяет, есть ли UUID уже в нашей D1-базе.</p>
+<div class="row">
+<input id="url" value="https://janitorai.com/ru/characters/b8733047-869f-4cdc-afa3-20d253077b79_character-blaise-hale-u-titans">
+<button id="go">CHECK</button>
+</div>
+<pre id="out">READY.</pre>
+</div>
+<script>
+go.onclick=async()=>{
+  out.textContent="CHECKING...";
+  try{
+    const r=await fetch("/api/import",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({url:url.value})});
+    const data=await r.json();
+    out.textContent=JSON.stringify(data,null,2);
+  }catch(e){out.textContent=String(e)}
+};
+</script>
+</body></html>

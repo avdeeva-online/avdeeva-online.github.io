@@ -36,25 +36,42 @@
 
   function apply(bot,data){
     if(!bot||!data)return;
-    if(data.description)bot.full=data.description;
+    bot.full=data.description||'';
     bot.scenario=data.scenario||'';
     bot.intros=data.intros||[];
+    bot._definitionReady=true;
+    bot._definitionLoading=false;
   }
 
   const original=window.openModal;
   if(typeof original!=='function')return;
 
   window.openModal=function(bot,...args){
-    const out=original.call(this,bot,...args);
-    if(!bot?.janitorUuid)return out;
+    if(!bot?.janitorUuid)return original.call(this,bot,...args);
 
-    loadDefinition(bot).then(data=>{
+    const uuid=bot.janitorUuid;
+    const cached=cache.get(uuid);
+    if(!bot._definitionReady){
+      bot._definitionLoading=true;
+      bot.full='';
+      bot.scenario='';
+      bot.intros=[];
+    }
+
+    const out=original.call(this,bot,...args);
+    if(bot._definitionReady)return out;
+
+    Promise.resolve(cached||loadDefinition(bot)).then(data=>{
       apply(bot,data);
-      // Repaint only if the user is still looking at this exact record.
       const title=document.querySelector('#modalTitle')?.textContent?.trim();
       if(title!==String(bot.nameEn||'').trim())return;
       if(typeof window.renderModalPanel==='function')window.renderModalPanel();
-    }).catch(err=>console.warn('Modal definition unavailable',err));
+    }).catch(err=>{
+      bot._definitionLoading=false;
+      console.warn('Modal definition unavailable',err);
+      const title=document.querySelector('#modalTitle')?.textContent?.trim();
+      if(title===String(bot.nameEn||'').trim()&&typeof window.renderModalPanel==='function')window.renderModalPanel();
+    });
 
     return out;
   };

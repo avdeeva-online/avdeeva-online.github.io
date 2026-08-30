@@ -1,111 +1,28 @@
 import worker from "./worker.js";
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data, null, 2), {
-    status,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store"
-    }
-  });
-}
+function json(data,status=200){return new Response(JSON.stringify(data,null,2),{status,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}})}
+function safeFilename(v,f="character"){return String(v||f).replace(/[\\/:*?"<>|]+/g,"-").replace(/\s+/g," ").trim().slice(0,100)||f}
+function cardBase(card){const name=String(card?.data?.name||"Character").trim(),creator=String(card?.data?.creator||"").trim();return safeFilename(creator?`${name}_${creator}`:name,"Character")}
+function attachment(name){return `attachment; filename*=UTF-8''${encodeURIComponent(name)}`}
+function extractUuid(input){const m=String(input||"").match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);return m?m[0].toLowerCase():null}
+function dcHeaders(env){return{"accept":"application/json","x-device-token":env.DATACAT_DEVICE_TOKEN||"","x-session-token":env.DATACAT_SESSION_TOKEN||"","user-agent":"ARCHIVE.EXE/1.4"}}
 
-function extractUuid(input) {
-  const m = String(input || "").match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
-  return m ? m[0].toLowerCase() : null;
-}
+async function getCard(request,env,ctx,uuid){const u=new URL(request.url);u.pathname=`/api/characters/${uuid}/card`;u.search="";const r=await worker.fetch(new Request(u.toString(),{method:"GET",headers:request.headers}),env,ctx);const text=await r.text();if(!r.ok)return{response:new Response(text,{status:r.status,headers:r.headers})};let card;try{card=JSON.parse(text)}catch{return{response:json({ok:false,error:"INVALID_CARD_JSON"},502)}}return{card,text}}
 
-function headers(env, jsonBody = false) {
-  return {
-    "accept": "application/json",
-    ...(jsonBody ? { "content-type": "application/json" } : {}),
-    "x-device-token": env.DATACAT_DEVICE_TOKEN || "",
-    "x-session-token": env.DATACAT_SESSION_TOKEN || "",
-    "user-agent": "ARCHIVE.EXE/1.0"
-  };
-}
+function crc32(bytes){let c=0xffffffff;for(const b of bytes){c^=b;for(let k=0;k<8;k++)c=(c>>>1)^((c&1)?0xedb88320:0)}return(c^0xffffffff)>>>0}
+function u32(n){return new Uint8Array([(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255])}
+function concat(parts){let n=0;for(const p of parts)n+=p.length;const out=new Uint8Array(n);let o=0;for(const p of parts){out.set(p,o);o+=p.length}return out}
+function chunk(type,data){const t=new TextEncoder().encode(type),crc=crc32(concat([t,data]));return concat([u32(data.length),t,data,u32(crc)])}
+function utf8Base64(text){const bytes=new TextEncoder().encode(text);let bin="";for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(bin)}
+function isPng(bytes){return bytes.length>8&&bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71&&bytes[4]===13&&bytes[5]===10&&bytes[6]===26&&bytes[7]===10}
+function embedCard(png,card){if(!isPng(png))throw new Error("SOURCE_NOT_PNG");const sig=png.slice(0,8),parts=[sig],payload=new TextEncoder().encode(`chara\0${utf8Base64(JSON.stringify(card))}`);let o=8,inserted=false;while(o+12<=png.length){const len=((png[o]<<24)|(png[o+1]<<16)|(png[o+2]<<8)|png[o+3])>>>0,end=o+12+len;if(end>png.length)throw new Error("INVALID_PNG");const type=String.fromCharCode(...png.slice(o+4,o+8));if(type==="IEND"&&!inserted){parts.push(chunk("tEXt",payload));inserted=true}if(!(type==="tEXt"&&new TextDecoder().decode(png.slice(o+8,o+8+Math.min(len,5)))==="chara"))parts.push(png.slice(o,end));o=end}if(!inserted)throw new Error("PNG_IEND_MISSING");return concat(parts)}
 
-async function safeJsonResponse(response) {
-  const text = await response.text();
-  let body = null;
-  try { body = text ? JSON.parse(text) : null; }
-  catch { body = text.slice(0, 4000); }
-  return { status: response.status, ok: response.ok, body };
-}
+async function fetchJannyPng(uuid){try{const r=await fetch("https://api.jannyai.com/api/v1/download",{method:"POST",headers:{"content-type":"application/json","accept":"application/json","user-agent":"ARCHIVE.EXE/1.4"},body:JSON.stringify({characterId:uuid}),redirect:"follow"});if(!r.ok)return{ok:false,state:r.status===403?"JANNY_BLOCKED":`JANNY_HTTP_${r.status}`};const data=await r.json();const downloadUrl=data?.downloadUrl||data?.download_url;if(!downloadUrl)return{ok:false,state:"JANNY_NO_DOWNLOAD_URL"};const f=await fetch(downloadUrl,{redirect:"follow"});if(!f.ok)return{ok:false,state:`JANNY_FILE_HTTP_${f.status}`};const bytes=new Uint8Array(await f.arrayBuffer());return isPng(bytes)?{ok:true,bytes}:{ok:false,state:"JANNY_FILE_NOT_PNG"}}catch(e){return{ok:false,state:"JANNY_FETCH_ERROR",detail:String(e?.message||e)}}}
+async function fetchAvatarPng(card){const avatar=card?.data?.extensions?.archive_exe?.avatar_url;if(!avatar)return{ok:false,state:"NO_AVATAR"};try{const r=await fetch(avatar,{redirect:"follow",cf:{image:{format:"png"}}});if(!r.ok)return{ok:false,state:`AVATAR_HTTP_${r.status}`};const bytes=new Uint8Array(await r.arrayBuffer());return isPng(bytes)?{ok:true,bytes}:{ok:false,state:"AVATAR_NOT_CONVERTED_TO_PNG"}}catch(e){return{ok:false,state:"AVATAR_FETCH_ERROR",detail:String(e?.message||e)}}}
+async function pngDownload(request,env,ctx,uuid){const got=await getCard(request,env,ctx,uuid);if(got.response)return got.response;let source=await fetchJannyPng(uuid);if(!source.ok)source=await fetchAvatarPng(got.card);if(!source.ok)return json({ok:false,state:"PNG_SOURCE_NOT_AVAILABLE",janitorUuid:uuid,detail:source.state,message:"JSON card is available, but no PNG image source could be obtained for this character."},502);let png;try{png=embedCard(source.bytes,got.card)}catch(e){return json({ok:false,state:"PNG_EMBED_ERROR",message:String(e?.message||e)},500)}const filename=`${cardBase(got.card)}.png`;return new Response(png,{status:200,headers:{"content-type":"image/png","content-disposition":attachment(filename),"cache-control":"private, no-store","x-archive-card-format":"chara_card_v2-png"}})}
 
-async function fetchView(env, uuid, view) {
-  const url = `https://datacat.run/api/characters/recent-public/${encodeURIComponent(uuid)}?view=${encodeURIComponent(view)}&sourceKind=janitor`;
-  try {
-    return await safeJsonResponse(await fetch(url, {
-      headers: headers(env),
-      redirect: "follow"
-    }));
-  } catch (error) {
-    return { status: 0, ok: false, body: { error: String(error?.message || error) } };
-  }
-}
+async function jsonDownload(request,env,ctx,uuid){const got=await getCard(request,env,ctx,uuid);if(got.response)return got.response;const filename=`${cardBase(got.card)}.json`;return new Response(JSON.stringify(got.card,null,2),{status:200,headers:{"content-type":"application/json; charset=utf-8","content-disposition":attachment(filename),"cache-control":"private, no-store"}})}
 
-async function debugRetrieval(env, uuid) {
-  if (!env.DATACAT_DEVICE_TOKEN || !env.DATACAT_SESSION_TOKEN) {
-    return json({ ok: false, error: "DATACAT_SECRETS_MISSING" }, 500);
-  }
+async function lorebookDownload(request,env,ctx,uuid){const u=new URL(request.url);const r=await worker.fetch(request,env,ctx);if(!r.ok)return r;let title="Lorebook";try{const modal=await fetch(`https://datacat.run/api/characters/recent-public/${encodeURIComponent(uuid)}?view=modal&sourceKind=janitor`,{headers:dcHeaders(env),redirect:"follow"});if(modal.ok){const body=await modal.json(),scripts=Array.isArray(body?.character?.scripts)?body.character.scripts:[],book=scripts.find(x=>String(x?.type||"").toLowerCase()==="lorebook"&&x?.is_public!==false&&x?.is_code_public!==false);if(book?.title)title=String(book.title)}}catch{}const h=new Headers(r.headers);h.set("content-disposition",attachment(`${safeFilename(title,"Lorebook")}.json`));return new Response(r.body,{status:r.status,headers:h})}
 
-  const requestId = crypto.randomUUID();
-  const retrievalBody = {
-    url: `https://janitorai.com/characters/${uuid}`,
-    openLoginIfNoSession: true,
-    appearOnPublicFeed: false,
-    publicFeedVisibilityIntent: false,
-    useSeparateWorkerServer: false,
-    inlinePostExtractCreatorProfile: true,
-    idempotencyKey: `${uuid}-debug-${Date.now()}`,
-    extractSourceMode: "core_plus_janny",
-    alwaysReextract: true
-  };
-
-  let retrieval;
-  try {
-    retrieval = await safeJsonResponse(await fetch("https://datacat.run/api/character/retrieval-v2", {
-      method: "POST",
-      headers: {
-        ...headers(env, true),
-        "x-request-id": requestId
-      },
-      body: JSON.stringify(retrievalBody),
-      redirect: "follow"
-    }));
-  } catch (error) {
-    retrieval = { status: 0, ok: false, body: { error: String(error?.message || error) } };
-  }
-
-  const views = {};
-  for (const view of ["modal", "personality", "greeting", "scenario", "alt_greetings"]) {
-    views[view] = await fetchView(env, uuid, view);
-  }
-
-  return json({
-    ok: retrieval.ok,
-    state: "DATACAT_RETRIEVAL_DEBUG",
-    janitorUuid: uuid,
-    retrieval: {
-      status: retrieval.status,
-      ok: retrieval.ok,
-      body: retrieval.body
-    },
-    views
-  }, retrieval.ok ? 200 : 502);
-}
-
-export default {
-  async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-
-    if (url.pathname === "/api/debug/retrieval" && request.method === "GET") {
-      const uuid = extractUuid(url.searchParams.get("uuid"));
-      if (!uuid) return json({ ok: false, error: "INVALID_UUID" }, 400);
-      return debugRetrieval(env, uuid);
-    }
-
-    return worker.fetch(request, env, ctx);
-  }
-};
+export default{async fetch(request,env,ctx){const url=new URL(request.url);if(request.method==="GET"){let m=url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})\/card\.png$/i);if(m)return pngDownload(request,env,ctx,m[1].toLowerCase());m=url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})\/card$/i);if(m)return jsonDownload(request,env,ctx,m[1].toLowerCase());m=url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})\/lorebook$/i);if(m)return lorebookDownload(request,env,ctx,m[1].toLowerCase());if(url.pathname==="/api/debug/retrieval")return json({ok:false,state:"DEBUG_REEXTRACT_DISABLED",message:"Forced re-extraction diagnostics were disabled after retrieval was stabilized."},410)}return worker.fetch(request,env,ctx)}};

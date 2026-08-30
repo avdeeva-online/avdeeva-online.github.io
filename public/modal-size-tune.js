@@ -4,16 +4,16 @@
   s.id='archiveModalSizeTune';
   s.textContent=`
   @media(min-width:761px){
-    /* Keep the compact old-school frame. */
+    /* Compact frame, but no dead lower third. */
     .modal-card{
       width:min(690px,88vw)!important;
-      height:min(440px,82vh)!important;
-      max-height:min(440px,82vh)!important;
+      height:min(420px,82vh)!important;
+      max-height:min(420px,82vh)!important;
       grid-template-columns:250px minmax(0,1fr)!important;
     }
     .modal-cover{height:100%!important;min-height:0!important}
     .modal-content{
-      padding:16px 18px 11px!important;
+      padding:15px 18px 10px!important;
       height:100%!important;
       overflow:hidden!important;
       display:flex!important;
@@ -23,44 +23,42 @@
     .modal-content h2{
       font-size:20px!important;
       line-height:1.04!important;
-      margin:6px 0 8px!important;
+      margin:5px 0 9px!important;
       max-width:100%;
       overflow:hidden;
     }
-    .modal-universe-row{margin-top:1px!important;margin-bottom:7px!important}
-    .modal-author-row{margin-top:0!important;margin-bottom:4px!important}
+    .modal-universe-row{margin-top:1px!important;margin-bottom:8px!important}
+    .modal-author-row{margin-top:0!important;margin-bottom:7px!important}
 
-    /* Main content viewport. Height stays fixed; content scrolls inside it. */
+    /* Give the useful summary the space instead of leaving it empty at the bottom. */
     .modal-public-summary{
       flex:0 0 auto!important;
-      margin-top:9px!important;
+      margin-top:10px!important;
       padding:0!important;
     }
     .modal-public-body{
-      height:116px!important;
-      min-height:116px!important;
-      max-height:116px!important;
+      height:132px!important;
+      min-height:132px!important;
+      max-height:132px!important;
       font-size:10.5px!important;
-      line-height:1.48!important;
+      line-height:1.5!important;
       padding-right:7px!important;
     }
-    .modal-public-body p{margin-bottom:6px!important}
+    .modal-public-body p{margin-bottom:7px!important}
 
-    /* Mode switch is visually separate from tags. */
-    .card-data-shell{margin-top:0!important;margin-bottom:7px!important}
+    .card-data-shell{margin-top:0!important;margin-bottom:9px!important}
     .card-data-toggle{height:30px!important;min-height:30px!important;font-size:7px!important}
-    .card-data-body{height:116px!important;max-height:116px!important}
-    .card-data-body .modal-text-wrap{height:85px!important;max-height:85px!important}
+    .card-data-body{height:132px!important;min-height:132px!important;max-height:132px!important}
+    .card-data-body .modal-text-wrap{height:101px!important;min-height:101px!important;max-height:101px!important}
 
-    .modal-tags{margin-top:0!important;margin-bottom:0!important}
+    .modal-tags{margin-top:1px!important;margin-bottom:0!important}
     .modal-primary-tags{gap:5px!important}
     .modal-primary-tags button{padding:4px 6px!important;font-size:8.5px!important}
-    .modal-hashtags{margin-top:6px!important;padding-top:5px!important;margin-bottom:0!important}
+    .modal-hashtags{margin-top:7px!important;padding-top:6px!important;margin-bottom:0!important}
     .modal-hashtags button{font-size:8.5px!important}
 
-    /* Footer follows metadata naturally. Never pin it to the bottom. */
     .modal-action-groups{
-      margin-top:12px!important;
+      margin-top:10px!important;
       padding-top:7px!important;
       gap:6px!important;
       flex:0 0 auto!important;

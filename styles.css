@@ -1216,3 +1216,48 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 .hero-fade{
   background:transparent!important;
 }
+
+/* =========================================================
+   v0.9.32 — NEW PANORAMIC HERO / EXACT 1920×300
+   The file itself is the final website ratio. No cover/crop/zoom.
+   ========================================================= */
+.hero{
+  height:300px!important;
+  min-height:300px!important;
+  max-height:300px!important;
+  background:#090c09!important;
+  overflow:hidden!important;
+}
+.hero-art{
+  inset:0!important;
+  background-image:url('assets/header.png')!important;
+  background-size:100% 100%!important;
+  background-position:center center!important;
+  background-repeat:no-repeat!important;
+  filter:none!important;
+  transform:none!important;
+  animation:none!important;
+}
+.hero-dark{
+  /* only a restrained readability veil on the title side */
+  background:linear-gradient(90deg,transparent 0%,transparent 60%,rgba(9,12,9,.05) 70%,rgba(9,12,9,.16) 100%)!important;
+}
+.hero-dark:after{display:none!important}
+.hero-fade{
+  /* dissolve the artwork into the actual page background instead of a hard edge */
+  display:block!important;
+  background:linear-gradient(180deg,transparent 0%,transparent 72%,rgba(11,14,11,.18) 82%,rgba(11,14,11,.62) 94%,var(--bg) 100%)!important;
+  pointer-events:none!important;
+}
+.hero-copy{
+  top:48%!important;
+  transform:translateY(-50%)!important;
+}
+@media(max-width:1200px){
+  .hero{height:300px!important;min-height:300px!important;max-height:300px!important}
+  .hero-art{background-size:100% 100%!important;background-position:center center!important}
+}
+@media(max-width:760px){
+  .hero{height:240px!important;min-height:240px!important;max-height:240px!important}
+  .hero-art{background-size:cover!important;background-position:42% center!important}
+}

@@ -41,3 +41,11 @@ Existing catalog, filters, random, modal, downloads, lorebooks, easter eggs and 
 - Terminal glitch is stronger, larger and triggers more often.
 - Added faint moving scanlines over the hero.
 - Dust changes from final3 are preserved.
+
+### final5 polish
+- Main records status dot is hidden by default and appears only when search/filter/sort state differs from default.
+- RESET FILTERS moved next to the record counter, styled more clearly, and is hidden when there is nothing to reset.
+- Modal author / POV metadata enlarged for readability.
+- Card POV + lorebook are now small inline system glyphs instead of detached square buttons.
+- Light animation changed from frequent broad sweep to a rarer circular sun/lens flare.
+- Terminal glitch is slower, stronger, and remains visible longer.

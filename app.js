@@ -60,10 +60,28 @@ function applyFilters(){
   return list;
 }
 
+function hasActiveFilters(){
+  return !!(
+    state.q.trim() ||
+    state.authors.size ||
+    state.universes.size ||
+    state.tags.size ||
+    state.hashtags.size ||
+    state.povs.size ||
+    state.lorebook ||
+    state.sort !== "newest"
+  );
+}
+
 function render(){
   syncBots();
   const list = applyFilters();
+  const filtered = hasActiveFilters();
   $("#resultCount").textContent = list.length;
+  const meta = $("#catalogMeta");
+  const reset = $("#resetBtn");
+  if(meta) meta.classList.toggle("has-filters", filtered);
+  if(reset) reset.hidden = !filtered;
   $("#totalMeta").textContent = `${String(B.length).padStart(3,"0")} RECORDS`;
   $("#empty").hidden = !!list.length;
   $("#grid").innerHTML = list.map((b,i)=>cardHtml(b,i)).join("");
@@ -83,12 +101,12 @@ function cardHtml(b,i){
     <div class="card-body">
       <h3 class="card-title">${esc(b.nameEn)}<span>${esc(b.nameRu)}</span></h3>
       <div class="card-author">BY <button data-author="${esc(b.author)}">@${esc(b.author)}</button></div>
-      <div class="card-meta">
+      <div class="card-meta card-system-line">
         <button class="meta-token" data-quick-universe="${esc(b.universe)}">${globeSvg}<span>${esc(b.universe)}</span></button>
-        <span class="card-pov-icon pov-${esc((b.pov||'AnyPOV').toLowerCase())}" title="${esc(b.pov||'AnyPOV')}" aria-label="POV: ${esc(b.pov||'AnyPOV')}">
+        <span class="card-status-icon card-pov-icon pov-${esc((b.pov||'AnyPOV').toLowerCase())}" title="${esc(b.pov||'AnyPOV')}" aria-label="POV: ${esc(b.pov||'AnyPOV')}">
           <span aria-hidden="true">${b.pov==='FemPOV'?'♀':b.pov==='MalePOV'?'♂':'◎'}</span>
         </span>
-        ${b.lorebook?`<span class="card-lore-icon" title="Lorebook available" aria-label="Lorebook available">${bookSvg}</span>`:''}
+        ${b.lorebook?`<span class="card-status-icon card-lore-icon" title="Lorebook available" aria-label="Lorebook available">${bookSvg}</span>`:''}
       </div>
       <p class="card-short">${esc(b.short)}</p>
       <div class="card-tags">${shown.map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}${more>0?`<span class="tag-more">+${more}</span>`:''}</div>

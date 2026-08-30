@@ -1916,3 +1916,291 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   }
   .hero-light-sweep{display:none!important}
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final5
+   catalog status / solar flare / terminal glitch / card cohesion
+   ========================================================= */
+
+/* ---------- RESULT STATUS ---------- */
+/* Keep records + reset as one compact block instead of throwing RESET to the far edge. */
+.catalog-meta{
+  justify-content:flex-start!important;
+  gap:10px!important;
+}
+.catalog-result-status{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:7px!important;
+}
+.catalog-result-status > i{
+  display:none!important;
+  width:5px!important;
+  height:5px!important;
+  flex:0 0 5px!important;
+  border-radius:50%!important;
+  background:#a9ba7f!important;
+  box-shadow:0 0 7px rgba(169,186,127,.42)!important;
+}
+.catalog-meta.has-filters .catalog-result-status > i{
+  display:inline-block!important;
+}
+#resetBtn{
+  padding:4px 7px!important;
+  border:1px solid rgba(112,126,91,.42)!important;
+  border-radius:4px!important;
+  background:rgba(26,32,23,.40)!important;
+  color:#8f9b80!important;
+  font-size:7px!important;
+  letter-spacing:.065em!important;
+  transition:color .16s ease,border-color .16s ease,background .16s ease!important;
+}
+#resetBtn:hover{
+  color:#d9d3bf!important;
+  border-color:rgba(160,178,124,.72)!important;
+  background:rgba(43,53,36,.58)!important;
+}
+#resetBtn[hidden]{display:none!important}
+
+/* ---------- CARD SYSTEM LINE ---------- */
+/* POV + lorebook are metadata glyphs now, not two independent chunky buttons. */
+.card-system-line{
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:nowrap!important;
+  gap:5px!important;
+  margin-top:6px!important;
+  min-height:25px!important;
+}
+.card-system-line .meta-token{
+  min-height:24px!important;
+  padding:3px 6px!important;
+}
+.card-status-icon{
+  position:relative;
+  width:18px!important;
+  height:22px!important;
+  flex:0 0 18px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#778271!important;
+  box-shadow:none!important;
+  opacity:.88;
+  cursor:help;
+  transition:color .16s ease,opacity .16s ease,transform .16s ease!important;
+}
+.card-status-icon::before{
+  content:"";
+  position:absolute;
+  left:-3px;
+  top:6px;
+  bottom:6px;
+  width:1px;
+  background:rgba(89,100,81,.34);
+}
+.card-status-icon:hover{
+  color:#c1cbaa!important;
+  opacity:1;
+  transform:translateY(-1px);
+}
+.card-pov-icon span{
+  font-size:12px!important;
+  line-height:1!important;
+}
+.card-lore-icon svg{
+  width:12px!important;
+  height:12px!important;
+}
+
+/* Keep the lower half of cards tighter and more intentional. */
+.card-short{
+  margin-top:7px!important;
+}
+.card-tags{
+  margin-top:7px!important;
+}
+.card-hashtags{
+  margin-top:5px!important;
+}
+
+/* ---------- MODAL META READABILITY ---------- */
+.modal-author-row{
+  font-size:10px!important;
+  line-height:1.35!important;
+  color:#727b70!important;
+}
+.modal-author-row button{
+  font-size:10px!important;
+  color:#bcc4aa!important;
+}
+.pov-label{
+  margin-left:8px!important;
+  font-size:10px!important;
+  color:#9aa58d!important;
+}
+
+/* ---------- HERO: ROUND SUN FLARE, RARER ---------- */
+/* Retire the frequent diagonal sweep. */
+.hero-light-sweep{
+  left:56%!important;
+  top:17%!important;
+  width:86px!important;
+  height:86px!important;
+  border-radius:50%!important;
+  opacity:0!important;
+  transform:none!important;
+  filter:blur(.2px)!important;
+  mix-blend-mode:screen!important;
+  background:
+    radial-gradient(circle at 50% 50%,
+      rgba(255,237,184,.26) 0 7%,
+      rgba(255,214,120,.15) 8% 17%,
+      rgba(239,174,75,.055) 18% 35%,
+      transparent 36% 100%)!important;
+  box-shadow:
+    0 0 30px rgba(236,174,75,.055),
+    0 0 72px rgba(217,145,51,.028)!important;
+  animation:archiveRoundSolarFlare 21s ease-in-out infinite!important;
+}
+.hero-light-sweep::before,
+.hero-light-sweep::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  pointer-events:none;
+}
+.hero-light-sweep::before{
+  width:26px;
+  height:26px;
+  left:-35px;
+  top:42px;
+  border:1px solid rgba(255,218,141,.16);
+  box-shadow:0 0 14px rgba(239,183,91,.055);
+}
+.hero-light-sweep::after{
+  width:12px;
+  height:12px;
+  right:-53px;
+  top:26px;
+  background:rgba(255,220,145,.10);
+  box-shadow:0 0 9px rgba(243,189,96,.08);
+}
+@keyframes archiveRoundSolarFlare{
+  0%,64%{
+    opacity:0;
+    transform:translate3d(-5px,3px,0) scale(.86);
+  }
+  68%{
+    opacity:.15;
+    transform:translate3d(-2px,1px,0) scale(.94);
+  }
+  73%{
+    opacity:.52;
+    transform:translate3d(2px,-1px,0) scale(1);
+  }
+  79%{
+    opacity:.31;
+    transform:translate3d(5px,-2px,0) scale(1.045);
+  }
+  84%{
+    opacity:.10;
+    transform:translate3d(7px,-3px,0) scale(1.07);
+  }
+  88%,100%{
+    opacity:0;
+    transform:translate3d(8px,-3px,0) scale(1.08);
+  }
+}
+
+/* The overall warm breathing light is now slower and calmer too. */
+.hero-sun-glare{
+  animation-duration:13.5s!important;
+  opacity:.68!important;
+}
+
+/* ---------- TERMINAL: SLOWER + MORE LEGIBLE ---------- */
+.hero-terminal-glitch{
+  background:
+    repeating-linear-gradient(180deg,
+      rgba(118,255,82,.075) 0 1px,
+      transparent 1px 4px)!important;
+  box-shadow:
+    inset 0 0 17px rgba(102,255,80,.16),
+    0 0 14px rgba(95,255,71,.075)!important;
+  animation:terminalWakeSlow 11.5s steps(1,end) infinite!important;
+}
+.hero-terminal-glitch::before{
+  animation:terminalSweepSlow 11.5s steps(1,end) infinite!important;
+}
+.hero-terminal-glitch::after{
+  background:rgba(116,255,84,.12)!important;
+  box-shadow:0 0 15px rgba(99,255,76,.22)!important;
+  animation:terminalFlashSlow 15.7s steps(1,end) infinite!important;
+}
+.terminal-glitch-line{
+  height:2px!important;
+  background:rgba(166,255,126,.50)!important;
+  box-shadow:
+    0 0 6px rgba(117,255,84,.42),
+    0 0 13px rgba(117,255,84,.18)!important;
+}
+.terminal-glitch-line-a{animation:terminalSliceSlowA 11.5s steps(1,end) infinite!important}
+.terminal-glitch-line-b{animation:terminalSliceSlowB 11.5s steps(1,end) infinite!important}
+.terminal-glitch-line-c{animation:terminalSliceSlowC 11.5s steps(1,end) infinite!important}
+
+@keyframes terminalWakeSlow{
+  0%,57%,75%,100%{opacity:0;transform:none}
+  58%{opacity:.30;transform:translateX(0)}
+  60%{opacity:.78;transform:translateX(2px)}
+  63%{opacity:.48;transform:translateX(-1px)}
+  67%{opacity:.86;transform:translateX(1px)}
+  71%{opacity:.34;transform:translateX(-1px)}
+  74%{opacity:0;transform:none}
+}
+@keyframes terminalSweepSlow{
+  0%,57%,75%,100%{opacity:0;transform:translateX(0)}
+  59%{opacity:.55;transform:translateX(-4px)}
+  62%{opacity:.88;transform:translateX(5px)}
+  66%{opacity:.42;transform:translateX(-3px)}
+  70%{opacity:.74;transform:translateX(2px)}
+  74%{opacity:0;transform:translateX(0)}
+}
+@keyframes terminalFlashSlow{
+  0%,76%,88%,100%{opacity:0}
+  78%{opacity:.28}
+  80%{opacity:.74}
+  83%{opacity:.31}
+  85%{opacity:.64}
+  87%{opacity:0}
+}
+@keyframes terminalSliceSlowA{
+  0%,58%,75%,100%{opacity:0;transform:translateX(0)}
+  60%{opacity:.72;transform:translateX(6px)}
+  64%{opacity:.32;transform:translateX(-4px)}
+  69%{opacity:.58;transform:translateX(3px)}
+  73%{opacity:0}
+}
+@keyframes terminalSliceSlowB{
+  0%,60%,75%,100%{opacity:0;transform:translateX(0)}
+  62%{opacity:.48;transform:translateX(-6px)}
+  67%{opacity:.76;transform:translateX(4px)}
+  72%{opacity:.25;transform:translateX(-2px)}
+}
+@keyframes terminalSliceSlowC{
+  0%,59%,75%,100%{opacity:0;transform:translateX(0)}
+  61%{opacity:.38;transform:translateX(4px)}
+  65%{opacity:.66;transform:translateX(-3px)}
+  71%{opacity:.30;transform:translateX(2px)}
+}
+
+/* Lower whole-header scanline movement so it doesn't compete with the scene. */
+.hero-live-fx::after{
+  opacity:.025!important;
+  animation-duration:8s!important;
+}
+

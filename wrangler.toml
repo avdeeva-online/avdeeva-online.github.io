@@ -1,6 +1,7 @@
 name = "archive-exe"
 main = "src/worker.js"
 compatibility_date = "2026-08-30"
+keep_vars = true
 
 [assets]
 directory = "./public"
@@ -10,3 +11,6 @@ binding = "ASSETS"
 binding = "DB"
 database_name = "archive-characters"
 database_id = "acc550d1-66d7-416e-b1af-73ca22f7c230"
+
+[secrets]
+required = ["DATACAT_DEVICE_TOKEN", "DATACAT_SESSION_TOKEN"]

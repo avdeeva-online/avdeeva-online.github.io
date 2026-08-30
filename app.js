@@ -80,7 +80,9 @@ function render(){
   $("#resultCount").textContent = list.length;
   const meta = $("#catalogMeta");
   const reset = $("#resetBtn");
+  const catalogOpen = $("#catalogOpen");
   if(meta) meta.classList.toggle("has-filters", filtered);
+  if(catalogOpen) catalogOpen.classList.toggle("has-filters", filtered);
   if(reset) reset.hidden = !filtered;
   $("#totalMeta").textContent = `${String(B.length).padStart(3,"0")} RECORDS`;
   $("#empty").hidden = !!list.length;

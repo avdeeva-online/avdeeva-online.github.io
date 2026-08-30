@@ -2204,3 +2204,152 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   animation-duration:8s!important;
 }
 
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final6
+   filter lamp logic + terminal glitch redesign
+   ========================================================= */
+
+/* The tiny lamp on CATALOG means "filters are active" — nothing else. */
+#catalogOpen::after{
+  display:none!important;
+}
+#catalogOpen.has-filters::after{
+  display:block!important;
+}
+
+/* ---------- TERMINAL GLITCH REDESIGN ----------
+   No large green rectangle. Only a short CRT signal disturbance
+   constrained to the actual monitor glass. */
+.hero-terminal-glitch{
+  left:7.45%!important;
+  top:0.8%!important;
+  width:14.75%!important;
+  height:54.5%!important;
+  border-radius:1px!important;
+  overflow:hidden!important;
+
+  background:transparent!important;
+  box-shadow:none!important;
+  opacity:0!important;
+  mix-blend-mode:screen!important;
+
+  animation:terminalSignalEvent 13.8s steps(1,end) infinite!important;
+}
+
+/* Two narrow "signal tear" bands rather than a full-screen flash. */
+.hero-terminal-glitch::before{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;
+  top:31%!important;
+  width:100%!important;
+  height:7%!important;
+  opacity:0!important;
+  background:
+    linear-gradient(180deg,
+      transparent 0%,
+      rgba(137,255,96,.055) 28%,
+      rgba(175,255,134,.13) 48%,
+      rgba(109,245,76,.045) 72%,
+      transparent 100%)!important;
+  filter:blur(.25px)!important;
+  transform:translateX(0)!important;
+  animation:terminalTearOne 13.8s steps(1,end) infinite!important;
+}
+
+.hero-terminal-glitch::after{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;
+  top:68%!important;
+  width:100%!important;
+  height:4%!important;
+  opacity:0!important;
+  background:
+    linear-gradient(180deg,
+      transparent,
+      rgba(164,255,122,.12),
+      transparent)!important;
+  filter:blur(.15px)!important;
+  transform:translateX(0)!important;
+  animation:terminalTearTwo 13.8s steps(1,end) infinite!important;
+}
+
+/* Existing three line elements become tiny CRT fragments. */
+.terminal-glitch-line{
+  height:1px!important;
+  width:58%!important;
+  left:8%!important;
+  opacity:0!important;
+  background:rgba(176,255,137,.28)!important;
+  box-shadow:0 0 3px rgba(122,255,85,.16)!important;
+}
+.terminal-glitch-line-a{
+  top:18%!important;
+  animation:terminalFragmentA 13.8s steps(1,end) infinite!important;
+}
+.terminal-glitch-line-b{
+  top:49%!important;
+  left:31%!important;
+  width:61%!important;
+  animation:terminalFragmentB 13.8s steps(1,end) infinite!important;
+}
+.terminal-glitch-line-c{
+  top:82%!important;
+  left:14%!important;
+  width:72%!important;
+  animation:terminalFragmentC 13.8s steps(1,end) infinite!important;
+}
+
+/* Event lasts ~1.4s, but remains restrained. */
+@keyframes terminalSignalEvent{
+  0%,68%,79%,100%{opacity:0; transform:translateX(0)}
+  69%{opacity:.30; transform:translateX(0)}
+  71%{opacity:.46; transform:translateX(.7px)}
+  73%{opacity:.22; transform:translateX(-.5px)}
+  75%{opacity:.38; transform:translateX(.4px)}
+  78%{opacity:0; transform:translateX(0)}
+}
+@keyframes terminalTearOne{
+  0%,68%,79%,100%{opacity:0; transform:translateX(0)}
+  70%{opacity:.72; transform:translateX(-5px)}
+  72%{opacity:.30; transform:translateX(3px)}
+  74%{opacity:.58; transform:translateX(-2px)}
+  77%{opacity:.18; transform:translateX(1px)}
+  79%{opacity:0}
+}
+@keyframes terminalTearTwo{
+  0%,70%,79%,100%{opacity:0; transform:translateX(0)}
+  72%{opacity:.46; transform:translateX(4px)}
+  74%{opacity:.18; transform:translateX(-3px)}
+  76%{opacity:.40; transform:translateX(2px)}
+  79%{opacity:0}
+}
+@keyframes terminalFragmentA{
+  0%,69%,79%,100%{opacity:0; transform:translateX(0)}
+  71%{opacity:.55; transform:translateX(4px)}
+  73%{opacity:.18; transform:translateX(-2px)}
+  76%{opacity:.32; transform:translateX(1px)}
+}
+@keyframes terminalFragmentB{
+  0%,68%,79%,100%{opacity:0; transform:translateX(0)}
+  70%{opacity:.40; transform:translateX(-5px)}
+  74%{opacity:.24; transform:translateX(3px)}
+  77%{opacity:.38; transform:translateX(-1px)}
+}
+@keyframes terminalFragmentC{
+  0%,71%,79%,100%{opacity:0; transform:translateX(0)}
+  73%{opacity:.42; transform:translateX(3px)}
+  75%{opacity:.20; transform:translateX(-2px)}
+  78%{opacity:.30; transform:translateX(1px)}
+}
+
+/* Override previous terminal animations completely. */
+.hero-terminal-glitch,
+.hero-terminal-glitch::before,
+.hero-terminal-glitch::after,
+.terminal-glitch-line{
+  animation-delay:0s!important;
+}

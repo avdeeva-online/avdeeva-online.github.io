@@ -49,3 +49,9 @@ Existing catalog, filters, random, modal, downloads, lorebooks, easter eggs and 
 - Card POV + lorebook are now small inline system glyphs instead of detached square buttons.
 - Light animation changed from frequent broad sweep to a rarer circular sun/lens flare.
 - Terminal glitch is slower, stronger, and remains visible longer.
+
+### final6
+- Catalog button status dot now appears only while filters/search/non-default sort are active.
+- Terminal glitch completely redesigned: no oversized green screen overlay.
+- New glitch is constrained to the terminal glass and uses short CRT signal tears/fragments.
+- Glitch is less aggressive and lasts long enough to read as an intentional screen malfunction.

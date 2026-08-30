@@ -1,6 +1,5 @@
-
 function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
+  return new Response(JSON.stringify(data, null, 2), {
     status,
     headers: {
       "content-type": "application/json; charset=utf-8",
@@ -60,15 +59,22 @@ function chooseCard(root) {
   walk(root, obj => {
     const keys = Object.keys(obj).map(k => k.toLowerCase());
     let score = 0;
-    for (const k of ["name","description","personality","scenario","first_mes","first_message","alternate_greetings","creator_notes","tags"]) {
+    for (const k of [
+      "name", "description", "personality", "scenario",
+      "first_mes", "first_message", "alternate_greetings",
+      "creator_notes", "tags"
+    ]) {
       if (keys.includes(k)) score += (k === "scenario" || k === "first_mes") ? 4 : 2;
     }
     if (score > best.score) best = { score, obj };
   });
+
   if (best.obj?.data && typeof best.obj.data === "object") {
     const d = best.obj.data;
     const keys = Object.keys(d).map(k => k.toLowerCase());
-    if (keys.some(k => ["description","scenario","first_mes","first_message"].includes(k))) return d;
+    if (keys.some(k => ["description", "scenario", "first_mes", "first_message"].includes(k))) {
+      return d;
+    }
   }
   return best.obj;
 }
@@ -91,8 +97,14 @@ function toArray(v) {
 }
 
 function pickImage(root) {
-  let candidate = findFirst(root, ["avatar","avatar_url","avatarUrl","image","image_url","imageUrl","thumbnail","media_url","mediaUrl"]);
-  if (candidate && typeof candidate === "object") candidate = candidate.url || candidate.src || candidate.path;
+  let candidate = findFirst(root, [
+    "avatar", "avatar_url", "avatarUrl", "image", "image_url",
+    "imageUrl", "thumbnail", "media_url", "mediaUrl"
+  ]);
+
+  if (candidate && typeof candidate === "object") {
+    candidate = candidate.url || candidate.src || candidate.path;
+  }
   if (candidate && /^https?:/i.test(String(candidate))) return String(candidate);
 
   let found = "";
@@ -113,7 +125,7 @@ function detectLorebook(root) {
   walk(root, obj => {
     for (const [k, v] of Object.entries(obj)) {
       const key = k.toLowerCase();
-      if (["character_book","characterbook","lorebook","worldbook","world_info","worldinfo"].includes(key)) {
+      if (["character_book", "characterbook", "lorebook", "worldbook", "world_info", "worldinfo"].includes(key)) {
         if (v && ((Array.isArray(v) && v.length) || typeof v === "object")) yes = true;
       }
     }
@@ -143,23 +155,42 @@ function slugify(name, uuid) {
 function parseDatacat(root, uuid, janitorUrl) {
   const card = chooseCard(root);
 
-  const name = stripHtml(toText(card.name ?? findFirst(root, ["character_name","characterName","name","title"])));
-  const author = stripHtml(toText(card.creator ?? card.author ?? findFirst(root, ["creator_name","creatorName","author","username"])));
-  const rawTags = card.tags ?? findFirst(root, ["tags","tag_names","tagNames"]);
+  const name = stripHtml(toText(
+    card.name ?? findFirst(root, ["character_name", "characterName", "name", "title"])
+  ));
+  const author = stripHtml(toText(
+    card.creator ?? card.author ?? findFirst(root, ["creator_name", "creatorName", "author", "username"])
+  ));
+
+  const rawTags = card.tags ?? findFirst(root, ["tags", "tag_names", "tagNames"]);
   const tags = toArray(rawTags).map(x => {
     if (x && typeof x === "object") return String(x.name || x.label || x.value || "").trim();
     return String(x).trim();
   }).filter(Boolean);
 
-  const description = stripHtml(toText(card.description ?? card.personality ?? findFirst(root, ["definition","description","personality"])));
+  const description = stripHtml(toText(
+    card.description ?? card.personality ?? findFirst(root, ["definition", "description", "personality"])
+  ));
   const scenario = stripHtml(toText(card.scenario ?? findFirst(root, ["scenario"])));
-  const first = card.first_mes ?? card.first_message ?? findFirst(root, ["first_mes","first_message","firstMessage","greeting","opening"]);
-  const alt = card.alternate_greetings ?? card.alternateGreetings ?? findFirst(root, ["alternate_greetings","alternateGreetings","alternative_greetings"]);
-  const intros = [first, ...toArray(alt)].filter(Boolean).map(v => stripHtml(toText(v))).filter(Boolean);
 
-  const authorUrl = toText(findFirst(root, ["creator_url","creatorUrl","author_url","authorUrl","profile_url","profileUrl"]));
-  const imageUrl = pickImage(root);
-  const pov = inferPov(tags);
+  const first =
+    card.first_mes ??
+    card.first_message ??
+    findFirst(root, ["first_mes", "first_message", "firstMessage", "greeting", "opening"]);
+
+  const alt =
+    card.alternate_greetings ??
+    card.alternateGreetings ??
+    findFirst(root, ["alternate_greetings", "alternateGreetings", "alternative_greetings"]);
+
+  const intros = [first, ...toArray(alt)]
+    .filter(Boolean)
+    .map(v => stripHtml(toText(v)))
+    .filter(Boolean);
+
+  const authorUrl = toText(findFirst(root, [
+    "creator_url", "creatorUrl", "author_url", "authorUrl", "profile_url", "profileUrl"
+  ]));
 
   return {
     janitor_uuid: uuid,
@@ -168,14 +199,14 @@ function parseDatacat(root, uuid, janitorUrl) {
     author,
     author_url: authorUrl && /^https?:/i.test(authorUrl) ? authorUrl : "",
     universe: "",
-    pov,
+    pov: inferPov(tags),
     tags,
     hashtags: [],
     short_description: description.slice(0, 300),
     description,
     scenario,
     intros,
-    image_url: imageUrl,
+    image_url: pickImage(root),
     janitor_url: janitorUrl,
     datacat_url: `https://datacat.run/characters/recent/janitor/${uuid}`,
     card_url: "",
@@ -231,28 +262,62 @@ async function saveCharacter(env, c) {
   ).run();
 }
 
-async function fetchDatacatPublic(uuid) {
-  const endpoint = `https://datacat.run/api/characters/recent-public/${encodeURIComponent(uuid)}?view=modal&sourceKind=janitor`;
+function datacatHeaders(env) {
+  return {
+    "accept": "application/json",
+    "x-device-token": env.DATACAT_DEVICE_TOKEN || "",
+    "x-session-token": env.DATACAT_SESSION_TOKEN || "",
+    "user-agent": "ARCHIVE.EXE/1.0"
+  };
+}
+
+async function fetchDatacatPublic(env, uuid) {
+  if (!env.DATACAT_DEVICE_TOKEN || !env.DATACAT_SESSION_TOKEN) {
+    return {
+      state: "SESSION_MISSING",
+      status: 500,
+      detail: "Cloudflare secrets DATACAT_DEVICE_TOKEN / DATACAT_SESSION_TOKEN are missing."
+    };
+  }
+
+  const endpoint =
+    `https://datacat.run/api/characters/recent-public/${encodeURIComponent(uuid)}?view=modal&sourceKind=janitor`;
+
   const r = await fetch(endpoint, {
-    headers: {
-      "accept": "application/json",
-      "user-agent": "ARCHIVE.EXE/1.0"
-    },
+    headers: datacatHeaders(env),
     redirect: "follow"
   });
 
   if (r.status === 404) return { state: "MISSING" };
   if (r.status === 410) return { state: "UNAVAILABLE" };
+
+  if (r.status === 401 || r.status === 403) {
+    const body = await r.text();
+    return {
+      state: "SESSION_ERROR",
+      status: r.status,
+      detail: body.slice(0, 500)
+    };
+  }
+
   if (!r.ok) {
     const body = await r.text();
-    return { state: "ERROR", status: r.status, detail: body.slice(0, 300) };
+    return {
+      state: "ERROR",
+      status: r.status,
+      detail: body.slice(0, 500)
+    };
   }
 
   let data;
   try {
     data = await r.json();
   } catch {
-    return { state: "ERROR", status: 502, detail: "DataCat returned non-JSON content." };
+    return {
+      state: "ERROR",
+      status: 502,
+      detail: "DataCat returned non-JSON content."
+    };
   }
 
   return { state: "FOUND", data };
@@ -265,26 +330,42 @@ export default {
     if (url.pathname === "/api/health") {
       let db = false;
       let dbError = null;
+
       try {
         const row = await env.DB.prepare("SELECT 1 AS ok").first();
         db = row?.ok === 1;
       } catch (error) {
         dbError = String(error?.message || error);
       }
-      return json({ ok: true, worker: "archive-exe", database: db, databaseError: dbError });
+
+      return json({
+        ok: true,
+        worker: "archive-exe",
+        database: db,
+        databaseError: dbError,
+        datacatSecrets:
+          Boolean(env.DATACAT_DEVICE_TOKEN && env.DATACAT_SESSION_TOKEN)
+      });
     }
 
     if (url.pathname === "/api/import" && request.method === "POST") {
       let body;
-      try { body = await request.json(); }
-      catch { return json({ ok: false, error: "INVALID_JSON" }, 400); }
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false, error: "INVALID_JSON" }, 400);
+      }
 
       const janitorUrl = String(body?.url || "").trim();
       const uuid = extractJanitorUuid(janitorUrl);
-      if (!uuid) return json({ ok: false, error: "INVALID_JANITOR_URL" }, 400);
+
+      if (!uuid) {
+        return json({ ok: false, error: "INVALID_JANITOR_URL" }, 400);
+      }
 
       try {
         const existing = await getExisting(env, uuid);
+
         if (existing) {
           return json({
             ok: true,
@@ -294,12 +375,13 @@ export default {
           });
         }
 
-        const dc = await fetchDatacatPublic(uuid);
+        const dc = await fetchDatacatPublic(env, uuid);
 
         if (dc.state === "FOUND") {
           const parsed = parseDatacat(dc.data, uuid, janitorUrl);
           await saveCharacter(env, parsed);
           const saved = await getExisting(env, uuid);
+
           return json({
             ok: true,
             state: "IMPORTED_FROM_DATACAT",
@@ -323,8 +405,27 @@ export default {
             state: "NEEDS_DATACAT_RETRIEVAL",
             janitorUuid: uuid,
             janitorUrl,
-            message: "The character is not yet in DataCat. Public automatic retrieval needs a DataCat server session, which is the next step."
+            message: "Authorized DataCat lookup worked, but this character is not stored there yet. Next step: retrieval-v2."
           });
+        }
+
+        if (dc.state === "SESSION_MISSING") {
+          return json({
+            ok: false,
+            state: "DATACAT_SECRETS_MISSING",
+            janitorUuid: uuid,
+            detail: dc.detail
+          }, 500);
+        }
+
+        if (dc.state === "SESSION_ERROR") {
+          return json({
+            ok: false,
+            state: "DATACAT_SESSION_ERROR",
+            janitorUuid: uuid,
+            status: dc.status,
+            detail: dc.detail
+          }, 502);
         }
 
         return json({

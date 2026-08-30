@@ -1,0 +1,30 @@
+/* ARCHIVE.EXE — modal spacing / scrollbar tune */
+@media (min-width:761px){
+  .modal-action-groups{
+    margin-top:20px!important;
+  }
+}
+
+/* Keep the description scrollbar present but visually recessed. */
+.modal-text-wrap,
+.modal-intros{
+  scrollbar-width:thin;
+  scrollbar-color:#30372f transparent;
+}
+.modal-text-wrap::-webkit-scrollbar,
+.modal-intros::-webkit-scrollbar{
+  width:5px;
+}
+.modal-text-wrap::-webkit-scrollbar-track,
+.modal-intros::-webkit-scrollbar-track{
+  background:transparent;
+}
+.modal-text-wrap::-webkit-scrollbar-thumb,
+.modal-intros::-webkit-scrollbar-thumb{
+  background:#2c332b;
+  border-radius:8px;
+}
+.modal-text-wrap:hover::-webkit-scrollbar-thumb,
+.modal-intros:hover::-webkit-scrollbar-thumb{
+  background:#394137;
+}

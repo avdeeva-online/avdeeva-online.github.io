@@ -1,7 +1,9 @@
-# ARCHIVE.EXE v0.9.28 — Narrower Hero
+# ARCHIVE.EXE v0.9.29 — Hero Fit Fix
 
-- Header image cropped to a flatter panoramic ratio (1717×300).
-- Hero height reduced to ~255–300px on desktop.
-- Keeps terminal, deer, sunlight and visible ground in frame.
-- Softer bottom fade continues to merge the image into the dark site.
-- No extra blur, brightness or recolor applied.
+- Restores the FULL generated hero artwork; no destructive vertical crop.
+- Keeps the header itself compact (~285–325px desktop).
+- Scales the artwork down to fit instead of using cover/cropping.
+- Deer and floor remain visible.
+- Lower half now gradually fades into the exact dark site background.
+- Terminal remains on the left.
+- No blur, brightness filter, recolor, or image zoom animation.

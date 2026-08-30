@@ -1,7 +1,12 @@
 name = "archive-exe"
+main = "src/worker.js"
 compatibility_date = "2026-08-30"
 
 [assets]
 directory = "./public"
-html_handling = "auto-trailing-slash"
-not_found_handling = "single-page-application"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "archive-characters"
+database_id = "acc550d1-66d7-416e-b1af-73ca22f7c230"

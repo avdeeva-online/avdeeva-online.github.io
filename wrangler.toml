@@ -2,6 +2,6 @@ name = "archive-exe"
 compatibility_date = "2026-08-30"
 
 [assets]
-directory = "."
+directory = "./public"
 html_handling = "auto-trailing-slash"
 not_found_handling = "single-page-application"

@@ -1,0 +1,11 @@
+{
+  "name": "Leo Hart Lorebook",
+  "universe": "Nocturne City",
+  "demo": true,
+  "entries": [
+    {
+      "key": "demo",
+      "content": "Demo lorebook placeholder for ARCHIVE.EXE v0.2"
+    }
+  ]
+}

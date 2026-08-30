@@ -1,8 +1,10 @@
 # CLOUDFLARE DEPLOY
 
-Cloudflare Worker project name: archive-exe
+Project: archive-exe
 
 Build command: leave empty
 Deploy command: npx wrangler deploy
 
-Static assets are served from the repository root via wrangler.toml.
+Important:
+Static site files are inside ./public
+Wrangler uploads only ./public and will NOT upload node_modules.

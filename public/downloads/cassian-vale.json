@@ -1,0 +1,20 @@
+{
+  "id": "cassian-vale",
+  "nameRu": "Кассиан Вейл",
+  "nameEn": "Cassian Vale",
+  "author": "CrimsonGem",
+  "universe": "Black Harbour",
+  "tags": [
+    "male",
+    "mafia",
+    "enemies",
+    "dark-romance"
+  ],
+  "short": "Кассиан привык покупать молчание, лояльность и время. Единственное, что ему не удаётся купить, — ваше согласие исчезнуть из его жизни.",
+  "full": "Black Harbour существует на контрактах, долгах и услугах, которые никогда не забываются. Кассиан управляет частью города как бизнесом, пока личный конфликт не превращается в проблему, которую нельзя решить деньгами.",
+  "image": "assets/bot-5.svg",
+  "platform": "JANITOR",
+  "url": "https://example.com/",
+  "download": "downloads/cassian-vale.json",
+  "isNew": true
+}

@@ -80,3 +80,9 @@ Existing catalog, filters, random, modal, downloads, lorebooks, easter eggs and 
 - SHOW selector supports 10 / 30 / 50 / 100 records per page.
 - Added page navigation under the grid when needed.
 - LOST DIRECTORY footer trigger now aggressively glitches and cycles warning strings on hover.
+
+### v1.0 final11 cleanup
+- Removed the decorative footer leaves/branch.
+- Fixed the blank-on-first-load catalog bug caused by missing `pageSize` / `currentPage` declarations.
+- Catalog now paints immediately when `window.BOTS` is already available.
+- Moved FOUND / SHOW / TOTAL / RESET into the top toolbar, after the filter controls.

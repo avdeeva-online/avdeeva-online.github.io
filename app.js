@@ -1,4 +1,6 @@
 let B = [];
+let pageSize = 30;
+let currentPage = 1;
 function syncBots(){
   const source = window.BOTS;
   if(Array.isArray(source)) B = source;
@@ -1015,13 +1017,29 @@ wireHashtagGhosts();
   let attempts = 0;
   function paint(){
     syncBots();
-    render();
     attempts++;
-    if(B.length===0 && attempts<12) setTimeout(paint, 80);
+    if(B.length){
+      render();
+      return;
+    }
+    if(attempts < 20) setTimeout(paint, 60);
+    else render();
   }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paint, {once:true});
-  else paint();
-  window.addEventListener('load', ()=>{ syncBots(); render(); }, {once:true});
+
+  // data.js is loaded before app.js, so in the normal path we paint immediately.
+  if(Array.isArray(window.BOTS) && window.BOTS.length){
+    syncBots();
+    render();
+  }else if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", paint, {once:true});
+  }else{
+    paint();
+  }
+
+  window.addEventListener("load", ()=>{
+    syncBots();
+    render();
+  }, {once:true});
 })();
 
 

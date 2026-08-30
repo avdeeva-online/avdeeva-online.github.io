@@ -3081,3 +3081,84 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   .page-size-btn,.total-count{font-size:7px}
   .lost-file.danger-glitch{animation:none!important}
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final11 — toolbar/meta cleanup + boot fix
+   ========================================================= */
+
+/* Footer botany removed: no leaves/branch decoration. */
+.footer-growth{
+  display:none!important;
+}
+
+/* Catalog stats live in the same top row as the controls. */
+.toolbar-row{
+  align-items:center;
+}
+.toolbar-meta{
+  margin-left:auto!important;
+  padding-left:13px;
+  border-left:1px solid rgba(102,112,92,.18);
+  flex:0 0 auto;
+  display:flex!important;
+  align-items:center;
+  justify-content:flex-end;
+  gap:9px;
+  min-height:38px;
+  white-space:nowrap;
+}
+.toolbar-meta .catalog-result-status,
+.toolbar-meta .page-size-btn,
+.toolbar-meta .total-count,
+.toolbar-meta #resetBtn{
+  font-size:7px!important;
+  letter-spacing:.09em!important;
+}
+.toolbar-meta .catalog-result-status{
+  color:#697363;
+}
+.toolbar-meta .catalog-result-status b{
+  color:#9ca88d;
+  font-weight:500;
+}
+.toolbar-meta .page-size-btn{
+  padding:3px 2px!important;
+}
+.toolbar-meta .total-count{
+  color:#515b4f;
+}
+.toolbar-meta #resetBtn{
+  margin-left:1px;
+  padding:4px 6px;
+  border:0;
+  background:transparent;
+  color:#737d6b;
+}
+.toolbar-meta #resetBtn:hover{
+  color:#adb89b;
+}
+
+/* Since the stats are no longer a separate row, remove its old vertical footprint. */
+.controls-block + .catalog-meta{
+  display:none!important;
+}
+
+/* On narrower layouts the meta block wraps as a compact final item,
+   instead of squeezing the search field into nothing. */
+@media(max-width:1450px){
+  .toolbar-meta{
+    margin-left:0!important;
+    border-left:0;
+    padding-left:0;
+  }
+}
+@media(max-width:980px){
+  .toolbar-meta{
+    width:100%;
+    justify-content:flex-start;
+    min-height:24px;
+    padding-top:4px;
+    border-top:1px solid rgba(102,112,92,.12);
+  }
+}

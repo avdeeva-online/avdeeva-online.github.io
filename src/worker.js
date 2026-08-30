@@ -62,9 +62,10 @@ function inferPov(tags) {
   return "";
 }
 
-function datacatHeaders(env) {
+function datacatHeaders(env, jsonBody = false) {
   return {
     "accept": "application/json",
+    ...(jsonBody ? { "content-type": "application/json" } : {}),
     "x-device-token": env.DATACAT_DEVICE_TOKEN || "",
     "x-session-token": env.DATACAT_SESSION_TOKEN || "",
     "user-agent": "ARCHIVE.EXE/1.0"
@@ -104,6 +105,59 @@ async function fetchDatacatPublic(env, uuid) {
     result = await fetchDatacatView(env, uuid, "modal");
   }
   return result;
+}
+
+async function queueDatacatRetrieval(env, uuid) {
+  if (!env.DATACAT_DEVICE_TOKEN || !env.DATACAT_SESSION_TOKEN) {
+    return { state: "SESSION_MISSING", status: 500 };
+  }
+
+  const endpoint = "https://datacat.run/api/character/retrieval-v2";
+  const body = {
+    url: `https://janitorai.com/characters/${uuid}`,
+    openLoginIfNoSession: true,
+    appearOnPublicFeed: false,
+    publicFeedVisibilityIntent: false,
+    useSeparateWorkerServer: false,
+    inlinePostExtractCreatorProfile: true,
+    idempotencyKey: uuid,
+    extractSourceMode: "core_plus_janny",
+    alwaysReextract: false
+  };
+
+  let r;
+  try {
+    r = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        ...datacatHeaders(env, true),
+        "x-request-id": crypto.randomUUID()
+      },
+      body: JSON.stringify(body),
+      redirect: "follow"
+    });
+  } catch (error) {
+    return { state: "ERROR", status: 502, detail: String(error?.message || error) };
+  }
+
+  const text = await r.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch {}
+
+  if (r.status === 401 || r.status === 403) {
+    return { state: "SESSION_ERROR", status: r.status, detail: text.slice(0, 800) };
+  }
+  if (r.status === 410) {
+    return { state: "UNAVAILABLE", status: 410, detail: text.slice(0, 800) };
+  }
+  if (r.status === 429) {
+    return { state: "RATE_LIMITED", status: 429, detail: text.slice(0, 800) };
+  }
+  if (!r.ok) {
+    return { state: "ERROR", status: r.status, detail: text.slice(0, 800) };
+  }
+
+  return { state: "QUEUED", status: r.status, data };
 }
 
 function getDatacatCharacter(payload) {
@@ -328,7 +382,7 @@ async function collectCardDefinition(env, uuid, modalPayload) {
     data: {
       name: String(c.chat_name || c.chatName || c.name || "Character"),
       description: personality,
-      personality: personality,
+      personality,
       scenario,
       first_mes: firstMes,
       mes_example: mesExample,
@@ -353,10 +407,24 @@ async function collectCardDefinition(env, uuid, modalPayload) {
   };
 }
 
-async function cardDownload(env, uuid) {
+async function cardDownload(env, uuid, origin) {
   const dc = await fetchDatacatPublic(env, uuid);
   if (dc.state !== "FOUND") {
-    return json({ ok: false, state: `DATACAT_${dc.state}`, status: dc.status || null, detail: dc.detail || null }, dc.state === "MISSING" ? 404 : 502);
+    if (dc.state === "MISSING") {
+      const retrieval = await queueDatacatRetrieval(env, uuid);
+      if (retrieval.state === "QUEUED") {
+        return json({
+          ok: true,
+          state: "RETRIEVAL_QUEUED",
+          janitorUuid: uuid,
+          retryAfterSeconds: 5,
+          statusUrl: `${origin}/api/import/status?uuid=${uuid}`,
+          message: "DataCat retrieval has been queued. Check status in a few seconds."
+        }, 202, { "retry-after": "5" });
+      }
+      return json({ ok: false, state: `DATACAT_RETRIEVAL_${retrieval.state}`, status: retrieval.status || null, detail: retrieval.detail || null }, retrieval.status || 502);
+    }
+    return json({ ok: false, state: `DATACAT_${dc.state}`, status: dc.status || null, detail: dc.detail || null }, 502);
   }
 
   const c = getDatacatCharacter(dc.data);
@@ -366,12 +434,24 @@ async function cardDownload(env, uuid) {
 
   const card = await collectCardDefinition(env, uuid, dc.data);
   if (!card) {
+    const retrieval = await queueDatacatRetrieval(env, uuid);
+    if (retrieval.state === "QUEUED") {
+      return json({
+        ok: true,
+        state: "RETRIEVAL_QUEUED",
+        janitorUuid: uuid,
+        retryAfterSeconds: 5,
+        statusUrl: `${origin}/api/import/status?uuid=${uuid}`,
+        message: "The public DataCat record exists, but its definition is not exposed yet. A retrieval/re-extraction request was queued."
+      }, 202, { "retry-after": "5" });
+    }
     return json({
       ok: false,
-      state: "CARD_DEFINITION_NOT_AVAILABLE",
+      state: `DATACAT_RETRIEVAL_${retrieval.state}`,
       janitorUuid: uuid,
-      message: "DataCat reports definition tabs, but this API session did not expose the character definition/greeting yet."
-    }, 409);
+      status: retrieval.status || null,
+      detail: retrieval.detail || null
+    }, retrieval.status || 502);
   }
 
   const filename = `${safeFilename(c?.chat_name || c?.chatName || c?.name, "character")}.json`;
@@ -382,6 +462,55 @@ async function cardDownload(env, uuid) {
       "content-disposition": `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
       "cache-control": "private, no-store"
     }
+  });
+}
+
+async function retrievalStatus(env, uuid, origin) {
+  const dc = await fetchDatacatPublic(env, uuid);
+
+  if (dc.state === "UNAVAILABLE") {
+    return json({ ok: false, state: "UNAVAILABLE", janitorUuid: uuid }, 410);
+  }
+  if (dc.state === "MISSING") {
+    return json({
+      ok: true,
+      state: "RETRIEVAL_PENDING",
+      janitorUuid: uuid,
+      ready: false,
+      retryAfterSeconds: 5
+    }, 202, { "retry-after": "5" });
+  }
+  if (dc.state !== "FOUND") {
+    return json({ ok: false, state: `DATACAT_${dc.state}`, janitorUuid: uuid, status: dc.status || null, detail: dc.detail || null }, 502);
+  }
+
+  const janitorUrl = `https://janitorai.com/characters/${uuid}`;
+  const parsed = parseDatacatExact(dc.data, uuid, janitorUrl, origin);
+  await saveCharacter(env, parsed);
+
+  const card = await collectCardDefinition(env, uuid, dc.data);
+  const saved = await getExisting(env, uuid);
+
+  if (!card) {
+    return json({
+      ok: true,
+      state: "RETRIEVAL_PENDING_DEFINITION",
+      janitorUuid: uuid,
+      ready: false,
+      character: saved,
+      retryAfterSeconds: 5,
+      cardUrl: `${origin}/api/characters/${uuid}/card`
+    }, 202, { "retry-after": "5" });
+  }
+
+  return json({
+    ok: true,
+    state: "RETRIEVAL_READY",
+    janitorUuid: uuid,
+    ready: true,
+    character: saved,
+    cardUrl: `${origin}/api/characters/${uuid}/card`,
+    lorebookUrl: saved?.lorebook_url || ""
   });
 }
 
@@ -403,7 +532,8 @@ export default {
         worker: "archive-exe",
         database: db,
         databaseError: dbError,
-        datacatSecrets: Boolean(env.DATACAT_DEVICE_TOKEN && env.DATACAT_SESSION_TOKEN)
+        datacatSecrets: Boolean(env.DATACAT_DEVICE_TOKEN && env.DATACAT_SESSION_TOKEN),
+        retrievalV2: true
       });
     }
 
@@ -421,11 +551,17 @@ export default {
       }, dc.state === "FOUND" ? 200 : 502);
     }
 
+    if (url.pathname === "/api/import/status" && request.method === "GET") {
+      const uuid = extractJanitorUuid(url.searchParams.get("uuid"));
+      if (!uuid) return json({ ok: false, error: "INVALID_UUID" }, 400);
+      return retrievalStatus(env, uuid, url.origin);
+    }
+
     const loreMatch = url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})\/lorebook$/i);
     if (loreMatch && request.method === "GET") return lorebookDownload(env, loreMatch[1].toLowerCase());
 
     const cardMatch = url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})\/card$/i);
-    if (cardMatch && request.method === "GET") return cardDownload(env, cardMatch[1].toLowerCase());
+    if (cardMatch && request.method === "GET") return cardDownload(env, cardMatch[1].toLowerCase(), url.origin);
 
     const charMatch = url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})$/i);
     if (charMatch && request.method === "GET") {
@@ -466,27 +602,27 @@ export default {
         }
 
         if (dc.state === "MISSING") {
-          if (existing) {
-            if (existingIsStale) {
-              return json({
-                ok: false,
-                state: "ARCHIVE_COPY_STALE",
-                janitorUuid: uuid,
-                stale: true,
-                character: existing,
-                message: "The archive contains a legacy broken import. DataCat is temporarily not exposing this record, so ARCHIVE.EXE will not treat the stale copy as valid. Run IMPORT / CHECK again later to repair it automatically."
-              }, 409);
-            }
+          const retrieval = await queueDatacatRetrieval(env, uuid);
+          if (retrieval.state === "QUEUED") {
             return json({
               ok: true,
-              state: "FOUND_IN_ARCHIVE",
+              state: "RETRIEVAL_QUEUED",
               janitorUuid: uuid,
-              stale: false,
-              character: existing,
-              note: "DataCat lookup is currently missing this record, so the valid archive copy was kept."
-            });
+              janitorUrl,
+              retryAfterSeconds: 5,
+              statusUrl: `${url.origin}/api/import/status?uuid=${uuid}`,
+              existingArchiveCopy: Boolean(existing),
+              existingArchiveCopyStale: existingIsStale,
+              message: "Character was not currently exposed by DataCat, so retrieval-v2 was queued automatically."
+            }, 202, { "retry-after": "5" });
           }
-          return json({ ok: true, state: "NEEDS_DATACAT_RETRIEVAL", janitorUuid: uuid, janitorUrl, message: "Character is not stored in DataCat yet. Next step is retrieval-v2." });
+          return json({
+            ok: false,
+            state: `DATACAT_RETRIEVAL_${retrieval.state}`,
+            janitorUuid: uuid,
+            status: retrieval.status || null,
+            detail: retrieval.detail || null
+          }, retrieval.status || 502);
         }
 
         return json({

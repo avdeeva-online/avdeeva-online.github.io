@@ -14,35 +14,191 @@
   <div class="hero-art" aria-hidden="true"></div>
   <div class="hero-dark" aria-hidden="true"></div>
   <div class="hero-fade" aria-hidden="true"></div>
+
+  <!-- v1.0 live atmosphere: separate overlay layers; header.png stays untouched -->
   <div class="hero-live-fx" aria-hidden="true">
-    <div class="hero-sun-glare"></div><div class="hero-light-sweep"></div>
-    <div class="hero-terminal-glitch"><i class="terminal-glitch-line terminal-glitch-line-a"></i><i class="terminal-glitch-line terminal-glitch-line-b"></i><i class="terminal-glitch-line terminal-glitch-line-c"></i></div>
+    <div class="hero-sun-glare"></div>
+    <div class="hero-light-sweep"></div>
+    <div class="hero-terminal-glitch">
+      <i class="terminal-glitch-line terminal-glitch-line-a"></i>
+      <i class="terminal-glitch-line terminal-glitch-line-b"></i>
+      <i class="terminal-glitch-line terminal-glitch-line-c"></i>
+    </div>
     <div id="heroDust" class="hero-dust-live"></div>
   </div>
-  <div class="hero-fx-v2" aria-hidden="true"><div class="hero-solar-flare-v2"><i class="flare-orb flare-orb-a"></i><i class="flare-orb flare-orb-b"></i><i class="flare-orb flare-orb-c"></i></div><div class="hero-terminal-crt-v2"><span class="crt-tear crt-tear-a"></span><span class="crt-tear crt-tear-b"></span><span class="crt-tear crt-tear-c"></span><span class="crt-scan crt-scan-a"></span><span class="crt-scan crt-scan-b"></span></div></div>
-  <div class="hero-copy"><div class="hero-kicker">CHARACTER DATABASE / NODE_00</div><div class="hero-title">ARCHIVE.EXE<span>_</span></div><div class="hero-line">FILES / CHARACTERS / STORIES / WORLDS</div></div>
+
+  <!-- HERO FX V2: independent layers, intentionally separate from legacy FX -->
+  <div class="hero-fx-v2" aria-hidden="true">
+    <div class="hero-solar-flare-v2">
+      <i class="flare-orb flare-orb-a"></i>
+      <i class="flare-orb flare-orb-b"></i>
+      <i class="flare-orb flare-orb-c"></i>
+    </div>
+    <div class="hero-terminal-crt-v2">
+      <span class="crt-tear crt-tear-a"></span>
+      <span class="crt-tear crt-tear-b"></span>
+      <span class="crt-tear crt-tear-c"></span>
+      <span class="crt-scan crt-scan-a"></span>
+      <span class="crt-scan crt-scan-b"></span>
+    </div>
+  </div>
+
+  <div class="hero-copy">
+    <div class="hero-kicker">CHARACTER DATABASE / NODE_00</div>
+    <div class="hero-title">ARCHIVE.EXE<span>_</span></div>
+    <div class="hero-line">FILES / CHARACTERS / STORIES / WORLDS</div>
+  </div>
 </header>
 
-<main><div class="archive-shell"><section class="controls-block"><section class="toolbar"><div class="toolbar-row">
-<button id="catalogOpen" class="control control-primary"><span class="hamb">☰</span><span>CATALOG</span></button>
-<label class="searchbar"><span class="search-icon">⌕</span><input id="searchInput" placeholder="Search by name, author, universe or tag..." autocomplete="off"></label>
-<div class="filter-group primary-group"><button class="control filter-trigger" data-filter="author"><span>AUTHOR</span><em id="authorCount"></em></button><button id="loreToggle" class="control icon-toggle lore-toggle" title="Lorebook filter: off" aria-label="Show only bots with lorebooks" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3.2-.9 5.7-.6 8.5 1.1v12c-2.8-1.7-5.3-2-8.5-1.1zM20.5 5.5c-3.2-.9-5.7-.6-8.5 1.1v12c2.8-1.7 5.3-2 8.5-1.1z"/></svg></button><button id="povCycle" class="control pov-cycle" title="POV: AnyPOV" aria-label="POV filter: AnyPOV" data-pov="AnyPOV"><span class="pov-cycle-label">ANY POV</span></button></div>
-<div class="filter-group secondary-group"><button class="control subtle-control filter-trigger hashtag-trigger" data-filter="hashtag" title="Filter by hashtags"><span class="hash-mark">#</span><span>HASHTAGS</span><em id="hashtagCount"></em></button><button class="control subtle-control filter-trigger universe-trigger" data-filter="universe" title="Filter by universe"><span>UNIVERSE</span><em id="universeCount"></em></button><button id="sortTrigger" class="control subtle-control"><span class="sort-mark">↕</span><span id="sortLabel">NEWEST</span><span class="chev">⌄</span></button></div>
-<button id="randomBtn" class="control random-trigger"><span class="random-mark" aria-hidden="true"><svg class="dice-icon" viewBox="0 0 24 24" focusable="false"><rect x="4" y="4" width="16" height="16" rx="2.5"/><circle cx="8.5" cy="8.5" r="1"/><circle cx="15.5" cy="8.5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="8.5" cy="15.5" r="1"/><circle cx="15.5" cy="15.5" r="1"/></svg></span><span>RANDOM</span></button>
-<section id="catalogMeta" class="catalog-meta toolbar-meta"><div class="page-size-wrap"><button id="pageSizeBtn" class="page-size-btn" type="button" aria-haspopup="listbox">SHOW 30⌄</button><div id="pageSizeMenu" class="page-size-menu" hidden><button type="button" data-page-size="10">10</button><button type="button" data-page-size="30">30</button><button type="button" data-page-size="50">50</button><button type="button" data-page-size="100">100</button></div></div><span id="totalCount" class="total-count">TOTAL 000</span></section>
-</div><div id="activeFilters" class="active-filters"></div></section>
-<section class="tag-zone"><div class="tag-strip-head"><div class="tag-strip-left"><span class="tag-label">TAGS</span><small>MULTI-SELECT</small><div class="tag-actions"><button id="clearQuickTags" hidden>CLEAR</button><button id="toggleAllTags">ALL TAGS +</button></div></div><div class="tags-results-actions"><button id="resetBtn" class="reset-filters-inline" hidden>RESET FILTERS</button><span class="catalog-result-status tags-result-status"><i id="filterStatusDot" aria-hidden="true"></i><b id="resultCount">0</b> RECORDS FOUND</span></div></div><div id="tagQuick" class="quick-list quick-collapsed"></div><div class="tag-scroll-hint">SCROLL HORIZONTALLY · DRAG TO BROWSE</div></section>
-</section>
-<section id="grid" class="grid"></section><nav id="pagination" class="pagination" aria-label="Catalog pages" hidden></nav><div id="empty" class="empty" hidden>NO MATCHING RECORDS</div></div></main>
+<main>
+  <div class="archive-shell">
+  <section class="controls-block">
+  <section class="toolbar">
+    <div class="toolbar-row">
+      <button id="catalogOpen" class="control control-primary"><span class="hamb">☰</span><span>CATALOG</span></button>
+      <button id="importOpen" class="control"><span>+ IMPORT</span></button>
 
-<footer class="site-footer"><div class="footer-left"><span>ARCHIVE.EXE / NODE_00</span><span id="totalMeta">000 RECORDS</span></div><div class="footer-right"><button id="lostFileBtn" class="lost-file">ARCHIVE STATUS: ONLINE&nbsp;&nbsp;•&nbsp;&nbsp;UNKNOWN FILES: 01</button><a class="archive-credit" href="https://t.me/ne_avdeeva" target="_blank" rel="noopener noreferrer">CURATED BY NE AVDEEVA ↗</a></div></footer>
+      <label class="searchbar">
+        <span class="search-icon">⌕</span>
+        <input id="searchInput" placeholder="Search by name, author, universe or tag..." autocomplete="off">
+      </label>
 
-<div id="popover" class="popover" hidden><div class="popover-search-wrap"><span>⌕</span><input id="popoverSearch" placeholder="Find..."></div><div id="popoverList" class="popover-list"></div><div class="popover-foot"><button id="popoverReset">RESET</button><button id="popoverDone">DONE</button></div></div>
-<div id="sortMenu" class="sort-menu" hidden><button data-sort="newest">NEWEST FIRST</button><button data-sort="az">A → Z</button><button data-sort="za">Z → A</button><button data-sort="author">@ BY AUTHOR</button></div>
-<div id="drawerShade" class="drawer-shade" hidden></div><aside id="catalogDrawer" class="catalog-drawer" aria-hidden="true"><div class="drawer-head"><div class="drawer-head-copy"><small>INDEX_00 / ACTIVE</small><strong>BROWSE CATALOG</strong><span>RECOVERED DATABASE INDEX</span></div><button id="catalogClose" aria-label="Close catalog">×</button></div><div class="drawer-status"><span><i></i> DATABASE ONLINE</span><b id="drawerTotal">000 RECORDS</b></div><div class="drawer-tabs"><button class="drawer-tab active" data-drawer-tab="tag"><em>01</em><span>TAGS</span></button><button class="drawer-tab" data-drawer-tab="author"><em>02</em><span>AUTHORS</span></button><button class="drawer-tab" data-drawer-tab="universe"><em>03</em><span>UNIVERSES</span></button></div><div class="drawer-query-row"><label class="drawer-search"><span>⌕</span><input id="drawerSearch" placeholder="SEARCH INDEX..."></label><button id="drawerSortCycle" class="drawer-tool-btn" type="button" title="Change catalog sort"><small>SORT</small><b>A→Z</b></button></div><div id="drawerList" class="drawer-list" data-layout="tag"></div><div class="drawer-foot"><span>NODE_00 / INDEX CACHE</span><span id="drawerFootStatus">STABLE</span></div></aside>
+      <div class="filter-group primary-group">
+        <button class="control filter-trigger" data-filter="author"><span>AUTHOR</span><em id="authorCount"></em></button>
+        <button id="loreToggle" class="control icon-toggle lore-toggle" title="Lorebook filter: off" aria-label="Show only bots with lorebooks" aria-pressed="false">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3.2-.9 5.7-.6 8.5 1.1v12c-2.8-1.7-5.3-2-8.5-1.1zM20.5 5.5c-3.2-.9-5.7-.6-8.5 1.1v12c2.8-1.7 5.3-2 8.5-1.1z"/></svg>
+        </button>
+        <button id="povCycle" class="control pov-cycle" title="POV: AnyPOV" aria-label="POV filter: AnyPOV" data-pov="AnyPOV"><span class="pov-cycle-label">ANY POV</span></button>
+      </div>
 
-<div id="modal" class="modal" hidden><div class="modal-backdrop" data-close></div><button class="modal-nav modal-prev" id="prevBot">‹</button><article class="modal-card"><button class="modal-close" data-close>×</button><div class="modal-cover"><img id="modalImage" alt=""><button id="modalAuthorBadge" class="author-badge"></button></div><div class="modal-content"><div class="modal-heading-row"><h2 id="modalTitle"></h2></div><div class="modal-universe-row"><button id="modalUniverse" class="universe-link modal-universe-under-title"></button><span id="modalLoreFlag" class="modal-lore-flag"></span></div><div class="modal-author-row">AUTHOR <button id="modalAuthor"></button> <span id="modalPov" class="pov-label"></span></div><div class="modal-tabs"><button class="modal-tab active" data-modal-tab="description">DESCRIPTION</button><button class="modal-tab" data-modal-tab="scenario">SCENARIO</button><button class="modal-tab" data-modal-tab="intro">INTRO</button></div><div id="modalPanel" class="modal-text-wrap"></div><div id="modalTags" class="modal-tags"></div><div class="modal-action-groups"><div class="modal-action-group"><small>FILES</small><div class="modal-actions files-actions"><a id="downloadBot" class="download-action" download>BOT CARD ↓</a><a id="downloadLore" class="download-action" download>LOREBOOK ↓</a></div></div><div class="modal-action-group"><small>SOURCE</small><div class="modal-actions source-actions"><a id="openBot" class="open-platform" target="_blank" rel="noopener">OPEN BOT ↗</a><a id="openAuthor" class="author-action" target="_blank" rel="noopener">AUTHOR ↗</a></div></div></div></div></article><button class="modal-nav modal-next" id="nextBot">›</button></div>
+      <div class="filter-group secondary-group">
+        <button class="control subtle-control filter-trigger hashtag-trigger" data-filter="hashtag" title="Filter by hashtags"><span class="hash-mark">#</span><span>HASHTAGS</span><em id="hashtagCount"></em></button>
+        <button class="control subtle-control filter-trigger universe-trigger" data-filter="universe" title="Filter by universe"><span>UNIVERSE</span><em id="universeCount"></em></button>
+        <button id="sortTrigger" class="control subtle-control"><span class="sort-mark">↕</span><span id="sortLabel">NEWEST</span><span class="chev">⌄</span></button>
+      </div>
+
+      <button id="randomBtn" class="control random-trigger"><span class="random-mark" aria-hidden="true"><svg class="dice-icon" viewBox="0 0 24 24" focusable="false"><rect x="4" y="4" width="16" height="16" rx="2.5"/><circle cx="8.5" cy="8.5" r="1"/><circle cx="15.5" cy="8.5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="8.5" cy="15.5" r="1"/><circle cx="15.5" cy="15.5" r="1"/></svg></span><span>RANDOM</span></button>
+
+      <section id="catalogMeta" class="catalog-meta toolbar-meta">
+        <div class="page-size-wrap">
+          <button id="pageSizeBtn" class="page-size-btn" type="button" aria-haspopup="listbox">SHOW 30⌄</button>
+          <div id="pageSizeMenu" class="page-size-menu" hidden>
+            <button type="button" data-page-size="10">10</button>
+            <button type="button" data-page-size="30">30</button>
+            <button type="button" data-page-size="50">50</button>
+            <button type="button" data-page-size="100">100</button>
+          </div>
+        </div>
+        <span id="totalCount" class="total-count">TOTAL 000</span>
+      </section>
+    </div>
+    <div id="activeFilters" class="active-filters"></div>
+  </section>
+
+  <section class="tag-zone">
+    <div class="tag-strip-head">
+      <div class="tag-strip-left">
+        <span class="tag-label">TAGS</span><small>MULTI-SELECT</small>
+        <div class="tag-actions"><button id="clearQuickTags" hidden>CLEAR</button><button id="toggleAllTags">ALL TAGS +</button></div>
+      </div>
+      <div class="tags-results-actions">
+        <button id="resetBtn" class="reset-filters-inline" hidden>RESET FILTERS</button>
+        <span class="catalog-result-status tags-result-status"><i id="filterStatusDot" aria-hidden="true"></i><b id="resultCount">0</b> RECORDS FOUND</span>
+      </div>
+    </div>
+    <div id="tagQuick" class="quick-list quick-collapsed"></div>
+    <div class="tag-scroll-hint">SCROLL HORIZONTALLY · DRAG TO BROWSE</div>
+  </section>
+  </section><!-- /controls-block -->
+
+  <section id="grid" class="grid"></section>
+  <nav id="pagination" class="pagination" aria-label="Catalog pages" hidden></nav>
+  <div id="empty" class="empty" hidden>NO MATCHING RECORDS</div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-left"><span>ARCHIVE.EXE / NODE_00</span><span id="totalMeta">000 RECORDS</span></div>
+  <div class="footer-right">
+    <button id="lostFileBtn" class="lost-file">ARCHIVE STATUS: ONLINE&nbsp;&nbsp;•&nbsp;&nbsp;UNKNOWN FILES: 01</button>
+    <a class="archive-credit" href="https://t.me/ne_avdeeva" target="_blank" rel="noopener noreferrer">CURATED BY NE AVDEEVA ↗</a>
+  </div>
+</footer>
+
+<div id="popover" class="popover" hidden>
+  <div class="popover-search-wrap"><span>⌕</span><input id="popoverSearch" placeholder="Find..."></div>
+  <div id="popoverList" class="popover-list"></div>
+  <div class="popover-foot"><button id="popoverReset">RESET</button><button id="popoverDone">DONE</button></div>
+</div>
+
+<div id="sortMenu" class="sort-menu" hidden>
+  <button data-sort="newest">NEWEST FIRST</button>
+  <button data-sort="az">A → Z</button>
+  <button data-sort="za">Z → A</button>
+  <button data-sort="author">@ BY AUTHOR</button>
+</div>
+
+<div id="drawerShade" class="drawer-shade" hidden></div>
+<aside id="catalogDrawer" class="catalog-drawer" aria-hidden="true">
+  <div class="drawer-head">
+    <div class="drawer-head-copy"><small>INDEX_00 / ACTIVE</small><strong>BROWSE CATALOG</strong><span>RECOVERED DATABASE INDEX</span></div>
+    <button id="catalogClose" aria-label="Close catalog">×</button>
+  </div>
+  <div class="drawer-status"><span><i></i> DATABASE ONLINE</span><b id="drawerTotal">000 RECORDS</b></div>
+  <div class="drawer-tabs">
+    <button class="drawer-tab active" data-drawer-tab="tag"><em>01</em><span>TAGS</span></button>
+    <button class="drawer-tab" data-drawer-tab="author"><em>02</em><span>AUTHORS</span></button>
+    <button class="drawer-tab" data-drawer-tab="universe"><em>03</em><span>UNIVERSES</span></button>
+  </div>
+  <div class="drawer-query-row">
+    <label class="drawer-search"><span>⌕</span><input id="drawerSearch" placeholder="SEARCH INDEX..."></label>
+    <button id="drawerSortCycle" class="drawer-tool-btn" type="button" title="Change catalog sort"><small>SORT</small><b>A→Z</b></button>
+  </div>
+  <div id="drawerList" class="drawer-list" data-layout="tag"></div>
+  <div class="drawer-foot"><span>NODE_00 / INDEX CACHE</span><span id="drawerFootStatus">STABLE</span></div>
+</aside>
+
+<div id="modal" class="modal" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <button class="modal-nav modal-prev" id="prevBot">‹</button>
+  <article class="modal-card">
+    <button class="modal-close" data-close>×</button>
+    <div class="modal-cover"><img id="modalImage" alt=""><button id="modalAuthorBadge" class="author-badge"></button></div>
+    <div class="modal-content">
+      <div class="modal-heading-row"><h2 id="modalTitle"></h2></div>
+      <div class="modal-universe-row">
+        <button id="modalUniverse" class="universe-link modal-universe-under-title"></button>
+        <span id="modalLoreFlag" class="modal-lore-flag"></span>
+      </div>
+      <div class="modal-author-row">AUTHOR <button id="modalAuthor"></button> <span id="modalPov" class="pov-label"></span></div>
+      <div class="modal-tabs"><button class="modal-tab active" data-modal-tab="description">DESCRIPTION</button><button class="modal-tab" data-modal-tab="scenario">SCENARIO</button><button class="modal-tab" data-modal-tab="intro">INTRO</button></div>
+      <div id="modalPanel" class="modal-text-wrap"></div>
+      <div id="modalTags" class="modal-tags"></div>
+      <div class="modal-action-groups">
+        <div class="modal-action-group"><small>FILES</small><div class="modal-actions files-actions"><a id="downloadBot" class="download-action" download>BOT CARD ↓</a><a id="downloadLore" class="download-action" download>LOREBOOK ↓</a></div></div>
+        <div class="modal-action-group"><small>SOURCE</small><div class="modal-actions source-actions"><a id="openBot" class="open-platform" target="_blank" rel="noopener">OPEN BOT ↗</a><a id="openAuthor" class="author-action" target="_blank" rel="noopener">AUTHOR ↗</a></div></div>
+      </div>
+    </div>
+  </article>
+  <button class="modal-nav modal-next" id="nextBot">›</button>
+</div>
+
 <div id="archiveWhisper" class="archive-whisper" hidden><span class="whisper-dot"></span><span id="whisperText"></span></div>
-<div id="lostTerminal" class="lost-terminal" hidden><div class="terminal-backdrop" data-terminal-close></div><div class="terminal-card"><button class="terminal-close" data-terminal-close>×</button><div class="terminal-title"><span>ARCHIVE.EXE // LOST_DIRECTORY</span><span id="terminalSignal" class="terminal-signal">SIGNAL: UNSTABLE</span></div><div id="terminalLines" class="terminal-lines"></div><div class="terminal-cursor-row" aria-hidden="true">&gt; <span class="terminal-cursor">_</span></div><button id="terminalRetry" class="terminal-retry">RECOVERY ATTEMPT</button></div></div>
-<script src="data.js"></script><script src="app.js"></script><script src="live-data.js"></script>
-</body></html>
+
+<div id="lostTerminal" class="lost-terminal" hidden>
+  <div class="terminal-backdrop" data-terminal-close></div>
+  <div class="terminal-card">
+    <button class="terminal-close" data-terminal-close>×</button>
+    <div class="terminal-title"><span>ARCHIVE.EXE // LOST_DIRECTORY</span><span id="terminalSignal" class="terminal-signal">SIGNAL: UNSTABLE</span></div>
+    <div id="terminalLines" class="terminal-lines"></div>
+    <div class="terminal-cursor-row" aria-hidden="true">&gt; <span class="terminal-cursor">_</span></div>
+    <button id="terminalRetry" class="terminal-retry">RECOVERY ATTEMPT</button>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="png-download.js"></script>
+<script src="app.js"></script>
+<script src="catalog-api.js"></script>
+</body>
+</html>

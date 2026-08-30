@@ -25,6 +25,12 @@
   <div id="list" class="list"><div class="empty">NO RECORDS LOADED</div></div>
   <div class="summary" id="summary"></div>
 </section>
+<section class="panel">
+  <div class="eyebrow">SOURCE-OF-TRUTH AUDIT</div>
+  <div class="toolbar" style="margin-top:10px"><button class="btn primary" id="reindexSourceTruth">RECHECK ALL ARCHIVE RECORDS</button></div>
+  <div class="hint">Заново читает DataCat для каждой записи. Имя бота, автор, universe/series/world и название lorebook сохраняются только из явных полей источника. Ничего не строится из имени персонажа.</div>
+  <div id="reindexStatus" class="status">READY.</div>
+</section>
 <div class="footer">ARCHIVE.EXE / ADMIN BULK IMPORT · this page is hidden, not access-controlled</div>
 </main>
 <script src="app.js"></script>

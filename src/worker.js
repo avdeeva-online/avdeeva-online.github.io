@@ -338,13 +338,20 @@ export default {
         dbError = String(error?.message || error);
       }
 
+      const envKeys = Object.keys(env).sort();
+
       return json({
         ok: true,
         worker: "archive-exe",
         database: db,
         databaseError: dbError,
         datacatSecrets:
-          Boolean(env.DATACAT_DEVICE_TOKEN && env.DATACAT_SESSION_TOKEN)
+          Boolean(env.DATACAT_DEVICE_TOKEN && env.DATACAT_SESSION_TOKEN),
+        envKeys,
+        hasDatacatDeviceToken:
+          Object.prototype.hasOwnProperty.call(env, "DATACAT_DEVICE_TOKEN"),
+        hasDatacatSessionToken:
+          Object.prototype.hasOwnProperty.call(env, "DATACAT_SESSION_TOKEN")
       });
     }
 

@@ -146,3 +146,13 @@ Includes all final14 modal/terminal fixes plus:
 ### v1.0 final15d main-page glitch fix
 - Catalog/drawer list entries are excluded from the new glitch interaction logic and keep their previous behavior.
 - Main page buttons, filters, tags, hashtags, SHOW/page-size controls, modal tags and other small interactive controls keep the improved behavior: visible autonomous glitches, but rare optical-only hover glitches with no jumping.
+
+### v1.0 final16 screenshot fixes
+- Modal lorebook icon moved beside Universe; header spacing relaxed.
+- Short modal descriptions no longer create the awkward compressed-header/huge-dead-space layout.
+- Terminal close button is truly absolute top-right; terminal scan texture softened and persistent tear stripe prevented.
+- Terminal typing/recovery pacing changed from very slow to medium/crisper.
+- SHOW dropdown uses border-box sizing and cannot expand sideways on hover.
+- Legacy main-page hover corruption/signal glitches and hashtag hover ghosts disabled.
+- Catalog/drawer legacy glitches remain untouched.
+- Autonomous main-page glitches now target the actual rendered buttons/tags/hashtags, start quickly, occur one at a time every ~3.2–7.4s, and always skip hovered controls.

@@ -4140,3 +4140,143 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
    ========================================================= */
 /* Catalog/drawer list items intentionally keep their previous glitch behavior.
    New hover-smoothing applies to the main page and modal controls only. */
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final16 — screenshot fixes
+   ========================================================= */
+
+/* MODAL: readable breathing room + lore indicator belongs to universe metadata. */
+.modal-heading-row{
+  justify-content:flex-start!important;
+}
+.modal-heading-row h2{
+  margin:9px 0 5px!important;
+}
+.modal-universe-row{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  min-height:18px!important;
+  margin:0 0 5px!important;
+}
+.modal-universe-under-title{
+  margin:0!important;
+}
+.modal-lore-flag{
+  position:static!important;
+  width:18px!important;
+  height:18px!important;
+  border:1px solid #3c4538!important;
+  border-radius:4px!important;
+  opacity:.78!important;
+}
+.modal-author-row{
+  margin:2px 0 5px!important;
+  line-height:1.45!important;
+}
+.modal-tabs{
+  margin-top:12px!important;
+}
+
+/* Short descriptions no longer force a huge elastic void before tags.
+   Long descriptions still get a scrollable, generous area. */
+.modal-text-wrap{
+  flex:0 1 auto!important;
+  min-height:150px!important;
+  max-height:235px!important;
+}
+.modal-tags{
+  margin-top:8px!important;
+}
+.modal-action-groups{
+  margin-top:10px!important;
+}
+
+/* TERMINAL: crisp rather than soft, close X actually pinned top-right.
+   The generic .terminal-card>* rule previously changed it back to relative. */
+.terminal-close{
+  position:absolute!important;
+  top:10px!important;
+  right:10px!important;
+  left:auto!important;
+  margin:0!important;
+  width:24px!important;
+  height:24px!important;
+  z-index:20!important;
+}
+.terminal-card::before{
+  opacity:.035!important;
+  animation:none!important;
+  background:
+    repeating-linear-gradient(180deg,
+      rgba(190,220,165,.045) 0 1px,
+      transparent 1px 5px)!important;
+}
+.terminal-card.terminal-hit::after{
+  height:3px!important;
+  opacity:.35;
+}
+.terminal-lines{
+  line-height:1.72!important;
+}
+.terminal-lines>div{
+  animation-duration:.08s!important;
+}
+
+/* SHOW: no expanding/overflowing hover target. */
+.page-size-menu,
+.page-size-menu *{
+  box-sizing:border-box!important;
+}
+.page-size-menu{
+  width:86px!important;
+  min-width:86px!important;
+  overflow:hidden!important;
+}
+.page-size-menu button{
+  width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  transform:none!important;
+  transition:background .12s ease,color .12s ease!important;
+}
+.page-size-menu button:hover,
+.page-size-menu button:focus-visible{
+  width:100%!important;
+  transform:none!important;
+  background:#1b2119!important;
+  color:#b7c1a3!important;
+}
+
+/* DIRECT INTERACTION: main-page controls never jump/glitch under the cursor.
+   Ambient glitch code explicitly skips hovered elements. */
+.toolbar .control:hover,
+.filter-trigger:hover,
+.quick-list button:hover,
+.card-tags button:hover,
+.card-hashtags button:hover,
+.active-filters button:hover,
+.modal-primary-tags button:hover,
+.modal-hashtags button:hover,
+.page-size-btn:hover,
+#toggleAllTags:hover,
+#clearQuickTags:hover,
+#resetBtn:hover,
+.universe-link:hover{
+  animation:none!important;
+  transform:none!important;
+}
+
+/* Autonomous glitches remain clearly visible away from the pointer. */
+.ambient-glitch{
+  animation:ambientInterfaceGlitch16 .56s steps(1,end) 1!important;
+}
+@keyframes ambientInterfaceGlitch16{
+  0%,100%{transform:none;filter:none;text-shadow:none}
+  14%{transform:translateX(-2px) skewX(-1.2deg);filter:brightness(1.18);text-shadow:-2px 0 rgba(145,255,111,.32)}
+  29%{transform:translateX(2px);text-shadow:2px 0 rgba(174,83,72,.22)}
+  45%{transform:translateX(-1px);filter:contrast(1.14)}
+  62%{transform:translateX(2px) skewX(.8deg);text-shadow:-1px 0 rgba(145,255,111,.25),1px 0 rgba(174,83,72,.15)}
+  79%{transform:translateX(-1px);filter:brightness(1.10)}
+}

@@ -619,7 +619,7 @@ function setTerminalSignal(text,hot=false){
   signal.classList.toggle("hot",hot);
 }
 function wait(ms){return new Promise(r=>setTimeout(r,ms))}
-async function typeTerminalLines(lines,{clear=true,speed=28,linePause=210}={}){
+async function typeTerminalLines(lines,{clear=true,speed=18,linePause=125}={}){
   const token=++terminalTypingToken;
   const box=$("#terminalLines");
   if(clear) box.innerHTML="";
@@ -639,9 +639,9 @@ async function typeTerminalLines(lines,{clear=true,speed=28,linePause=210}={}){
       if(token!==terminalTypingToken)return;
       target.textContent+=text[i];
       const punctuation=/[.:!?]/.test(text[i]) ? 45 : 0;
-      await wait(speed + Math.random()*10 + punctuation);
+      await wait(speed + Math.random()*7 + (punctuation?24:0));
     }
-    await wait(linePause + Math.random()*80);
+    await wait(linePause + Math.random()*45);
   }
 
   terminalBusy=false;
@@ -652,8 +652,8 @@ async function showTerminal(){
   const seen=bumpTerminalSeen();
   setTerminalSignal("SIGNAL: UNSTABLE",false);
   $(".terminal-card")?.classList.remove("terminal-hit","terminal-recovered");
-  await wait(320);
-  typeTerminalLines(terminalIntroFor(seen),{speed:27,linePause:220});
+  await wait(180);
+  typeTerminalLines(terminalIntroFor(seen),{speed:18,linePause:125});
 }
 function hideTerminal(){
   terminalTypingToken++;
@@ -679,7 +679,7 @@ async function recoveryAttempt(){
   for(const n of steps){
     pct.textContent=n+"%";
     bar.style.width=n+"%";
-    await wait(180+Math.random()*110);
+    await wait(110+Math.random()*75);
   }
 
   const roll=Math.random();
@@ -694,6 +694,7 @@ async function recoveryAttempt(){
       ["You were not supposed to find this.","warn"]
     ];
     card?.classList.add("terminal-hit");
+    setTimeout(()=>card?.classList.remove("terminal-hit"),560);
   }else if(roll<.32){
     const today=new Date().toLocaleDateString(undefined,{year:"numeric",month:"2-digit",day:"2-digit"});
     result=[
@@ -712,10 +713,11 @@ async function recoveryAttempt(){
       ["Then who created it?","ok"]
     ];
     card?.classList.add("terminal-hit");
+    setTimeout(()=>card?.classList.remove("terminal-hit"),560);
   }
 
-  await wait(420);
-  await typeTerminalLines(result,{clear:true,speed:25,linePause:230});
+  await wait(240);
+  await typeTerminalLines(result,{clear:true,speed:17,linePause:120});
   setTerminalSignal("SIGNAL: LOST",false);
   btn.disabled=false;
 }
@@ -785,8 +787,10 @@ function showUnknownRecord(done){
 }
 
 // A tiny distinction: "signal glitch" is RGB/slice noise; "corruption" is a brief red ? state.
-const CORRUPT_SELECTORS=['#catalogOpen','.filter-trigger','.hashtag-trigger','.universe-trigger','#sortTrigger','#loreToggle','#povCycle','#randomBtn','.drawer-tab','.drawer-item','.quick-list button'];
-const GLITCH_SELECTORS=['.control','.quick-list button','.drawer-tab','.drawer-item','.card-tags button','.card-hashtags button'];
+// Main-page hover corruption is disabled: it interfered with rapid filtering.
+// Drawer/catalog keeps its original anomaly behavior untouched.
+const CORRUPT_SELECTORS=['.drawer-tab','.drawer-item'];
+const GLITCH_SELECTORS=['.drawer-tab','.drawer-item'];
 
 function transientCorruption(el){
   if(!el || el.dataset.corrupting==='1') return;
@@ -900,15 +904,8 @@ function wireHashtagGhosts(){
   $$('[data-hashtag]').forEach(el=>{
     if(el.dataset.hashtagGhostWired) return;
     el.dataset.hashtagGhostWired='1';
-    el.addEventListener('mouseenter',()=>{
-      if(Math.random()>=.025 || el.dataset.ghosting==='1') return;
-      el.dataset.ghosting='1';
-      const old=el.textContent;
-      const pool=['#unknown','#missing','#do-not-index','#still-here','#record-000'];
-      el.textContent=pool[Math.floor(Math.random()*pool.length)];
-      el.classList.add('hashtag-ghost');
-      setTimeout(()=>{el.textContent=old;el.classList.remove('hashtag-ghost');delete el.dataset.ghosting},650);
-    });
+    // Intentionally no hover anomaly here: hashtags are often selected rapidly.
+    // Ambient anomalies are handled globally away from the pointer.
   });
 }
 
@@ -1203,80 +1200,70 @@ wireHashtagGhosts();
 
 
 // ============================================================
-// ARCHIVE.EXE ambient interface anomalies — rare, autonomous glitches.
-// Hover glitches still exist; these are occasional background events.
+// ARCHIVE.EXE ambient interface anomalies — autonomous, never under pointer.
+// Main-page controls glitch on their own; direct hover stays stable.
+// Catalog/drawer is intentionally excluded and keeps its legacy behavior.
 // ============================================================
 (function initAmbientUiGlitches(){
   const selectors=[
-    ".control",
-    ".quick-tag",
+    "#catalogOpen",
+    ".toolbar .control",
     ".filter-trigger",
-    ".tag-chip",
-    ".meta-token",
-    ".hashtag",
-    ".hash-tag",
-    ".modal-hashtags button",
+    ".quick-list button",
+    ".card-tags button",
+    ".card-hashtags button",
+    ".active-filters button",
     ".modal-primary-tags button",
+    ".modal-hashtags button",
     ".page-size-btn",
-    ".all-tags-btn",
+    ".page-size-menu button",
     "#toggleAllTags",
-    ".universe-link",
-    ".archive-credit"
+    "#clearQuickTags",
+    "#resetBtn",
+    ".universe-link"
   ];
 
+  let last=null;
+
   function candidates(){
-    return selectors.flatMap(sel=>Array.from(document.querySelectorAll(sel)))
-      .filter(el=>!el.closest("[hidden]") && el.offsetParent!==null);
+    return [...new Set(selectors.flatMap(sel=>Array.from(document.querySelectorAll(sel))))]
+      .filter(el =>
+        !el.closest("[hidden]") &&
+        el.offsetParent!==null &&
+        !el.matches(":hover") &&
+        !el.closest(":hover") &&
+        !el.closest("#catalogDrawer")
+      );
   }
 
   function glitchOne(){
     if(document.visibilityState!=="visible") return;
-    const pool=candidates();
+    let pool=candidates();
     if(!pool.length) return;
-
-    const safePool=pool.filter(el=>!el.matches(":hover"));
-    if(!safePool.length) return;
-    const el=safePool[Math.floor(Math.random()*safePool.length)];
+    if(pool.length>1 && last) pool=pool.filter(el=>el!==last);
+    const el=pool[Math.floor(Math.random()*pool.length)];
+    last=el;
+    el.classList.remove("ambient-glitch");
+    void el.offsetWidth;
     el.classList.add("ambient-glitch");
-
-    setTimeout(()=>el.classList.remove("ambient-glitch"), 360 + Math.random()*220);
+    setTimeout(()=>el.classList.remove("ambient-glitch"),560);
   }
 
   function schedule(){
-    // Autonomous anomalies remain present, but irregular rather than tied to hover.
-    const delay=9000 + Math.random()*13000;
+    // Frequent enough to be part of the site's atmosphere, but one element at a time.
+    const delay=3200 + Math.random()*4200;
     setTimeout(()=>{
       glitchOne();
       schedule();
     },delay);
   }
 
-  // Do not trigger immediately after load; let the interface settle.
-  setTimeout(schedule,12000);
+  setTimeout(()=>{
+    glitchOne();
+    schedule();
+  },1800);
 })();
 
 
-// Rare hover anomalies: most hovers are completely clean.
-// Autonomous glitches continue independently in the background.
-(function initRareHoverGlitches(){
-  const selector=".control,.quick-tag,.filter-trigger,.tag-chip,.meta-token,.hashtag,.hash-tag,.modal-hashtags button,.modal-primary-tags button,.page-size-btn,.all-tags-btn,#toggleAllTags,.universe-link,.archive-credit";
-  const cooldown=new WeakMap();
+// Main-page hover glitches intentionally disabled in final16.
 
-  document.addEventListener("pointerover",e=>{
-    const el=e.target.closest(selector);
-    if(!el || el.contains(e.relatedTarget)) return;
-
-    const now=Date.now();
-    if((cooldown.get(el)||0)>now) return;
-
-    // Hover anomalies are intentionally rare because users often click
-    // several tags/hashtags in succession.
-    if(Math.random()>.08) return;
-
-    cooldown.set(el,now+9000);
-    el.classList.remove("hover-glitch-once");
-    void el.offsetWidth;
-    el.classList.add("hover-glitch-once");
-    setTimeout(()=>el.classList.remove("hover-glitch-once"),380);
-  },{passive:true});
-})();

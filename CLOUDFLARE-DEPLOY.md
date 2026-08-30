@@ -1,13 +1,12 @@
-# FINAL21 — IMPORT CHECK
+# FINAL22 — DATACAT LOOKUP
 
-Adds:
-- POST /api/import
-- Extracts Janitor UUID from submitted URL
-- Checks D1 table `characters`
-- Returns FOUND if record exists
-- Returns MISSING if record is not in database
-- No DataCat retrieval yet
-- Test page: /import-test/
+Flow:
+1. Janitor URL -> UUID
+2. Check D1
+3. If absent, query DataCat public character endpoint
+4. If DataCat already has the record, parse and save into D1 automatically
+5. If DataCat does not have it yet, return NEEDS_DATACAT_RETRIEVAL
 
-Test with:
-https://archive-exe.node-00.workers.dev/import-test/
+Important:
+DataCat's retrieval-v2 endpoint is session-protected. Public visitors should NOT need browser extensions.
+The next step is to add a server-side DataCat session as Cloudflare secrets so the Worker can queue retrieval itself.

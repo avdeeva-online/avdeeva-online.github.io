@@ -55,3 +55,8 @@ Existing catalog, filters, random, modal, downloads, lorebooks, easter eggs and 
 - Terminal glitch completely redesigned: no oversized green screen overlay.
 - New glitch is constrained to the terminal glass and uses short CRT signal tears/fragments.
 - Glitch is less aggressive and lasts long enough to read as an intentional screen malfunction.
+
+### final7 FX calibration
+- Solar lens flare now has a clearly visible peak and appears roughly every 16 seconds.
+- Terminal CRT event now occurs roughly every 9 seconds and remains visible for ~1.5–2 seconds.
+- Both effects remain separate overlays; header.png is unchanged.

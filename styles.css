@@ -2353,3 +2353,155 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 .terminal-glitch-line{
   animation-delay:0s!important;
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final7 — FX visibility calibration
+   ========================================================= */
+
+/* SOLAR FLARE
+   Clearly visible, but only once every ~16 seconds.
+   Positioned around the actual warm sunlight, not across the whole banner. */
+.hero-light-sweep{
+  display:block!important;
+  left:59%!important;
+  top:17%!important;
+  width:105px!important;
+  height:105px!important;
+  opacity:0;
+  border-radius:50%!important;
+  background:
+    radial-gradient(circle,
+      rgba(255,244,207,.46) 0 3%,
+      rgba(255,222,143,.28) 4% 9%,
+      rgba(247,190,91,.13) 10% 22%,
+      rgba(226,150,49,.045) 23% 42%,
+      transparent 43%)!important;
+  box-shadow:
+    0 0 24px rgba(255,208,111,.13),
+    0 0 58px rgba(238,170,65,.075)!important;
+  filter:blur(.35px)!important;
+  mix-blend-mode:screen!important;
+  animation:archiveFlareVisible 16s ease-in-out infinite!important;
+}
+.hero-light-sweep::before{
+  width:32px!important;
+  height:32px!important;
+  left:-48px!important;
+  top:51px!important;
+  border:1px solid rgba(255,224,155,.26)!important;
+  background:rgba(255,209,119,.035)!important;
+  box-shadow:0 0 14px rgba(245,188,89,.10)!important;
+}
+.hero-light-sweep::after{
+  width:17px!important;
+  height:17px!important;
+  right:-57px!important;
+  top:30px!important;
+  background:rgba(255,225,157,.18)!important;
+  box-shadow:0 0 12px rgba(247,193,99,.14)!important;
+}
+@keyframes archiveFlareVisible{
+  0%,54%{opacity:0;transform:translate3d(-5px,3px,0) scale(.90)}
+  59%{opacity:.24}
+  65%{opacity:.68;transform:translate3d(0,0,0) scale(1)}
+  71%{opacity:.50;transform:translate3d(4px,-2px,0) scale(1.035)}
+  77%{opacity:.20}
+  82%,100%{opacity:0;transform:translate3d(7px,-3px,0) scale(1.07)}
+}
+
+/* TERMINAL
+   A visible CRT malfunction every ~9 seconds.
+   No full green rectangle: two signal tears + short fragments. */
+.hero-terminal-glitch{
+  display:block!important;
+  left:7.45%!important;
+  top:.8%!important;
+  width:14.75%!important;
+  height:54.5%!important;
+  opacity:0;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+  mix-blend-mode:screen!important;
+  animation:terminalEventVisible 9s steps(1,end) infinite!important;
+}
+.hero-terminal-glitch::before{
+  top:34%!important;
+  height:9%!important;
+  background:
+    linear-gradient(180deg,
+      transparent,
+      rgba(163,255,122,.12) 25%,
+      rgba(183,255,145,.30) 48%,
+      rgba(121,255,84,.10) 72%,
+      transparent)!important;
+  animation:terminalTearVisibleA 9s steps(1,end) infinite!important;
+}
+.hero-terminal-glitch::after{
+  top:66%!important;
+  height:6%!important;
+  background:
+    linear-gradient(180deg,
+      transparent,
+      rgba(177,255,139,.24),
+      transparent)!important;
+  animation:terminalTearVisibleB 9s steps(1,end) infinite!important;
+}
+.terminal-glitch-line{
+  height:1px!important;
+  background:rgba(190,255,156,.50)!important;
+  box-shadow:0 0 5px rgba(126,255,91,.28)!important;
+}
+
+@keyframes terminalEventVisible{
+  0%,58%,78%,100%{opacity:0;transform:translateX(0)}
+  60%{opacity:.50}
+  63%{opacity:.78;transform:translateX(1px)}
+  67%{opacity:.43;transform:translateX(-1px)}
+  71%{opacity:.72;transform:translateX(.5px)}
+  76%{opacity:.28}
+}
+@keyframes terminalTearVisibleA{
+  0%,58%,78%,100%{opacity:0;transform:translateX(0)}
+  61%{opacity:.82;transform:translateX(-6px)}
+  64%{opacity:.40;transform:translateX(5px)}
+  68%{opacity:.76;transform:translateX(-3px)}
+  72%{opacity:.34;transform:translateX(3px)}
+  76%{opacity:.62;transform:translateX(-1px)}
+}
+@keyframes terminalTearVisibleB{
+  0%,60%,78%,100%{opacity:0;transform:translateX(0)}
+  63%{opacity:.58;transform:translateX(5px)}
+  67%{opacity:.30;transform:translateX(-4px)}
+  71%{opacity:.70;transform:translateX(3px)}
+  75%{opacity:.28;transform:translateX(-2px)}
+}
+
+/* Keep the three tiny fragments synchronized with the visible event. */
+.terminal-glitch-line-a{animation:terminalFragVisibleA 9s steps(1,end) infinite!important}
+.terminal-glitch-line-b{animation:terminalFragVisibleB 9s steps(1,end) infinite!important}
+.terminal-glitch-line-c{animation:terminalFragVisibleC 9s steps(1,end) infinite!important}
+@keyframes terminalFragVisibleA{
+  0%,59%,78%,100%{opacity:0;transform:translateX(0)}
+  62%{opacity:.75;transform:translateX(5px)}
+  67%{opacity:.28;transform:translateX(-3px)}
+  72%{opacity:.60;transform:translateX(2px)}
+}
+@keyframes terminalFragVisibleB{
+  0%,60%,78%,100%{opacity:0;transform:translateX(0)}
+  64%{opacity:.62;transform:translateX(-5px)}
+  69%{opacity:.32;transform:translateX(4px)}
+  74%{opacity:.54;transform:translateX(-2px)}
+}
+@keyframes terminalFragVisibleC{
+  0%,61%,78%,100%{opacity:0;transform:translateX(0)}
+  65%{opacity:.52;transform:translateX(4px)}
+  70%{opacity:.25;transform:translateX(-3px)}
+  75%{opacity:.48;transform:translateX(2px)}
+}
+
+/* Previous mobile rule hid the flare completely. Keep only terminal alignment safety. */
+@media(max-width:760px){
+  .hero-light-sweep{display:block!important;transform:scale(.72)}
+}

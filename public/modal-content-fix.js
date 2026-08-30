@@ -3,6 +3,7 @@
   style.id='archiveModalDossierStyles';
   style.textContent=`
     .modal-dossier{padding:7px 2px 10px;color:#aab0a6;font:12px/1.58 Arial,sans-serif}
+    .dossier-loading{padding:14px 2px;color:#6f796b;font:9px var(--mono);letter-spacing:.09em}
     .dossier-section{padding:0 0 11px;margin:0 0 10px;border-bottom:1px solid rgba(72,81,70,.38)}
     .dossier-section:last-child{border-bottom:0;margin-bottom:0}
     .dossier-title{display:flex;align-items:center;gap:7px;width:100%;min-height:18px;padding:0;margin:0 0 7px;border:0;background:transparent;color:#c9cfba;font:700 9px/18px var(--mono);letter-spacing:.08em;text-transform:uppercase;text-align:left;cursor:pointer}
@@ -34,6 +35,17 @@
     return safe;
   }
 
+  function splitHeader(line){
+    const raw=line.replace(/^>\s*/,'').trim();
+    const i=raw.indexOf(':');
+    if(i>0&&i<48){
+      const title=raw.slice(0,i).trim();
+      const rest=raw.slice(i+1).trim();
+      if(title&&rest)return{title,rest};
+    }
+    return{title:raw,rest:''};
+  }
+
   function structuredText(raw){
     const text=String(raw||'').replace(/\r/g,'').trim();
     if(!text)return '';
@@ -49,7 +61,9 @@
     for(const line of lines){
       if(/^>\s*/.test(line)){
         push();
-        current.title=line.replace(/^>\s*/,'').trim();
+        const h=splitHeader(line);
+        current.title=h.title;
+        if(h.rest)current.paras.push(h.rest);
       }else if(/^[-•]\s+/.test(line)){
         current.items.push(line.replace(/^[-•]\s+/,''));
       }else{
@@ -86,8 +100,14 @@
     if(!panel)return;
     if(!current){panel.innerHTML='';return}
 
+    if(current._definitionLoading){
+      panel.innerHTML='<div class="dossier-loading">LOADING RECORD...</div>';
+      panel.scrollTop=0;
+      return;
+    }
+
     if(modalTab==='description'){
-      const text=String(current.full||current.short||'').trim();
+      const text=String(current.full||'').trim();
       panel.innerHTML=text?structuredText(text):'<div class="modal-dossier"><p class="dossier-paragraph">No description available.</p></div>';
       bindDossierToggles(panel);
       panel.scrollTop=0;

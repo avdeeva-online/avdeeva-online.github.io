@@ -90,3 +90,9 @@ Existing catalog, filters, random, modal, downloads, lorebooks, easter eggs and 
 ### v1.0 final11b
 - Reduced the visual weight of FOUND / SHOW / TOTAL.
 - Removed the heavy right-side separation and made the stats read as passive archive metadata beside RANDOM.
+
+### v1.0 final11c
+- Reordered catalog meta: SHOW first, TOTAL second.
+- Moved FOUND onto its own small result line below the toolbar so it has a separate visual anchor.
+- Increased meta readability.
+- Re-anchored the SHOW dropdown directly under/right-aligned to its button instead of letting it float into the card area.

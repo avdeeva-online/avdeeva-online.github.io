@@ -157,7 +157,10 @@ if(pageSizeBtn && pageSizeMenu){
     e.stopPropagation();
     pageSizeMenu.hidden=!pageSizeMenu.hidden;
     const r=pageSizeBtn.getBoundingClientRect();
-    pageSizeMenu.style.left=Math.min(window.innerWidth-92,Math.max(8,r.left))+"px";
+    const menuW=84;
+    let left=r.right-menuW;
+    left=Math.max(8,Math.min(window.innerWidth-menuW-8,left));
+    pageSizeMenu.style.left=left+"px";
     pageSizeMenu.style.top=(r.bottom+6)+"px";
   };
 

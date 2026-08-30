@@ -3222,3 +3222,97 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
     margin-left:10px!important;
   }
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final11c — clearer catalog meta layout
+   ========================================================= */
+
+/* Right corner: only page-size control + total archive count. */
+.toolbar-meta{
+  margin-left:auto!important;
+  padding-left:12px!important;
+  border-left:1px solid rgba(105,115,96,.14)!important;
+  gap:10px!important;
+  opacity:.95!important;
+  min-height:34px!important;
+}
+.toolbar-meta::before{display:none!important}
+.toolbar-meta .page-size-btn,
+.toolbar-meta .total-count,
+.toolbar-meta #resetBtn{
+  font-size:8px!important;
+  letter-spacing:.085em!important;
+  line-height:1!important;
+}
+.toolbar-meta .page-size-btn{
+  color:#8b967f!important;
+  padding:5px 4px!important;
+}
+.toolbar-meta .page-size-btn:hover{
+  color:#bcc8a7!important;
+}
+.toolbar-meta .total-count{
+  color:#737e6d!important;
+}
+.toolbar-meta #resetBtn{
+  color:#6e7868!important;
+}
+
+/* FOUND gets its own visual anchor below the controls. */
+.results-line{
+  display:flex;
+  align-items:center;
+  min-height:20px;
+  padding:5px 2px 0;
+}
+.results-line .catalog-result-status{
+  font:8px var(--mono)!important;
+  letter-spacing:.09em!important;
+  color:#646f60!important;
+}
+.results-line .catalog-result-status b{
+  color:#9ca88f!important;
+  font-weight:500!important;
+}
+.results-line #filterStatusDot{
+  margin-right:5px;
+}
+
+/* Popup: compact and attached to the SHOW control visually. */
+.page-size-menu{
+  width:84px!important;
+  min-width:84px!important;
+  padding:4px!important;
+  border:1px solid #374034!important;
+  background:rgba(10,13,10,.985)!important;
+  box-shadow:0 10px 26px rgba(0,0,0,.48)!important;
+}
+.page-size-menu button{
+  padding:8px 10px!important;
+  font-size:8px!important;
+  text-align:left!important;
+}
+.page-size-menu button:hover{
+  background:#182016!important;
+}
+
+/* Keep the right-side block truly right aligned on wide screens. */
+@media(min-width:1200px){
+  .toolbar-meta{
+    margin-left:auto!important;
+  }
+}
+
+/* On narrower layouts, let the whole meta block wrap cleanly. */
+@media(max-width:1199px){
+  .toolbar-meta{
+    width:auto!important;
+    margin-left:0!important;
+    padding-left:0!important;
+    border-left:0!important;
+  }
+  .results-line{
+    width:100%;
+  }
+}

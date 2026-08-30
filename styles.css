@@ -1111,301 +1111,81 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 
 
 /* =========================================================
-   v0.9.26 — SOURCE-FAITHFUL HERO
-   The generated artwork is NOT filtered / blurred / recolored.
+   v0.9.30 — EXACT HERO 1920×270
    ========================================================= */
 
 .hero{
-  height:clamp(365px,24vw,460px)!important;
-  background:#0b0e0b!important;
+  height:270px!important;
+  min-height:270px!important;
+  max-height:270px!important;
+  background:#090c09!important;
+  overflow:hidden!important;
 }
 
-/* Keep the image itself untouched. */
+/* The asset itself is already 1920×270.
+   No cover, no crop, no zoom, no filter. */
 .hero-art{
+  position:absolute!important;
   inset:0!important;
   background-image:url('assets/header.png')!important;
-  background-size:cover!important;
-  background-position:center center!important;
+  background-size:100% 270px!important;
+  background-position:center top!important;
+  background-repeat:no-repeat!important;
+  background-color:#090c09!important;
   filter:none!important;
   transform:none!important;
   animation:none!important;
 }
 
-/* No global black veil. Only a localized, gradual dark zone behind copy. */
+/* The dark right side and bottom fade are ALREADY baked into the PNG.
+   Keep overlays essentially transparent so they cannot destroy the art. */
 .hero-dark{
-  background:
-    linear-gradient(90deg,
-      transparent 0%,
-      transparent 57%,
-      rgba(7,10,7,.10) 64%,
-      rgba(7,10,7,.38) 76%,
-      rgba(7,10,7,.70) 100%)!important;
-  pointer-events:none;
+  background:transparent!important;
 }
-.hero-dark:after{
+.hero-fade{
+  background:transparent!important;
+}
+
+/* Place actual HTML branding over the naturally dark right side. */
+.hero-copy{
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  right:max(calc((100vw - 1452px)/2 + 18px),32px)!important;
+  width:min(390px,29vw)!important;
+}
+
+/* Prevent any old hero animation layer from changing the chosen artwork. */
+.hero-dust,
+.hero-light-haze,
+.hero-terminal-cover,
+.hero-terminal-clone,
+.hero-deer-motion,
+.hero-deer-live,
+.hero-dust-particles,
+.hero-dust-field,
+.hero-terminal-signal,
+.hero-terminal-wake,
+.hero-scan{
   display:none!important;
 }
 
-/* Very small bottom blend into the site, not an overall darkener. */
-.hero-fade{
-  background:
-    linear-gradient(180deg,
-      transparent 0%,
-      transparent 76%,
-      rgba(9,12,9,.14) 89%,
-      rgba(9,12,9,.42) 100%)!important;
-  pointer-events:none;
-}
-
-/* Real independent dust particles. They do not alter the image itself. */
-.hero-dust-field{
-  position:absolute;
-  inset:0;
-  z-index:2;
-  pointer-events:none;
-  overflow:hidden;
-}
-.hero-dust-field i{
-  position:absolute;
-  top:-10px;
-  width:1.4px;
-  height:1.4px;
-  border-radius:999px;
-  background:rgba(245,224,166,.72);
-  box-shadow:0 0 6px rgba(237,210,145,.36);
-  will-change:transform,opacity;
-}
-
-/* A tiny glow exactly where the terminal already exists in the image.
-   It does not redraw or move the terminal. */
-.hero-terminal-wake{
-  position:absolute;
-  left:69.1%;
-  top:51%;
-  width:9.5%;
-  height:25%;
-  z-index:2;
-  pointer-events:none;
-  opacity:0;
-  border-radius:16px;
-  background:
-    radial-gradient(ellipse at center,
-      rgba(125,171,106,.16),
-      rgba(85,132,76,.055) 48%,
-      transparent 72%);
-  mix-blend-mode:screen;
-  filter:blur(4px);
-}
-
-.hero-copy{
-  z-index:5!important;
-}
-
-/* Keep the image readable on desktop. */
-@media(min-width:1021px){
-  .hero-copy{
-    right:max(calc((100vw - 1452px)/2 + 18px),34px)!important;
-    width:min(390px,29vw)!important;
-  }
-}
-
-/* Mobile can darken under text because the copy moves over the art. */
-@media(max-width:760px){
+@media(max-width:1200px){
   .hero-art{
-    background-position:39% center!important;
-    filter:none!important;
-  }
-  .hero-dark{
-    background:linear-gradient(180deg,
-      rgba(7,10,7,.04) 0%,
-      rgba(7,10,7,.12) 55%,
-      rgba(7,10,7,.72) 100%)!important;
-  }
-  .hero-dust-field,
-  .hero-terminal-wake{
-    display:none!important;
-  }
-}
-
-@media(prefers-reduced-motion:reduce){
-  .hero-dust-field,
-  .hero-terminal-wake{
-    display:none!important;
-  }
-}
-
-
-/* =========================================================
-   v0.9.27 — NEW HERO / COMPACT HEIGHT
-   ========================================================= */
-
-.hero{
-  height:clamp(300px,18vw,350px)!important;
-  background:#0a0d0a!important;
-}
-
-/* Use the new image directly, without dimming or stretching it. */
-.hero-art{
-  inset:0!important;
-  background-image:url('assets/header.png')!important;
-  background-size:cover!important;
-  background-position:center center!important;
-  filter:none!important;
-  transform:none!important;
-  animation:none!important;
-}
-
-/* Right side only: enough darkness for ARCHIVE.EXE, but not a hard split. */
-.hero-dark{
-  background:
-    linear-gradient(90deg,
-      transparent 0%,
-      transparent 58%,
-      rgba(7,10,7,.05) 66%,
-      rgba(7,10,7,.24) 78%,
-      rgba(7,10,7,.52) 100%)!important;
-}
-
-/* Make the hero melt into the site instead of ending like a separate poster. */
-.hero-fade{
-  background:
-    linear-gradient(180deg,
-      transparent 0%,
-      transparent 63%,
-      rgba(9,12,9,.06) 76%,
-      rgba(9,12,9,.23) 88%,
-      rgba(9,12,9,.72) 100%)!important;
-}
-
-/* Position the title a touch lower so it sits naturally in the dark side. */
-.hero-copy{
-  top:50%!important;
-  transform:translateY(-48%)!important;
-}
-
-/* Dust stays visible but subtle. */
-.hero-dust-field{
-  opacity:.78!important;
-}
-
-/* Terminal is already on the LEFT in the artwork. Remove old right-side pulse. */
-.hero-terminal-wake{
-  left:8.2%!important;
-  top:42%!important;
-  width:10.8%!important;
-  height:28%!important;
-}
-
-/* Desktop keeps the full scene readable. */
-@media(min-width:1021px){
-  .hero-art{
-    background-position:center center!important;
-  }
-}
-
-/* Mobile: keep the header compact. */
-@media(max-width:760px){
-  .hero{
-    height:280px!important;
-  }
-  .hero-art{
-    background-position:34% center!important;
-  }
-}
-
-
-/* =========================================================
-   v0.9.29 — HERO FIT FIX
-   Keep hero height compact, but SCALE THE IMAGE DOWN instead
-   of cropping it. Preserve deer + floor + bottom fade.
-   ========================================================= */
-
-.hero{
-  height:clamp(285px,17vw,325px)!important;
-  overflow:hidden!important;
-  background:#090c09!important;
-}
-
-/* Important: contain the whole artwork vertically.
-   No cover = no chopped deer / no missing floor. */
-.hero-art{
-  inset:0!important;
-  background-image:url('assets/header.png')!important;
-  background-size:100% auto!important;
-  background-repeat:no-repeat!important;
-  background-position:center top!important;
-  filter:none!important;
-  transform:none!important;
-  animation:none!important;
-  background-color:#090c09!important;
-}
-
-/* Only the right reading zone for the real HTML title. */
-.hero-dark{
-  background:
-    linear-gradient(90deg,
-      transparent 0%,
-      transparent 58%,
-      rgba(7,10,7,.05) 67%,
-      rgba(7,10,7,.25) 80%,
-      rgba(7,10,7,.54) 100%)!important;
-}
-
-/* Long, gradual fade: actual lower part of the artwork disappears
-   into exactly the site's dark background. */
-.hero-fade{
-  inset:0!important;
-  background:
-    linear-gradient(180deg,
-      transparent 0%,
-      transparent 48%,
-      rgba(9,12,9,.05) 58%,
-      rgba(9,12,9,.16) 68%,
-      rgba(9,12,9,.34) 78%,
-      rgba(9,12,9,.62) 89%,
-      #090c09 100%)!important;
-  pointer-events:none!important;
-}
-
-/* The source terminal is already left; align its subtle wake there. */
-.hero-terminal-wake{
-  left:6.2%!important;
-  top:38%!important;
-  width:12%!important;
-  height:34%!important;
-}
-
-/* Keep the copy vertically balanced without increasing hero size. */
-.hero-copy{
-  top:45%!important;
-  transform:translateY(-50%)!important;
-}
-
-@media(min-width:1500px){
-  .hero-art{
-    /* On very wide monitors scale slightly smaller than viewport width,
-       leaving dark background at the extreme sides rather than cropping. */
-    background-size:min(100%,1920px) auto!important;
-  }
-}
-
-@media(max-width:1000px){
-  .hero-art{
-    background-size:auto 100%!important;
+    /* On narrower screens preserve height; side crop is allowed only
+       outside the desktop target layout. */
+    background-size:auto 270px!important;
     background-position:38% top!important;
   }
 }
 
 @media(max-width:760px){
   .hero{
-    height:260px!important;
+    height:240px!important;
+    min-height:240px!important;
+    max-height:240px!important;
   }
-  .hero-fade{
-    background:
-      linear-gradient(180deg,
-        transparent 0%,
-        rgba(9,12,9,.08) 52%,
-        rgba(9,12,9,.45) 78%,
-        #090c09 100%)!important;
+  .hero-art{
+    background-size:auto 240px!important;
+    background-position:34% top!important;
   }
 }

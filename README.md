@@ -105,3 +105,9 @@ Existing catalog, filters, random, modal, downloads, lorebooks, easter eggs and 
 - Added completely new independent HERO FX V2:
   - visible solar flare starts ~1.6s after load and repeats ~14.5s;
   - visible terminal CRT tear starts ~3.4s after load and repeats ~8.8s.
+
+### v1.0 final13 filter + FX polish
+- SHOW menu now visually matches the other dropdown filters.
+- All floating filters close on selection, outside click, or when another filter/control is opened.
+- Solar flare reduced from 145px to 64px, moved left toward the real light opening, slowed to 4.4s, and simplified to one soft glow for smoother rendering.
+- CRT glitch moved to match the actual monitor glass and reduced to restrained signal tears rather than a broad overlay.

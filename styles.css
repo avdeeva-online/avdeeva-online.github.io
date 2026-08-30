@@ -3637,3 +3637,152 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
     animation-duration:.001ms!important;
   }
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final13
+   FILTER CONSISTENCY + HERO FX POSITION/PERFORMANCE POLISH
+   ========================================================= */
+
+/* --- Floating filters should look like one family --- */
+.page-size-menu{
+  width:118px!important;
+  min-width:118px!important;
+  padding:6px!important;
+  border:1px solid #3c4339!important;
+  border-radius:8px!important;
+  background:#171a17!important;
+  box-shadow:0 18px 45px rgba(0,0,0,.45)!important;
+}
+.page-size-menu button{
+  padding:8px!important;
+  border-radius:5px!important;
+  color:#8d9489!important;
+  font:9px var(--mono)!important;
+}
+.page-size-menu button:hover{
+  background:#222721!important;
+  color:var(--sand)!important;
+}
+
+/* Keep SHOW's menu close to the trigger and visually aligned with it. */
+.page-size-wrap .page-size-menu{
+  top:calc(100% + 7px)!important;
+  right:-4px!important;
+}
+
+/* --- Solar flare V3: smaller, slower, calmer, moved to the actual light opening --- */
+.hero-solar-flare-v2{
+  left:51.7%!important;
+  top:31%!important;
+  width:64px!important;
+  height:64px!important;
+  background:
+    radial-gradient(circle at 50% 50%,
+      rgba(255,248,220,.58) 0 4%,
+      rgba(255,226,153,.30) 5% 12%,
+      rgba(247,192,94,.14) 13% 27%,
+      rgba(232,157,57,.045) 28% 48%,
+      transparent 50%)!important;
+  box-shadow:
+    0 0 18px rgba(255,220,137,.11),
+    0 0 42px rgba(239,174,73,.065)!important;
+  will-change:opacity,transform;
+  transform:translateZ(0);
+}
+.hero-solar-flare-v2 .flare-orb{
+  display:none!important;
+}
+.hero-solar-flare-v2.is-active{
+  animation:heroSolarV3 4.4s cubic-bezier(.22,.55,.28,1) 1 both!important;
+}
+@keyframes heroSolarV3{
+  0%{opacity:0;transform:translate3d(-3px,2px,0) scale(.94)}
+  18%{opacity:.10}
+  38%{opacity:.34;transform:translate3d(0,0,0) scale(1)}
+  58%{opacity:.42;transform:translate3d(1px,-1px,0) scale(1.025)}
+  76%{opacity:.22;transform:translate3d(2px,-1px,0) scale(1.045)}
+  100%{opacity:0;transform:translate3d(4px,-2px,0) scale(1.06)}
+}
+
+/* --- CRT V3: fit the actual monitor glass on the current 1920x300 header --- */
+.hero-terminal-crt-v2{
+  left:9.9%!important;
+  top:1.2%!important;
+  width:13.05%!important;
+  height:49%!important;
+  border-radius:7px!important;
+  will-change:opacity,transform;
+  transform:translateZ(0);
+  background:transparent!important;
+}
+
+/* Less "overlay", more actual signal tears. */
+.hero-terminal-crt-v2::before{
+  opacity:.42!important;
+}
+.crt-tear{
+  height:4%!important;
+  filter:none!important;
+  box-shadow:0 0 4px rgba(131,255,94,.10)!important;
+}
+.crt-tear-a{top:28%!important}
+.crt-tear-b{top:53%!important;height:3%!important}
+.crt-tear-c{top:76%!important;height:2.5%!important}
+.crt-scan-a{top:39%!important}
+.crt-scan-b{top:66%!important}
+
+.hero-terminal-crt-v2.is-active{
+  animation:heroCrtV3 2.25s steps(1,end) 1 both!important;
+}
+.hero-terminal-crt-v2.is-active .crt-tear-a{animation:crtTearV3A 2.25s steps(1,end) 1 both!important}
+.hero-terminal-crt-v2.is-active .crt-tear-b{animation:crtTearV3B 2.25s steps(1,end) 1 both!important}
+.hero-terminal-crt-v2.is-active .crt-tear-c{animation:crtTearV3C 2.25s steps(1,end) 1 both!important}
+.hero-terminal-crt-v2.is-active .crt-scan-a{animation:crtScanV3A 2.25s steps(1,end) 1 both!important}
+.hero-terminal-crt-v2.is-active .crt-scan-b{animation:crtScanV3B 2.25s steps(1,end) 1 both!important}
+
+@keyframes heroCrtV3{
+  0%,100%{opacity:0;transform:translate3d(0,0,0)}
+  10%{opacity:.18}
+  24%{opacity:.48;transform:translate3d(.5px,0,0)}
+  37%{opacity:.28;transform:translate3d(-.5px,0,0)}
+  52%{opacity:.56;transform:translate3d(.7px,0,0)}
+  68%{opacity:.30}
+  84%{opacity:.42;transform:translate3d(-.3px,0,0)}
+}
+@keyframes crtTearV3A{
+  0%,100%{opacity:0;transform:translateX(0)}
+  18%{opacity:.62;transform:translateX(-4px)}
+  40%{opacity:.20;transform:translateX(3px)}
+  59%{opacity:.66;transform:translateX(-2px)}
+  79%{opacity:.28;transform:translateX(2px)}
+}
+@keyframes crtTearV3B{
+  0%,100%{opacity:0;transform:translateX(0)}
+  27%{opacity:.48;transform:translateX(4px)}
+  50%{opacity:.18;transform:translateX(-3px)}
+  72%{opacity:.55;transform:translateX(2px)}
+}
+@keyframes crtTearV3C{
+  0%,100%{opacity:0;transform:translateX(0)}
+  34%{opacity:.38;transform:translateX(-3px)}
+  61%{opacity:.50;transform:translateX(3px)}
+  81%{opacity:.20;transform:translateX(-2px)}
+}
+@keyframes crtScanV3A{
+  0%,100%{opacity:0;transform:translateX(0)}
+  22%{opacity:.52;transform:translateX(4px)}
+  53%{opacity:.16;transform:translateX(-3px)}
+  76%{opacity:.40;transform:translateX(2px)}
+}
+@keyframes crtScanV3B{
+  0%,100%{opacity:0;transform:translateX(0)}
+  30%{opacity:.42;transform:translateX(-4px)}
+  58%{opacity:.17;transform:translateX(3px)}
+  82%{opacity:.36;transform:translateX(-2px)}
+}
+
+/* Keep FX predictable on the desktop header. */
+@media(max-width:1200px){
+  .hero-terminal-crt-v2{display:none!important}
+}

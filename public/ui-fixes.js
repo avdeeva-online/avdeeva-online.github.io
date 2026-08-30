@@ -19,9 +19,11 @@
 
   function enhance(bot){
     if(!bot)return;ensureFileButtons();
-    const png=$('#downloadPng'),json=$('#downloadBot');
+    const png=$('#downloadPng'),json=$('#downloadBot'),author=$('#openAuthor'),lore=$('#downloadLore');
     if(png){const href=pngUrl(bot);if(href)png.href=href;else png.removeAttribute('href');png.classList.toggle('disabled',!href)}
     if(json){json.href=bot.download||'';json.textContent='JSON CARD ↓'}
+    if(author){const href=String(bot.authorUrl||'').trim();if(href){author.href=href;author.classList.remove('disabled');author.removeAttribute('aria-disabled');author.textContent=`@${bot.author||'AUTHOR'} ↗`}else{author.removeAttribute('href');author.classList.add('disabled');author.setAttribute('aria-disabled','true');author.textContent='AUTHOR LINK — N/A'}}
+    if(lore&&bot.lorebook){const n=Number(bot.lorebookCount||1);lore.textContent=`LOREBOOKS [${n}] ↓`;lore.title=`${n} attached lorebook${n===1?'':'s'} — choose files`}
   }
 
   function findCurrentBot(){

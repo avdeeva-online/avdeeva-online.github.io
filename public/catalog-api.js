@@ -21,6 +21,7 @@
       if(!r.ok||!data.ok)throw new Error(data.message||data.error||`HTTP ${r.status}`);
       liveBots=Array.isArray(data.characters)?data.characters:[];
       mergeBots();
+      window.dispatchEvent(new CustomEvent('archive:catalog-updated',{detail:{characters:liveBots}}));
       return liveBots;
     }catch(e){console.warn('ARCHIVE live catalog unavailable',e);return[]}
   }
@@ -115,6 +116,11 @@
     finally{go.disabled=false}
   }
 
-  const start=()=>{baseBots=Array.isArray(window.BOTS)?[...window.BOTS]:baseBots;bindTrigger();buildModal();loadLive()};
+  function loadLorebookUi(){
+    if(document.querySelector('script[data-archive-lorebooks]'))return;
+    const s=document.createElement('script');s.src='lorebooks.js';s.dataset.archiveLorebooks='1';document.body.appendChild(s);
+  }
+
+  const start=()=>{baseBots=Array.isArray(window.BOTS)?[...window.BOTS]:baseBots;bindTrigger();buildModal();loadLorebookUi();loadLive()};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

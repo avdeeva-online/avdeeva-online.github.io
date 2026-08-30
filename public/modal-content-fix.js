@@ -5,9 +5,9 @@
     .modal-dossier{padding:7px 2px 10px;color:#aab0a6;font:12px/1.58 Arial,sans-serif}
     .dossier-section{padding:0 0 11px;margin:0 0 10px;border-bottom:1px solid rgba(72,81,70,.38)}
     .dossier-section:last-child{border-bottom:0;margin-bottom:0}
-    .dossier-title{display:flex;align-items:center;gap:7px;width:100%;padding:0;margin:0 0 7px;border:0;background:transparent;color:#c9cfba;font:700 9px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;text-align:left;cursor:pointer}
+    .dossier-title{display:flex;align-items:center;gap:7px;width:100%;min-height:18px;padding:0;margin:0 0 7px;border:0;background:transparent;color:#c9cfba;font:700 9px/18px var(--mono);letter-spacing:.08em;text-transform:uppercase;text-align:left;cursor:pointer}
     .dossier-title:hover{color:#e0e5d2}
-    .dossier-arrow{display:inline-block;width:10px;color:#899673;font-size:12px;line-height:1;transition:transform .16s ease}
+    .dossier-arrow{display:flex;align-items:center;justify-content:center;flex:0 0 10px;width:10px;height:18px;color:#899673;font:700 12px/18px var(--mono);transform:rotate(0deg);transform-origin:center;transition:transform .16s ease}
     .dossier-section.is-collapsed .dossier-arrow{transform:rotate(-90deg)}
     .dossier-body{display:block}
     .dossier-section.is-collapsed .dossier-body{display:none}
@@ -66,7 +66,7 @@
     return `<div class="modal-dossier">${sections.map((s,i)=>{
       const body=`${s.paras.map(p=>`<p class="dossier-paragraph">${esc(p)}</p>`).join('')}${s.items.length?`<ul class="dossier-list">${s.items.map(item=>`<li>${inlineFormat(item)}</li>`).join('')}</ul>`:''}`;
       if(!s.title)return `<section class="dossier-section"><div class="dossier-body">${body}</div></section>`;
-      return `<section class="dossier-section" data-dossier-section="${i}"><button type="button" class="dossier-title" aria-expanded="true"><span class="dossier-arrow">⌄</span><span>${esc(s.title)}</span></button><div class="dossier-body">${body}</div></section>`;
+      return `<section class="dossier-section is-collapsed" data-dossier-section="${i}"><button type="button" class="dossier-title" aria-expanded="false"><span class="dossier-arrow">⌄</span><span>${esc(s.title)}</span></button><div class="dossier-body">${body}</div></section>`;
     }).join('')}</div>`;
   }
 

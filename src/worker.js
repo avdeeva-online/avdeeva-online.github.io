@@ -98,7 +98,12 @@ async function fetchDatacatView(env, uuid, view = "modal") {
 }
 
 async function fetchDatacatPublic(env, uuid) {
-  return fetchDatacatView(env, uuid, "modal");
+  let result = await fetchDatacatView(env, uuid, "modal");
+  if (result.state === "MISSING") {
+    await new Promise(resolve => setTimeout(resolve, 250));
+    result = await fetchDatacatView(env, uuid, "modal");
+  }
+  return result;
 }
 
 function getDatacatCharacter(payload) {
@@ -209,6 +214,21 @@ function parseDatacatExact(payload, uuid, janitorUrl, origin) {
 
 async function getExisting(env, uuid) {
   return await env.DB.prepare(`SELECT * FROM characters WHERE janitor_uuid = ? LIMIT 1`).bind(uuid).first();
+}
+
+function isLegacyCorrupt(row) {
+  if (!row) return false;
+  const badScalar = value => ["true", "false", "null", "undefined"].includes(String(value ?? "").trim().toLowerCase());
+  if (badScalar(row.description) || badScalar(row.short_description) || badScalar(row.scenario)) return true;
+
+  try {
+    const intros = JSON.parse(row.intros || "[]");
+    if (Array.isArray(intros) && intros.some(x => badScalar(x))) return true;
+  } catch {
+    return true;
+  }
+
+  return false;
 }
 
 async function saveCharacter(env, c) {
@@ -410,7 +430,8 @@ export default {
     const charMatch = url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})$/i);
     if (charMatch && request.method === "GET") {
       const row = await getExisting(env, charMatch[1].toLowerCase());
-      return row ? json({ ok: true, character: row }) : json({ ok: false, error: "NOT_FOUND" }, 404);
+      if (!row) return json({ ok: false, error: "NOT_FOUND" }, 404);
+      return json({ ok: true, stale: isLegacyCorrupt(row), character: row });
     }
 
     if (url.pathname === "/api/import" && request.method === "POST") {
@@ -423,12 +444,21 @@ export default {
       if (!uuid) return json({ ok: false, error: "INVALID_JANITOR_URL" }, 400);
 
       try {
+        const existing = await getExisting(env, uuid);
+        const existingIsStale = isLegacyCorrupt(existing);
         const dc = await fetchDatacatPublic(env, uuid);
+
         if (dc.state === "FOUND") {
           const parsed = parseDatacatExact(dc.data, uuid, janitorUrl, url.origin);
           await saveCharacter(env, parsed);
           const saved = await getExisting(env, uuid);
-          return json({ ok: true, state: "IMPORTED_FROM_DATACAT", janitorUuid: uuid, character: saved });
+          return json({
+            ok: true,
+            state: existingIsStale ? "REPAIRED_FROM_DATACAT" : "IMPORTED_FROM_DATACAT",
+            janitorUuid: uuid,
+            repairedLegacyRecord: existingIsStale,
+            character: saved
+          });
         }
 
         if (dc.state === "UNAVAILABLE") {
@@ -436,9 +466,25 @@ export default {
         }
 
         if (dc.state === "MISSING") {
-          const existing = await getExisting(env, uuid);
           if (existing) {
-            return json({ ok: true, state: "FOUND_IN_ARCHIVE", janitorUuid: uuid, character: existing, note: "DataCat lookup is currently missing this record, so the existing archive copy was kept." });
+            if (existingIsStale) {
+              return json({
+                ok: false,
+                state: "ARCHIVE_COPY_STALE",
+                janitorUuid: uuid,
+                stale: true,
+                character: existing,
+                message: "The archive contains a legacy broken import. DataCat is temporarily not exposing this record, so ARCHIVE.EXE will not treat the stale copy as valid. Run IMPORT / CHECK again later to repair it automatically."
+              }, 409);
+            }
+            return json({
+              ok: true,
+              state: "FOUND_IN_ARCHIVE",
+              janitorUuid: uuid,
+              stale: false,
+              character: existing,
+              note: "DataCat lookup is currently missing this record, so the valid archive copy was kept."
+            });
           }
           return json({ ok: true, state: "NEEDS_DATACAT_RETRIEVAL", janitorUuid: uuid, janitorUrl, message: "Character is not stored in DataCat yet. Next step is retrieval-v2." });
         }

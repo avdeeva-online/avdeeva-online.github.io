@@ -20,28 +20,34 @@
     if(!Array.isArray(list))return;
     for(const b of list){
       if(!b)continue;
-      const u=verifiedUrl(b.author,b.authorUrl);
-      b.authorUrl=u;
+      b.authorUrl=verifiedUrl(b.author,b.authorUrl);
     }
+  }
+
+  function currentAuthor(){
+    return clean(document.getElementById('modalAuthor')?.textContent).replace(/^@/,'');
   }
 
   function patchModal(){
     const a=document.getElementById('openAuthor');
-    const author=document.getElementById('modalAuthor');
+    const badge=document.getElementById('modalAuthorBadge');
+    const author=currentAuthor();
     if(!a||!author)return;
-    const u=verifiedUrl(author.textContent,a.getAttribute('href'));
+    const u=verifiedUrl(author,a.getAttribute('href'));
     if(u){
       a.href=u;
-      a.textContent=`@${clean(author.textContent).replace(/^@/,'')} ↗`;
+      a.textContent=`@${author} ↗`;
       a.classList.remove('disabled');
       a.removeAttribute('aria-disabled');
       a.target='_blank';
       a.rel='noopener noreferrer';
+      if(badge){badge.dataset.authorUrl=u;badge.title=`Open @${author} on JanitorAI`;badge.style.cursor='pointer';badge.setAttribute('aria-label',`Open @${author} profile`)}
     }else{
       a.removeAttribute('href');
       a.textContent='AUTHOR LINK — N/A';
       a.classList.add('disabled');
       a.setAttribute('aria-disabled','true');
+      if(badge){delete badge.dataset.authorUrl;badge.removeAttribute('title');badge.style.cursor='default';badge.setAttribute('aria-label',`Author @${author}`)}
     }
   }
 
@@ -55,9 +61,15 @@
 
   document.addEventListener('click',e=>{
     const a=e.target.closest('#openAuthor');
-    if(!a)return;
+    if(a){patchModal();if(!a.getAttribute('href'))e.preventDefault();return}
+    const badge=e.target.closest('#modalAuthorBadge');
+    if(!badge)return;
     patchModal();
-    if(!a.getAttribute('href'))e.preventDefault();
+    const u=badge.dataset.authorUrl;
+    if(!u)return;
+    e.preventDefault();
+    e.stopPropagation();
+    window.open(u,'_blank','noopener,noreferrer');
   },true);
 
   const observer=new MutationObserver(()=>patchModal());

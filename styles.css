@@ -1189,3 +1189,30 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
     background-position:34% top!important;
   }
 }
+
+
+/* =========================================================
+   v0.9.31 — FLOOR VISIBLE
+   Exact same 1920×270 hero geometry; only the artwork slice
+   is shifted downward to include the deer legs and floor.
+   ========================================================= */
+
+.hero{
+  height:270px!important;
+  min-height:270px!important;
+  max-height:270px!important;
+}
+
+.hero-art{
+  background-image:url('assets/header.png')!important;
+  background-size:100% 270px!important;
+  background-position:center top!important;
+  background-repeat:no-repeat!important;
+  filter:none!important;
+  transform:none!important;
+}
+
+.hero-dark,
+.hero-fade{
+  background:transparent!important;
+}

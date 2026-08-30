@@ -1,9 +1,7 @@
-# ARCHIVE.EXE v0.9.30 — Exact Hero 1920×270
+# ARCHIVE.EXE v0.9.31 — Floor Visible
 
-- Final desktop hero asset is exactly 1920×270 px.
-- The browser does not use `cover` on the 1920px desktop layout.
-- Terminal, deer, sunlight and visible floor are composed inside the 270px image itself.
-- The right side is already faded to the page background for the real ARCHIVE.EXE HTML text.
-- The bottom of the image is already faded to exact site background `#090c09`.
-- No blur, brightness, zoom, artificial hero crop, or hero motion layer in this patch.
-- Based on stable v0.9.21 toolbar/catalog build; existing catalog/glitch/easter-egg functionality remains.
+- Keeps the exact 1920×270 desktop hero size.
+- Moves the source crop downward instead of changing the banner size.
+- Deer is visible with legs and the real cracked/wet floor is now inside the image.
+- Bottom 65px gently fade into site background #090c09.
+- No browser crop, no cover, no blur, no brightness filter.

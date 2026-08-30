@@ -5,8 +5,14 @@
     .modal-dossier{padding:7px 2px 10px;color:#aab0a6;font:12px/1.58 Arial,sans-serif}
     .dossier-section{padding:0 0 11px;margin:0 0 10px;border-bottom:1px solid rgba(72,81,70,.38)}
     .dossier-section:last-child{border-bottom:0;margin-bottom:0}
-    .dossier-title{display:flex;align-items:center;gap:7px;margin:0 0 7px;color:#c9cfba;font:700 9px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase}
-    .dossier-title:before{content:'›';color:#899673;font-size:12px}
+    .dossier-title{display:flex;align-items:center;gap:7px;width:100%;padding:0;margin:0 0 7px;border:0;background:transparent;color:#c9cfba;font:700 9px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;text-align:left;cursor:pointer}
+    .dossier-title:hover{color:#e0e5d2}
+    .dossier-arrow{display:inline-block;width:10px;color:#899673;font-size:12px;line-height:1;transition:transform .16s ease}
+    .dossier-section.is-collapsed .dossier-arrow{transform:rotate(-90deg)}
+    .dossier-body{display:block}
+    .dossier-section.is-collapsed .dossier-body{display:none}
+    .dossier-section.is-collapsed{padding-bottom:7px;margin-bottom:7px}
+    .dossier-section.is-collapsed .dossier-title{margin-bottom:0}
     .dossier-list{display:grid;gap:5px;margin:0;padding:0;list-style:none}
     .dossier-list li{position:relative;padding-left:12px;color:#a6aca2}
     .dossier-list li:before{content:'·';position:absolute;left:1px;top:0;color:#78836c;font-weight:700}
@@ -32,8 +38,6 @@
     const text=String(raw||'').replace(/\r/g,'').trim();
     if(!text)return '';
 
-    // Janitor definitions often use >SECTION headers and - list items.
-    // Preserve every character of actual content; this only changes presentation.
     const normalized=text
       .replace(/\s+(?=>[A-Z][A-Z /&-]{2,}(?:\s|$))/g,'\n')
       .replace(/\s+(?=>[A-Z][A-Za-z /&-]{2,}:?\s*-)/g,'\n');
@@ -49,7 +53,6 @@
       }else if(/^[-•]\s+/.test(line)){
         current.items.push(line.replace(/^[-•]\s+/,''));
       }else{
-        // Some cards flatten multiple bullets into a single line. Split only on a clear " - Label:" boundary.
         const parts=line.split(/\s+-\s+(?=[A-Z][A-Za-z /()'-]{1,35}:)/g);
         if(parts.length>1){
           if(parts[0].trim())current.paras.push(parts[0].trim());
@@ -60,7 +63,22 @@
     push();
 
     if(!sections.length)return `<div class="modal-dossier"><p class="dossier-paragraph">${esc(text)}</p></div>`;
-    return `<div class="modal-dossier">${sections.map(s=>`<section class="dossier-section">${s.title?`<h3 class="dossier-title">${esc(s.title)}</h3>`:''}${s.paras.map(p=>`<p class="dossier-paragraph">${esc(p)}</p>`).join('')}${s.items.length?`<ul class="dossier-list">${s.items.map(i=>`<li>${inlineFormat(i)}</li>`).join('')}</ul>`:''}</section>`).join('')}</div>`;
+    return `<div class="modal-dossier">${sections.map((s,i)=>{
+      const body=`${s.paras.map(p=>`<p class="dossier-paragraph">${esc(p)}</p>`).join('')}${s.items.length?`<ul class="dossier-list">${s.items.map(item=>`<li>${inlineFormat(item)}</li>`).join('')}</ul>`:''}`;
+      if(!s.title)return `<section class="dossier-section"><div class="dossier-body">${body}</div></section>`;
+      return `<section class="dossier-section" data-dossier-section="${i}"><button type="button" class="dossier-title" aria-expanded="true"><span class="dossier-arrow">⌄</span><span>${esc(s.title)}</span></button><div class="dossier-body">${body}</div></section>`;
+    }).join('')}</div>`;
+  }
+
+  function bindDossierToggles(panel){
+    panel.querySelectorAll('.dossier-title').forEach(button=>{
+      button.addEventListener('click',()=>{
+        const section=button.closest('.dossier-section');
+        if(!section)return;
+        const collapsed=section.classList.toggle('is-collapsed');
+        button.setAttribute('aria-expanded',collapsed?'false':'true');
+      });
+    });
   }
 
   renderModalPanel=function(){
@@ -71,6 +89,7 @@
     if(modalTab==='description'){
       const text=String(current.full||current.short||'').trim();
       panel.innerHTML=text?structuredText(text):'<div class="modal-dossier"><p class="dossier-paragraph">No description available.</p></div>';
+      bindDossierToggles(panel);
       panel.scrollTop=0;
       return;
     }
@@ -78,6 +97,7 @@
     if(modalTab==='scenario'){
       const text=String(current.scenario||'').trim();
       panel.innerHTML=text?structuredText(text):'<div class="modal-dossier"><p class="dossier-paragraph">No scenario available.</p></div>';
+      bindDossierToggles(panel);
       panel.scrollTop=0;
       return;
     }

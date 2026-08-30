@@ -3316,3 +3316,324 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
     width:100%;
   }
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final12 — final metadata + HERO FX V2
+   ========================================================= */
+
+/* Old flare/glitch layers are retired. Dust stays alive. */
+.hero-sun-glare,
+.hero-light-sweep,
+.hero-terminal-glitch{
+  display:none!important;
+}
+.hero-dust-live{
+  display:block!important;
+}
+
+/* ----- TOP RIGHT: SHOW / TOTAL, no inner square box ----- */
+.toolbar-meta{
+  position:relative!important;
+  margin-left:auto!important;
+  padding:0!important;
+  border:0!important;
+  outline:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  min-height:auto!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:15px!important;
+  opacity:1!important;
+}
+.toolbar-meta::before,
+.toolbar-meta::after{
+  content:none!important;
+  display:none!important;
+}
+.toolbar-meta .page-size-btn,
+.toolbar-meta .total-count,
+.toolbar-meta #resetBtn{
+  font:8px var(--mono)!important;
+  letter-spacing:.085em!important;
+  line-height:1!important;
+}
+.toolbar-meta .page-size-btn{
+  padding:6px 0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#89947e!important;
+}
+.toolbar-meta .page-size-btn:hover{color:#bec9aa!important}
+.toolbar-meta .total-count{color:#707b6b!important}
+.toolbar-meta #resetBtn{
+  border:0!important;
+  background:transparent!important;
+  color:#697365!important;
+  padding:6px 0!important;
+}
+
+/* Dropdown is physically attached to SHOW — no viewport coordinate math. */
+.page-size-wrap{
+  position:relative!important;
+  display:inline-flex!important;
+  align-items:center!important;
+}
+.page-size-menu{
+  position:absolute!important;
+  z-index:260!important;
+  top:calc(100% + 7px)!important;
+  right:0!important;
+  left:auto!important;
+  width:80px!important;
+  min-width:80px!important;
+  padding:4px!important;
+  border:1px solid #364033!important;
+  border-radius:7px!important;
+  background:rgba(10,13,10,.99)!important;
+  box-shadow:0 12px 28px rgba(0,0,0,.48)!important;
+}
+.page-size-menu button{
+  display:block!important;
+  width:100%!important;
+  padding:8px 9px!important;
+  border:0!important;
+  border-radius:4px!important;
+  background:transparent!important;
+  color:#7f8974!important;
+  text-align:left!important;
+  font:8px var(--mono)!important;
+  cursor:pointer!important;
+}
+.page-size-menu button:hover{
+  background:#171d15!important;
+  color:#b6c19f!important;
+}
+
+/* FOUND is now visually tied to the tag/filter result area. */
+.results-line{display:none!important}
+.tag-strip-head{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:14px!important;
+}
+.tag-strip-left{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  min-width:0!important;
+}
+.tag-strip-left .tag-actions{
+  display:flex!important;
+  align-items:center!important;
+}
+.tags-result-status{
+  margin-left:auto!important;
+  flex:0 0 auto!important;
+  white-space:nowrap!important;
+  font:8px var(--mono)!important;
+  letter-spacing:.09em!important;
+  color:#626d5f!important;
+}
+.tags-result-status b{
+  color:#9daa91!important;
+  font-weight:500!important;
+}
+.tags-result-status #filterStatusDot{margin-right:5px!important}
+
+/* ----- HERO FX V2 ----- */
+.hero-fx-v2{
+  position:absolute!important;
+  inset:0!important;
+  z-index:5!important;
+  overflow:hidden!important;
+  pointer-events:none!important;
+}
+
+/* Circular sun reflection around the bright opening. */
+.hero-solar-flare-v2{
+  position:absolute;
+  left:55.2%;
+  top:20%;
+  width:145px;
+  height:145px;
+  border-radius:50%;
+  opacity:0;
+  mix-blend-mode:screen;
+  background:
+    radial-gradient(circle at 50% 50%,
+      rgba(255,252,231,.96) 0 2.5%,
+      rgba(255,234,169,.62) 3% 7%,
+      rgba(251,204,109,.34) 8% 16%,
+      rgba(240,172,68,.15) 17% 30%,
+      rgba(223,145,43,.055) 31% 46%,
+      transparent 47%);
+  box-shadow:
+    0 0 28px rgba(255,225,151,.24),
+    0 0 72px rgba(244,183,84,.16),
+    0 0 125px rgba(225,151,52,.09);
+}
+.hero-solar-flare-v2 .flare-orb{
+  position:absolute;
+  display:block;
+  border-radius:50%;
+}
+.flare-orb-a{
+  width:42px;height:42px;
+  left:-60px;top:70px;
+  border:1px solid rgba(255,231,175,.38);
+  background:rgba(255,215,128,.06);
+  box-shadow:0 0 15px rgba(246,190,89,.13);
+}
+.flare-orb-b{
+  width:23px;height:23px;
+  right:-68px;top:43px;
+  background:rgba(255,233,177,.27);
+  box-shadow:0 0 13px rgba(247,194,98,.19);
+}
+.flare-orb-c{
+  width:11px;height:11px;
+  right:-101px;top:91px;
+  background:rgba(212,238,176,.19);
+}
+.hero-solar-flare-v2.is-active{
+  animation:heroSolarV2 2.7s ease-in-out 1 both!important;
+}
+@keyframes heroSolarV2{
+  0%{opacity:0;transform:translate3d(-9px,5px,0) scale(.90)}
+  14%{opacity:.28}
+  34%{opacity:.82;transform:translate3d(-1px,1px,0) scale(1)}
+  51%{opacity:1;transform:translate3d(1px,0,0) scale(1.035)}
+  69%{opacity:.62;transform:translate3d(5px,-3px,0) scale(1.065)}
+  86%{opacity:.22}
+  100%{opacity:0;transform:translate3d(10px,-5px,0) scale(1.10)}
+}
+
+/* CRT tearing only on the monitor glass at far left. */
+.hero-terminal-crt-v2{
+  position:absolute;
+  left:8.3%;
+  top:4%;
+  width:12.7%;
+  height:40%;
+  overflow:hidden;
+  opacity:0;
+  border-radius:2px;
+  mix-blend-mode:screen;
+}
+.hero-terminal-crt-v2::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 3px,
+      rgba(171,255,131,.055) 3px 4px
+    );
+}
+.crt-tear,
+.crt-scan{
+  position:absolute;
+  display:block;
+  left:4%;
+  width:92%;
+  opacity:0;
+}
+.crt-tear{
+  background:
+    linear-gradient(180deg,
+      transparent,
+      rgba(195,255,161,.18) 24%,
+      rgba(158,255,117,.46) 52%,
+      rgba(116,237,83,.11) 78%,
+      transparent);
+  box-shadow:0 0 7px rgba(131,255,94,.14);
+}
+.crt-tear-a{top:23%;height:8%}
+.crt-tear-b{top:51%;height:5%}
+.crt-tear-c{top:76%;height:4%}
+.crt-scan{
+  height:1px;
+  background:rgba(208,255,183,.68);
+  box-shadow:0 0 5px rgba(142,255,105,.31);
+}
+.crt-scan-a{top:36%}
+.crt-scan-b{top:68%}
+
+.hero-terminal-crt-v2.is-active{
+  animation:heroCrtV2 1.8s steps(1,end) 1 both!important;
+}
+.hero-terminal-crt-v2.is-active .crt-tear-a{animation:crtTearA 1.8s steps(1,end) 1 both!important}
+.hero-terminal-crt-v2.is-active .crt-tear-b{animation:crtTearB 1.8s steps(1,end) 1 both!important}
+.hero-terminal-crt-v2.is-active .crt-tear-c{animation:crtTearC 1.8s steps(1,end) 1 both!important}
+.hero-terminal-crt-v2.is-active .crt-scan-a{animation:crtScanA 1.8s steps(1,end) 1 both!important}
+.hero-terminal-crt-v2.is-active .crt-scan-b{animation:crtScanB 1.8s steps(1,end) 1 both!important}
+
+@keyframes heroCrtV2{
+  0%,100%{opacity:0;transform:translateX(0);filter:none}
+  10%{opacity:.38}
+  21%{opacity:.86;transform:translateX(1px)}
+  34%{opacity:.52;transform:translateX(-1px)}
+  48%{opacity:.94;transform:translateX(1.5px);filter:brightness(1.10)}
+  63%{opacity:.50;transform:translateX(-1px)}
+  78%{opacity:.80;transform:translateX(.5px)}
+  90%{opacity:.30}
+}
+@keyframes crtTearA{
+  0%,100%{opacity:0;transform:translateX(0)}
+  16%{opacity:.88;transform:translateX(-8px)}
+  34%{opacity:.30;transform:translateX(6px)}
+  50%{opacity:.94;transform:translateX(-4px)}
+  68%{opacity:.40;transform:translateX(3px)}
+  82%{opacity:.70;transform:translateX(-1px)}
+}
+@keyframes crtTearB{
+  0%,100%{opacity:0;transform:translateX(0)}
+  23%{opacity:.68;transform:translateX(7px)}
+  43%{opacity:.28;transform:translateX(-5px)}
+  61%{opacity:.82;transform:translateX(4px)}
+  79%{opacity:.36;transform:translateX(-2px)}
+}
+@keyframes crtTearC{
+  0%,100%{opacity:0;transform:translateX(0)}
+  31%{opacity:.54;transform:translateX(-4px)}
+  55%{opacity:.76;transform:translateX(5px)}
+  74%{opacity:.32;transform:translateX(-3px)}
+}
+@keyframes crtScanA{
+  0%,100%{opacity:0;transform:translateX(0)}
+  18%{opacity:.80;transform:translateX(6px)}
+  46%{opacity:.26;transform:translateX(-4px)}
+  72%{opacity:.62;transform:translateX(3px)}
+}
+@keyframes crtScanB{
+  0%,100%{opacity:0;transform:translateX(0)}
+  27%{opacity:.64;transform:translateX(-5px)}
+  54%{opacity:.30;transform:translateX(4px)}
+  80%{opacity:.56;transform:translateX(-2px)}
+}
+
+@media(max-width:900px){
+  .hero-terminal-crt-v2{display:none!important}
+  .hero-solar-flare-v2{left:50%!important}
+}
+@media(max-width:760px){
+  .tag-strip-head{
+    align-items:flex-start!important;
+    flex-direction:column!important;
+    gap:7px!important;
+  }
+  .tags-result-status{margin-left:0!important}
+}
+
+/* Do not hide V2 effects through old reduced-motion selectors/classes. */
+@media(prefers-reduced-motion:reduce){
+  .hero-solar-flare-v2,
+  .hero-terminal-crt-v2{
+    animation-duration:.001ms!important;
+  }
+}

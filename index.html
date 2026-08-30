@@ -27,6 +27,22 @@
     <div id="heroDust" class="hero-dust-live"></div>
   </div>
 
+  <!-- HERO FX V2: independent layers, intentionally separate from legacy FX -->
+  <div class="hero-fx-v2" aria-hidden="true">
+    <div class="hero-solar-flare-v2">
+      <i class="flare-orb flare-orb-a"></i>
+      <i class="flare-orb flare-orb-b"></i>
+      <i class="flare-orb flare-orb-c"></i>
+    </div>
+    <div class="hero-terminal-crt-v2">
+      <span class="crt-tear crt-tear-a"></span>
+      <span class="crt-tear crt-tear-b"></span>
+      <span class="crt-tear crt-tear-c"></span>
+      <span class="crt-scan crt-scan-a"></span>
+      <span class="crt-scan crt-scan-b"></span>
+    </div>
+  </div>
+
   <div class="hero-copy">
     <div class="hero-kicker">CHARACTER DATABASE / NODE_00</div>
     <div class="hero-title">ARCHIVE.EXE<span>_</span></div>
@@ -63,33 +79,35 @@
       <button id="randomBtn" class="control random-trigger"><span class="random-mark" aria-hidden="true"><svg class="dice-icon" viewBox="0 0 24 24" focusable="false"><rect x="4" y="4" width="16" height="16" rx="2.5"/><circle cx="8.5" cy="8.5" r="1"/><circle cx="15.5" cy="8.5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="8.5" cy="15.5" r="1"/><circle cx="15.5" cy="15.5" r="1"/></svg></span><span>RANDOM</span></button>
 
       <section id="catalogMeta" class="catalog-meta toolbar-meta">
-        <button id="pageSizeBtn" class="page-size-btn" type="button" aria-haspopup="listbox">SHOW: 30 ▾</button>
-        <span id="totalCount" class="total-count">TOTAL: 0</span>
+        <div class="page-size-wrap">
+          <button id="pageSizeBtn" class="page-size-btn" type="button" aria-haspopup="listbox">SHOW 30⌄</button>
+          <div id="pageSizeMenu" class="page-size-menu" hidden>
+            <button type="button" data-page-size="10">10</button>
+            <button type="button" data-page-size="30">30</button>
+            <button type="button" data-page-size="50">50</button>
+            <button type="button" data-page-size="100">100</button>
+          </div>
+        </div>
+        <span id="totalCount" class="total-count">TOTAL 000</span>
         <button id="resetBtn" hidden>RESET</button>
       </section>
-    </div>
-    <div class="results-line" id="resultsLine">
-      <span class="catalog-result-status"><i id="filterStatusDot" aria-hidden="true"></i><b id="resultCount">0</b> FOUND</span>
     </div>
     <div id="activeFilters" class="active-filters"></div>
   </section>
 
   <section class="tag-zone">
     <div class="tag-strip-head">
-      <div><span class="tag-label">TAGS</span><small>MULTI-SELECT</small></div>
-      <div class="tag-actions"><button id="clearQuickTags" hidden>CLEAR</button><button id="toggleAllTags">ALL TAGS +</button></div>
+      <div class="tag-strip-left">
+        <span class="tag-label">TAGS</span><small>MULTI-SELECT</small>
+        <div class="tag-actions"><button id="clearQuickTags" hidden>CLEAR</button><button id="toggleAllTags">ALL TAGS +</button></div>
+      </div>
+      <span class="catalog-result-status tags-result-status"><i id="filterStatusDot" aria-hidden="true"></i><b id="resultCount">0</b> RECORDS FOUND</span>
     </div>
     <div id="tagQuick" class="quick-list quick-collapsed"></div>
     <div class="tag-scroll-hint">SCROLL HORIZONTALLY · DRAG TO BROWSE</div>
   </section>
   </section><!-- /controls-block -->
 
-  <div id="pageSizeMenu" class="page-size-menu" hidden>
-    <button type="button" data-page-size="10">10</button>
-    <button type="button" data-page-size="30">30</button>
-    <button type="button" data-page-size="50">50</button>
-    <button type="button" data-page-size="100">100</button>
-  </div>
 
   <section id="grid" class="grid"></section>
   <nav id="pagination" class="pagination" aria-label="Catalog pages" hidden></nav>

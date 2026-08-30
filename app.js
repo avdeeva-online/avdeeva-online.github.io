@@ -86,7 +86,7 @@ function render(){
 
   $("#resultCount").textContent = list.length;
   const totalCount = $("#totalCount");
-  if(totalCount) totalCount.textContent = `TOTAL: ${B.length}`;
+  if(totalCount) totalCount.textContent = `TOTAL ${String(B.length).padStart(3,"0")}`;
 
   const meta = $("#catalogMeta");
   const reset = $("#resetBtn");
@@ -156,19 +156,13 @@ if(pageSizeBtn && pageSizeMenu){
   pageSizeBtn.onclick=e=>{
     e.stopPropagation();
     pageSizeMenu.hidden=!pageSizeMenu.hidden;
-    const r=pageSizeBtn.getBoundingClientRect();
-    const menuW=84;
-    let left=r.right-menuW;
-    left=Math.max(8,Math.min(window.innerWidth-menuW-8,left));
-    pageSizeMenu.style.left=left+"px";
-    pageSizeMenu.style.top=(r.bottom+6)+"px";
   };
 
   pageSizeMenu.querySelectorAll("[data-page-size]").forEach(btn=>{
     btn.onclick=()=>{
       pageSize=Number(btn.dataset.pageSize)||30;
       currentPage=1;
-      pageSizeBtn.textContent=`SHOW: ${pageSize} ▾`;
+      pageSizeBtn.textContent=`SHOW ${pageSize}⌄`;
       pageSizeMenu.hidden=true;
       render();
     };
@@ -1160,4 +1154,34 @@ wireHashtagGhosts();
     btn.classList.remove("danger-glitch");
     btn.textContent=base;
   });
+})();
+
+
+// HERO FX V2 — completely independent from all legacy hero animation classes.
+(function initHeroFxV2(){
+  const flare=document.querySelector(".hero-solar-flare-v2");
+  const crt=document.querySelector(".hero-terminal-crt-v2");
+  if(!flare || !crt) return;
+
+  function pulse(el,cls,duration){
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+    window.setTimeout(()=>el.classList.remove(cls),duration);
+  }
+
+  function fireFlare(){
+    if(document.visibilityState==="visible") pulse(flare,"is-active",2700);
+  }
+  function fireCrt(){
+    if(document.visibilityState==="visible") pulse(crt,"is-active",1800);
+  }
+
+  // Early first run so the effects are easy to verify after Ctrl+F5.
+  window.setTimeout(fireFlare,1600);
+  window.setTimeout(fireCrt,3400);
+
+  // Then occasional atmospheric events.
+  window.setInterval(fireFlare,14500);
+  window.setInterval(fireCrt,8800);
 })();

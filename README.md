@@ -96,3 +96,12 @@ Existing catalog, filters, random, modal, downloads, lorebooks, easter eggs and 
 - Moved FOUND onto its own small result line below the toolbar so it has a separate visual anchor.
 - Increased meta readability.
 - Re-anchored the SHOW dropdown directly under/right-aligned to its button instead of letting it float into the card area.
+
+### v1.0 final12 UI + FX
+- SHOW/TOTAL finalized in the top-right with no internal square frame.
+- SHOW dropdown is nested directly under SHOW and no longer uses viewport coordinate math.
+- RECORDS FOUND moved to the far-right of the TAGS row.
+- Old sun/glitch layers retired; dust remains untouched.
+- Added completely new independent HERO FX V2:
+  - visible solar flare starts ~1.6s after load and repeats ~14.5s;
+  - visible terminal CRT tear starts ~3.4s after load and repeats ~8.8s.

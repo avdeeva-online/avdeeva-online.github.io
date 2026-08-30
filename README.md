@@ -24,3 +24,8 @@ Existing catalog, filters, random, modal, downloads, lorebooks, easter eggs and 
 - Added drawer sort cycle: A→Z → Z→A → MOST → LEAST.
 - Added bot-count threshold cycle: ALL → 2+ → 5+ → 10+.
 - Sorting/count threshold work separately for TAGS, AUTHORS and UNIVERSES and can be combined with search.
+
+### final2 cleanup
+- POV and lorebook indicators reduced to compact 25×25 status icons.
+- Removed COUNT threshold control from Catalog; it duplicated the MOST/LEAST sorting use case.
+- Catalog now keeps a cleaner SEARCH + SORT layout.

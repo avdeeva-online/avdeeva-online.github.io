@@ -12,7 +12,7 @@ const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const state = { q:"", authors:new Set(), universes:new Set(), tags:new Set(), hashtags:new Set(), povs:new Set(), lorebook:false, sort:"newest" };
-let activeFilter = null, drawerTab = "tag", drawerSort = "az", drawerMinCount = 0, current = null, modalTab = "description", tagsExpanded = false, openIntro = 0;
+let activeFilter = null, drawerTab = "tag", drawerSort = "az", current = null, modalTab = "description", tagsExpanded = false, openIntro = 0;
 
 const bookSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3.2-.9 5.7-.6 8.5 1.1v12c-2.8-1.7-5.3-2-8.5-1.1zM20.5 5.5c-3.2-.9-5.7-.6-8.5 1.1v12c2.8-1.7 5.3-2 8.5-1.1z"/></svg>`;
 const globeSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.2 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.7 8.6 12s1.2 6.1 3.4 8.5"/></svg>`;
@@ -230,11 +230,6 @@ $("#drawerSortCycle").onclick=()=>{
   drawerSort=order[(order.indexOf(drawerSort)+1)%order.length];
   renderDrawer();
 };
-$("#drawerCountCycle").onclick=()=>{
-  const levels=[0,2,5,10];
-  drawerMinCount=levels[(levels.indexOf(drawerMinCount)+1)%levels.length];
-  renderDrawer();
-};
 function drawerSelectionCount(){
   if(drawerTab==="tag") return state.tags.size;
   if(drawerTab==="author") return state.authors.size;
@@ -247,7 +242,7 @@ function drawerActiveCount(vals){
 function renderDrawer(){
   const q=($("#drawerSearch").value||"").trim().toLowerCase();
   const allVals=(drawerTab==="tag"?allTags():drawerTab==="author"?uniq("author"):uniq("universe"));
-  let vals=allVals.filter(v=>v.toLowerCase().includes(q) && count(drawerTab,v)>=drawerMinCount);
+  let vals=allVals.filter(v=>v.toLowerCase().includes(q));
 
   vals.sort((a,b)=>{
     if(drawerSort==="za") return b.localeCompare(a,undefined,{sensitivity:"base"});
@@ -260,13 +255,10 @@ function renderDrawer(){
   if(!list) return;
   list.dataset.layout=drawerTab;
   $("#drawerTotal").textContent=`${String(B.length).padStart(3,"0")} RECORDS`;
-  const filtered = q || drawerMinCount>0;
-  $("#drawerFootStatus").textContent=filtered?`${String(vals.length).padStart(2,"0")} MATCHES`:"STABLE";
+  $("#drawerFootStatus").textContent=q?`${String(vals.length).padStart(2,"0")} MATCHES`:"STABLE";
 
   const sortBtn=$("#drawerSortCycle");
-  const countBtn=$("#drawerCountCycle");
   if(sortBtn) sortBtn.querySelector("b").textContent=({az:"A→Z",za:"Z→A",most:"MOST",least:"LEAST"})[drawerSort];
-  if(countBtn) countBtn.querySelector("b").textContent=drawerMinCount?`${drawerMinCount}+`:"ALL";
 
   if(drawerTab==="tag"){
     list.innerHTML=vals.map(v=>`<button class="drawer-item drawer-tag-item ${state.tags.has(v)?'selected':''}" data-drawer-value="${esc(v)}"><span class="drawer-item-name">${esc(tagLabel(v))}</span><small>${String(count("tag",v)).padStart(2,"0")}</small></button>`).join("");

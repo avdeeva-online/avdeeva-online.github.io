@@ -1671,3 +1671,54 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   .drawer-query-row{grid-template-columns:minmax(0,1fr) 54px 54px;gap:4px}
   .drawer-tool-btn{padding-left:2px;padding-right:2px}
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final2 — compact metadata + simpler catalog
+   ========================================================= */
+
+/* POV / lorebook are status indicators, not primary actions. */
+.card-pov-icon,
+.card-lore-icon{
+  width:25px!important;
+  height:25px!important;
+  flex:0 0 25px!important;
+  border-radius:6px!important;
+}
+.card-pov-icon{
+  font-size:12px!important;
+}
+.card-pov-icon.pov-fempov span,
+.card-pov-icon.pov-malepov span,
+.card-pov-icon.pov-anypov span{
+  font-size:13px!important;
+}
+.card-lore-icon svg{
+  width:13px!important;
+  height:13px!important;
+}
+.card-meta{
+  gap:6px!important;
+}
+
+/* COUNT was redundant with MOST / LEAST sorting, so the drawer goes back
+   to one useful secondary control instead of two tiny utility boxes. */
+.drawer-query-row{
+  grid-template-columns:minmax(0,1fr) 72px!important;
+  gap:6px!important;
+}
+.drawer-tool-btn{
+  height:29px!important;
+}
+.drawer-tool-btn small{
+  font-size:5.8px!important;
+}
+.drawer-tool-btn b{
+  font-size:7.8px!important;
+}
+
+@media(max-width:560px){
+  .drawer-query-row{
+    grid-template-columns:minmax(0,1fr) 66px!important;
+  }
+}

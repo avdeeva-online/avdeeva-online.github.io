@@ -77,7 +77,15 @@ function render(){
   syncBots();
   const list = applyFilters();
   const filtered = hasActiveFilters();
+  const pages = Math.max(1, Math.ceil(list.length / pageSize));
+  if(currentPage > pages) currentPage = pages;
+  const start = (currentPage - 1) * pageSize;
+  const visible = list.slice(start, start + pageSize);
+
   $("#resultCount").textContent = list.length;
+  const totalCount = $("#totalCount");
+  if(totalCount) totalCount.textContent = `TOTAL: ${B.length}`;
+
   const meta = $("#catalogMeta");
   const reset = $("#resetBtn");
   const catalogOpen = $("#catalogOpen");
@@ -86,12 +94,86 @@ function render(){
   if(reset) reset.hidden = !filtered;
   $("#totalMeta").textContent = `${String(B.length).padStart(3,"0")} RECORDS`;
   $("#empty").hidden = !!list.length;
-  $("#grid").innerHTML = list.map((b,i)=>cardHtml(b,i)).join("");
+  $("#grid").innerHTML = visible.map((b,i)=>cardHtml(b,i)).join("");
+
+  renderPagination(list.length);
   renderQuickTags();
   renderActiveFilters();
   renderCounts();
   renderDrawer();
+}
 
+
+function renderPagination(totalItems){
+  const nav=$("#pagination");
+  if(!nav) return;
+  const pages=Math.max(1,Math.ceil(totalItems/pageSize));
+
+  if(totalItems<=pageSize){
+    nav.hidden=true;
+    nav.innerHTML="";
+    return;
+  }
+
+  nav.hidden=false;
+  const pieces=[];
+  pieces.push(`<button type="button" data-page="${Math.max(1,currentPage-1)}" ${currentPage===1?"disabled":""} aria-label="Previous page">‹</button>`);
+
+  let start=Math.max(1,currentPage-2);
+  let end=Math.min(pages,start+4);
+  start=Math.max(1,end-4);
+
+  if(start>1){
+    pieces.push(`<button type="button" data-page="1">1</button>`);
+    if(start>2) pieces.push(`<span class="pagination-gap">…</span>`);
+  }
+  for(let p=start;p<=end;p++){
+    pieces.push(`<button type="button" data-page="${p}" class="${p===currentPage?"active":""}" ${p===currentPage?'aria-current="page"':""}>${p}</button>`);
+  }
+  if(end<pages){
+    if(end<pages-1) pieces.push(`<span class="pagination-gap">…</span>`);
+    pieces.push(`<button type="button" data-page="${pages}">${pages}</button>`);
+  }
+
+  pieces.push(`<button type="button" data-page="${Math.min(pages,currentPage+1)}" ${currentPage===pages?"disabled":""} aria-label="Next page">›</button>`);
+  nav.innerHTML=pieces.join("");
+
+  nav.querySelectorAll("button[data-page]").forEach(btn=>{
+    btn.onclick=()=>{
+      if(btn.disabled) return;
+      currentPage=Number(btn.dataset.page)||1;
+      render();
+      $("#catalogMeta")?.scrollIntoView({behavior:"smooth",block:"start"});
+    };
+  });
+}
+
+const pageSizeBtn=$("#pageSizeBtn");
+const pageSizeMenu=$("#pageSizeMenu");
+if(pageSizeBtn && pageSizeMenu){
+  pageSizeBtn.onclick=e=>{
+    e.stopPropagation();
+    pageSizeMenu.hidden=!pageSizeMenu.hidden;
+    const r=pageSizeBtn.getBoundingClientRect();
+    pageSizeMenu.style.left=Math.min(window.innerWidth-92,Math.max(8,r.left))+"px";
+    pageSizeMenu.style.top=(r.bottom+6)+"px";
+  };
+
+  pageSizeMenu.querySelectorAll("[data-page-size]").forEach(btn=>{
+    btn.onclick=()=>{
+      pageSize=Number(btn.dataset.pageSize)||30;
+      currentPage=1;
+      pageSizeBtn.textContent=`SHOW: ${pageSize} ▾`;
+      pageSizeMenu.hidden=true;
+      render();
+    };
+  });
+
+  document.addEventListener("click",e=>{
+    if(!pageSizeMenu.hidden && !pageSizeMenu.contains(e.target) && e.target!==pageSizeBtn){
+      pageSizeMenu.hidden=true;
+    }
+  });
 }
 
 function cardHtml(b,i){
@@ -1026,4 +1108,35 @@ wireHashtagGhosts();
   setTimeout(terminalNow,4700);
   setInterval(flareNow,14500);
   setInterval(terminalNow,10500);
+})();
+
+
+(function initLostDirectoryTriggerGlitch(){
+  const btn=$("#lostFileBtn");
+  if(!btn) return;
+
+  const base="ARCHIVE STATUS: ONLINE  •  UNKNOWN FILES: 01";
+  const warnings=[
+    "ACCESS DENIED  •  DO NOT OPEN",
+    "NODE_00 WARNING  •  FILE_001 ACTIVE",
+    "ARCHIVE STATUS: ERROR  •  UNKNOWN FILES: ??",
+    "UNKNOWN DIRECTORY  •  SIGNAL CORRUPTED"
+  ];
+
+  let timer=null;
+  btn.addEventListener("mouseenter",()=>{
+    btn.classList.add("danger-glitch");
+    let i=0;
+    btn.textContent=warnings[0];
+    timer=setInterval(()=>{
+      btn.textContent=warnings[++i%warnings.length];
+    },105);
+  });
+
+  btn.addEventListener("mouseleave",()=>{
+    clearInterval(timer);
+    timer=null;
+    btn.classList.remove("danger-glitch");
+    btn.textContent=base;
+  });
 })();

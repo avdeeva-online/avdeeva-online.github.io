@@ -76,11 +76,20 @@
   </section><!-- /controls-block -->
 
   <section id="catalogMeta" class="catalog-meta">
-    <span class="catalog-result-status"><i id="filterStatusDot" aria-hidden="true"></i><b id="resultCount">0</b> RECORDS</span>
+    <span class="catalog-result-status"><i id="filterStatusDot" aria-hidden="true"></i><b id="resultCount">0</b> FOUND</span>
+    <button id="pageSizeBtn" class="page-size-btn" type="button" aria-haspopup="listbox">SHOW: 30 ▾</button>
+    <span id="totalCount" class="total-count">TOTAL: 0</span>
     <button id="resetBtn" hidden>RESET FILTERS</button>
   </section>
+  <div id="pageSizeMenu" class="page-size-menu" hidden>
+    <button type="button" data-page-size="10">10</button>
+    <button type="button" data-page-size="30">30</button>
+    <button type="button" data-page-size="50">50</button>
+    <button type="button" data-page-size="100">100</button>
+  </div>
 
   <section id="grid" class="grid"></section>
+  <nav id="pagination" class="pagination" aria-label="Catalog pages" hidden></nav>
   <div id="empty" class="empty" hidden>NO MATCHING RECORDS</div>
   </div>
 </main>

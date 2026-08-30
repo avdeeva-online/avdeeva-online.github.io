@@ -2937,3 +2937,147 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   .terminal-cursor,
   .terminal-signal.hot{animation:none!important}
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final10 — small catalog controls patch
+   ========================================================= */
+
+.catalog-meta{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  flex-wrap:wrap;
+}
+.page-size-btn{
+  border:0;
+  background:transparent;
+  color:#78816f;
+  padding:2px 3px;
+  font:8px var(--mono);
+  letter-spacing:.08em;
+  cursor:pointer;
+}
+.page-size-btn:hover{color:#a5b092}
+.total-count{
+  color:#555f51;
+  font:8px var(--mono);
+  letter-spacing:.08em;
+}
+
+.page-size-menu{
+  position:fixed;
+  z-index:160;
+  width:78px;
+  padding:5px;
+  border:1px solid #30372d;
+  background:rgba(10,13,10,.985);
+  box-shadow:0 14px 34px rgba(0,0,0,.42);
+}
+.page-size-menu button{
+  display:block;
+  width:100%;
+  padding:7px 9px;
+  border:0;
+  background:transparent;
+  color:#7c8671;
+  text-align:left;
+  font:8px var(--mono);
+  cursor:pointer;
+}
+.page-size-menu button:hover{
+  color:#b5c09e;
+  background:#151a14;
+}
+
+.pagination{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  margin:18px 0 4px;
+}
+.pagination button{
+  min-width:29px;
+  height:29px;
+  padding:0 8px;
+  border:1px solid #293027;
+  background:#10140f;
+  color:#65705e;
+  font:8px var(--mono);
+  cursor:pointer;
+  transition:border-color .15s ease,color .15s ease,background .15s ease;
+}
+.pagination button:hover:not(:disabled){
+  border-color:#4b5744;
+  color:#aab596;
+}
+.pagination button.active{
+  border-color:#5d6953;
+  background:#181d16;
+  color:#c0caa9;
+}
+.pagination button:disabled{
+  opacity:.25;
+  cursor:default;
+}
+.pagination-gap{
+  color:#424a40;
+  font:9px var(--mono);
+  padding:0 2px;
+}
+
+/* LOST DIRECTORY trigger: it should look obviously unsafe on hover. */
+.lost-file{
+  overflow:visible!important;
+}
+.lost-file.danger-glitch{
+  position:relative;
+  color:#c0caa8!important;
+  text-shadow:
+    -2px 0 rgba(127,255,90,.36),
+     2px 0 rgba(185,73,62,.28),
+     0 0 11px rgba(138,164,106,.32);
+  animation:lostTriggerGlitch .105s steps(1,end) infinite!important;
+}
+.lost-file.danger-glitch::before,
+.lost-file.danger-glitch::after{
+  content:"DO NOT OPEN";
+  position:absolute;
+  left:0;
+  width:100%;
+  pointer-events:none;
+  opacity:.34;
+  white-space:nowrap;
+  overflow:hidden;
+}
+.lost-file.danger-glitch::before{
+  top:-1px;
+  color:#9fbc82;
+  clip-path:inset(0 0 62% 0);
+  transform:translateX(-3px);
+}
+.lost-file.danger-glitch::after{
+  bottom:-1px;
+  color:#9d6258;
+  clip-path:inset(58% 0 0 0);
+  transform:translateX(3px);
+}
+@keyframes lostTriggerGlitch{
+  0%,100%{transform:none;filter:none}
+  10%{transform:translate(-2px,0) skewX(-2deg)}
+  20%{transform:translate(2px,1px)}
+  30%{transform:translate(-1px,-1px);filter:brightness(1.35)}
+  40%{transform:translate(3px,0) skewX(2deg)}
+  50%{transform:translate(-2px,1px)}
+  60%{transform:translate(1px,-1px);filter:contrast(1.25)}
+  70%{transform:translate(-3px,0)}
+  80%{transform:translate(2px,0)}
+  90%{transform:translate(-1px,1px)}
+}
+
+@media(max-width:760px){
+  .catalog-meta{gap:7px}
+  .page-size-btn,.total-count{font-size:7px}
+  .lost-file.danger-glitch{animation:none!important}
+}

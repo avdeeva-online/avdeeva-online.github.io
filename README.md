@@ -74,3 +74,9 @@ Existing catalog, filters, random, modal, downloads, lorebooks, easter eggs and 
 - LOST DIRECTORY now types its lines, remembers repeat visits, runs a recovery progress sequence, has multiple outcomes and a rare NE AVDEEVA result.
 - Footer now includes `CURATED BY NE AVDEEVA ↗`.
 - Telegram credit currently points to `https://t.me/ne_avdeeva`.
+
+### v1.0 final10 small
+- Catalog top bar now shows FOUND, SHOW and TOTAL.
+- SHOW selector supports 10 / 30 / 50 / 100 records per page.
+- Added page navigation under the grid when needed.
+- LOST DIRECTORY footer trigger now aggressively glitches and cycles warning strings on hover.

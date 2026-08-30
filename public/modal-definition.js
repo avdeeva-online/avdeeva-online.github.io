@@ -1,5 +1,6 @@
 (()=>{
   const cache=new Map();
+  const TIMEOUT_MS=12000;
 
   function cleanList(first,alts){
     const out=[];
@@ -13,13 +14,20 @@
     return out;
   }
 
+  async function fetchWithTimeout(url){
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),TIMEOUT_MS);
+    try{return await fetch(url,{cache:'no-store',signal:controller.signal})}
+    finally{clearTimeout(timer)}
+  }
+
   async function loadDefinition(bot){
     const uuid=bot?.janitorUuid;
     if(!uuid)return null;
     if(cache.has(uuid))return cache.get(uuid);
 
     const promise=(async()=>{
-      const r=await fetch(`/api/characters/${encodeURIComponent(uuid)}/card`,{cache:'no-store'});
+      const r=await fetchWithTimeout(`/api/characters/${encodeURIComponent(uuid)}/card`);
       if(!r.ok)throw new Error(`CARD_HTTP_${r.status}`);
       const card=await r.json();
       const d=card?.data||{};
@@ -41,6 +49,12 @@
     bot.intros=data.intros||[];
     bot._definitionReady=true;
     bot._definitionLoading=false;
+    bot._definitionError='';
+  }
+
+  function repaint(bot){
+    if(window.current!==bot)return;
+    if(typeof window.renderModalPanel==='function')window.renderModalPanel();
   }
 
   const original=window.openModal;
@@ -49,10 +63,9 @@
   window.openModal=function(bot,...args){
     if(!bot?.janitorUuid)return original.call(this,bot,...args);
 
-    const uuid=bot.janitorUuid;
-    const cached=cache.get(uuid);
     if(!bot._definitionReady){
       bot._definitionLoading=true;
+      bot._definitionError='';
       bot.full='';
       bot.scenario='';
       bot.intros=[];
@@ -61,16 +74,14 @@
     const out=original.call(this,bot,...args);
     if(bot._definitionReady)return out;
 
-    Promise.resolve(cached||loadDefinition(bot)).then(data=>{
+    loadDefinition(bot).then(data=>{
       apply(bot,data);
-      const title=document.querySelector('#modalTitle')?.textContent?.trim();
-      if(title!==String(bot.nameEn||'').trim())return;
-      if(typeof window.renderModalPanel==='function')window.renderModalPanel();
+      repaint(bot);
     }).catch(err=>{
       bot._definitionLoading=false;
+      bot._definitionError=err?.name==='AbortError'?'TIMEOUT':String(err?.message||err||'LOAD_FAILED');
       console.warn('Modal definition unavailable',err);
-      const title=document.querySelector('#modalTitle')?.textContent?.trim();
-      if(title===String(bot.nameEn||'').trim()&&typeof window.renderModalPanel==='function')window.renderModalPanel();
+      repaint(bot);
     });
 
     return out;

@@ -10,6 +10,35 @@ function normalizeUniverse(row){const stored=String(row?.universe||"").trim();if
 function normalizeDbCharacter(r,origin){const uuid=r.janitor_uuid,universe=normalizeUniverse(r);return{id:r.slug||uuid,nameRu:"",nameEn:r.name||"Character",author:r.author||"Unknown",authorUrl:r.author_url||"",universe,pov:r.pov||"AnyPOV",tags:parseArray(r.tags),hashtags:parseArray(r.hashtags),short:r.short_description||"",full:r.description||"",scenario:r.scenario||"",image:r.image_url||"",platform:"JANITOR",url:r.janitor_url||`https://janitorai.com/characters/${uuid}`,download:`${origin}/api/characters/${uuid}/card`,downloadPng:`${origin}/api/characters/${uuid}/card.png`,lorebook:r.lorebook_url||"",lorebookTitle:r.lorebook_url?`${universe} LOREBOOK`:"",intros:parseArray(r.intros),isNew:false,janitorUuid:uuid,datacatUrl:r.datacat_url||"",source:r.source||"janitor",sourceLabel:"JanitorAI"}}
 async function catalogCharacters(request,env){try{const url=new URL(request.url),limit=Math.min(Math.max(Number(url.searchParams.get("limit")||500),1),1000);const res=await env.DB.prepare("SELECT * FROM characters WHERE status = 'published' ORDER BY updated_at DESC LIMIT ?").bind(limit).all();const rows=Array.isArray(res?.results)?res.results:[];return json({ok:true,count:rows.length,characters:rows.map(r=>normalizeDbCharacter(r,url.origin))})}catch(e){return json({ok:false,error:"CATALOG_DB_ERROR",message:String(e?.message||e)},500)}}
 async function catalogLorebooks(request,env){try{const url=new URL(request.url);const res=await env.DB.prepare("SELECT janitor_uuid,name,author,universe,lorebook_url,status FROM characters WHERE status = 'published' AND lorebook_url IS NOT NULL AND lorebook_url != '' ORDER BY author,name").all();const rows=Array.isArray(res?.results)?res.results:[];const items=rows.map(r=>{const universe=normalizeUniverse(r);return{id:`${r.janitor_uuid}:lorebook`,janitorUuid:r.janitor_uuid,characterName:r.name||"Character",author:r.author||"Unknown",universe,title:`${universe} LOREBOOK`,download:r.lorebook_url||`${url.origin}/api/characters/${r.janitor_uuid}/lorebook`,source:"janitor"}});return json({ok:true,count:items.length,lorebooks:items})}catch(e){return json({ok:false,error:"LOREBOOK_CATALOG_DB_ERROR",message:String(e?.message||e)},500)}}
+function stripHtmlText(v){return String(v||"").replace(/<script[\s\S]*?<\/script>/gi,"").replace(/<style[\s\S]*?<\/style>/gi,"").replace(/<[^>]+>/g," ").replace(/&amp;/g,"&").replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/\s+/g," ").trim()}
+async function scanDatacatCreator(request){
+  const reqUrl=new URL(request.url),raw=reqUrl.searchParams.get("url");
+  if(!raw)return json({ok:false,error:"MISSING_CREATOR_URL"},400);
+  let base;try{base=new URL(raw)}catch{return json({ok:false,error:"INVALID_CREATOR_URL"},400)}
+  const creatorMatch=base.pathname.match(/^\/creators\/janitor\/([0-9a-f-]{36})\/?$/i);
+  if(base.protocol!=="https:"||base.hostname!=="datacat.run"||!creatorMatch)return json({ok:false,error:"DATACAT_CREATOR_URL_REQUIRED"},400);
+  const creatorId=creatorMatch[1].toLowerCase(),found=new Map();let emptyStreak=0,pagesScanned=0;
+  try{
+    for(let page=1;page<=50;page++){
+      const target=new URL(base.toString());target.searchParams.set("page",String(page));
+      const r=await fetch(target.toString(),{redirect:"follow",headers:{"accept":"text/html,application/xhtml+xml","user-agent":"ARCHIVE.EXE/1.8"}});
+      if(!r.ok)return json({ok:false,error:"DATACAT_CREATOR_HTTP",status:r.status,page},502);
+      let html=await r.text();pagesScanned=page;
+      html=html.replace(/\\\//g,"/");
+      const before=found.size;
+      const linkRe=/href=["']([^"']*\/characters\/(?:recent\/janitor\/)?([0-9a-f-]{36})[^"']*)["'][^>]*>([\s\S]{0,1200}?)<\/a>/ig;
+      let m;
+      while((m=linkRe.exec(html))){const id=m[2].toLowerCase();if(id===creatorId)continue;const name=stripHtmlText(m[3])||id;if(!found.has(id))found.set(id,{id,name})}
+      const anyRe=/\/characters\/(?:recent\/janitor\/)?([0-9a-f-]{36})/ig;
+      while((m=anyRe.exec(html))){const id=m[1].toLowerCase();if(id!==creatorId&&!found.has(id))found.set(id,{id,name:id})}
+      const added=found.size-before;emptyStreak=added?0:emptyStreak+1;
+      const range=stripHtmlText(html).match(/(\d+)\s*[-–]\s*(\d+)\s+of\s+(\d+)/i);
+      if(range&&found.size>=Number(range[3]))break;
+      if(emptyStreak>=2)break;
+    }
+    return json({ok:true,creatorId,count:found.size,pagesScanned,characters:[...found.values()]});
+  }catch(e){return json({ok:false,error:"DATACAT_CREATOR_SCAN_ERROR",message:String(e?.message||e),pagesScanned},502)}
+}
 function crc32(bytes){let c=0xffffffff;for(const b of bytes){c^=b;for(let k=0;k<8;k++)c=(c>>>1)^((c&1)?0xedb88320:0)}return(c^0xffffffff)>>>0}
 function u32(n){return new Uint8Array([(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255])}
 function concat(parts){let n=0;for(const p of parts)n+=p.length;const out=new Uint8Array(n);let o=0;for(const p of parts){out.set(p,o);o+=p.length}return out}
@@ -24,4 +53,4 @@ function canvasPngDataUrl(avatar,card){const safeAvatar=JSON.stringify(String(av
 async function pngDownload(request,env,ctx,uuid){const got=await getCard(request,env,ctx,uuid);if(got.response)return got.response;let source=await fetchJannyPng(uuid);if(source.ok){try{const png=embedCard(source.bytes,got.card);return new Response(png,{headers:{"content-type":"image/png","content-disposition":attachment(`${cardBase(got.card)}.png`),"cache-control":"private, no-store"}})}catch{}}
 const avatar=got.card?.data?.extensions?.archive_exe?.avatar_url||"";if(!avatar)return json({ok:false,state:"PNG_SOURCE_NOT_AVAILABLE",janitorUuid:uuid,detail:source.state},502);const origin=new URL(request.url).origin,proxied=`${origin}/api/image-proxy?url=${encodeURIComponent(avatar)}`;return new Response(canvasPngDataUrl(proxied,got.card),{status:200,headers:{"content-type":"text/html; charset=utf-8","cache-control":"private, no-store"}})}
 async function jsonDownload(request,env,ctx,uuid){const got=await getCard(request,env,ctx,uuid);if(got.response)return got.response;return new Response(JSON.stringify(got.card,null,2),{headers:{"content-type":"application/json; charset=utf-8","content-disposition":attachment(`${cardBase(got.card)}.json`),"cache-control":"private, no-store"}})}
-export default{async fetch(request,env,ctx){const url=new URL(request.url);if(request.method==="GET"){if(url.pathname==="/api/characters")return catalogCharacters(request,env);if(url.pathname==="/api/lorebooks")return catalogLorebooks(request,env);if(url.pathname==="/api/image-proxy")return imageProxy(request);let m=url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})\/card\.png$/i);if(m)return pngDownload(request,env,ctx,m[1].toLowerCase());m=url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})\/card$/i);if(m)return jsonDownload(request,env,ctx,m[1].toLowerCase());if(url.pathname==="/api/debug/retrieval")return json({ok:false,state:"DEBUG_REEXTRACT_DISABLED"},410)}return worker.fetch(request,env,ctx)}};
+export default{async fetch(request,env,ctx){const url=new URL(request.url);if(request.method==="GET"){if(url.pathname==="/api/characters")return catalogCharacters(request,env);if(url.pathname==="/api/lorebooks")return catalogLorebooks(request,env);if(url.pathname==="/api/admin/creator-scan")return scanDatacatCreator(request);if(url.pathname==="/api/image-proxy")return imageProxy(request);let m=url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})\/card\.png$/i);if(m)return pngDownload(request,env,ctx,m[1].toLowerCase());m=url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})\/card$/i);if(m)return jsonDownload(request,env,ctx,m[1].toLowerCase());if(url.pathname==="/api/debug/retrieval")return json({ok:false,state:"DEBUG_REEXTRACT_DISABLED"},410)}return worker.fetch(request,env,ctx)}};

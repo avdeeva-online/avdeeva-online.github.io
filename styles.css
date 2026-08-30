@@ -3786,3 +3786,357 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 @media(max-width:1200px){
   .hero-terminal-crt-v2{display:none!important}
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final14
+   MODAL INFORMATION HIERARCHY + TERMINAL PACING
+   ========================================================= */
+
+/* SHOW dropdown: compact, not a giant floating slab. */
+.page-size-menu{
+  width:86px!important;
+  min-width:86px!important;
+  padding:5px!important;
+  border-radius:7px!important;
+}
+.page-size-menu button{
+  padding:7px 8px!important;
+  font-size:8px!important;
+}
+.page-size-wrap .page-size-menu{
+  top:calc(100% + 5px)!important;
+  right:-2px!important;
+}
+
+/* ----- MODAL: stronger hierarchy without making the name physically larger ----- */
+.modal-heading-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.modal-heading-row h2{
+  margin:7px 0 3px!important;
+  font-weight:800!important;
+  letter-spacing:-.018em!important;
+  color:#eee9dd!important;
+}
+.modal-lore-flag{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:#8f9a82;
+}
+.modal-lore-flag svg{
+  width:14px;
+  height:14px;
+}
+
+/* Universe replaces the duplicated RU name directly under the main name. */
+.modal-universe-under-title{
+  margin:0 0 6px!important;
+  color:#778171!important;
+  font-size:9px!important;
+  line-height:1.2!important;
+}
+.modal-universe-under-title:hover{
+  color:#aeb89d!important;
+}
+
+.modal-author-row{
+  margin-top:0!important;
+}
+
+/* Compact the top information stack. */
+.modal-tabs{
+  margin-top:10px!important;
+}
+
+/* Description gets the flexible vertical space.
+   Tags/actions sit lower instead of leaving a random empty dead zone. */
+.modal-content{
+  padding-top:17px!important;
+  padding-bottom:13px!important;
+}
+.modal-text-wrap{
+  flex:1 1 auto!important;
+  min-height:120px!important;
+  max-height:250px!important;
+  padding-right:6px!important;
+}
+.modal-text-wrap p{
+  margin-top:8px!important;
+  margin-bottom:8px!important;
+  font-size:11px!important;
+  line-height:1.58!important;
+}
+
+/* Tags and hashtags become a tighter footer to the content area. */
+.modal-tags{
+  flex:0 0 auto!important;
+  margin-top:5px!important;
+}
+.modal-primary-tags{
+  gap:5px!important;
+}
+.modal-hashtags{
+  margin-top:5px!important;
+  padding-top:5px!important;
+  gap:7px!important;
+  border-top:1px solid #282d28!important;
+}
+.modal-hashtags button{
+  font-size:9px!important;
+}
+
+/* Remove the auto-spacer that was creating the giant blank region. */
+.modal-action-groups{
+  margin-top:9px!important;
+  padding-top:10px!important;
+}
+
+/* ----- LOST DIRECTORY: correctly placed close button ----- */
+.terminal-close{
+  right:12px!important;
+  top:11px!important;
+  left:auto!important;
+  width:24px!important;
+  height:24px!important;
+  padding:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  line-height:1!important;
+  font-size:16px!important;
+  border-radius:4px!important;
+  z-index:8!important;
+}
+.terminal-title{
+  padding-right:34px!important;
+}
+
+/* Opening itself is a touch slower, matching the new loading pace. */
+.terminal-card{
+  animation:terminalInSlow .32s ease-out!important;
+}
+@keyframes terminalInSlow{
+  from{opacity:0;transform:translateY(8px) scale(.995)}
+  to{opacity:1;transform:none}
+}
+.terminal-lines{
+  line-height:1.9!important;
+}
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final15 — final candidate polish
+   RESET FILTERS + rarer ambient UI glitches
+   ========================================================= */
+
+/* RESET FILTERS lives with the filtered result count, where users look for it. */
+.tags-results-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-left:auto;
+  flex:0 0 auto;
+}
+.reset-filters-inline{
+  border:1px solid #343b32!important;
+  border-radius:5px!important;
+  background:transparent!important;
+  color:#737e6d!important;
+  padding:5px 8px!important;
+  font:7px var(--mono)!important;
+  letter-spacing:.08em!important;
+  cursor:pointer!important;
+  transition:
+    color .16s ease,
+    border-color .16s ease,
+    background .16s ease,
+    transform .16s ease;
+}
+.reset-filters-inline:hover{
+  color:#b1bd9f!important;
+  border-color:#56614d!important;
+  background:#151a14!important;
+  transform:translateY(-1px);
+}
+.reset-filters-inline[hidden]{
+  display:none!important;
+}
+
+/* Autonomous interface glitch: tiny and rare, not a constant distraction. */
+.ambient-glitch{
+  animation:ambientInterfaceGlitch .48s steps(1,end) 1!important;
+  position:relative;
+}
+@keyframes ambientInterfaceGlitch{
+  0%,100%{
+    transform:none;
+    filter:none;
+    text-shadow:none;
+  }
+  18%{
+    transform:translateX(-1px);
+    filter:brightness(1.10);
+    text-shadow:-1px 0 rgba(145,255,111,.24);
+  }
+  36%{
+    transform:translateX(1px);
+    text-shadow:1px 0 rgba(170,84,71,.16);
+  }
+  54%{
+    transform:translateX(-.5px);
+    filter:contrast(1.06);
+  }
+  72%{
+    transform:translateX(.5px);
+    text-shadow:0 0 4px rgba(136,160,107,.14);
+  }
+}
+
+/* Existing hover glitches remain, but calm down slightly so the ambient
+   anomalies do not make the interface feel constantly noisy. */
+.control:hover,
+.quick-tag:hover,
+.filter-trigger:hover{
+  animation-duration:.42s!important;
+}
+
+/* Mobile: keep results/actions readable rather than squeezed. */
+@media(max-width:760px){
+  .tags-results-actions{
+    margin-left:0;
+    width:100%;
+    justify-content:space-between;
+  }
+}
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final15b — glitch interaction balance
+   ========================================================= */
+
+/* Do not repeatedly animate every time the pointer crosses a tag/control.
+   Hover should primarily remain readable/clickable. */
+.control:hover,
+.quick-tag:hover,
+.filter-trigger:hover,
+.tag-chip:hover,
+.meta-token:hover{
+  animation:none!important;
+}
+
+/* Rare hover glitch, triggered probabilistically by JS. */
+.hover-glitch-once{
+  animation:hoverGlitchOnce .34s steps(1,end) 1!important;
+}
+@keyframes hoverGlitchOnce{
+  0%,100%{transform:none;filter:none;text-shadow:none}
+  30%{transform:translateX(-1px);text-shadow:-1px 0 rgba(145,255,111,.18)}
+  55%{transform:translateX(.7px);filter:brightness(1.06)}
+  78%{transform:translateX(-.4px);text-shadow:1px 0 rgba(170,84,71,.12)}
+}
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final15c — final glitch interaction behavior
+   ========================================================= */
+
+/* During direct interaction, hover state must never physically move controls.
+   This applies to filters, tags, hashtags, modal tag buttons, catalog controls, etc. */
+.control:hover,
+.quick-tag:hover,
+.filter-trigger:hover,
+.tag-chip:hover,
+.meta-token:hover,
+.hashtag:hover,
+.hash-tag:hover,
+.modal-hashtags button:hover,
+.modal-primary-tags button:hover,
+.page-size-btn:hover,
+.all-tags-btn:hover,
+#toggleAllTags:hover,
+.universe-link:hover,
+.archive-credit:hover{
+  transform:none!important;
+}
+
+/* Hover glitch stays visible, but is purely optical:
+   brightness / split shadow / tiny contrast pulse — zero position shift. */
+.hover-glitch-once{
+  animation:hoverGlitchStable .36s steps(1,end) 1!important;
+}
+@keyframes hoverGlitchStable{
+  0%,100%{
+    transform:none;
+    filter:none;
+    text-shadow:none;
+  }
+  24%{
+    transform:none;
+    filter:brightness(1.08);
+    text-shadow:
+      -1px 0 rgba(145,255,111,.22),
+       1px 0 rgba(174,83,72,.14);
+  }
+  48%{
+    transform:none;
+    filter:contrast(1.08);
+    text-shadow:
+      1px 0 rgba(145,255,111,.16),
+     -1px 0 rgba(174,83,72,.10);
+  }
+  72%{
+    transform:none;
+    filter:brightness(1.04);
+    text-shadow:0 0 5px rgba(136,160,107,.16);
+  }
+}
+
+/* Autonomous glitches are allowed to visibly 'break' the interface,
+   because they happen away from the pointer and never interfere with clicking.
+   Still only one chosen element per autonomous event. */
+.ambient-glitch{
+  animation:ambientInterfaceGlitchFinal .54s steps(1,end) 1!important;
+}
+@keyframes ambientInterfaceGlitchFinal{
+  0%,100%{
+    transform:none;
+    filter:none;
+    text-shadow:none;
+  }
+  16%{
+    transform:translateX(-2px) skewX(-1deg);
+    filter:brightness(1.14);
+    text-shadow:-2px 0 rgba(145,255,111,.28);
+  }
+  31%{
+    transform:translateX(2px);
+    text-shadow:2px 0 rgba(174,83,72,.18);
+  }
+  48%{
+    transform:translateX(-1px);
+    filter:contrast(1.10);
+  }
+  65%{
+    transform:translateX(1.5px) skewX(.7deg);
+    text-shadow:
+      -1px 0 rgba(145,255,111,.20),
+       1px 0 rgba(174,83,72,.12);
+  }
+  82%{
+    transform:translateX(-.5px);
+    filter:brightness(1.06);
+  }
+}
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final15d — catalog preserved
+   ========================================================= */
+/* Catalog/drawer list items intentionally keep their previous glitch behavior.
+   New hover-smoothing applies to the main page and modal controls only. */

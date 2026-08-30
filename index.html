@@ -89,7 +89,7 @@
           </div>
         </div>
         <span id="totalCount" class="total-count">TOTAL 000</span>
-        <button id="resetBtn" hidden>RESET</button>
+        
       </section>
     </div>
     <div id="activeFilters" class="active-filters"></div>
@@ -101,7 +101,10 @@
         <span class="tag-label">TAGS</span><small>MULTI-SELECT</small>
         <div class="tag-actions"><button id="clearQuickTags" hidden>CLEAR</button><button id="toggleAllTags">ALL TAGS +</button></div>
       </div>
-      <span class="catalog-result-status tags-result-status"><i id="filterStatusDot" aria-hidden="true"></i><b id="resultCount">0</b> RECORDS FOUND</span>
+      <div class="tags-results-actions">
+        <button id="resetBtn" class="reset-filters-inline" hidden>RESET FILTERS</button>
+        <span class="catalog-result-status tags-result-status"><i id="filterStatusDot" aria-hidden="true"></i><b id="resultCount">0</b> RECORDS FOUND</span>
+      </div>
     </div>
     <div id="tagQuick" class="quick-list quick-collapsed"></div>
     <div class="tag-scroll-hint">SCROLL HORIZONTALLY · DRAG TO BROWSE</div>
@@ -163,8 +166,11 @@
     <button class="modal-close" data-close>×</button>
     <div class="modal-cover"><img id="modalImage" alt=""><button id="modalAuthorBadge" class="author-badge"></button></div>
     <div class="modal-content">
-      <div class="modal-topline"><button id="modalUniverse" class="universe-link"></button><span id="modalLoreFlag"></span></div>
-      <h2 id="modalTitle"></h2>
+      <div class="modal-heading-row">
+        <h2 id="modalTitle"></h2>
+        <span id="modalLoreFlag" class="modal-lore-flag"></span>
+      </div>
+      <button id="modalUniverse" class="universe-link modal-universe-under-title"></button>
       <div class="modal-author-row">AUTHOR <button id="modalAuthor"></button> <span id="modalPov" class="pov-label"></span></div>
       <div class="modal-tabs"><button class="modal-tab active" data-modal-tab="description">DESCRIPTION</button><button class="modal-tab" data-modal-tab="scenario">SCENARIO</button><button class="modal-tab" data-modal-tab="intro">INTRO</button></div>
       <div id="modalPanel" class="modal-text-wrap"></div>

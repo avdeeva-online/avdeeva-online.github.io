@@ -111,3 +111,38 @@ Existing catalog, filters, random, modal, downloads, lorebooks, easter eggs and 
 - All floating filters close on selection, outside click, or when another filter/control is opened.
 - Solar flare reduced from 145px to 64px, moved left toward the real light opening, slowed to 4.4s, and simplified to one soft glow for smoother rendering.
 - CRT glitch moved to match the actual monitor glass and reduced to restrained signal tears rather than a broad overlay.
+
+### v1.0 final14 modal + terminal polish
+- SHOW dropdown reduced to a compact 86px menu.
+- LOST DIRECTORY typing now animates character-by-character with slower line pauses and a slower recovery progress sequence.
+- Terminal close button pinned correctly to the top-right and vertically centered.
+- Removed duplicated Russian name from modal.
+- Modal hierarchy is now: NAME → UNIVERSE → AUTHOR / POV.
+- Name receives stronger weight/contrast without increasing its font size.
+- Reduced spacing in the modal header.
+- Description area can use substantially more vertical space.
+- Tags/hashtags compressed and moved down toward the action area; removed the large empty spacer before FILES/SOURCE.
+
+### v1.0 final15 final candidate
+Includes all final14 modal/terminal fixes plus:
+- RESET FILTERS moved beside `N RECORDS FOUND` in the TAGS row.
+- RESET is visible only when filters/search/non-default sorting are active, using the existing filter-state logic.
+- Added rare autonomous interface glitches across filters/tags/controls, approximately every 18–34 seconds.
+- Hover glitches remain but are visually calmer so the UI does not feel constantly noisy.
+
+### v1.0 final15b glitch balance
+- Autonomous UI glitches remain active without hover, now at irregular ~9–22 second intervals.
+- Autonomous glitches skip whichever control/tag is currently under the pointer.
+- Repetitive glitch-on-every-hover behavior removed.
+- Hover glitch now has only ~18% chance per pointer entry plus a 6.5s cooldown per element, so selecting several tags stays comfortable.
+
+### v1.0 final15c final glitch behavior
+- Glitch logic now covers filters, tags, hashtags, modal tags, drawer controls, page-size controls and other archive UI elements.
+- Autonomous glitches stay visibly broken and noticeable, but always skip the element currently under the pointer.
+- Hover glitch chance reduced to ~8% per pointer entry with a 9s per-element cooldown.
+- Hover glitches no longer move/jump the element at all; they use only optical brightness/contrast/text-shadow distortion.
+- Result: the site still feels unstable, but rapidly selecting multiple tags/hashtags remains comfortable.
+
+### v1.0 final15d main-page glitch fix
+- Catalog/drawer list entries are excluded from the new glitch interaction logic and keep their previous behavior.
+- Main page buttons, filters, tags, hashtags, SHOW/page-size controls, modal tags and other small interactive controls keep the improved behavior: visible autonomous glitches, but rare optical-only hover glitches with no jumping.

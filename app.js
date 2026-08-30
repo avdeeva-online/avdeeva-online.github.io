@@ -507,7 +507,7 @@ function openModal(b,keepOpen=false){
   modalTab="description";
   openIntro=0;
   $("#modalImage").src=b.image;
-  $("#modalTitle").innerHTML=`${esc(b.nameEn)}<span>${esc(b.nameRu)}</span>`;
+  $("#modalTitle").textContent=b.nameEn;
   $("#modalAuthor").textContent=`@${b.author}`;
   $("#modalAuthor").dataset.author=b.author;
   $("#modalAuthorBadge").textContent=`@${b.author}`;
@@ -619,7 +619,7 @@ function setTerminalSignal(text,hot=false){
   signal.classList.toggle("hot",hot);
 }
 function wait(ms){return new Promise(r=>setTimeout(r,ms))}
-async function typeTerminalLines(lines,{clear=true,speed=17}={}){
+async function typeTerminalLines(lines,{clear=true,speed=28,linePause=210}={}){
   const token=++terminalTypingToken;
   const box=$("#terminalLines");
   if(clear) box.innerHTML="";
@@ -633,13 +633,17 @@ async function typeTerminalLines(lines,{clear=true,speed=17}={}){
     row.innerHTML='<span class="terminal-prompt">&gt;</span> <span></span>';
     box.appendChild(row);
     const target=row.querySelector("span:last-child");
+
+    // True terminal typing: every character gets time instead of batching 3 chars at once.
     for(let i=0;i<text.length;i++){
       if(token!==terminalTypingToken)return;
       target.textContent+=text[i];
-      if(i%3===0) await wait(speed);
+      const punctuation=/[.:!?]/.test(text[i]) ? 45 : 0;
+      await wait(speed + Math.random()*10 + punctuation);
     }
-    await wait(95);
+    await wait(linePause + Math.random()*80);
   }
+
   terminalBusy=false;
   $("#terminalRetry").disabled=false;
 }
@@ -648,8 +652,8 @@ async function showTerminal(){
   const seen=bumpTerminalSeen();
   setTerminalSignal("SIGNAL: UNSTABLE",false);
   $(".terminal-card")?.classList.remove("terminal-hit","terminal-recovered");
-  await wait(120);
-  typeTerminalLines(terminalIntroFor(seen));
+  await wait(320);
+  typeTerminalLines(terminalIntroFor(seen),{speed:27,linePause:220});
 }
 function hideTerminal(){
   terminalTypingToken++;
@@ -675,7 +679,7 @@ async function recoveryAttempt(){
   for(const n of steps){
     pct.textContent=n+"%";
     bar.style.width=n+"%";
-    await wait(85+Math.random()*80);
+    await wait(180+Math.random()*110);
   }
 
   const roll=Math.random();
@@ -710,8 +714,8 @@ async function recoveryAttempt(){
     card?.classList.add("terminal-hit");
   }
 
-  await wait(180);
-  await typeTerminalLines(result,{clear:true,speed:20});
+  await wait(420);
+  await typeTerminalLines(result,{clear:true,speed:25,linePause:230});
   setTerminalSignal("SIGNAL: LOST",false);
   btn.disabled=false;
 }
@@ -1195,4 +1199,84 @@ wireHashtagGhosts();
   // Then occasional atmospheric events.
   window.setInterval(fireFlare,14500);
   window.setInterval(fireCrt,8800);
+})();
+
+
+// ============================================================
+// ARCHIVE.EXE ambient interface anomalies — rare, autonomous glitches.
+// Hover glitches still exist; these are occasional background events.
+// ============================================================
+(function initAmbientUiGlitches(){
+  const selectors=[
+    ".control",
+    ".quick-tag",
+    ".filter-trigger",
+    ".tag-chip",
+    ".meta-token",
+    ".hashtag",
+    ".hash-tag",
+    ".modal-hashtags button",
+    ".modal-primary-tags button",
+    ".page-size-btn",
+    ".all-tags-btn",
+    "#toggleAllTags",
+    ".universe-link",
+    ".archive-credit"
+  ];
+
+  function candidates(){
+    return selectors.flatMap(sel=>Array.from(document.querySelectorAll(sel)))
+      .filter(el=>!el.closest("[hidden]") && el.offsetParent!==null);
+  }
+
+  function glitchOne(){
+    if(document.visibilityState!=="visible") return;
+    const pool=candidates();
+    if(!pool.length) return;
+
+    const safePool=pool.filter(el=>!el.matches(":hover"));
+    if(!safePool.length) return;
+    const el=safePool[Math.floor(Math.random()*safePool.length)];
+    el.classList.add("ambient-glitch");
+
+    setTimeout(()=>el.classList.remove("ambient-glitch"), 360 + Math.random()*220);
+  }
+
+  function schedule(){
+    // Autonomous anomalies remain present, but irregular rather than tied to hover.
+    const delay=9000 + Math.random()*13000;
+    setTimeout(()=>{
+      glitchOne();
+      schedule();
+    },delay);
+  }
+
+  // Do not trigger immediately after load; let the interface settle.
+  setTimeout(schedule,12000);
+})();
+
+
+// Rare hover anomalies: most hovers are completely clean.
+// Autonomous glitches continue independently in the background.
+(function initRareHoverGlitches(){
+  const selector=".control,.quick-tag,.filter-trigger,.tag-chip,.meta-token,.hashtag,.hash-tag,.modal-hashtags button,.modal-primary-tags button,.page-size-btn,.all-tags-btn,#toggleAllTags,.universe-link,.archive-credit";
+  const cooldown=new WeakMap();
+
+  document.addEventListener("pointerover",e=>{
+    const el=e.target.closest(selector);
+    if(!el || el.contains(e.relatedTarget)) return;
+
+    const now=Date.now();
+    if((cooldown.get(el)||0)>now) return;
+
+    // Hover anomalies are intentionally rare because users often click
+    // several tags/hashtags in succession.
+    if(Math.random()>.08) return;
+
+    cooldown.set(el,now+9000);
+    el.classList.remove("hover-glitch-once");
+    void el.offsetWidth;
+    el.classList.add("hover-glitch-once");
+    setTimeout(()=>el.classList.remove("hover-glitch-once"),380);
+  },{passive:true});
 })();

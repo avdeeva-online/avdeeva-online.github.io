@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ARCHIVE IMPORTER / NODE_01</title>
+<link rel="stylesheet" href="importer.css">
+</head>
+<body>
+<div class="shell">
+  <header class="head">
+    <div>
+      <div class="eyebrow">PRIVATE ARCHIVE TOOL / NODE_01</div>
+      <h1>ARCHIVE IMPORTER</h1>
+      <div class="route">JANITOR → DATACAT → REVIEW → ARCHIVE.EXE</div>
+    </div>
+    <div id="bridgeBadge" class="badge bad">BRIDGE OFFLINE</div>
+  </header>
+
+  <section class="panel source">
+    <div class="row">
+      <input id="janitorUrl" class="url" placeholder="https://janitorai.com/...">
+      <button id="resolveBtn">RESOLVE</button>
+    </div>
+    <div id="status" class="terminal">READY.
+Открой эту страницу с установленным ARCHIVE IMPORTER BRIDGE.</div>
+  </section>
+
+  <section class="panel review">
+    <div class="previewCol">
+      <div class="imageBox"><img id="previewImage" alt=""><span id="imageEmpty">NO IMAGE</span></div>
+      <div class="mini">
+        <span>JANITOR UUID</span>
+        <code id="uuidOut">—</code>
+      </div>
+      <div class="mini">
+        <span>DATA SOURCE</span>
+        <code id="sourceOut">—</code>
+      </div>
+      <div class="mini">
+        <span>LOREBOOK</span>
+        <code id="loreOut">UNKNOWN</code>
+      </div>
+    </div>
+
+    <div class="fields">
+      <label>NAME<input id="name"></label>
+      <label>AUTHOR<input id="author"></label>
+      <label>POV<input id="pov"></label>
+      <label>TAGS<input id="tags"></label>
+      <label>UNIVERSE<input id="universe" placeholder="manual / later auto-suggest"></label>
+      <label>SHORT DESCRIPTION<textarea id="short" rows="3"></textarea></label>
+      <label>DESCRIPTION<textarea id="description" rows="8"></textarea></label>
+      <label>SCENARIO<textarea id="scenario" rows="6"></textarea></label>
+      <label>INTRO
+        <select id="introSelect"></select>
+        <textarea id="intro" rows="8"></textarea>
+      </label>
+      <label>HASHTAGS<input id="hashtags" placeholder="#tag, #tag"></label>
+    </div>
+  </section>
+
+  <section class="panel actions">
+    <button id="saveDraft" disabled>SAVE ARCHIVE DRAFT</button>
+    <button id="showRaw" class="secondary" disabled>SHOW RAW JSON</button>
+    <button id="clearBtn" class="secondary">CLEAR</button>
+  </section>
+
+  <pre id="rawJson" class="raw hidden"></pre>
+  <footer>ARCHIVE.EXE / IMPORT NODE_01 • LOCAL ADMIN BRIDGE REQUIRED</footer>
+</div>
+<script src="importer.js"></script>
+</body>
+</html>

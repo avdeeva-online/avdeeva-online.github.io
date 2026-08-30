@@ -1,0 +1,18 @@
+
+:root{--bg:#0b0e0b;--panel:#111610;--panel2:#0d120d;--line:#3b4736;--text:#d8deca;--muted:#819078;--accent:#b2c19a;--bad:#cf7e70;--good:#9fbd84}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Consolas,ui-monospace,monospace}
+.shell{max-width:1320px;margin:auto;padding:28px}.head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:20px}
+.eyebrow,.route{color:var(--muted);font-size:12px;letter-spacing:.08em}h1{margin:5px 0;font-size:28px;letter-spacing:.045em}
+.badge{border:1px solid var(--line);padding:9px 12px}.badge.bad{color:var(--bad)}.badge.good{color:var(--good)}
+.panel{border:1px solid var(--line);background:var(--panel);padding:18px;margin:0 0 18px}.row{display:flex;gap:12px}
+.url,input,textarea,select{width:100%;background:#0a0e0a;border:1px solid #4a5844;color:var(--text);padding:11px;font:inherit}
+textarea{resize:vertical}button{background:#253020;border:1px solid #708161;color:#e1e8d4;padding:11px 16px;font:inherit;cursor:pointer}
+button:hover{background:#303d2b}button:disabled{opacity:.4;cursor:not-allowed}.secondary{background:#151c14;color:#aab5a0}
+.terminal{margin-top:12px;background:#080b08;border:1px solid #303a2d;color:#a9bd92;padding:12px;min-height:118px;white-space:pre-wrap}
+.review{display:grid;grid-template-columns:250px 1fr;gap:20px}.imageBox{height:340px;border:1px solid var(--line);background:#080b08;display:grid;place-items:center;overflow:hidden;color:#596653}
+.imageBox img{width:100%;height:100%;object-fit:cover;display:none}.mini{margin-top:12px;border-top:1px solid #2d352a;padding-top:9px}.mini span{display:block;color:var(--muted);font-size:11px}.mini code{display:block;margin-top:4px;overflow-wrap:anywhere}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fields label{display:block;color:var(--muted);font-size:12px}
+.fields label:nth-child(n+6){grid-column:1/-1}.fields input,.fields textarea,.fields select{margin-top:5px;color:var(--text)}
+.actions{display:flex;gap:10px;flex-wrap:wrap}.raw{border:1px solid var(--line);background:#080b08;color:#a3ae99;padding:14px;max-height:420px;overflow:auto;white-space:pre-wrap}.hidden{display:none}
+footer{color:#5f6d58;font-size:11px;padding:4px 0 30px}
+@media(max-width:800px){.review{grid-template-columns:1fr}.previewCol{max-width:320px}.fields{grid-template-columns:1fr}.fields label{grid-column:1!important}.row{flex-direction:column}.head{flex-direction:column}}

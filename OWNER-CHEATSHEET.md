@@ -26,3 +26,8 @@ Hidden motif: the archive occasionally behaves as if an unindexed `RECORD_000` e
 - TAGS are a compact two-column index; AUTHORS and UNIVERSES deliberately use different record layouts.
 - Existing missing-tab and impossible-author anomalies remain.
 - A small additional Catalog anomaly may briefly report one extra index entry in the compact stats line.
+
+
+## IMPORTER
+Private importer page: `https://avdeeva-online.github.io/importer/`
+Requires ARCHIVE IMPORTER BRIDGE browser extension.

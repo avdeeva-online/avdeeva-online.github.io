@@ -2,22 +2,22 @@
   const style=document.createElement('style');
   style.textContent=`
     .modal-public-body{font-family:Arial,sans-serif!important;contain:paint;isolation:isolate}
-    .public-summary{display:grid;gap:9px}
-    .public-summary-hook{font-size:12.8px;line-height:1.42;color:#e2e6db;font-weight:700;letter-spacing:-.01em}
-    .public-summary-lead{font-size:11.4px;line-height:1.5;color:#c5cbbf}
-    .public-summary-meta{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 10px;padding:7px 0;border-top:1px solid rgba(100,112,94,.24);border-bottom:1px solid rgba(100,112,94,.24)}
-    .public-summary-meta b,.public-summary-section h4{font:700 7.8px/1.4 var(--mono);letter-spacing:.08em;color:#929f88}
-    .public-summary-meta span{font:10.8px/1.45 Arial,sans-serif;color:#c6cbc0;overflow-wrap:anywhere}
-    .public-summary-section{display:grid;gap:4px}
+    .public-summary{display:grid;gap:10px}
+    .public-summary-hook{font-size:13.4px;line-height:1.38;color:#f0ece2;font-weight:700;letter-spacing:-.012em}
+    .public-summary-lead{font-size:11.6px;line-height:1.52;color:#cbd0c5;max-width:98%}
+    .public-summary-meta{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:5px 11px;padding:8px 0;border-top:1px solid rgba(100,112,94,.24);border-bottom:1px solid rgba(100,112,94,.24)}
+    .public-summary-meta b,.public-summary-section h4{font:700 8px/1.4 var(--mono);letter-spacing:.08em;color:#96a28d}
+    .public-summary-meta span{font:10.9px/1.46 Arial,sans-serif;color:#c9cec3;overflow-wrap:anywhere}
+    .public-summary-section{display:grid;gap:5px}
     .public-summary-section h4{margin:0;text-transform:uppercase}
-    .public-summary-section p{margin:0!important;font:11.2px/1.5 Arial,sans-serif!important;color:#bdc3b8!important}
-    .public-summary-chapters{display:grid;gap:6px}
-    .public-summary-chapter{padding-left:9px;border-left:1px solid rgba(125,139,111,.38)}
-    .public-summary-chapter b{display:block;font:700 8.2px/1.4 var(--mono);color:#b5bfa9;margin-bottom:2px}
+    .public-summary-section p{margin:0!important;font:11.3px/1.52 Arial,sans-serif!important;color:#c0c6bb!important}
+    .public-summary-chapters{display:grid;gap:7px}
+    .public-summary-chapter{padding-left:10px;border-left:1px solid rgba(125,139,111,.42)}
+    .public-summary-chapter b{display:block;font:700 8.4px/1.4 var(--mono);color:#bac3ae;margin-bottom:3px}
   `;
   document.head.appendChild(style);
 
-  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const clean=s=>String(s||'')
     .replace(/[\u200B-\u200D\u2060\uFEFF]/g,'')
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g,'')

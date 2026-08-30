@@ -52,9 +52,21 @@
     bot._definitionError='';
   }
 
+  function modalStillShows(bot){
+    const modal=document.querySelector('#modal');
+    if(!modal||modal.hidden)return false;
+    const title=document.querySelector('#modalTitle')?.textContent?.trim()||'';
+    return title===String(bot?.nameEn||'').trim();
+  }
+
   function repaint(bot){
-    if(window.current!==bot)return;
-    if(typeof window.renderModalPanel==='function')window.renderModalPanel();
+    if(!modalStillShows(bot))return;
+    const paint=()=>{
+      if(!modalStillShows(bot))return;
+      if(typeof window.renderModalPanel==='function')window.renderModalPanel();
+    };
+    paint();
+    requestAnimationFrame(paint);
   }
 
   const original=window.openModal;

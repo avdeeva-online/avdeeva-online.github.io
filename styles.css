@@ -3162,3 +3162,63 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
     border-top:1px solid rgba(102,112,92,.12);
   }
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final11b — quieter toolbar stats
+   ========================================================= */
+
+/* The stats should read as passive archive metadata, not as another control group. */
+.toolbar-meta{
+  margin-left:10px!important;
+  padding-left:0!important;
+  border-left:0!important;
+  min-height:auto!important;
+  gap:7px!important;
+  opacity:.72;
+}
+.toolbar-meta::before{
+  content:"";
+  width:1px;
+  height:12px;
+  margin:0 4px 0 1px;
+  background:rgba(112,122,101,.16);
+}
+.toolbar-meta .catalog-result-status,
+.toolbar-meta .page-size-btn,
+.toolbar-meta .total-count,
+.toolbar-meta #resetBtn{
+  font-size:6px!important;
+  letter-spacing:.075em!important;
+  line-height:1!important;
+}
+.toolbar-meta .catalog-result-status{
+  color:#5d6659!important;
+}
+.toolbar-meta .catalog-result-status b{
+  color:#7f8977!important;
+}
+.toolbar-meta .page-size-btn{
+  color:#596255!important;
+  padding:0!important;
+}
+.toolbar-meta .page-size-btn:hover{
+  color:#8d987f!important;
+}
+.toolbar-meta .total-count{
+  color:#50594d!important;
+}
+.toolbar-meta #resetBtn{
+  color:#626c5e!important;
+  padding:0 2px!important;
+}
+.toolbar-meta:hover{
+  opacity:.92;
+}
+
+/* Keep the cluster visually attached to RANDOM rather than pinned to the far edge. */
+@media(min-width:1451px){
+  .toolbar-meta{
+    margin-left:10px!important;
+  }
+}

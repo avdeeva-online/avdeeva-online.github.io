@@ -86,3 +86,7 @@ Existing catalog, filters, random, modal, downloads, lorebooks, easter eggs and 
 - Fixed the blank-on-first-load catalog bug caused by missing `pageSize` / `currentPage` declarations.
 - Catalog now paints immediately when `window.BOTS` is already available.
 - Moved FOUND / SHOW / TOTAL / RESET into the top toolbar, after the filter controls.
+
+### v1.0 final11b
+- Reduced the visual weight of FOUND / SHOW / TOTAL.
+- Removed the heavy right-side separation and made the stats read as passive archive metadata beside RANDOM.

@@ -737,7 +737,7 @@ wireHashtagGhosts();
   if(reduced) return;
 
   let activeDust = 0;
-  const MAX_DUST = 22;
+  const MAX_DUST = 28;
 
   function spawnDust(){
     if(document.hidden || activeDust >= MAX_DUST) return;
@@ -749,18 +749,18 @@ wireHashtagGhosts();
     const clustered = Math.random() < .72;
     const x = clustered ? (24 + Math.random()*58) : (4 + Math.random()*92);
     const y = 18 + Math.random()*67;
-    const size = .8 + Math.random()*2.2;
-    const drift = -28 + Math.random()*56;
-    const lift = 14 + Math.random()*34;
-    const dur = 5.5 + Math.random()*7.5;
-    const delay = Math.random()*1.8;
-    const peak = .13 + Math.random()*.34;
+    const size = 1.35 + Math.random()*2.65;
+    const drift = -36 + Math.random()*72;
+    const fall = 18 + Math.random()*42;
+    const dur = 6.5 + Math.random()*7.5;
+    const delay = Math.random()*1.4;
+    const peak = .30 + Math.random()*.34;
 
     p.style.setProperty('--x', x + '%');
     p.style.setProperty('--y', y + '%');
     p.style.setProperty('--s', size + 'px');
     p.style.setProperty('--dx', drift + 'px');
-    p.style.setProperty('--dy', (-lift) + 'px');
+    p.style.setProperty('--dy', fall + 'px');
     p.style.setProperty('--dur', dur + 's');
     p.style.setProperty('--delay', delay + 's');
     p.style.setProperty('--peak', peak.toFixed(2));
@@ -775,12 +775,12 @@ wireHashtagGhosts();
 
   // Quiet, irregular flow rather than "snow".
   const timer = setInterval(()=>{
-    if(Math.random() < .78) spawnDust();
-    if(Math.random() < .16) setTimeout(spawnDust, 180 + Math.random()*500);
-  }, 720);
+    if(Math.random() < .92) spawnDust();
+    if(Math.random() < .28) setTimeout(spawnDust, 160 + Math.random()*420);
+  }, 620);
 
-  // Seed just a few particles so the header doesn't start empty.
-  for(let i=0;i<7;i++) setTimeout(spawnDust, i*210);
+  // A visible but still sparse initial field.
+  for(let i=0;i<11;i++) setTimeout(spawnDust, i*150);
 
   window.addEventListener('pagehide', ()=>clearInterval(timer), {once:true});
 })();

@@ -1722,3 +1722,197 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
     grid-template-columns:minmax(0,1fr) 66px!important;
   }
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final3 — dust visibility / direction fix
+   ========================================================= */
+.hero-dust-particle{
+  background:rgba(242,216,151,.96)!important;
+  box-shadow:
+    0 0 4px rgba(240,202,123,.42),
+    0 0 9px rgba(222,169,81,.16)!important;
+  filter:blur(.15px);
+}
+@keyframes archiveDust{
+  0%{
+    opacity:0;
+    transform:translate3d(0,-5px,0) scale(.62);
+  }
+  14%{opacity:calc(var(--peak) * .82)}
+  38%{opacity:var(--peak)}
+  72%{opacity:calc(var(--peak) * .72)}
+  100%{
+    opacity:0;
+    transform:translate3d(var(--dx),var(--dy),0) scale(1.18);
+  }
+}
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final4 — visible hero motion pass
+   ========================================================= */
+
+/* Make sure atmospheric FX sit above artwork and below UI text. */
+.hero-live-fx{
+  z-index:4!important;
+}
+.hero-copy{
+  z-index:6!important;
+}
+
+/* Stronger warm breathing light around the opening / reflective floor. */
+.hero-sun-glare{
+  left:34%!important;
+  top:-28%!important;
+  width:54%!important;
+  height:155%!important;
+  opacity:.82!important;
+  filter:blur(7px)!important;
+  background:
+    radial-gradient(ellipse at 57% 46%,
+      rgba(255,205,111,.20) 0%,
+      rgba(232,164,69,.11) 24%,
+      rgba(194,119,35,.045) 48%,
+      transparent 70%)!important;
+  animation:archiveSunBreathVisible 7.8s ease-in-out infinite alternate!important;
+}
+.hero-sun-glare::after{
+  opacity:1!important;
+  background:linear-gradient(95deg,
+    transparent 0%,
+    rgba(234,181,86,.04) 18%,
+    rgba(255,218,135,.15) 49%,
+    rgba(206,139,52,.045) 78%,
+    transparent 100%)!important;
+}
+
+@keyframes archiveSunBreathVisible{
+  0%{
+    opacity:.48;
+    transform:translate3d(-9px,-2px,0) scale(.985);
+  }
+  45%{opacity:.82}
+  100%{
+    opacity:.61;
+    transform:translate3d(11px,5px,0) scale(1.035);
+  }
+}
+
+/* A slow diagonal light sweep. It should be noticeable at a glance,
+   but it passes rarely so the header doesn't constantly move. */
+.hero-light-sweep{
+  position:absolute;
+  left:-28%;
+  top:-20%;
+  width:26%;
+  height:150%;
+  opacity:0;
+  transform:skewX(-15deg) translateX(0);
+  background:linear-gradient(90deg,
+    transparent,
+    rgba(255,223,154,.03) 24%,
+    rgba(255,228,163,.15) 50%,
+    rgba(241,193,103,.045) 74%,
+    transparent);
+  filter:blur(8px);
+  mix-blend-mode:screen;
+  animation:archiveLightSweep 11s ease-in-out infinite;
+}
+@keyframes archiveLightSweep{
+  0%,12%{opacity:0; transform:skewX(-15deg) translateX(0)}
+  18%{opacity:.48}
+  46%{opacity:.26}
+  58%{opacity:0; transform:skewX(-15deg) translateX(520%)}
+  100%{opacity:0; transform:skewX(-15deg) translateX(520%)}
+}
+
+/* Terminal: make the actual screen effect visible, not just a 2px line. */
+.hero-terminal-glitch{
+  left:8.9%!important;
+  top:2.5%!important;
+  width:13.8%!important;
+  height:43%!important;
+  border-radius:3px!important;
+  box-shadow:
+    inset 0 0 14px rgba(102,255,80,.10),
+    0 0 12px rgba(95,255,71,.05);
+  animation:terminalWakeVisible 6.4s steps(1,end) infinite!important;
+}
+.hero-terminal-glitch::before{
+  animation:terminalSweepVisible 6.4s steps(1,end) infinite!important;
+}
+.hero-terminal-glitch::after{
+  animation:terminalFlashVisible 9.8s steps(1,end) infinite!important;
+}
+
+@keyframes terminalWakeVisible{
+  0%,55%,56.2%,62%,100%{opacity:0;transform:none}
+  55.15%{opacity:.82;transform:translateX(0)}
+  55.38%{opacity:.34;transform:translateX(3px)}
+  55.62%{opacity:.74;transform:translateX(-2px)}
+  55.92%{opacity:.24;transform:translateX(1px)}
+  56.18%{opacity:0;transform:none}
+}
+@keyframes terminalSweepVisible{
+  0%,55%,100%{opacity:0;transform:translateX(0)}
+  55.12%{opacity:.90;transform:translateX(-6px)}
+  55.40%{opacity:.36;transform:translateX(8px)}
+  55.68%{opacity:.74;transform:translateX(-3px)}
+  56.05%{opacity:0;transform:translateX(0)}
+}
+@keyframes terminalFlashVisible{
+  0%,72%,73.5%,100%{opacity:0}
+  72.15%{opacity:.88}
+  72.38%{opacity:.20}
+  72.62%{opacity:.62}
+  72.88%{opacity:.12}
+  73.2%{opacity:0}
+}
+
+/* More readable terminal slices. */
+.terminal-glitch-line{
+  height:3px!important;
+  background:rgba(156,255,117,.42)!important;
+  box-shadow:
+    0 0 5px rgba(117,255,84,.34),
+    0 0 11px rgba(117,255,84,.14)!important;
+}
+
+/* Very subtle scanline vibration over the whole hero to give it life,
+   independent of the terminal-specific glitch. */
+.hero-live-fx::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  opacity:.055;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(255,255,255,.055) 0 1px,
+      transparent 1px 5px
+    );
+  animation:archiveScanDrift 4.8s linear infinite;
+  mix-blend-mode:soft-light;
+}
+@keyframes archiveScanDrift{
+  from{transform:translateY(-5px)}
+  to{transform:translateY(5px)}
+}
+
+/* Keep motion restrained on small screens. */
+@media(max-width:1200px){
+  .hero-light-sweep{opacity:.65}
+}
+@media(max-width:760px){
+  .hero-light-sweep,
+  .hero-live-fx::after{display:none!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .hero-light-sweep,
+  .hero-live-fx::after{
+    animation:none!important;
+  }
+  .hero-light-sweep{display:none!important}
+}

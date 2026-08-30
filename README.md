@@ -29,3 +29,15 @@ Existing catalog, filters, random, modal, downloads, lorebooks, easter eggs and 
 - POV and lorebook indicators reduced to compact 25×25 status icons.
 - Removed COUNT threshold control from Catalog; it duplicated the MOST/LEAST sorting use case.
 - Catalog now keeps a cleaner SEARCH + SORT layout.
+
+### final3 dust fix
+- Dust is noticeably more visible.
+- Particles now drift mostly sideways and downward instead of floating upward.
+- Slightly larger particles, stronger glow, and a denser but still sparse spawn pattern.
+
+### final4 hero visibility pass
+- Warm glare is stronger and visibly breathes.
+- Added a slow diagonal light sweep over the header.
+- Terminal glitch is stronger, larger and triggers more often.
+- Added faint moving scanlines over the hero.
+- Dust changes from final3 are preserved.

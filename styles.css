@@ -2505,3 +2505,67 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 @media(max-width:760px){
   .hero-light-sweep{display:block!important;transform:scale(.72)}
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 final8 — modal record paging animation
+   ========================================================= */
+
+/* Tiny "file card" movement: enough to read as paging, not a carousel gimmick. */
+.modal-card.record-out-left{
+  animation:recordOutLeft .145s cubic-bezier(.4,0,1,1) both!important;
+}
+.modal-card.record-out-right{
+  animation:recordOutRight .145s cubic-bezier(.4,0,1,1) both!important;
+}
+.modal-card.record-in-right{
+  animation:recordInRight .23s cubic-bezier(.16,1,.3,1) both!important;
+}
+.modal-card.record-in-left{
+  animation:recordInLeft .23s cubic-bezier(.16,1,.3,1) both!important;
+}
+
+@keyframes recordOutLeft{
+  from{opacity:1;transform:translateX(0) scale(1)}
+  to{opacity:.16;transform:translateX(-18px) scale(.992)}
+}
+@keyframes recordOutRight{
+  from{opacity:1;transform:translateX(0) scale(1)}
+  to{opacity:.16;transform:translateX(18px) scale(.992)}
+}
+@keyframes recordInRight{
+  from{opacity:.12;transform:translateX(20px) scale(.992)}
+  to{opacity:1;transform:translateX(0) scale(1)}
+}
+@keyframes recordInLeft{
+  from{opacity:.12;transform:translateX(-20px) scale(.992)}
+  to{opacity:1;transform:translateX(0) scale(1)}
+}
+
+/* Image gets a tiny independent drift, which makes the swap feel less static. */
+.record-in-right .modal-cover img{animation:recordImageInRight .34s ease-out both}
+.record-in-left .modal-cover img{animation:recordImageInLeft .34s ease-out both}
+@keyframes recordImageInRight{
+  from{opacity:.45;transform:translateX(7px) scale(1.012)}
+  to{opacity:1;transform:none}
+}
+@keyframes recordImageInLeft{
+  from{opacity:.45;transform:translateX(-7px) scale(1.012)}
+  to{opacity:1;transform:none}
+}
+
+/* The arrows now imply actual previous / next records. */
+.modal-nav:active{
+  transform:translateY(-50%) scale(.94)!important;
+}
+
+@media(prefers-reduced-motion:reduce){
+  .modal-card.record-out-left,
+  .modal-card.record-out-right,
+  .modal-card.record-in-right,
+  .modal-card.record-in-left,
+  .record-in-right .modal-cover img,
+  .record-in-left .modal-cover img{
+    animation:none!important;
+  }
+}

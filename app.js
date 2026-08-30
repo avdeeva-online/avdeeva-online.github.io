@@ -353,9 +353,57 @@ $("#randomBtn").onclick=()=>{
   if(Math.random()<.12)archiveWhisper(randomWhispers[Math.floor(Math.random()*randomWhispers.length)],true);
   setTimeout(()=>{btn.classList.remove("active");btn.querySelector("span:last-child").textContent="RANDOM";randomModal()},240);
 };
-$("#prevBot").onclick=randomModal;$("#nextBot").onclick=randomModal;
-function randomModal(){let pool=applyFilters().filter(b=>!current||b.id!==current.id);if(!pool.length)pool=B.filter(b=>!current||b.id!==current.id);if(pool.length)openModal(pool[Math.floor(Math.random()*pool.length)])}
-function openModal(b){
+$("#prevBot").onclick=()=>browseModal(-1);
+$("#nextBot").onclick=()=>browseModal(1);
+
+function browseModal(direction){
+  const pool=applyFilters().length?applyFilters():B;
+  if(!pool.length) return;
+  let index=current?pool.findIndex(b=>b.id===current.id):-1;
+  if(index<0) index=0;
+  index=(index+direction+pool.length)%pool.length;
+  switchModalRecord(pool[index],direction);
+}
+
+function randomModal(){
+  let pool=applyFilters().filter(b=>!current||b.id!==current.id);
+  if(!pool.length) pool=B.filter(b=>!current||b.id!==current.id);
+  if(pool.length) switchModalRecord(pool[Math.floor(Math.random()*pool.length)], Math.random()<.5?-1:1);
+}
+
+let modalSwitching=false;
+function switchModalRecord(b,direction=1){
+  const modal=$("#modal");
+  const card=document.querySelector(".modal-card");
+  if(!b) return;
+
+  // First opening: keep the normal modal entrance animation.
+  if(modal.hidden || !current || !card){
+    openModal(b);
+    return;
+  }
+  if(modalSwitching) return;
+  modalSwitching=true;
+
+  const outClass=direction>0?"record-out-left":"record-out-right";
+  const inClass=direction>0?"record-in-right":"record-in-left";
+
+  card.classList.remove("record-out-left","record-out-right","record-in-left","record-in-right");
+  void card.offsetWidth;
+  card.classList.add(outClass);
+
+  setTimeout(()=>{
+    openModal(b,true);
+    card.classList.remove(outClass);
+    card.classList.add(inClass);
+    setTimeout(()=>{
+      card.classList.remove(inClass);
+      modalSwitching=false;
+    },230);
+  },145);
+}
+
+function openModal(b,keepOpen=false){
   current=b;
   modalTab="description";
   openIntro=0;
@@ -389,8 +437,10 @@ function openModal(b){
   $("#downloadBot").textContent="DOWNLOAD BOT CARD ↓";
   $$('.modal-tab').forEach(t=>t.classList.toggle('active',t.dataset.modalTab==='description'));
   renderModalPanel();
-  $("#modal").hidden=false;
-  document.body.style.overflow="hidden";
+  if(!keepOpen){
+    $("#modal").hidden=false;
+    document.body.style.overflow="hidden";
+  }
 }
 function closeModal(){$("#modal").hidden=true;document.body.style.overflow=""}
 function renderModalPanel(){

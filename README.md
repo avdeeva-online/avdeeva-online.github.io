@@ -60,3 +60,9 @@ Existing catalog, filters, random, modal, downloads, lorebooks, easter eggs and 
 - Solar lens flare now has a clearly visible peak and appears roughly every 16 seconds.
 - Terminal CRT event now occurs roughly every 9 seconds and remains visible for ~1.5–2 seconds.
 - Both effects remain separate overlays; header.png is unchanged.
+
+### final8 modal paging
+- Left/right modal arrows now browse the previous/next record in the current filtered catalog instead of picking a random bot.
+- Switching records has a subtle directional slide + fade.
+- Cover image gets a very small independent drift/fade on entry.
+- Random button still chooses a random record.

@@ -34,17 +34,17 @@ window.TAG_ORDER = [
 // The public catalog is now driven by D1 imports. Placeholder/demo records were removed.
 window.BOTS = [];
 
-// Modal geometry must not depend on DESCRIPTION / SCENARIO / INTRO content length.
-// Keep the shell stable and scroll only the text panel when content is long.
+// Stable modal geometry: keep the earlier compact footprint while preventing
+// DESCRIPTION / SCENARIO / INTRO from resizing the outer card.
 (()=>{
   const style=document.createElement('style');
   style.id='archiveModalStability';
   style.textContent=`
     @media (min-width: 761px){
       .modal-card{
-        height:min(640px,calc(100vh - 72px)) !important;
-        min-height:min(640px,calc(100vh - 72px)) !important;
-        max-height:min(640px,calc(100vh - 72px)) !important;
+        height:min(500px,calc(100vh - 72px)) !important;
+        min-height:min(500px,calc(100vh - 72px)) !important;
+        max-height:min(500px,calc(100vh - 72px)) !important;
         overflow:hidden !important;
       }
       .modal-cover,

@@ -1,5 +1,5 @@
 name = "archive-exe"
-main = "src/entry.js"
+main = "src/main.js"
 compatibility_date = "2026-08-30"
 keep_vars = true
 

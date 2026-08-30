@@ -42,8 +42,15 @@
     try{return await promise}catch(e){cache.delete(uuid);throw e}
   }
 
+  function preservePublicDescription(bot){
+    if(!bot||bot.publicDescription)return;
+    const source=String(bot.full||bot.short||'').trim();
+    if(source)bot.publicDescription=source;
+  }
+
   function apply(bot,data){
     if(!bot||!data)return;
+    preservePublicDescription(bot);
     bot.full=data.description||'';
     bot.scenario=data.scenario||'';
     bot.intros=data.intros||[];
@@ -64,6 +71,7 @@
     const paint=()=>{
       if(!modalStillShows(bot))return;
       if(typeof window.renderModalPanel==='function')window.renderModalPanel();
+      window.dispatchEvent(new CustomEvent('archive:modal-definition-ready',{detail:{bot}}));
     };
     paint();
     requestAnimationFrame(paint);
@@ -74,6 +82,7 @@
 
   window.openModal=function(bot,...args){
     if(!bot?.janitorUuid)return original.call(this,bot,...args);
+    preservePublicDescription(bot);
 
     if(!bot._definitionReady){
       bot._definitionLoading=true;
@@ -84,6 +93,7 @@
     }
 
     const out=original.call(this,bot,...args);
+    window.dispatchEvent(new CustomEvent('archive:modal-public-ready',{detail:{bot}}));
     if(bot._definitionReady)return out;
 
     loadDefinition(bot).then(data=>{

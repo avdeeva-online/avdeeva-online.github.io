@@ -1,6 +1,68 @@
 (()=>{
-  // Modal content must use the full database fields. `short` is only for catalog cards.
-  // Scenario and intros are stored separately and are not character-limited here.
+  const style=document.createElement('style');
+  style.id='archiveModalDossierStyles';
+  style.textContent=`
+    .modal-dossier{padding:7px 2px 10px;color:#aab0a6;font:12px/1.58 Arial,sans-serif}
+    .dossier-section{padding:0 0 11px;margin:0 0 10px;border-bottom:1px solid rgba(72,81,70,.38)}
+    .dossier-section:last-child{border-bottom:0;margin-bottom:0}
+    .dossier-title{display:flex;align-items:center;gap:7px;margin:0 0 7px;color:#c9cfba;font:700 9px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+    .dossier-title:before{content:'›';color:#899673;font-size:12px}
+    .dossier-list{display:grid;gap:5px;margin:0;padding:0;list-style:none}
+    .dossier-list li{position:relative;padding-left:12px;color:#a6aca2}
+    .dossier-list li:before{content:'·';position:absolute;left:1px;top:0;color:#78836c;font-weight:700}
+    .dossier-list strong{color:#c5cab9;font-weight:600}
+    .dossier-paragraph{margin:0 0 7px;color:#a8aea4;white-space:pre-wrap}
+    .dossier-paragraph:last-child{margin-bottom:0}
+    .modal-intros .intro-display{white-space:pre-wrap}
+  `;
+  document.head.appendChild(style);
+
+  function inlineFormat(text){
+    const safe=esc(String(text||''));
+    const i=safe.indexOf(':');
+    if(i>0&&i<42){
+      const head=safe.slice(0,i).trim();
+      const rest=safe.slice(i+1).trim();
+      if(head&&rest)return `<strong>${head}:</strong> ${rest}`;
+    }
+    return safe;
+  }
+
+  function structuredText(raw){
+    const text=String(raw||'').replace(/\r/g,'').trim();
+    if(!text)return '';
+
+    // Janitor definitions often use >SECTION headers and - list items.
+    // Preserve every character of actual content; this only changes presentation.
+    const normalized=text
+      .replace(/\s+(?=>[A-Z][A-Z /&-]{2,}(?:\s|$))/g,'\n')
+      .replace(/\s+(?=>[A-Z][A-Za-z /&-]{2,}:?\s*-)/g,'\n');
+    const lines=normalized.split('\n').map(x=>x.trim()).filter(Boolean);
+    const sections=[];
+    let current={title:'',items:[],paras:[]};
+    const push=()=>{if(current.title||current.items.length||current.paras.length)sections.push(current);current={title:'',items:[],paras:[]}};
+
+    for(const line of lines){
+      if(/^>\s*/.test(line)){
+        push();
+        current.title=line.replace(/^>\s*/,'').trim();
+      }else if(/^[-•]\s+/.test(line)){
+        current.items.push(line.replace(/^[-•]\s+/,''));
+      }else{
+        // Some cards flatten multiple bullets into a single line. Split only on a clear " - Label:" boundary.
+        const parts=line.split(/\s+-\s+(?=[A-Z][A-Za-z /()'-]{1,35}:)/g);
+        if(parts.length>1){
+          if(parts[0].trim())current.paras.push(parts[0].trim());
+          current.items.push(...parts.slice(1).map(x=>x.trim()).filter(Boolean));
+        }else current.paras.push(line);
+      }
+    }
+    push();
+
+    if(!sections.length)return `<div class="modal-dossier"><p class="dossier-paragraph">${esc(text)}</p></div>`;
+    return `<div class="modal-dossier">${sections.map(s=>`<section class="dossier-section">${s.title?`<h3 class="dossier-title">${esc(s.title)}</h3>`:''}${s.paras.map(p=>`<p class="dossier-paragraph">${esc(p)}</p>`).join('')}${s.items.length?`<ul class="dossier-list">${s.items.map(i=>`<li>${inlineFormat(i)}</li>`).join('')}</ul>`:''}</section>`).join('')}</div>`;
+  }
+
   renderModalPanel=function(){
     const panel=document.querySelector('#modalPanel');
     if(!panel)return;
@@ -8,14 +70,14 @@
 
     if(modalTab==='description'){
       const text=String(current.full||current.short||'').trim();
-      panel.innerHTML=`<p class="modal-copy">${esc(text||'No description available.')}</p>`;
+      panel.innerHTML=text?structuredText(text):'<div class="modal-dossier"><p class="dossier-paragraph">No description available.</p></div>';
       panel.scrollTop=0;
       return;
     }
 
     if(modalTab==='scenario'){
       const text=String(current.scenario||'').trim();
-      panel.innerHTML=`<p class="modal-copy">${esc(text||'No scenario available.')}</p>`;
+      panel.innerHTML=text?structuredText(text):'<div class="modal-dossier"><p class="dossier-paragraph">No scenario available.</p></div>';
       panel.scrollTop=0;
       return;
     }

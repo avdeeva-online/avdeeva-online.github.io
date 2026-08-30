@@ -1261,3 +1261,77 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   .hero{height:240px!important;min-height:240px!important;max-height:240px!important}
   .hero-art{background-size:cover!important;background-position:42% center!important}
 }
+
+
+/* =========================================================
+   v0.9.33 — FINAL HEADER TEST
+   Exact prepared 1920×300 image. No crop / zoom / filters.
+   ========================================================= */
+.hero{
+  height:300px!important;
+  min-height:300px!important;
+  max-height:300px!important;
+  overflow:hidden!important;
+  background:#0b0e0b!important;
+}
+.hero-art{
+  position:absolute!important;
+  inset:0!important;
+  background-image:url('assets/header.png')!important;
+  background-size:100% 300px!important;
+  background-position:center top!important;
+  background-repeat:no-repeat!important;
+  background-color:#0b0e0b!important;
+  filter:none!important;
+  transform:none!important;
+  animation:none!important;
+}
+.hero-dark{
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      transparent 62%,
+      rgba(11,14,11,.04) 70%,
+      rgba(11,14,11,.22) 82%,
+      rgba(11,14,11,.48) 100%)!important;
+}
+.hero-fade{
+  background:transparent!important;
+}
+.hero-copy{
+  top:48%!important;
+  transform:translateY(-50%)!important;
+  z-index:5!important;
+}
+
+/* Disable accumulated hero-only image hacks. The fade is already baked
+   into header.png; site UI/glitches elsewhere remain untouched. */
+.hero-dust,
+.hero-light-haze,
+.hero-terminal-cover,
+.hero-terminal-clone,
+.hero-deer-motion,
+.hero-deer-live,
+.hero-dust-particles,
+.hero-dust-field,
+.hero-terminal-signal,
+.hero-terminal-wake{
+  display:none!important;
+}
+
+@media(max-width:1200px){
+  .hero-art{
+    background-size:auto 300px!important;
+    background-position:center top!important;
+  }
+}
+@media(max-width:760px){
+  .hero{
+    height:240px!important;
+    min-height:240px!important;
+    max-height:240px!important;
+  }
+  .hero-art{
+    background-size:auto 240px!important;
+  }
+}

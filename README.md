@@ -1,7 +1,7 @@
-# ARCHIVE.EXE v0.9.31 — Floor Visible
+# ARCHIVE.EXE v0.9.33 — Header Test
 
-- Keeps the exact 1920×270 desktop hero size.
-- Moves the source crop downward instead of changing the banner size.
-- Deer is visible with legs and the real cracked/wet floor is now inside the image.
-- Bottom 65px gently fade into site background #090c09.
-- No browser crop, no cover, no blur, no brightness filter.
+- Uses the newly prepared 1920×300 header with baked lower fade.
+- Desktop displays it without cover, crop, zoom, blur, brightness or recoloring.
+- Only a light right-side readability gradient remains under the HTML ARCHIVE.EXE title.
+- Old hero-only motion/duplicate layers are disabled for this test.
+- Catalog, filters, cards, modal, glitches and easter eggs remain unchanged.

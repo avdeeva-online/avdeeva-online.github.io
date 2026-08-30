@@ -30,6 +30,7 @@
   .card-data-body .dossier-section,.card-data-body .dossier-section.is-collapsed{padding:0 0 6px!important;margin:0 0 6px!important;border-bottom:1px solid rgba(72,81,70,.28)!important}.card-data-body .dossier-body,.card-data-body .dossier-section.is-collapsed .dossier-body{display:block!important}.card-data-body .dossier-title{pointer-events:none!important;cursor:default!important;margin:0 0 4px!important;min-height:15px!important;font-size:7.5px!important;line-height:15px!important}.card-data-body .dossier-arrow{display:none!important}.card-data-body .modal-dossier{padding:3px 0 5px!important;font-size:9.5px!important;line-height:1.42!important}.card-data-body .dossier-paragraph{font-size:9.5px!important;line-height:1.42!important;margin-bottom:5px!important}.card-data-body .intro-choice{padding:4px 6px!important;font-size:7.5px!important}.card-data-body .intro-display{font-size:9.5px!important;line-height:1.42!important;padding:5px 0!important}
 
   .modal-tags{min-height:0!important;height:auto!important;flex:0 0 auto!important;margin-top:5px!important;margin-bottom:0!important}.modal-hashtags{min-height:0!important;height:auto!important;margin-bottom:0!important;padding-bottom:0!important}
+  @media(min-width:761px){.modal-action-groups{margin-top:14px!important;padding-top:6px!important}}
   @media(max-width:760px){.card-data-toggle-hint{display:none!important}.modal-public-body{height:150px!important;min-height:150px!important;max-height:150px!important}.card-data-body{height:150px!important;min-height:150px!important;max-height:150px!important}.card-data-body .modal-text-wrap{height:119px!important;min-height:119px!important;max-height:119px!important}}
   `;
   document.head.appendChild(s);
@@ -46,7 +47,6 @@
     btn.setAttribute('aria-label','Switch between About this bot and character card data');
     if(btn.dataset.switchReady!=='1'){
       btn.dataset.switchReady='1';
-      /* app.js already toggles .open; this listener only synchronizes the fixed viewport after that click. */
       btn.addEventListener('click',()=>requestAnimationFrame(sync));
     }
     function sync(){const open=shell.classList.contains('open');content.classList.toggle('card-data-mode',open);btn.setAttribute('aria-expanded',open?'true':'false');if(open)normalizeInternalSections()}

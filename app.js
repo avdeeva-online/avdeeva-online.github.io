@@ -12,7 +12,7 @@ const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const state = { q:"", authors:new Set(), universes:new Set(), tags:new Set(), hashtags:new Set(), povs:new Set(), lorebook:false, sort:"newest" };
-let activeFilter = null, drawerTab = "tag", current = null, modalTab = "description", tagsExpanded = false, openIntro = 0;
+let activeFilter = null, drawerTab = "tag", drawerSort = "az", drawerMinCount = 0, current = null, modalTab = "description", tagsExpanded = false, openIntro = 0;
 
 const bookSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3.2-.9 5.7-.6 8.5 1.1v12c-2.8-1.7-5.3-2-8.5-1.1zM20.5 5.5c-3.2-.9-5.7-.6-8.5 1.1v12c2.8-1.7 5.3-2 8.5-1.1z"/></svg>`;
 const globeSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.2 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.7 8.6 12s1.2 6.1 3.4 8.5"/></svg>`;
@@ -85,6 +85,9 @@ function cardHtml(b,i){
       <div class="card-author">BY <button data-author="${esc(b.author)}">@${esc(b.author)}</button></div>
       <div class="card-meta">
         <button class="meta-token" data-quick-universe="${esc(b.universe)}">${globeSvg}<span>${esc(b.universe)}</span></button>
+        <span class="card-pov-icon pov-${esc((b.pov||'AnyPOV').toLowerCase())}" title="${esc(b.pov||'AnyPOV')}" aria-label="POV: ${esc(b.pov||'AnyPOV')}">
+          <span aria-hidden="true">${b.pov==='FemPOV'?'♀':b.pov==='MalePOV'?'♂':'◎'}</span>
+        </span>
         ${b.lorebook?`<span class="card-lore-icon" title="Lorebook available" aria-label="Lorebook available">${bookSvg}</span>`:''}
       </div>
       <p class="card-short">${esc(b.short)}</p>
@@ -222,6 +225,16 @@ function closeDrawer(){$("#catalogDrawer").classList.remove("open");$("#catalogD
 $("#catalogOpen").onclick=openDrawer;$("#catalogClose").onclick=closeDrawer;$("#drawerShade").onclick=closeDrawer;
 $$('.drawer-tab').forEach(b=>b.onclick=()=>{drawerTab=b.dataset.drawerTab;$$('.drawer-tab').forEach(x=>x.classList.toggle('active',x===b));$("#drawerSearch").value="";renderDrawer()});
 $("#drawerSearch").oninput=renderDrawer;
+$("#drawerSortCycle").onclick=()=>{
+  const order=["az","za","most","least"];
+  drawerSort=order[(order.indexOf(drawerSort)+1)%order.length];
+  renderDrawer();
+};
+$("#drawerCountCycle").onclick=()=>{
+  const levels=[0,2,5,10];
+  drawerMinCount=levels[(levels.indexOf(drawerMinCount)+1)%levels.length];
+  renderDrawer();
+};
 function drawerSelectionCount(){
   if(drawerTab==="tag") return state.tags.size;
   if(drawerTab==="author") return state.authors.size;
@@ -234,12 +247,26 @@ function drawerActiveCount(vals){
 function renderDrawer(){
   const q=($("#drawerSearch").value||"").trim().toLowerCase();
   const allVals=(drawerTab==="tag"?allTags():drawerTab==="author"?uniq("author"):uniq("universe"));
-  const vals=allVals.filter(v=>v.toLowerCase().includes(q));
+  let vals=allVals.filter(v=>v.toLowerCase().includes(q) && count(drawerTab,v)>=drawerMinCount);
+
+  vals.sort((a,b)=>{
+    if(drawerSort==="za") return b.localeCompare(a,undefined,{sensitivity:"base"});
+    if(drawerSort==="most") return count(drawerTab,b)-count(drawerTab,a) || a.localeCompare(b,undefined,{sensitivity:"base"});
+    if(drawerSort==="least") return count(drawerTab,a)-count(drawerTab,b) || a.localeCompare(b,undefined,{sensitivity:"base"});
+    return a.localeCompare(b,undefined,{sensitivity:"base"});
+  });
+
   const list=$("#drawerList");
   if(!list) return;
   list.dataset.layout=drawerTab;
   $("#drawerTotal").textContent=`${String(B.length).padStart(3,"0")} RECORDS`;
-  $("#drawerFootStatus").textContent=q?`${String(vals.length).padStart(2,"0")} MATCHES`:"STABLE";
+  const filtered = q || drawerMinCount>0;
+  $("#drawerFootStatus").textContent=filtered?`${String(vals.length).padStart(2,"0")} MATCHES`:"STABLE";
+
+  const sortBtn=$("#drawerSortCycle");
+  const countBtn=$("#drawerCountCycle");
+  if(sortBtn) sortBtn.querySelector("b").textContent=({az:"A→Z",za:"Z→A",most:"MOST",least:"LEAST"})[drawerSort];
+  if(countBtn) countBtn.querySelector("b").textContent=drawerMinCount?`${drawerMinCount}+`:"ALL";
 
   if(drawerTab==="tag"){
     list.innerHTML=vals.map(v=>`<button class="drawer-item drawer-tag-item ${state.tags.has(v)?'selected':''}" data-drawer-value="${esc(v)}"><span class="drawer-item-name">${esc(tagLabel(v))}</span><small>${String(count("tag",v)).padStart(2,"0")}</small></button>`).join("");
@@ -702,4 +729,66 @@ wireHashtagGhosts();
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paint, {once:true});
   else paint();
   window.addEventListener('load', ()=>{ syncBots(); render(); }, {once:true});
+})();
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.0 — live hero atmosphere
+   Non-destructive overlays: the source header image is never modified.
+   ========================================================= */
+(function initHeroAtmosphere(){
+  const hero = document.querySelector('.hero');
+  const dust = document.getElementById('heroDust');
+  if(!hero || !dust) return;
+
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if(reduced) return;
+
+  let activeDust = 0;
+  const MAX_DUST = 22;
+
+  function spawnDust(){
+    if(document.hidden || activeDust >= MAX_DUST) return;
+
+    const p = document.createElement('i');
+    p.className = 'hero-dust-particle';
+
+    // More particles around the illuminated center, but a few can drift anywhere.
+    const clustered = Math.random() < .72;
+    const x = clustered ? (24 + Math.random()*58) : (4 + Math.random()*92);
+    const y = 18 + Math.random()*67;
+    const size = .8 + Math.random()*2.2;
+    const drift = -28 + Math.random()*56;
+    const lift = 14 + Math.random()*34;
+    const dur = 5.5 + Math.random()*7.5;
+    const delay = Math.random()*1.8;
+    const peak = .13 + Math.random()*.34;
+
+    p.style.setProperty('--x', x + '%');
+    p.style.setProperty('--y', y + '%');
+    p.style.setProperty('--s', size + 'px');
+    p.style.setProperty('--dx', drift + 'px');
+    p.style.setProperty('--dy', (-lift) + 'px');
+    p.style.setProperty('--dur', dur + 's');
+    p.style.setProperty('--delay', delay + 's');
+    p.style.setProperty('--peak', peak.toFixed(2));
+
+    activeDust++;
+    p.addEventListener('animationend', ()=>{
+      p.remove();
+      activeDust = Math.max(0, activeDust - 1);
+    }, {once:true});
+    dust.appendChild(p);
+  }
+
+  // Quiet, irregular flow rather than "snow".
+  const timer = setInterval(()=>{
+    if(Math.random() < .78) spawnDust();
+    if(Math.random() < .16) setTimeout(spawnDust, 180 + Math.random()*500);
+  }, 720);
+
+  // Seed just a few particles so the header doesn't start empty.
+  for(let i=0;i<7;i++) setTimeout(spawnDust, i*210);
+
+  window.addEventListener('pagehide', ()=>clearInterval(timer), {once:true});
 })();

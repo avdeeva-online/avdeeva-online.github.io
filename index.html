@@ -14,6 +14,18 @@
   <div class="hero-art" aria-hidden="true"></div>
   <div class="hero-dark" aria-hidden="true"></div>
   <div class="hero-fade" aria-hidden="true"></div>
+
+  <!-- v1.0 live atmosphere: separate overlay layers; header.png stays untouched -->
+  <div class="hero-live-fx" aria-hidden="true">
+    <div class="hero-sun-glare"></div>
+    <div class="hero-terminal-glitch">
+      <i class="terminal-glitch-line terminal-glitch-line-a"></i>
+      <i class="terminal-glitch-line terminal-glitch-line-b"></i>
+      <i class="terminal-glitch-line terminal-glitch-line-c"></i>
+    </div>
+    <div id="heroDust" class="hero-dust-live"></div>
+  </div>
+
   <div class="hero-copy">
     <div class="hero-kicker">CHARACTER DATABASE / NODE_00</div>
     <div class="hero-title">ARCHIVE.EXE<span>_</span></div>
@@ -103,7 +115,11 @@
     <button class="drawer-tab" data-drawer-tab="author"><em>02</em><span>AUTHORS</span></button>
     <button class="drawer-tab" data-drawer-tab="universe"><em>03</em><span>UNIVERSES</span></button>
   </div>
-  <label class="drawer-search"><span>⌕</span><input id="drawerSearch" placeholder="SEARCH INDEX..."></label>
+  <div class="drawer-query-row">
+    <label class="drawer-search"><span>⌕</span><input id="drawerSearch" placeholder="SEARCH INDEX..."></label>
+    <button id="drawerSortCycle" class="drawer-tool-btn" type="button" title="Change catalog sort"><small>SORT</small><b>A→Z</b></button>
+    <button id="drawerCountCycle" class="drawer-tool-btn" type="button" title="Filter by number of bots"><small>COUNT</small><b>ALL</b></button>
+  </div>
   <div id="drawerList" class="drawer-list" data-layout="tag"></div>
   <div class="drawer-foot"><span>NODE_00 / INDEX CACHE</span><span id="drawerFootStatus">STABLE</span></div>
 </aside>

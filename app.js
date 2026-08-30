@@ -704,132 +704,76 @@ wireHashtagGhosts();
   window.addEventListener('load', ()=>{ syncBots(); render(); }, {once:true});
 })();
 
-/* v0.9.22 — subtle hero atmosphere signal.
-   A rare image-slice glitch ties the photographic banner to the archive UI
-   without turning the hero into a constantly animated background. */
-(function wireHeroImageSignal(){
-  const hero=document.querySelector('.hero');
-  if(!hero || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-  let timer;
-  function schedule(){
-    const wait=30000 + Math.random()*22000;
-    timer=setTimeout(()=>{
-      if(!document.hidden){
-        hero.classList.add('hero-image-glitch');
-        setTimeout(()=>hero.classList.remove('hero-image-glitch'),320);
-      }
-      schedule();
-    },wait);
-  }
-  schedule();
-  document.addEventListener('visibilitychange',()=>{
-    if(document.hidden){ clearTimeout(timer); }
-    else { clearTimeout(timer); schedule(); }
-  });
-})();
-
 
 /* =========================================================
-   v0.9.25 — continuous hero atmosphere (no synchronized loop)
+   v0.9.26 — HERO ATMOSPHERE
+   No image zoom / no image loop. Only independent overlays.
    ========================================================= */
-(function initLivingHeroV0925(){
-  const hero = document.querySelector(".hero");
-  const bg = document.querySelector(".hero-bg");
-  const deer = document.querySelector(".hero-deer-live");
-  const dust = document.querySelector(".hero-dust-particles");
-  const terminal = document.querySelector(".hero-terminal-signal");
-  if(!hero) return;
+(function sourceFaithfulHeroV0926(){
+  const dust = document.querySelector(".hero-dust-field");
+  const wake = document.querySelector(".hero-terminal-wake");
+  const reduce = window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduce) return;
 
-  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if(reduced) return;
-
-  /* Background motion is driven by time-based sine waves with different
-     periods; it never returns to a single obvious keyframe boundary. */
-  const t0 = performance.now();
-  function ambientFrame(now){
-    const t = (now - t0) / 1000;
-
-    if(bg){
-      const x = Math.sin(t/23.0)*1.6 + Math.sin(t/41.0)*0.7;
-      const y = Math.sin(t/31.0)*0.7 + Math.cos(t/57.0)*0.4;
-      const s = 1.012 + (Math.sin(t/47.0)+1)*0.0017;
-      bg.style.transform = `translate3d(${x}px,${y}px,0) scale(${s})`;
-    }
-
-    if(deer){
-      /* Around 3–5px on a desktop hero: noticeable if watched, still calm. */
-      const dx = Math.sin(t/3.9)*2.2 + Math.sin(t/8.7)*1.1;
-      const dy = Math.cos(t/5.4)*0.9;
-      const rot = Math.sin(t/6.8)*0.34;
-      const sy = 1 + Math.sin(t/4.6)*0.0035;
-      deer.style.transform = `translate3d(${dx}px,${dy}px,0) rotate(${rot}deg) scaleY(${sy})`;
-      deer.style.filter = `brightness(${0.98 + Math.sin(t/7.7)*0.018})`;
-    }
-
-    requestAnimationFrame(ambientFrame);
-  }
-  requestAnimationFrame(ambientFrame);
-
-  /* Independent falling particles. No shared animation cycle. */
   if(dust){
-    const count = Math.max(22, Math.min(46, Math.round(innerWidth/48)));
-    const particles = [];
-    for(let n=0;n<count;n++){
-      const p = document.createElement("i");
-      dust.appendChild(p);
-      const obj = {el:p};
-      particles.push(obj);
-      resetParticle(obj, true);
+    const count = Math.max(28, Math.min(54, Math.round(window.innerWidth / 38)));
+    const parts = [];
+    for(let i=0;i<count;i++){
+      const el = document.createElement("i");
+      dust.appendChild(el);
+      const p = {el};
+      parts.push(p);
+      reset(p, true);
     }
 
-    function resetParticle(p, first){
-      p.x = Math.random()*100;
-      p.y = first ? Math.random()*105 : -4-Math.random()*15;
-      p.size = 0.7 + Math.random()*1.8;
-      p.speed = 3.3 + Math.random()*7.2;     // % of hero height per sec
-      p.drift = -0.75 + Math.random()*1.5;
+    function reset(p, initial){
+      p.x = 5 + Math.random()*72;
+      p.y = initial ? Math.random()*105 : -3-Math.random()*15;
+      p.speed = 2.8 + Math.random()*6.2;
+      p.drift = -.18 + Math.random()*.36;
       p.phase = Math.random()*Math.PI*2;
-      p.alpha = 0.18 + Math.random()*0.55;
+      p.alpha = .20 + Math.random()*.52;
+      p.size = .7 + Math.random()*1.45;
       p.el.style.width = `${p.size}px`;
       p.el.style.height = `${p.size}px`;
       p.el.style.opacity = p.alpha;
     }
 
     let last = performance.now();
-    function dustFrame(now){
+    function frame(now){
       const dt = Math.min(.04,(now-last)/1000);
       last = now;
-      for(const p of particles){
-        p.phase += dt*(.45+0.8/p.size);
+      for(const p of parts){
+        p.phase += dt*(.5 + Math.random()*.02);
         p.y += p.speed*dt;
-        p.x += (p.drift + Math.sin(p.phase)*.18)*dt;
-        if(p.y>108 || p.x<-5 || p.x>105) resetParticle(p,false);
-        const sway = Math.sin(p.phase)*3.4;
-        p.el.style.transform = `translate3d(calc(${p.x}vw + ${sway}px),${p.y}%,0)`;
+        p.x += (p.drift + Math.sin(p.phase)*.10)*dt;
+        if(p.y > 108) reset(p,false);
+        const sway = Math.sin(p.phase)*2.1;
+        p.el.style.transform =
+          `translate3d(calc(${p.x}vw + ${sway}px),${p.y}%,0)`;
       }
-      requestAnimationFrame(dustFrame);
+      requestAnimationFrame(frame);
     }
-    requestAnimationFrame(dustFrame);
+    requestAnimationFrame(frame);
   }
 
-  /* Random terminal wake-ups rather than a repeating keyframe loop. */
-  if(terminal){
-    function pulseTerminal(){
-      const delay = 5500 + Math.random()*14000;
+  if(wake){
+    function pulse(){
       setTimeout(()=>{
-        terminal.animate([
-          {opacity:0, transform:"scale(.985)"},
-          {opacity:.36, transform:"scale(1.01)", offset:.22},
-          {opacity:.13, transform:"scale(.996)", offset:.48},
-          {opacity:.29, transform:"scale(1.006)", offset:.61},
-          {opacity:0, transform:"scale(1)"}
+        wake.animate([
+          {opacity:0},
+          {opacity:.26,offset:.18},
+          {opacity:.10,offset:.38},
+          {opacity:.22,offset:.57},
+          {opacity:0}
         ],{
-          duration:950 + Math.random()*750,
+          duration:900 + Math.random()*650,
           easing:"steps(5,end)"
         });
-        pulseTerminal();
-      },delay);
+        pulse();
+      }, 6500 + Math.random()*13500);
     }
-    pulseTerminal();
+    pulse();
   }
 })();

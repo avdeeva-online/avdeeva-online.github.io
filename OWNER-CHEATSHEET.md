@@ -27,23 +27,9 @@ Hidden motif: the archive occasionally behaves as if an unindexed `RECORD_000` e
 - Existing missing-tab and impossible-author anomalies remain.
 - A small additional Catalog anomaly may briefly report one extra index entry in the compact stats line.
 
-## v0.9.22 hero atmosphere
-- Hero art now has a very slow 30s alternate drift/zoom.
-- Dust layer moves continuously but at ~10% opacity and is concentrated toward the scenic left/middle.
-- A faint scan haze crosses the hero occasionally on a 17s cycle.
-- The photographic hero itself gets a rare short horizontal slice glitch every ~30–52 seconds.
-- Existing ARCHIVE.EXE logo glitch behavior is unchanged and remains intentionally more noticeable than the image glitch.
 
-
-## v0.9.24 HERO NOTES
-- Dust settles downward over ~19 seconds.
-- Terminal image fragment is relocated left using a feathered copy of the same hero artwork.
-- Original terminal area is softly shadowed so it does not fight with ARCHIVE.EXE.
-- Deer overlay makes a 1–2 px slow shift every ~8.6 sec (intentionally subtle).
-
-
-## v0.9.25 HERO NO-LOOP
-- Background uses continuous sine motion; there is no CSS animation boundary.
-- Dust particles fall individually and respawn independently.
-- Deer overlay moves continuously by roughly 3–5 px on desktop.
-- Terminal pulse delay is randomized between roughly 5.5 and 19.5 sec.
+## v0.9.26 HERO
+- `assets/header.png` is the original generation, only vertically cropped.
+- There is deliberately NO CSS brightness/saturation/blur on the art.
+- Dust exists only as overlay particles; the base picture never moves.
+- Terminal wake triggers randomly every ~6.5–20 sec.

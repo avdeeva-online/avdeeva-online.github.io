@@ -203,11 +203,16 @@ function cardHtml(b,i){
 
 function renderQuickTags(){
   const el = $("#tagQuick");
+  const compactMobile = window.matchMedia && window.matchMedia("(max-width:760px)").matches;
+  const everyTag = allTags();
+  const mobileTags = [...new Set([...state.tags, ...everyTag])].slice(0,6);
+  const visibleTags = compactMobile ? mobileTags : everyTag;
   el.classList.toggle("quick-expanded", tagsExpanded);
   el.classList.toggle("quick-collapsed", !tagsExpanded);
-  el.innerHTML = allTags().map(t=>`<button class="${state.tags.has(t)?'active':''}" data-quick-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("");
+  el.classList.toggle("quick-mobile-shortlist", compactMobile);
+  el.innerHTML = visibleTags.map(t=>`<button class="${state.tags.has(t)?'active':''}" data-quick-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("");
   $("#clearQuickTags").hidden = state.tags.size === 0;
-  $("#toggleAllTags").textContent = tagsExpanded ? "COLLAPSE −" : "ALL TAGS +";
+  $("#toggleAllTags").textContent = compactMobile ? "ALL TAGS +" : (tagsExpanded ? "COLLAPSE −" : "ALL TAGS +");
 }
 
 function renderActiveFilters(){
@@ -392,7 +397,19 @@ $("#drawerList").onclick=e=>{
 };
 
 // Tag rail scroll + expansion
-$("#toggleAllTags").onclick=()=>{tagsExpanded=!tagsExpanded;renderQuickTags()};
+$("#toggleAllTags").onclick=()=>{
+  const compactMobile = window.matchMedia && window.matchMedia("(max-width:760px)").matches;
+  if(compactMobile){
+    drawerTab="tag";
+    $$('.drawer-tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.drawerTab==='tag'));
+    $("#drawerSearch").value="";
+    renderDrawer();
+    openDrawer();
+    return;
+  }
+  tagsExpanded=!tagsExpanded;
+  renderQuickTags();
+};
 $("#clearQuickTags").onclick=()=>{state.tags.clear();render()};
 const tagRail=$("#tagQuick");
 tagRail.addEventListener("wheel",e=>{if(tagsExpanded)return;if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){e.preventDefault();tagRail.scrollLeft+=e.deltaY}}, {passive:false});
@@ -1266,4 +1283,3 @@ wireHashtagGhosts();
 
 
 // Main-page hover glitches intentionally disabled in final16.
-

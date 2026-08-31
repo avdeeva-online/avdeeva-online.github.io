@@ -4787,3 +4787,361 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   .card-title{font-size:13px!important}
   .card-tags button,.card-tags span{font-size:9px!important;padding-inline:6px!important}
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.1.1 — COMPACT MOBILE DENSITY
+   Smaller controls and a six-tag shortlist instead of a long rail.
+   ========================================================= */
+@media (max-width:760px){
+  .hero{
+    height:176px!important;
+    min-height:176px!important;
+    max-height:176px!important;
+  }
+  .hero-art{
+    background-size:auto 176px!important;
+    background-position:38% top!important;
+  }
+  .hero-copy{
+    bottom:13px!important;
+  }
+  .hero-kicker{
+    margin-bottom:7px!important;
+    font-size:6px!important;
+  }
+  .hero-title{
+    padding-bottom:7px!important;
+    font-size:clamp(25px,8.2vw,31px)!important;
+  }
+  .hero-line{
+    margin-top:7px!important;
+    font-size:6px!important;
+  }
+
+  main{
+    padding-inline:8px!important;
+  }
+  .controls-block{
+    margin-top:-10px!important;
+    padding:7px!important;
+    border-radius:7px!important;
+  }
+  .toolbar-row{
+    gap:5px!important;
+  }
+  .toolbar-row>.control{
+    height:36px!important;
+    min-height:36px!important;
+    padding-inline:5px!important;
+    font-size:7px!important;
+  }
+  .searchbar{
+    height:38px!important;
+    padding-inline:10px!important;
+  }
+  .searchbar input{
+    font-size:14px!important;
+  }
+  .searchbar input::placeholder{
+    font-size:11px!important;
+  }
+  .primary-group,
+  .secondary-group{
+    gap:5px!important;
+  }
+  .primary-group .control,
+  .secondary-group .control{
+    height:34px!important;
+    min-height:34px!important;
+    padding-inline:4px!important;
+    font-size:7px!important;
+  }
+  #povCycle{
+    min-height:34px!important;
+  }
+  .pov-cycle-label{
+    font-size:7px!important;
+  }
+  .toolbar-meta{
+    min-height:17px!important;
+    padding-top:0!important;
+  }
+  .toolbar-meta .page-size-btn,
+  .toolbar-meta .total-count{
+    min-height:17px!important;
+    font-size:6px!important;
+  }
+
+  .tag-zone{
+    margin-top:5px!important;
+    padding-top:6px!important;
+  }
+  .tag-strip-head{
+    margin-bottom:5px!important;
+  }
+  .tag-label{
+    font-size:8px!important;
+  }
+  .tag-actions button{
+    min-height:25px!important;
+    padding:3px 4px!important;
+    font-size:6.5px!important;
+  }
+  .tags-result-status{
+    font-size:5.8px!important;
+  }
+  .quick-list.quick-mobile-shortlist{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:5px!important;
+    width:100%;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+    scroll-snap-type:none!important;
+  }
+  .quick-list.quick-mobile-shortlist button{
+    width:100%;
+    min-width:0;
+    min-height:29px!important;
+    padding:5px 5px!important;
+    overflow:hidden;
+    font-size:10px!important;
+    line-height:1.1!important;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .grid{
+    gap:19px 8px!important;
+  }
+  .card-media{
+    aspect-ratio:3/3.72!important;
+  }
+  .card-body{
+    padding-top:7px!important;
+  }
+  .card-title{
+    min-height:2.35em!important;
+    font-size:clamp(12px,3.5vw,14px)!important;
+  }
+  .card-author{
+    margin-top:5px!important;
+    font-size:7px!important;
+  }
+  .card-meta{
+    gap:4px!important;
+    margin-top:6px!important;
+  }
+  .card-system-line .meta-token{
+    height:26px!important;
+    padding-inline:5px!important;
+    font-size:6.5px!important;
+  }
+  .card-pov-icon,
+  .card-lore-icon{
+    width:26px!important;
+    height:26px!important;
+    flex-basis:26px!important;
+  }
+  .card-tags{
+    gap:4px!important;
+    margin-top:6px!important;
+  }
+  .card-tags button,
+  .card-tags span{
+    min-height:24px!important;
+    padding:5px 6px!important;
+    font-size:8.5px!important;
+  }
+  .card-hashtags{
+    margin-top:5px!important;
+  }
+  .card-hashtags button,
+  .card-hashtags span{
+    font-size:8.5px!important;
+  }
+
+  /* Compact bottom trays: search remains useful, rows no longer fill the screen. */
+  .popover,
+  .more-menu{
+    left:12px!important;
+    right:12px!important;
+    bottom:max(8px,env(safe-area-inset-bottom,0px))!important;
+    max-height:min(57dvh,430px)!important;
+    padding:8px!important;
+  }
+  .popover-search-wrap{
+    height:36px!important;
+  }
+  .popover-search-wrap input{
+    font-size:14px!important;
+  }
+  .popover-list{
+    max-height:calc(57dvh - 88px)!important;
+    padding-block:4px!important;
+  }
+  .popover-list button{
+    min-height:34px!important;
+    padding:6px 8px!important;
+    font-size:11px!important;
+  }
+  .popover-foot{
+    padding-top:4px!important;
+  }
+  .popover-foot button{
+    min-height:32px!important;
+    padding:5px!important;
+    font-size:7px!important;
+  }
+  .sort-menu{
+    left:auto!important;
+    right:10px!important;
+    bottom:max(8px,env(safe-area-inset-bottom,0px))!important;
+    width:min(270px,calc(100vw - 20px))!important;
+    padding:6px!important;
+  }
+  .sort-menu button{
+    min-height:38px!important;
+    padding:7px 9px!important;
+    font-size:9px!important;
+  }
+
+  /* The full catalog is the fast route to every tag on a phone. */
+  .catalog-drawer{
+    width:min(86vw,320px)!important;
+    padding:9px 9px max(7px,env(safe-area-inset-bottom,0px))!important;
+  }
+  .drawer-head{
+    padding-bottom:5px!important;
+  }
+  .drawer-head strong{
+    font-size:12px!important;
+  }
+  .drawer-head-copy>span{
+    font-size:5.5px!important;
+  }
+  .drawer-head button{
+    width:32px!important;
+    height:32px!important;
+    font-size:18px!important;
+  }
+  .drawer-status{
+    min-height:18px!important;
+    margin-bottom:3px!important;
+    padding:3px 1px!important;
+    font-size:5.8px!important;
+  }
+  .drawer-tabs .drawer-tab{
+    min-height:33px!important;
+    padding:5px 2px!important;
+    font-size:6.7px!important;
+  }
+  .drawer-query-row{
+    margin:4px 0 5px!important;
+  }
+  .drawer-query-row .drawer-search,
+  .drawer-tool-btn{
+    height:34px!important;
+    min-height:34px!important;
+  }
+  .drawer-search input{
+    font-size:11px!important;
+  }
+  .drawer-tag-item{
+    height:31px!important;
+    min-height:31px!important;
+    padding-inline:5px!important;
+    font-size:9.5px!important;
+  }
+  .drawer-tag-item small{
+    font-size:6px!important;
+  }
+  .drawer-author-item,
+  .drawer-world-item{
+    min-height:39px!important;
+  }
+  .drawer-author-copy b,
+  .drawer-world-copy b{
+    font-size:9.5px!important;
+  }
+
+  /* Record sheet: retain legibility, remove oversized presentation spacing. */
+  .modal{
+    padding:6px 7px max(6px,env(safe-area-inset-bottom,0px))!important;
+  }
+  .modal-card{
+    height:min(92dvh,820px)!important;
+    max-height:92dvh!important;
+    border-radius:9px!important;
+  }
+  .modal-cover{
+    height:clamp(210px,30dvh,275px)!important;
+    min-height:210px!important;
+  }
+  .modal-close{
+    top:7px!important;
+    right:7px!important;
+    width:36px!important;
+    height:36px!important;
+    margin:7px 7px -43px 0!important;
+    font-size:20px!important;
+  }
+  .author-badge{
+    left:9px!important;
+    bottom:9px!important;
+    min-height:31px!important;
+    padding:6px 8px!important;
+    font-size:7px!important;
+  }
+  .modal-content{
+    padding:15px 14px max(18px,env(safe-area-inset-bottom,0px))!important;
+  }
+  .modal-heading-row h2{
+    margin:2px 0 7px!important;
+    font-size:clamp(22px,6.8vw,27px)!important;
+    line-height:1.02!important;
+  }
+  .modal-universe-under-title,
+  .modal-author-row{
+    font-size:7.5px!important;
+  }
+  .modal-tabs{
+    gap:16px!important;
+    margin-top:8px!important;
+  }
+  .modal-tab{
+    min-height:34px!important;
+    padding-block:6px!important;
+    font-size:7.5px!important;
+  }
+  .modal-text-wrap p{
+    font-size:13px!important;
+    line-height:1.5!important;
+  }
+  .modal-primary-tags button,
+  .modal-hashtags button{
+    min-height:28px!important;
+    padding:5px 7px!important;
+    font-size:9px!important;
+  }
+  .modal-action-groups{
+    gap:9px!important;
+    margin-top:12px!important;
+  }
+  .modal-actions{
+    gap:6px!important;
+  }
+  .modal-actions a{
+    min-height:37px!important;
+    height:37px!important;
+    font-size:9px!important;
+  }
+}
+
+@media (max-width:370px){
+  .hero{height:164px!important;min-height:164px!important;max-height:164px!important}
+  .hero-art{background-size:auto 164px!important}
+  .quick-list.quick-mobile-shortlist{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}

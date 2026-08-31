@@ -3316,7 +3316,46 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   }
   .results-line{
     width:100%;
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.3.1 — MOBILE PORTRAIT COVERS
+   Preserve character artwork in the catalog and make the
+   opened record image read as an intentional visual header.
+   ========================================================= */
+@media (max-width:760px){
+  .card-media{
+    aspect-ratio:3/4!important;
   }
+
+  .modal-cover{
+    height:clamp(230px,33dvh,290px)!important;
+    min-height:230px!important;
+    background:#0b0e0b!important;
+  }
+  .modal-cover::before{
+    inset:-24px!important;
+    background-position:center 28%!important;
+    filter:blur(18px) brightness(.48) saturate(.82)!important;
+    transform:scale(1.13)!important;
+  }
+  .modal-cover::after{
+    content:"";
+    position:absolute;
+    z-index:1;
+    inset:0;
+    pointer-events:none;
+    background:linear-gradient(90deg,rgba(7,9,7,.34),transparent 24%,transparent 76%,rgba(7,9,7,.34)),linear-gradient(180deg,transparent 72%,rgba(10,13,10,.30));
+  }
+  .modal-cover img{
+    z-index:2!important;
+    width:100%!important;
+    height:100%!important;
+    object-fit:contain!important;
+    object-position:center!important;
+    filter:brightness(.94) saturate(.94) drop-shadow(0 0 18px rgba(0,0,0,.34))!important;
+  }
+}  }
 }
 
 
@@ -6542,5 +6581,45 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
     content:attr(data-mobile-label);
     font:700 6.3px/1.1 var(--mono);
     letter-spacing:.035em;
+  }
+}
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.3.1 — MOBILE PORTRAIT COVERS
+   Preserve character artwork in the catalog and make the
+   opened record image read as an intentional visual header.
+   ========================================================= */
+@media (max-width:760px){
+  .card-media{
+    aspect-ratio:3/4!important;
+  }
+
+  .modal-cover{
+    height:clamp(230px,33dvh,290px)!important;
+    min-height:230px!important;
+    background:#0b0e0b!important;
+  }
+  .modal-cover::before{
+    inset:-24px!important;
+    background-position:center 28%!important;
+    filter:blur(18px) brightness(.48) saturate(.82)!important;
+    transform:scale(1.13)!important;
+  }
+  .modal-cover::after{
+    content:"";
+    position:absolute;
+    z-index:1;
+    inset:0;
+    pointer-events:none;
+    background:linear-gradient(90deg,rgba(7,9,7,.34),transparent 24%,transparent 76%,rgba(7,9,7,.34)),linear-gradient(180deg,transparent 72%,rgba(10,13,10,.30));
+  }
+  .modal-cover img{
+    z-index:2!important;
+    width:100%!important;
+    height:100%!important;
+    object-fit:contain!important;
+    object-position:center!important;
+    filter:brightness(.94) saturate(.94) drop-shadow(0 0 18px rgba(0,0,0,.34))!important;
   }
 }

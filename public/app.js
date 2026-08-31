@@ -205,7 +205,9 @@ function renderQuickTags(){
   const el = $("#tagQuick");
   const compactMobile = window.matchMedia && window.matchMedia("(max-width:760px)").matches;
   const everyTag = allTags();
-  const mobileTags = [...new Set([...state.tags, ...everyTag])].slice(0,tagsExpanded ? everyTag.length : 12);
+  // Mobile uses one continuous swipe rail: selected tags stay first, but every
+  // tag remains reachable without opening the catalog or expanding the page.
+  const mobileTags = [...new Set([...state.tags, ...everyTag])];
   const visibleTags = compactMobile ? mobileTags : everyTag;
   el.classList.toggle("quick-expanded", tagsExpanded);
   el.classList.toggle("quick-collapsed", !tagsExpanded);
@@ -236,6 +238,7 @@ function renderCounts(){
   $("#loreToggle").setAttribute("aria-pressed",state.lorebook?"true":"false");
   const ht=$(".hashtag-trigger"); if(ht) ht.classList.toggle("active",state.hashtags.size>0);
   const ut=$(".universe-trigger"); if(ut) ut.classList.toggle("active",state.universes.size>0);
+  const st=$("#sortTrigger"); if(st) st.classList.toggle("active",state.sort!=="newest");
   renderPovCycle();
 }
 function setCount(sel,n){const e=$(sel);if(!e)return;e.textContent=n||"";e.classList.toggle("has-count",!!n)}
@@ -256,20 +259,33 @@ function valuesForFilter(kind){
 }
 
 function closeFloatingMenus(except=""){
-  if(except!=="popover") $("#popover").hidden=true;
-  if(except!=="sort") $("#sortMenu").hidden=true;
+  if(except!=="popover"){
+    $("#popover").hidden=true;
+    $$('.filter-trigger').forEach(b=>b.setAttribute("aria-expanded","false"));
+  }
+  if(except!=="sort"){
+    $("#sortMenu").hidden=true;
+    $("#sortTrigger").setAttribute("aria-expanded","false");
+  }
   if(except!=="pageSize" && $("#pageSizeMenu")) $("#pageSizeMenu").hidden=true;
 }
 
 function openPopover(btn,kind){
-  closeFloatingMenus("popover");
-  activeFilter=kind;
   const pop=$("#popover");
+  const sameFilterIsOpen=!pop.hidden && activeFilter===kind;
+  closeFloatingMenus();
+  if(sameFilterIsOpen){
+    activeFilter=null;
+    return;
+  }
+  activeFilter=kind;
   const r=btn.getBoundingClientRect();
   pop.hidden=false;
+  btn.setAttribute("aria-expanded","true");
   pop.style.left=Math.max(8,Math.min(r.left + scrollX,scrollX+innerWidth-270))+"px";
   pop.style.top=(r.bottom + scrollY + 7)+"px";
   $("#popoverSearch").value="";
+  $("#popoverSearch").placeholder=({author:"Find author...",hashtag:"Find tag...",universe:"Find universe...",tag:"Find tag..."})[kind]||"Find...";
   renderPopover();
 }
 function renderPopover(){
@@ -286,9 +302,9 @@ $("#popoverList").onclick=e=>{
   if(!b)return;
   toggle(activeFilter,b.dataset.option);
   render();
-  $("#popover").hidden=true;
+  closeFloatingMenus();
 };
-$("#popoverDone").onclick=()=>$("#popover").hidden=true;
+$("#popoverDone").onclick=()=>closeFloatingMenus();
 $("#popoverReset").onclick=()=>{
   if(activeFilter==="tag")state.tags.clear();
   if(activeFilter==="author")state.authors.clear();
@@ -327,13 +343,16 @@ $("#povCycle").onclick=e=>{
 // Sort
 $("#sortTrigger").onclick=e=>{
   e.stopPropagation();
-  closeFloatingMenus("sort");
-  const r=e.currentTarget.getBoundingClientRect(),m=$("#sortMenu");
-  m.hidden=!m.hidden;
+  const m=$("#sortMenu"), wasOpen=!m.hidden;
+  closeFloatingMenus();
+  if(wasOpen)return;
+  const r=e.currentTarget.getBoundingClientRect();
+  m.hidden=false;
+  e.currentTarget.setAttribute("aria-expanded","true");
   m.style.left=Math.max(8,Math.min(r.left+scrollX,scrollX+innerWidth-178))+"px";
   m.style.top=(r.bottom+scrollY+7)+"px";
 };
-$("#sortMenu").onclick=e=>{const b=e.target.closest("[data-sort]");if(!b)return;state.sort=b.dataset.sort;$("#sortLabel").textContent={newest:"NEWEST",az:"A → Z",za:"Z → A",author:"AUTHOR"}[state.sort];$("#sortMenu").hidden=true;render()};
+$("#sortMenu").onclick=e=>{const b=e.target.closest("[data-sort]");if(!b)return;state.sort=b.dataset.sort;$("#sortLabel").textContent={newest:"NEWEST",az:"A → Z",za:"Z → A",author:"AUTHOR"}[state.sort];closeFloatingMenus();render()};
 
 // Drawer
 function openDrawer(){$("#catalogDrawer").classList.add("open");$("#catalogDrawer").setAttribute("aria-hidden","false");$("#drawerShade").hidden=false}
@@ -400,8 +419,8 @@ $("#drawerList").onclick=e=>{
 $("#toggleAllTags").onclick=()=>{
   const compactMobile = window.matchMedia && window.matchMedia("(max-width:760px)").matches;
   if(compactMobile){
-    tagsExpanded=!tagsExpanded;
-    renderQuickTags();
+    // The mobile tag rail is always complete and scrolls horizontally.
+    tagRail.scrollTo({left:0,behavior:"smooth"});
     return;
   }
   tagsExpanded=!tagsExpanded;

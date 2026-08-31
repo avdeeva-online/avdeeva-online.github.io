@@ -5482,3 +5482,380 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   .hero-art{background-size:auto 146px!important}
   .quick-list.quick-mobile-shortlist{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.2 — MOBILE APP SHELL
+   A phone-first control dock, swipe rail and compact pickers.
+   Desktop remains unchanged.
+   ========================================================= */
+@media (max-width:760px){
+  main{
+    padding-inline:6px!important;
+  }
+
+  /* The artwork becomes a compact app masthead instead of a desktop hero. */
+  .hero{
+    height:112px!important;
+    min-height:112px!important;
+    max-height:112px!important;
+  }
+  .hero-art{
+    background-size:auto 112px!important;
+    background-position:42% top!important;
+  }
+  .hero-copy{
+    left:11px!important;
+    right:11px!important;
+    bottom:7px!important;
+  }
+  .hero-title{
+    padding-bottom:3px!important;
+    font-size:clamp(20px,6.2vw,24px)!important;
+  }
+  .hero-line{
+    margin-top:3px!important;
+    font-size:4.8px!important;
+    letter-spacing:.14em!important;
+  }
+
+  /* One cohesive app control surface. */
+  .controls-block{
+    margin-top:-4px!important;
+    padding:5px 5px 4px!important;
+    border-color:rgba(69,78,65,.58)!important;
+    border-radius:10px!important;
+    background:linear-gradient(180deg,rgba(17,21,17,.97),rgba(13,17,14,.97))!important;
+  }
+  .toolbar-row{
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    gap:3px!important;
+  }
+  .toolbar-row>#catalogOpen,
+  .toolbar-row>#importOpen,
+  .toolbar-row>#randomBtn{
+    height:27px!important;
+    min-height:27px!important;
+    padding:0 3px!important;
+    border-radius:6px!important;
+    font-size:6px!important;
+    letter-spacing:.06em!important;
+  }
+  .toolbar-row>#catalogOpen{grid-column:1 / 3!important}
+  .toolbar-row>#importOpen{grid-column:3 / 5!important}
+  .toolbar-row>#randomBtn{grid-column:5 / 7!important}
+  .toolbar-row>#catalogOpen .hamb,
+  .toolbar-row>#randomBtn .random-mark{
+    width:10px!important;
+    min-width:10px!important;
+  }
+  .toolbar-row>#randomBtn .dice-icon{
+    width:10px!important;
+    height:10px!important;
+  }
+  .searchbar{
+    grid-column:1 / 7!important;
+    height:30px!important;
+    min-height:30px!important;
+    padding-inline:8px!important;
+    border-radius:7px!important;
+  }
+  .searchbar input{
+    font-size:12px!important;
+  }
+  .searchbar input::placeholder{
+    font-size:9px!important;
+  }
+
+  /* Six evenly spaced, self-explanatory app buttons. */
+  .primary-group,
+  .secondary-group{
+    display:contents!important;
+  }
+  .primary-group>.control,
+  .secondary-group>.control,
+  #povCycle,
+  #loreToggle{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:3px!important;
+    justify-self:stretch!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:39px!important;
+    min-height:39px!important;
+    padding:2px 1px!important;
+    overflow:visible!important;
+    border-radius:7px!important;
+    background:rgba(15,19,16,.88)!important;
+  }
+  .primary-group>.control:nth-child(1){grid-column:1!important}
+  .primary-group>.control:nth-child(2){grid-column:2!important}
+  .primary-group>.control:nth-child(3){grid-column:3!important}
+  .secondary-group>.control:nth-child(1){grid-column:4!important}
+  .secondary-group>.control:nth-child(2){grid-column:5!important}
+  .secondary-group>.control:nth-child(3){grid-column:6!important}
+  .primary-group>.control.active,
+  .secondary-group>.control.active{
+    border-color:#81936b!important;
+    color:#dce4c7!important;
+    background:rgba(34,44,29,.92)!important;
+  }
+  .primary-group>.control::after,
+  .secondary-group>.control::after{
+    display:block!important;
+    color:#727b6f;
+    font:600 5.5px/1 Arial,sans-serif!important;
+    letter-spacing:.08em!important;
+  }
+  .primary-group>.control.active::after,
+  .secondary-group>.control.active::after{
+    color:#abb99a!important;
+  }
+  .primary-group>.filter-trigger[data-filter="author"]::before{
+    font-size:13px!important;
+  }
+  .primary-group>.filter-trigger[data-filter="author"]::after{content:"AUTHOR"}
+  #loreToggle::after{content:"LORE"}
+  #povCycle::after{content:"POV"}
+  .hashtag-trigger::after{content:"TAGS"}
+  .universe-trigger::after{content:"WORLD"}
+  #sortTrigger::after{content:"SORT"}
+  #loreToggle .ui-icon{
+    width:12px!important;
+    height:12px!important;
+  }
+  #povCycle::before,
+  .universe-trigger::before{
+    font-size:13px!important;
+  }
+  .hashtag-trigger .hash-mark,
+  #sortTrigger .sort-mark{
+    min-width:0!important;
+    width:auto!important;
+    font-size:13px!important;
+    line-height:1!important;
+  }
+  .primary-group>.control em,
+  .secondary-group>.control em{
+    right:2px!important;
+    top:2px!important;
+    width:10px!important;
+    min-width:10px!important;
+    height:10px!important;
+    font-size:5px!important;
+  }
+  .toolbar-meta{
+    display:none!important;
+  }
+  .active-filters.has{
+    margin-top:3px!important;
+    gap:3px!important;
+  }
+  .active-filters button{
+    min-height:20px!important;
+    padding:3px 5px!important;
+    font-size:6px!important;
+  }
+
+  /* Every tag is available in one shallow swipe rail. */
+  .tag-zone{
+    margin-top:2px!important;
+    padding:4px 0 2px!important;
+    border-top:1px solid rgba(62,69,59,.26)!important;
+    border-bottom:0!important;
+  }
+  .tag-strip-head{
+    display:flex!important;
+    align-items:center!important;
+    min-height:14px!important;
+    margin:0 2px 2px!important;
+  }
+  .tag-label{
+    font-size:6px!important;
+  }
+  .tags-result-status,
+  #toggleAllTags{
+    display:none!important;
+  }
+  #clearQuickTags{
+    min-height:16px!important;
+    padding:1px 3px!important;
+    font-size:5px!important;
+  }
+  .quick-list.quick-mobile-shortlist,
+  .quick-list.quick-mobile-shortlist.quick-expanded,
+  .quick-list.quick-mobile-shortlist.quick-collapsed{
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    gap:4px!important;
+    width:100%!important;
+    margin:0!important;
+    padding:1px 18px 2px 1px!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    scroll-snap-type:x proximity!important;
+    touch-action:pan-x!important;
+    -webkit-mask-image:linear-gradient(90deg,#000 0,#000 91%,transparent 100%);
+    mask-image:linear-gradient(90deg,#000 0,#000 91%,transparent 100%);
+  }
+  .quick-list.quick-mobile-shortlist button{
+    flex:0 0 auto!important;
+    width:auto!important;
+    min-width:max-content!important;
+    min-height:23px!important;
+    padding:4px 7px!important;
+    border-radius:999px!important;
+    font-size:8px!important;
+    line-height:1!important;
+    scroll-snap-align:start;
+  }
+  .tag-scroll-hint{
+    display:block!important;
+    height:7px!important;
+    margin:0 2px!important;
+    text-align:right;
+    font-size:0!important;
+    opacity:.76!important;
+  }
+  .tag-scroll-hint::after{
+    content:"SWIPE  ↔";
+    color:#566054;
+    font:600 5px/1 Arial,sans-serif;
+    letter-spacing:.12em;
+  }
+
+  /* Dense app cards: imagery remains useful without dominating the screen. */
+  .grid{
+    gap:13px 6px!important;
+    padding-top:3px!important;
+  }
+  .card-media{
+    aspect-ratio:1/1.08!important;
+    border-radius:7px!important;
+  }
+  .card-body{
+    padding:5px 1px 0!important;
+  }
+  .card-title{
+    min-height:2.25em!important;
+    font-size:clamp(10.5px,3vw,12px)!important;
+    line-height:1.12!important;
+  }
+  .card-author{
+    margin-top:4px!important;
+    font-size:6px!important;
+  }
+  .card-meta{
+    margin-top:4px!important;
+  }
+  .card-system-line .meta-token{
+    height:21px!important;
+    min-height:21px!important;
+    font-size:5.5px!important;
+  }
+  .card-pov-icon,
+  .card-lore-icon{
+    width:20px!important;
+    height:20px!important;
+    flex-basis:20px!important;
+  }
+  .card-tags{
+    gap:3px!important;
+    margin-top:4px!important;
+  }
+  .card-tags button,
+  .card-tags span{
+    min-height:19px!important;
+    padding:3px 4px!important;
+    font-size:6.5px!important;
+  }
+  .card-hashtags{
+    margin-top:3px!important;
+  }
+  .card-hashtags button,
+  .card-hashtags span{
+    font-size:6.5px!important;
+  }
+
+  /* Compact bottom picker: content height is natural and long lists scroll. */
+  .popover{
+    left:14px!important;
+    right:14px!important;
+    top:auto!important;
+    bottom:max(7px,env(safe-area-inset-bottom,0px))!important;
+    width:auto!important;
+    height:auto!important;
+    max-height:min(42dvh,310px)!important;
+    padding:6px!important;
+    border-radius:10px!important;
+  }
+  .popover-search-wrap{
+    height:31px!important;
+    min-height:31px!important;
+    padding-inline:8px!important;
+  }
+  .popover-search-wrap input{
+    font-size:12px!important;
+  }
+  .popover-list{
+    max-height:min(210px,calc(42dvh - 72px))!important;
+    padding-block:3px!important;
+    overscroll-behavior:contain;
+  }
+  .popover-list button{
+    min-height:30px!important;
+    padding:5px 7px!important;
+    font-size:10px!important;
+  }
+  .popover-foot{
+    padding-top:3px!important;
+  }
+  .popover-foot button{
+    min-height:25px!important;
+    padding:3px 5px!important;
+    font-size:6px!important;
+  }
+  .sort-menu{
+    left:auto!important;
+    right:10px!important;
+    top:auto!important;
+    bottom:max(7px,env(safe-area-inset-bottom,0px))!important;
+    width:min(210px,calc(100vw - 20px))!important;
+    max-height:none!important;
+    padding:5px!important;
+    border-radius:9px!important;
+  }
+  .sort-menu button{
+    min-height:29px!important;
+    padding:5px 7px!important;
+    font-size:7.5px!important;
+  }
+
+  /* Record details keep readable body text, but lose oversized chrome. */
+  .modal-cover{
+    height:clamp(155px,23dvh,190px)!important;
+    min-height:155px!important;
+  }
+  .modal-content{
+    padding:10px 10px max(13px,env(safe-area-inset-bottom,0px))!important;
+  }
+  .modal-heading-row h2{
+    font-size:clamp(18px,5.4vw,21px)!important;
+  }
+  .modal-actions a{
+    min-height:29px!important;
+    height:29px!important;
+    font-size:7px!important;
+  }
+}
+
+@media (max-width:370px){
+  .hero{height:104px!important;min-height:104px!important;max-height:104px!important}
+  .hero-art{background-size:auto 104px!important}
+  .primary-group>.control::after,
+  .secondary-group>.control::after{font-size:5px!important}
+}

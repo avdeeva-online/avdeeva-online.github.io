@@ -282,8 +282,10 @@ function openPopover(btn,kind){
   const r=btn.getBoundingClientRect();
   pop.hidden=false;
   btn.setAttribute("aria-expanded","true");
-  pop.style.left=Math.max(8,Math.min(r.left + scrollX,scrollX+innerWidth-270))+"px";
-  pop.style.top=(r.bottom + scrollY + 7)+"px";
+  pop.style.setProperty("left",Math.max(8,Math.min(r.left + scrollX,scrollX+innerWidth-270))+"px","important");
+  pop.style.setProperty("top",(r.bottom + scrollY + 5)+"px","important");
+  pop.style.setProperty("right","auto","important");
+  pop.style.setProperty("bottom","auto","important");
   $("#popoverSearch").value="";
   $("#popoverSearch").placeholder=({author:"Find author...",hashtag:"Find tag...",universe:"Find universe...",tag:"Find tag..."})[kind]||"Find...";
   renderPopover();
@@ -349,8 +351,10 @@ $("#sortTrigger").onclick=e=>{
   const r=e.currentTarget.getBoundingClientRect();
   m.hidden=false;
   e.currentTarget.setAttribute("aria-expanded","true");
-  m.style.left=Math.max(8,Math.min(r.left+scrollX,scrollX+innerWidth-178))+"px";
-  m.style.top=(r.bottom+scrollY+7)+"px";
+  m.style.setProperty("left",Math.max(8,Math.min(r.left+scrollX,scrollX+innerWidth-178))+"px","important");
+  m.style.setProperty("top",(r.bottom+scrollY+5)+"px","important");
+  m.style.setProperty("right","auto","important");
+  m.style.setProperty("bottom","auto","important");
 };
 $("#sortMenu").onclick=e=>{const b=e.target.closest("[data-sort]");if(!b)return;state.sort=b.dataset.sort;$("#sortLabel").textContent={newest:"NEWEST",az:"A → Z",za:"Z → A",author:"AUTHOR"}[state.sort];closeFloatingMenus();render()};
 

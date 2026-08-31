@@ -5145,3 +5145,340 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   .hero-art{background-size:auto 164px!important}
   .quick-list.quick-mobile-shortlist{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+
+
+/* =========================================================
+   ARCHIVE.EXE v1.1.2 — MOBILE ICON / MICRO UI PASS
+   Readable content, minimal interface chrome. Mobile only.
+   ========================================================= */
+@media (max-width:760px){
+  .hero{
+    height:156px!important;
+    min-height:156px!important;
+    max-height:156px!important;
+  }
+  .hero-art{
+    background-size:auto 156px!important;
+  }
+  .hero-copy{
+    left:14px!important;
+    right:14px!important;
+    bottom:10px!important;
+  }
+  .hero-kicker{
+    display:none!important;
+  }
+  .hero-title{
+    padding-bottom:5px!important;
+    font-size:clamp(23px,7.5vw,28px)!important;
+  }
+  .hero-line{
+    margin-top:5px!important;
+    font-size:5.5px!important;
+  }
+
+  .controls-block{
+    margin-top:-8px!important;
+    padding:6px!important;
+  }
+  .toolbar-row{
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    gap:4px!important;
+  }
+  #catalogOpen{
+    grid-column:1 / 3!important;
+    grid-row:1!important;
+  }
+  #importOpen{
+    grid-column:3 / 5!important;
+    grid-row:1!important;
+  }
+  #randomBtn{
+    grid-column:5 / 7!important;
+    grid-row:1!important;
+  }
+  .toolbar-row>#catalogOpen,
+  .toolbar-row>#importOpen,
+  .toolbar-row>#randomBtn{
+    height:31px!important;
+    min-height:31px!important;
+    font-size:6.5px!important;
+  }
+  .searchbar{
+    grid-column:1 / 7!important;
+    grid-row:2!important;
+    height:34px!important;
+    padding-inline:9px!important;
+  }
+  .searchbar input{
+    font-size:13px!important;
+  }
+  .searchbar input::placeholder{
+    font-size:10.5px!important;
+  }
+
+  /* Flatten both filter groups into one row of small square symbols. */
+  .primary-group,
+  .secondary-group{
+    display:contents!important;
+  }
+  .primary-group>.control,
+  .secondary-group>.control{
+    position:relative;
+    grid-row:3!important;
+    justify-self:center!important;
+    width:32px!important;
+    min-width:32px!important;
+    max-width:32px!important;
+    height:32px!important;
+    min-height:32px!important;
+    padding:0!important;
+    overflow:visible!important;
+    border-radius:6px!important;
+    font:600 12px/1 var(--mono)!important;
+  }
+  .primary-group>.control:nth-child(1){grid-column:1!important}
+  .primary-group>.control:nth-child(2){grid-column:2!important}
+  .primary-group>.control:nth-child(3){grid-column:3!important}
+  .secondary-group>.control:nth-child(1){grid-column:4!important}
+  .secondary-group>.control:nth-child(2){grid-column:5!important}
+  .secondary-group>.control:nth-child(3){grid-column:6!important}
+
+  .primary-group>.filter-trigger[data-filter="author"]>span{
+    display:none!important;
+  }
+  .primary-group>.filter-trigger[data-filter="author"]::before{
+    content:"@";
+    font:600 13px/1 Arial,sans-serif;
+  }
+  #loreToggle{
+    width:32px!important;
+  }
+  #loreToggle .ui-icon{
+    width:13px!important;
+    height:13px!important;
+  }
+  #povCycle .pov-cycle-label{
+    display:none!important;
+  }
+  #povCycle{
+    width:32px!important;
+    min-width:32px!important;
+    max-width:32px!important;
+    padding:0!important;
+  }
+  #povCycle::before{
+    content:"◎";
+    font:500 15px/1 Arial,sans-serif;
+  }
+  #povCycle[data-pov="FemPOV"]::before{content:"♀"}
+  #povCycle[data-pov="MalePOV"]::before{content:"♂"}
+  .hashtag-trigger>span:not(.hash-mark){
+    display:none!important;
+  }
+  .hashtag-trigger .hash-mark{
+    width:auto!important;
+    min-width:0!important;
+    font-size:15px!important;
+  }
+  .universe-trigger>span{
+    display:none!important;
+  }
+  .universe-trigger::before{
+    content:"⊙";
+    font:500 15px/1 Arial,sans-serif;
+  }
+  #sortTrigger #sortLabel,
+  #sortTrigger .chev{
+    display:none!important;
+  }
+  #sortTrigger .sort-mark{
+    width:auto!important;
+    min-width:0!important;
+    font-size:14px!important;
+  }
+  .primary-group>.control em,
+  .secondary-group>.control em{
+    position:absolute!important;
+    right:-3px!important;
+    top:-3px!important;
+    min-width:12px!important;
+    width:12px!important;
+    height:12px!important;
+    font-size:6px!important;
+  }
+  .toolbar-meta{
+    grid-column:1 / 7!important;
+    grid-row:4!important;
+    min-height:13px!important;
+    padding:0 2px!important;
+  }
+  .toolbar-meta .total-count{
+    display:none!important;
+  }
+  .toolbar-meta .page-size-btn{
+    min-height:13px!important;
+    padding:0!important;
+    font-size:5.5px!important;
+  }
+
+  .tag-zone{
+    margin-top:3px!important;
+    padding-top:5px!important;
+  }
+  .tag-strip-head{
+    margin-bottom:4px!important;
+  }
+  .tag-label{
+    font-size:7px!important;
+  }
+  .tag-actions button{
+    min-height:20px!important;
+    padding:2px 3px!important;
+    font-size:5.8px!important;
+  }
+  .tags-result-status{
+    font-size:5.2px!important;
+  }
+  .quick-list.quick-mobile-shortlist{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:3px!important;
+  }
+  .quick-list.quick-mobile-shortlist button{
+    min-height:23px!important;
+    padding:3px 4px!important;
+    border-radius:4px!important;
+    font-size:8px!important;
+    line-height:1!important;
+  }
+
+  .grid{
+    gap:16px 7px!important;
+  }
+  .card-media{
+    aspect-ratio:3/3.55!important;
+  }
+  .card-body{
+    padding-top:6px!important;
+  }
+  .card-title{
+    font-size:clamp(11.5px,3.3vw,13px)!important;
+  }
+  .card-meta{
+    margin-top:5px!important;
+  }
+  .card-system-line .meta-token{
+    height:23px!important;
+    font-size:6px!important;
+  }
+  .card-pov-icon,
+  .card-lore-icon{
+    width:23px!important;
+    height:23px!important;
+    flex-basis:23px!important;
+  }
+  .card-tags button,
+  .card-tags span{
+    min-height:21px!important;
+    padding:4px 5px!important;
+    font-size:7.5px!important;
+  }
+
+  /* Modal controls get smaller; body copy stays comfortable to read. */
+  .modal{
+    padding:5px!important;
+  }
+  .modal-card{
+    height:min(91dvh,790px)!important;
+    max-height:91dvh!important;
+  }
+  .modal-cover{
+    height:clamp(190px,27dvh,235px)!important;
+    min-height:190px!important;
+  }
+  .modal-close{
+    top:5px!important;
+    right:5px!important;
+    width:30px!important;
+    height:30px!important;
+    margin:5px 5px -35px 0!important;
+    font-size:17px!important;
+  }
+  .author-badge{
+    min-height:25px!important;
+    padding:4px 6px!important;
+    font-size:6px!important;
+  }
+  .modal-content{
+    padding:12px 11px max(14px,env(safe-area-inset-bottom,0px))!important;
+  }
+  .modal-heading-row h2{
+    margin-bottom:6px!important;
+    font-size:clamp(20px,6.1vw,24px)!important;
+  }
+  .modal-universe-row{
+    gap:5px!important;
+    margin-bottom:5px!important;
+  }
+  .modal-lore-flag{
+    width:24px!important;
+    height:24px!important;
+    flex:0 0 24px!important;
+  }
+  .modal-universe-under-title,
+  .modal-author-row{
+    font-size:7px!important;
+  }
+  .modal-tabs{
+    gap:12px!important;
+    margin-top:6px!important;
+  }
+  .modal-tab{
+    min-height:29px!important;
+    padding-block:4px!important;
+    font-size:7px!important;
+  }
+  .modal-text-wrap p{
+    font-size:12.5px!important;
+    line-height:1.48!important;
+  }
+  .modal-primary-tags,
+  .modal-hashtags{
+    gap:4px!important;
+  }
+  .modal-primary-tags button,
+  .modal-hashtags button{
+    min-height:23px!important;
+    padding:4px 6px!important;
+    font-size:8px!important;
+  }
+  .modal-action-groups{
+    gap:7px!important;
+    margin-top:9px!important;
+  }
+  .modal-action-group>small{
+    margin-bottom:4px!important;
+    font-size:6px!important;
+  }
+  .files-actions{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  .source-actions{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .modal-actions{
+    gap:4px!important;
+  }
+  .modal-actions a{
+    min-height:31px!important;
+    height:31px!important;
+    padding-inline:4px!important;
+    font-size:7.5px!important;
+  }
+}
+
+@media (max-width:370px){
+  .hero{height:146px!important;min-height:146px!important;max-height:146px!important}
+  .hero-art{background-size:auto 146px!important}
+  .quick-list.quick-mobile-shortlist{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}

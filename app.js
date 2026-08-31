@@ -554,6 +554,7 @@ function openModal(b,keepOpen=false){
   modalTab="description";
   openIntro=0;
   $("#modalImage").src=b.image;
+  $(".modal-cover").style.setProperty("--record-cover-image",`url(${JSON.stringify(b.image)})`);
   $("#modalTitle").textContent=b.nameEn;
   $("#modalAuthor").textContent=`@${b.author}`;
   $("#modalAuthor").dataset.author=b.author;

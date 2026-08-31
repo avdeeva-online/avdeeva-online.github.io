@@ -3,7 +3,7 @@
   const missing=s=>!clean(s)||clean(s).toUpperCase()==='UNCLASSIFIED';
   function explicitUniverse(bot){
     if(!bot||!missing(bot.universe))return null;
-    const source=String(bot.publicDescription||bot.short||'').replace(/\r/g,'');
+    const source=String(bot.publicDescription||bot.full||bot.short||'').replace(/\r/g,'');
     for(const label of ['UNIVERSE','WORLD','FRANCHISE','SERIES']){
       const rx=new RegExp(`(?:^|\\n)\\s*\\*{0,3}${label}\\*{0,3}(?:\\s*[:：-]\\s*|\\s+)([^\\n]+)`,'i');
       const m=source.match(rx);

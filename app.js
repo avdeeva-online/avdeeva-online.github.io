@@ -20,10 +20,33 @@ const bookSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><pa
 const globeSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.2 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.7 8.6 12s1.2 6.1 3.4 8.5"/></svg>`;
 const eyeSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-5.5 9.5-5.5S21.5 12 21.5 12 18.2 17.5 12 17.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>`;
 
-const tagLabel = t => `${TAG_META[t] || ""} ${t}`.trim();
+const tagKey = value => String(value ?? "").trim().replace(/\s+/g," ").toLocaleLowerCase();
+const preferredTags = new Map([...TAG_ORDER,...Object.keys(TAG_META)].map(tag=>[tagKey(tag),tag]));
+const displayTag = value => preferredTags.get(tagKey(value)) || String(value ?? "").trim().replace(/\s+/g," ");
+const tagLabel = value => {
+  const tag=displayTag(value),metaKey=preferredTags.get(tagKey(tag));
+  return `${TAG_META[metaKey] || ""} ${tag}`.trim();
+};
 const povLabel = p => p === "AnyPOV" ? "◌ AnyPOV" : p === "FemPOV" ? "♀ FemPOV" : p === "MalePOV" ? "♂ MalePOV" : p;
 const uniq = key => [...new Set(B.map(x => x[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
-const allTags = () => TAG_ORDER.filter(t => TAG_META[t]);
+const allTags = () => {
+  syncBots();
+  const tags=new Map();
+  TAG_ORDER.forEach(tag=>tags.set(tagKey(tag),displayTag(tag)));
+  B.flatMap(bot=>bot.tags||[]).forEach(tag=>{
+    const key=tagKey(tag);
+    if(key && !tags.has(key)) tags.set(key,displayTag(tag));
+  });
+  const preferred=TAG_ORDER.map(tag=>tags.get(tagKey(tag))).filter(Boolean);
+  const preferredKeys=new Set(preferred.map(tagKey));
+  const imported=[...tags.values()].filter(tag=>!preferredKeys.has(tagKey(tag))).sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:"base"}));
+  return [...preferred,...imported];
+};
+const canonicalTag = value => {
+  const key=tagKey(value);
+  return allTags().find(tag=>tagKey(tag)===key) || displayTag(value);
+};
+const botHasTag = (bot,value) => (bot.tags||[]).some(tag=>tagKey(tag)===tagKey(value));
 const allHashtags = () => [...new Set(B.flatMap(b => b.hashtags || []))].sort((a,b)=>a.localeCompare(b));
 
 function selectionCoversAll(set, values){
@@ -31,7 +54,7 @@ function selectionCoversAll(set, values){
 }
 
 function count(kind, val){
-  if(kind === "tag") return B.filter(b => (b.tags||[]).includes(val)).length;
+  if(kind === "tag") return B.filter(b => botHasTag(b,val)).length;
   if(kind === "author") return B.filter(b => b.author === val).length;
   if(kind === "universe") return B.filter(b => b.universe === val).length;
   if(kind === "pov") return B.filter(b => b.pov === val).length;
@@ -51,7 +74,7 @@ function applyFilters(){
     if(state.universes.size && !allUniversesSelected && !state.universes.has(b.universe)) return false;
     if(state.povs.size && !state.povs.has(b.pov)) return false;
     if(state.lorebook && !b.lorebook) return false;
-    if([...state.tags].some(t => !(b.tags||[]).includes(t))) return false; // AND logic
+    if([...state.tags].some(t => !botHasTag(b,t))) return false; // AND logic
     if([...state.hashtags].some(h => !(b.hashtags||[]).includes(h))) return false; // hashtag AND logic
     return true;
   });
@@ -245,8 +268,10 @@ function setCount(sel,n){const e=$(sel);if(!e)return;e.textContent=n||"";e.class
 
 function toggle(kind,val){
   const map={tag:"tags",author:"authors",universe:"universes",pov:"povs",hashtag:"hashtags"};
+  if(kind==="tag") val=canonicalTag(val);
   const set=state[map[kind]]; if(!set)return;
   set.has(val)?set.delete(val):set.add(val);
+  currentPage=1;
 }
 
 function valuesForFilter(kind){
@@ -415,7 +440,10 @@ $("#drawerList").onclick=e=>{
   const v=b.dataset.drawerValue;
   if(drawerTab==="author") toggle("author",v);
   if(drawerTab==="universe") toggle("universe",v);
-  if(drawerTab==="tag") toggle("tag",v);
+  if(drawerTab==="tag"){
+    toggle("tag",v);
+    if(window.matchMedia?.("(max-width:760px)").matches) closeDrawer();
+  }
   render();
 };
 
@@ -460,6 +488,8 @@ document.addEventListener("click",e=>{
   if(e.target.closest("[data-stop]")){e.stopPropagation();return}
   const rem=e.target.closest("[data-remove]");if(rem){const m={author:"authors",universe:"universes",tag:"tags",pov:"povs",hashtag:"hashtags"};m[rem.dataset.remove]?state[m[rem.dataset.remove]].delete(rem.dataset.value):state.lorebook=false;render();return}
   const au=e.target.closest("[data-author]");if(au){e.stopPropagation();state.authors.clear();state.authors.add(au.dataset.author);closeModal();render();return}
+  const passiveCardTags=e.target.closest(".card .card-tags, .card .card-hashtags");
+  if(passiveCardTags && window.matchMedia?.("(max-width:760px)").matches){e.stopPropagation();return}
   const tg=e.target.closest("[data-tag]");if(tg){e.stopPropagation();toggle("tag",tg.dataset.tag);closeModal();render();return}
   const hs=e.target.closest("[data-hashtag]");if(hs){e.stopPropagation();toggle("hashtag",hs.dataset.hashtag);closeModal();render();return}
   const qu=e.target.closest("[data-quick-universe]");if(qu){toggle("universe",qu.dataset.quickUniverse);closeModal();render();return}

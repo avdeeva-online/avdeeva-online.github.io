@@ -62,11 +62,13 @@
     return out;
   }
 
-  function markup(raw){
+  function markup(raw,bot){
     const d=parse(raw);let html='<div class="public-summary">';
+    const mobile=window.matchMedia&&window.matchMedia('(max-width:760px)').matches;
+    const meta=mobile?d.meta.filter(([k,v])=>!(k==='SERIES'&&bot?.universe&&norm(v)===norm(bot.universe))):d.meta;
     if(d.hook)html+=`<div class="public-summary-hook">${esc(d.hook)}</div>`;
     if(d.lead)html+=`<div class="public-summary-lead">${esc(d.lead)}</div>`;
-    if(d.meta.length)html+=`<div class="public-summary-meta">${d.meta.map(([k,v])=>`<b>${esc(k)}</b><span>${esc(v)}</span>`).join('')}</div>`;
+    if(meta.length)html+=`<div class="public-summary-meta">${meta.map(([k,v])=>`<b>${esc(k)}</b><span>${esc(v)}</span>`).join('')}</div>`;
     html+=d.sections.filter(x=>x.text).map(x=>`<section class="public-summary-section"><h4>${esc(x.title)}</h4><p>${esc(x.text)}</p></section>`).join('');
     if(d.chapters.length)html+=`<section class="public-summary-section"><h4>CHAPTERS</h4><div class="public-summary-chapters">${d.chapters.map(x=>`<div class="public-summary-chapter"><b>${esc(x.title)}</b>${x.text?`<p>${esc(x.text)}</p>`:''}</div>`).join('')}</div></section>`;
     if(html==='<div class="public-summary">')html+='<div class="modal-public-empty">NO PUBLIC DESCRIPTION AVAILABLE</div>';
@@ -85,8 +87,36 @@
 
   function render(bot){
     const body=document.querySelector('#modalPublicBody');if(!body||!bot)return;
-    body.innerHTML=markup(bot.publicDescription||bot.short||'');
+    body.innerHTML=markup(bot.publicDescription||bot.short||'',bot);
+    const summary=body.closest('.modal-public-summary');
+    let more=summary?.querySelector('.modal-public-more');
+    const mobile=window.matchMedia&&window.matchMedia('(max-width:760px)').matches;
+    if(!mobile){
+      summary?.classList.remove('expanded');
+      if(more)more.hidden=true;
+      resetScroll(body);
+      return;
+    }
+    if(summary&&!more){
+      more=document.createElement('button');
+      more.type='button';
+      more.className='modal-public-more';
+      more.textContent='READ MORE';
+      more.addEventListener('click',()=>{
+        const expanded=summary.classList.toggle('expanded');
+        more.textContent=expanded?'SHOW LESS':'READ MORE';
+        more.setAttribute('aria-expanded',expanded?'true':'false');
+        if(!expanded)resetScroll(body);
+      });
+      summary.appendChild(more);
+    }
+    summary?.classList.remove('expanded');
+    if(more){more.textContent='READ MORE';more.setAttribute('aria-expanded','false');more.hidden=false}
     resetScroll(body);
+    requestAnimationFrame(()=>{
+      if(!more)return;
+      more.hidden=body.scrollHeight<=body.clientHeight+3;
+    });
   }
 
   window.addEventListener('archive:modal-public-ready',e=>render(e.detail?.bot));

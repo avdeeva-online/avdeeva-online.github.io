@@ -463,6 +463,16 @@ document.addEventListener("click",e=>{
   const tg=e.target.closest("[data-tag]");if(tg){e.stopPropagation();toggle("tag",tg.dataset.tag);closeModal();render();return}
   const hs=e.target.closest("[data-hashtag]");if(hs){e.stopPropagation();toggle("hashtag",hs.dataset.hashtag);closeModal();render();return}
   const qu=e.target.closest("[data-quick-universe]");if(qu){toggle("universe",qu.dataset.quickUniverse);closeModal();render();return}
+  const actionToggle=e.target.closest(".mobile-action-toggle");
+  if(actionToggle){
+    e.stopPropagation();
+    const group=actionToggle.closest(".modal-action-group");
+    const willOpen=!group.classList.contains("mobile-open");
+    $$(".modal-action-group.mobile-open").forEach(x=>x.classList.remove("mobile-open"));
+    group.classList.toggle("mobile-open",willOpen);
+    actionToggle.setAttribute("aria-expanded",willOpen?"true":"false");
+    return;
+  }
   const card=e.target.closest(".card");if(card)openModal(B.find(b=>b.id===card.dataset.id));
   if(e.target.matches("[data-close]"))closeModal();
 });
@@ -547,18 +557,23 @@ function openModal(b,keepOpen=false){
   $("#modalTitle").textContent=b.nameEn;
   $("#modalAuthor").textContent=`@${b.author}`;
   $("#modalAuthor").dataset.author=b.author;
+  $("#modalAuthor").title=`Show all bots by @${b.author}`;
+  $("#modalAuthor").setAttribute("aria-label",`Show all bots by @${b.author}`);
   $("#modalAuthorBadge").textContent=`@${b.author}`;
   $("#modalAuthorBadge").dataset.author=b.author;
   $("#modalUniverse").innerHTML=`${globeSvg}<span>UNIVERSE / ${esc(b.universe)}</span>`;
   $("#modalUniverse").dataset.quickUniverse=b.universe;
+  $("#modalUniverse").title=`Show universe: ${b.universe}`;
   $("#modalLoreFlag").innerHTML=b.lorebook?bookSvg:"";
   $("#modalLoreFlag").title=b.lorebook?"Lorebook available":"";
   $("#modalPov").textContent=povLabel(b.pov);
   $("#modalTags").innerHTML=`<div class="modal-primary-tags">${(b.tags||[]).map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}</div>${(b.hashtags||[]).length?`<div class="modal-hashtags">${(b.hashtags||[]).map(h=>`<button data-hashtag="${esc(h)}">#${esc(h)}</button>`).join("")}</div>`:''}`;
   $("#openBot").href=b.url;
   $("#openBot").textContent=`OPEN ON ${b.platform} ↗`;
+  $("#openBot").dataset.mobileLabel=`${b.platform} PAGE ↗`;
   $("#openAuthor").href=b.authorUrl||b.url;
   $("#openAuthor").textContent=`@${b.author} ↗`;
+  $("#openAuthor").dataset.mobileLabel="AUTHOR PROFILE ↗";
   $("#downloadBot").href=b.download;
   const l=$("#downloadLore");
   if(b.lorebook){
@@ -571,6 +586,8 @@ function openModal(b,keepOpen=false){
     l.textContent="LOREBOOK — NOT AVAILABLE";
   }
   $("#downloadBot").textContent="DOWNLOAD BOT CARD ↓";
+  $$(".modal-action-group.mobile-open").forEach(x=>x.classList.remove("mobile-open"));
+  $$(".mobile-action-toggle").forEach(x=>x.setAttribute("aria-expanded","false"));
   $$('.modal-tab').forEach(t=>t.classList.toggle('active',t.dataset.modalTab==='description'));
   renderModalPanel();
   if(!keepOpen){

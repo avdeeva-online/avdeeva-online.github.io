@@ -650,6 +650,8 @@ function openModal(b,keepOpen=false){
   $("#modalImage").src=b.image;
   $(".modal-cover").style.setProperty("--record-cover-image",`url(${JSON.stringify(b.image)})`);
   $("#modalTitle").textContent=b.nameEn;
+  $("#modalTitle").classList.toggle("is-long-title",b.nameEn.length>32);
+  $("#modalTitle").classList.toggle("is-very-long-title",b.nameEn.length>64);
   $("#modalAuthor").textContent=`@${b.author}`;
   $("#modalAuthor").dataset.author=b.author;
   $("#modalAuthor").title=`Show all bots by @${b.author}`;

@@ -79,6 +79,7 @@
     activeUuid=String(bot?.janitorUuid||'').toLowerCase();
     if(!activeUuid)return original.call(this,bot,...args);
     preservePublicDescription(bot);
+    if(bot.detailLoaded&&!bot._definitionReady)bot._definitionReady=true;
     if(!bot._definitionReady){bot._definitionLoading=true;bot._definitionError='';bot.full='';bot.scenario='';bot.intros=[]}
     const out=original.call(this,bot,...args);
     window.dispatchEvent(new CustomEvent('archive:modal-public-ready',{detail:{bot}}));

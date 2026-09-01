@@ -6772,3 +6772,58 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   #modalTitle.is-very-long-title{font-size:16px!important;line-height:1.14!important}
   .modal-primary-tags button,.modal-hashtags button{min-height:27px!important;padding:5px 7px!important;font-size:9.5px!important}
 }
+
+/* =========================================================
+   v1.4.2 — MOBILE FILTER STABILITY + FASTER SHEETS
+   Fixed viewport anchoring, calmer sizing and denser downloads.
+   ========================================================= */
+@media (max-width:760px){
+  .primary-group>.control,.secondary-group>.control,#povCycle,#loreToggle{
+    min-height:37px!important;height:37px!important;padding:3px 2px!important;
+  }
+  .primary-group>.control::after,.secondary-group>.control::after{
+    font-size:7.5px!important;letter-spacing:.045em!important;
+  }
+  .primary-group>.filter-trigger[data-filter="author"]::before,
+  #povCycle::before,.universe-trigger::before,
+  .hashtag-trigger .hash-mark,#sortTrigger .sort-mark{
+    font-size:15px!important;
+  }
+
+  .popover{
+    position:fixed!important;
+    left:8px!important;right:8px!important;bottom:auto!important;
+    width:auto!important;height:auto!important;
+    max-height:min(54dvh,calc(100dvh - var(--popover-mobile-top,150px) - 8px))!important;
+    padding:6px!important;border-radius:9px!important;
+    overflow:hidden!important;animation:none!important;transition:none!important;
+    box-shadow:0 10px 26px rgba(0,0,0,.54)!important;
+  }
+  .popover:not([hidden]){display:flex!important;flex-direction:column!important}
+  .popover-search-wrap{height:38px!important;min-height:38px!important;padding-inline:8px!important}
+  .popover-list{
+    flex:1 1 auto!important;min-height:0!important;
+    max-height:min(42dvh,330px)!important;padding-block:3px!important;
+  }
+  .popover-list button,.sort-menu button{
+    min-height:34px!important;padding:6px 7px!important;font-size:10.5px!important;
+  }
+  .popover-list button small{font-size:8px!important}
+  .popover-foot{flex:0 0 auto!important;padding-top:3px!important}
+  .popover-foot button{min-height:29px!important;padding:4px 6px!important;font-size:7.5px!important}
+
+  .catalog-drawer{transition-duration:.14s!important}
+  .modal-card{animation:none!important}
+  .modal-backdrop{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+
+  .modal-action-groups{gap:6px!important;margin-top:7px!important}
+  .files-group{padding:6px!important}
+  .files-group .mobile-action-label{
+    min-height:0!important;margin:0 0 4px!important;font-size:7px!important;line-height:1!important;
+  }
+  .files-group .modal-actions{gap:5px!important}
+  .files-actions .download-action,.modal-actions a{
+    min-height:34px!important;height:34px!important;padding:0 6px!important;font-size:9px!important;
+  }
+  .mobile-action-toggle{min-height:34px!important;height:34px!important;font-size:8.5px!important}
+}

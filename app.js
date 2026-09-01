@@ -364,15 +364,24 @@ function openPopover(btn,kind){
   }
   activeFilter=kind;
   const r=btn.getBoundingClientRect();
-  pop.hidden=false;
   btn.setAttribute("aria-expanded","true");
-  pop.style.setProperty("left",Math.max(8,Math.min(r.left + scrollX,scrollX+innerWidth-270))+"px","important");
-  pop.style.setProperty("top",(r.bottom + scrollY + 5)+"px","important");
-  pop.style.setProperty("right","auto","important");
-  pop.style.setProperty("bottom","auto","important");
+  if(isCompactMobile()){
+    const top=Math.max(8,Math.min(r.bottom+5,innerHeight-150));
+    pop.style.setProperty("--popover-mobile-top",`${top}px`);
+    pop.style.setProperty("left","8px","important");
+    pop.style.setProperty("top",`${top}px`,"important");
+    pop.style.setProperty("right","8px","important");
+    pop.style.setProperty("bottom","auto","important");
+  }else{
+    pop.style.setProperty("left",Math.max(8,Math.min(r.left+scrollX,scrollX+innerWidth-270))+"px","important");
+    pop.style.setProperty("top",(r.bottom+scrollY+5)+"px","important");
+    pop.style.setProperty("right","auto","important");
+    pop.style.setProperty("bottom","auto","important");
+  }
   $("#popoverSearch").value="";
   $("#popoverSearch").placeholder=({author:"Find author...",hashtag:"Find tag...",universe:"Find universe...",tag:"Find tag..."})[kind]||"Find...";
   renderPopover();
+  pop.hidden=false;
 }
 function renderPopover(){
   const q=($("#popoverSearch").value||"").toLowerCase();

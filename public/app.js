@@ -714,6 +714,26 @@ function switchModalRecord(b,direction=1){
   anim.oncancel=()=>{modalSwitching=false};
 }
 
+async function hydrateModalDetail(b){
+  if(!b?.janitorUuid || b.detailLoaded || b.detailLoading)return;
+  b.detailLoading=true;
+  b.detailError=false;
+  try{
+    const response=await fetch(`/api/characters/${encodeURIComponent(b.janitorUuid)}`);
+    const data=await response.json();
+    if(!response.ok||!data.ok||!data.character)throw new Error(data.error||`HTTP ${response.status}`);
+    Object.assign(b,data.character,{detailLoaded:true,detailLoading:false,detailError:false});
+    const stored=B.find(x=>x.id===b.id||x.janitorUuid===b.janitorUuid);
+    if(stored&&stored!==b)Object.assign(stored,b);
+    if(current&&(current.id===b.id||current.janitorUuid===b.janitorUuid)){current=b;renderModalPanel()}
+  }catch(error){
+    b.detailLoading=false;
+    b.detailError=true;
+    console.warn('ARCHIVE character detail unavailable',error);
+    if(current&&(current.id===b.id||current.janitorUuid===b.janitorUuid))renderModalPanel();
+  }
+}
+
 function openModal(b,keepOpen=false){
   current=b;
   modalTab="description";
@@ -769,6 +789,7 @@ function openModal(b,keepOpen=false){
     $("#modal").hidden=false;
     document.body.style.overflow="hidden";
   }
+  hydrateModalDetail(b);
 }
 function closeModal(){$("#modal").hidden=true;document.body.style.overflow=""}
 function renderModalPanel(){
@@ -779,6 +800,8 @@ function renderModalPanel(){
     panel.innerHTML=`<p class="modal-copy">${esc(current.short)}</p>`;
     return;
   }
+  if(current.detailLoading){panel.innerHTML=`<div class="intro-display intro-empty">LOADING RECORD DATA…</div>`;return}
+  if(current.detailError){panel.innerHTML=`<div class="intro-display intro-empty">RECORD DATA TEMPORARILY UNAVAILABLE</div>`;return}
   if(modalTab==="scenario"){
     panel.innerHTML=`<p class="modal-copy">${esc(current.full)}</p>`;
     return;

@@ -28,7 +28,7 @@
 
   async function loadLive(){
     try{
-      const r=await fetch('/api/characters?limit=1000',{cache:'no-store'}),data=await r.json();
+      const r=await fetch('/api/catalog?limit=1000'),data=await r.json();
       if(!r.ok||!data.ok)throw new Error(data.message||data.error||`HTTP ${r.status}`);
       liveBots=normalizeCatalog(Array.isArray(data.characters)?data.characters:[]);
       mergeBots();

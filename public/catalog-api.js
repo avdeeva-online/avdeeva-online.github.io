@@ -17,7 +17,7 @@
   }
   function normalizeCatalog(list){
     const authors=canonicalDisplay(list.map(x=>x.author));
-    return list.map(b=>({...b,author:authors.get(clean(b.author).toLocaleLowerCase())||clean(b.author)||'Unknown',universe:clean(b.universe)||'UNCLASSIFIED'}));
+    return list.map(b=>({...b,author:authors.get(clean(b.author).toLocaleLowerCase())||clean(b.author)||'Unknown',universe:clean(b.universe),settingIds:Array.isArray(b.settingIds)?b.settingIds:[],settings:Array.isArray(b.settings)?b.settings:[]}));
   }
   function mergeBots(){
     const seen=new Set(),all=[];

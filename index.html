@@ -59,7 +59,7 @@
 
       <label class="searchbar">
         <span class="search-icon">⌕</span>
-        <input id="searchInput" placeholder="Search by name, author, universe or tag..." autocomplete="off">
+        <input id="searchInput" placeholder="Search by name, setting, author, universe or tag..." autocomplete="off">
       </label>
 
       <div class="filter-group primary-group">
@@ -72,7 +72,7 @@
 
       <div class="filter-group secondary-group">
         <button class="control subtle-control filter-trigger hashtag-trigger" data-filter="hashtag" title="Filter by hashtags"><span class="hash-mark">#</span><span>HASHTAGS</span><em id="hashtagCount"></em></button>
-        <button class="control subtle-control filter-trigger universe-trigger" data-filter="universe" title="Filter by universe"><span>UNIVERSE</span><em id="universeCount"></em></button>
+        <button class="control subtle-control filter-trigger setting-trigger" data-filter="setting" title="Filter by setting"><span>SETTING</span><em id="settingCount"></em></button>
         <button id="sortTrigger" class="control subtle-control"><span class="sort-mark">↕</span><span id="sortLabel">NEWEST</span><span class="chev">⌄</span></button>
       </div>
 
@@ -147,15 +147,16 @@
   </div>
   <div class="drawer-status"><span><i></i> DATABASE ONLINE</span><b id="drawerTotal">000 RECORDS</b></div>
   <div class="drawer-tabs">
-    <button class="drawer-tab active" data-drawer-tab="tag"><em>01</em><span>TAGS</span></button>
-    <button class="drawer-tab" data-drawer-tab="author"><em>02</em><span>AUTHORS</span></button>
-    <button class="drawer-tab" data-drawer-tab="universe"><em>03</em><span>UNIVERSES</span></button>
+    <button class="drawer-tab active" data-drawer-tab="setting"><em>01</em><span>SETTINGS</span></button>
+    <button class="drawer-tab" data-drawer-tab="tag"><em>02</em><span>TAGS</span></button>
+    <button class="drawer-tab" data-drawer-tab="author"><em>03</em><span>AUTHORS</span></button>
+    <button class="drawer-tab" data-drawer-tab="universe"><em>04</em><span>UNIVERSES</span></button>
   </div>
   <div class="drawer-query-row">
     <label class="drawer-search"><span>⌕</span><input id="drawerSearch" placeholder="SEARCH INDEX..."></label>
     <button id="drawerSortCycle" class="drawer-tool-btn" type="button" title="Change catalog sort"><small>SORT</small><b>A→Z</b></button>
   </div>
-  <div id="drawerList" class="drawer-list" data-layout="tag"></div>
+  <div id="drawerList" class="drawer-list" data-layout="setting"></div>
   <div class="drawer-foot"><span>NODE_00 / INDEX CACHE</span><span id="drawerFootStatus">STABLE</span></div>
 </aside>
 
@@ -169,6 +170,7 @@
       <div class="modal-heading-row">
         <h2 id="modalTitle"></h2>
       </div>
+      <div id="modalSettingRow" class="modal-setting-row" hidden><span>SETTING</span><div id="modalSetting"></div></div>
       <div class="modal-universe-row">
         <button id="modalUniverse" class="universe-link modal-universe-under-title"></button>
         <span id="modalLoreFlag" class="modal-lore-flag"></span>

@@ -11,8 +11,8 @@ const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-const state = { q:"", authors:new Set(), universes:new Set(), tags:new Set(), hashtags:new Set(), povs:new Set(), lorebook:false, sort:"newest" };
-let activeFilter = null, drawerTab = "tag", drawerSort = "az", current = null, modalTab = "description", tagsExpanded = false, openIntro = 0;
+const state = { q:"", settings:new Set(), authors:new Set(), universes:new Set(), tags:new Set(), hashtags:new Set(), povs:new Set(), lorebook:false, sort:"newest" };
+let activeFilter = null, drawerTab = "setting", drawerSort = "az", current = null, modalTab = "description", tagsExpanded = false, openIntro = 0;
 
 const bookSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3.2-.9 5.7-.6 8.5 1.1v12c-2.8-1.7-5.3-2-8.5-1.1zM20.5 5.5c-3.2-.9-5.7-.6-8.5 1.1v12c2.8-1.7 5.3-2 8.5-1.1z"/></svg>`;
 const globeSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.2 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.7 8.6 12s1.2 6.1 3.4 8.5"/></svg>`;
@@ -31,9 +31,38 @@ const displayTag = value => cleanTag(value);
 const tagLabel = value => displayTag(value);
 const povLabel = p => p === "AnyPOV" ? "◌ AnyPOV" : p === "FemPOV" ? "♀ FemPOV" : p === "MalePOV" ? "♂ MalePOV" : p;
 const isCompactMobile = () => Boolean(window.matchMedia?.("(max-width:760px)").matches);
+const SETTING_DEFS = [
+  ["omegaverse","Omegaverse","","abo a/b/o alpha beta omega"],
+  ["post-apocalypse","Post-apocalypse","","post apocalypse postapocalypse апокалипсис постапокалипсис"],
+  ["zombie-apocalypse","Zombie apocalypse","post-apocalypse","zombie apocalypse зомби апокалипсис"],
+  ["rusreal","Rusreal","","русреал russian realism modern russia современная россия"],
+  ["rusreal-2000s","2000s Rusreal","rusreal","нулевые 2000s russia россия нулевых"],
+  ["china","China","","китай chinese setting"],
+  ["ancient-china","Ancient China","china","древний китай imperial china historical china"],
+  ["egypt","Egypt","","египет egyptian setting"],
+  ["ancient-egypt","Ancient Egypt","egypt","древний египет"],
+  ["medieval","Medieval","","middle ages средневековье"],
+  ["regency","Regency","","regency era"],
+  ["victorian","Victorian","","victorian era"],
+  ["historical","Historical","","historical setting исторический сеттинг"],
+  ["fantasy","Fantasy","","фэнтези"],
+  ["sci-fi","Sci-Fi","","science fiction научная фантастика"],
+  ["cyberpunk","Cyberpunk","","киберпанк"],
+  ["supernatural","Supernatural","","urban fantasy сверхъестественное"],
+  ["college","College / University","","college university университет колледж"],
+  ["high-school","High school","","school setting старшая школа"],
+  ["mafia","Mafia / Crime","","mafia organized crime криминал"]
+].map(([id,label,parent,aliases])=>({id,label,parent,aliases}));
+const SETTING_BY_ID = new Map(SETTING_DEFS.map(x=>[x.id,x]));
+const settingLabel = id => SETTING_BY_ID.get(id)?.label || id;
+const settingSearchText = id => {const x=SETTING_BY_ID.get(id);return x?`${x.label} ${x.aliases}`.toLocaleLowerCase():String(id).toLocaleLowerCase()};
+const settingDisplayLabel = id => `${SETTING_BY_ID.get(id)?.parent?'↳ ':''}${settingLabel(id)}`;
+const settingDescendsFrom = (id,parent) => {let x=SETTING_BY_ID.get(id);while(x?.parent){if(x.parent===parent)return true;x=SETTING_BY_ID.get(x.parent)}return false};
+const botHasSetting = (bot,id) => (bot.settingIds||[]).some(botId=>botId===id||settingDescendsFrom(botId,id));
+const allSettings = () => SETTING_DEFS.filter(def=>B.some(bot=>botHasSetting(bot,def.id))).map(def=>def.id);
 const cleanUniverse = value => {
   const universe=cleanTag(value);
-  if(!universe || /^(setting|universe|world)\s*:?$/i.test(universe) || universe.length>120) return "UNCLASSIFIED";
+  if(!universe || /^(unclassified|unknown|none|null|n\/?a|setting|universe|world)\s*:?$/i.test(universe) || universe.length>80) return "";
   return universe;
 };
 const universeKey = value => cleanUniverse(value).toLocaleLowerCase();
@@ -49,7 +78,7 @@ const allUniverses = () => {
 const canonicalUniverse = value => allUniverses().find(universe=>universeKey(universe)===universeKey(value)) || cleanUniverse(value);
 const botHasUniverse = (bot,value) => universeKey(bot.universe)===universeKey(value);
 const selectedUniverse = value => [...state.universes].find(universe=>universeKey(universe)===universeKey(value));
-const uniq = key => key==="universe" && isCompactMobile() ? allUniverses() : [...new Set(B.map(x => x[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+const uniq = key => key==="universe" ? allUniverses() : [...new Set(B.map(x => x[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
 const allTags = () => {
   syncBots();
   const tags=new Map();
@@ -94,9 +123,10 @@ function selectionCoversAll(set, values){
 }
 
 function count(kind, val){
+  if(kind === "setting") return B.filter(b => botHasSetting(b,val)).length;
   if(kind === "tag") return B.filter(b => botHasTag(b,val)).length;
   if(kind === "author") return B.filter(b => b.author === val).length;
-  if(kind === "universe") return B.filter(b => isCompactMobile() ? botHasUniverse(b,val) : b.universe===val).length;
+  if(kind === "universe") return B.filter(b => botHasUniverse(b,val)).length;
   if(kind === "pov") return B.filter(b => b.pov === val).length;
   if(kind === "hashtag") return B.filter(b => botHasHashtag(b,val)).length;
   return 0;
@@ -106,12 +136,13 @@ function applyFilters(){
   syncBots();
   const q = state.q.trim().toLowerCase();
   let list = B.filter(b => {
-    const hay = [b.nameRu,b.nameEn,b.author,b.universe,b.pov,b.short,b.full,...(b.tags||[]),...(b.hashtags||[])].join(" ").toLowerCase();
+    const hay = [b.nameRu,b.nameEn,b.author,b.universe,b.pov,b.short,b.full,b.scenario,...(b.intros||[]),...(b.settingIds||[]).flatMap(id=>[settingLabel(id),settingSearchText(id)]),...(b.tags||[]),...(b.hashtags||[])].join(" ").toLowerCase();
     if(q && !hay.includes(q)) return false;
     const allAuthorsSelected = selectionCoversAll(state.authors, uniq("author"));
     const allUniversesSelected = selectionCoversAll(state.universes, uniq("universe"));
     if(state.authors.size && !allAuthorsSelected && !state.authors.has(b.author)) return false;
-    if(state.universes.size && !allUniversesSelected && !(isCompactMobile() ? [...state.universes].some(universe=>botHasUniverse(b,universe)) : state.universes.has(b.universe))) return false;
+    if(state.settings.size && [...state.settings].some(setting=>!botHasSetting(b,setting))) return false;
+    if(state.universes.size && !allUniversesSelected && ![...state.universes].some(universe=>botHasUniverse(b,universe))) return false;
     if(state.povs.size && !state.povs.has(b.pov)) return false;
     if(state.lorebook && !b.lorebook) return false;
     if([...state.tags].some(t => !botHasTag(b,t))) return false; // AND logic
@@ -129,6 +160,7 @@ function applyFilters(){
 function hasActiveFilters(){
   return !!(
     state.q.trim() ||
+    state.settings.size ||
     state.authors.size ||
     state.universes.size ||
     state.tags.size ||
@@ -249,14 +281,16 @@ function cardHtml(b,i){
   const passiveMobile = isCompactMobile();
   const tagChip = tag => passiveMobile ? `<span>${esc(tagLabel(tag))}</span>` : `<button data-tag="${esc(tag)}">${esc(tagLabel(tag))}</button>`;
   const hashtagChip = hashtag => passiveMobile ? `<span>#${esc(cleanHashtag(hashtag))}</span>` : `<button data-hashtag="${esc(hashtag)}">#${esc(cleanHashtag(hashtag))}</button>`;
-  const universe=passiveMobile?canonicalUniverse(b.universe):b.universe;
+  const universe=canonicalUniverse(b.universe);
+  const setting=(b.settingIds||[])[0]||"";
   return `<article class="card" data-id="${esc(b.id)}" style="animation-delay:${Math.min(i,12)*18}ms">
     <div class="card-media"><img src="${esc(b.image)}" alt="${esc(b.nameEn)}" loading="${i<4?'eager':'lazy'}" decoding="async"${i<2?' fetchpriority="high"':''}>${b.isNew?'<span class="new-badge">NEW</span>':''}<a class="download-hover" href="${esc(b.download)}" download data-stop>BOT CARD ↓</a></div>
     <div class="card-body">
       <h3 class="card-title">${esc(b.nameEn)}<span>${esc(b.nameRu)}</span></h3>
       <div class="card-author">BY <button data-author="${esc(b.author)}">@${esc(b.author)}</button></div>
       <div class="card-meta card-system-line">
-        <button class="meta-token" data-quick-universe="${esc(universe)}">${globeSvg}<span>${esc(universe)}</span></button>
+        ${setting?`<button class="meta-token card-setting-token" data-quick-setting="${esc(setting)}"><span class="setting-mark">⌖</span><span>${esc(settingLabel(setting))}</span></button>`:""}
+        ${universe?`<button class="meta-token card-universe-token" data-quick-universe="${esc(universe)}">${globeSvg}<span>${esc(universe)}</span></button>`:""}
         <span class="card-status-icon card-pov-icon pov-${esc((b.pov||'AnyPOV').toLowerCase())}" title="${esc(b.pov||'AnyPOV')}" aria-label="POV: ${esc(b.pov||'AnyPOV')}">
           <span aria-hidden="true">${b.pov==='FemPOV'?'♀':b.pov==='MalePOV'?'♂':'◎'}</span>
         </span>
@@ -289,6 +323,7 @@ function renderActiveFilters(){
   // Direct toggles (tags / POV / lorebook) already show their state on the controls themselves.
   // Keep this row only for filters that otherwise have no persistent visible state.
   const chips = [];
+  state.settings.forEach(v=>chips.push(["setting",v,`SETTING / ${settingLabel(v)}`]));
   state.authors.forEach(v=>chips.push(["author",v,`@ ${v}`]));
   state.universes.forEach(v=>chips.push(["universe",v,`UNIVERSE / ${v}`]));
   state.hashtags.forEach(v=>chips.push(["hashtag",v,`#${cleanHashtag(v)}`]));
@@ -298,6 +333,7 @@ function renderActiveFilters(){
 }
 
 function renderCounts(){
+  setCount("#settingCount", state.settings.size);
   setCount("#authorCount", state.authors.size);
   setCount("#hashtagCount", state.hashtags.size);
   setCount("#universeCount", state.universes.size);
@@ -305,6 +341,7 @@ function renderCounts(){
   $("#loreToggle").classList.toggle("active",state.lorebook);
   $("#loreToggle").setAttribute("aria-pressed",state.lorebook?"true":"false");
   const ht=$(".hashtag-trigger"); if(ht) ht.classList.toggle("active",state.hashtags.size>0);
+  const set=$(".setting-trigger"); if(set) set.classList.toggle("active",state.settings.size>0);
   const ut=$(".universe-trigger"); if(ut) ut.classList.toggle("active",state.universes.size>0);
   const st=$("#sortTrigger"); if(st) st.classList.toggle("active",state.sort!=="newest");
   renderPovCycle();
@@ -312,7 +349,7 @@ function renderCounts(){
 function setCount(sel,n){const e=$(sel);if(!e)return;e.textContent=n||"";e.classList.toggle("has-count",!!n)}
 
 function toggle(kind,val){
-  const map={tag:"tags",author:"authors",universe:"universes",pov:"povs",hashtag:"hashtags"};
+  const map={setting:"settings",tag:"tags",author:"authors",universe:"universes",pov:"povs",hashtag:"hashtags"};
   if(kind==="tag"){
     const existing=selectedTag(val);
     if(existing){state.tags.delete(existing);currentPage=1;return}
@@ -323,7 +360,7 @@ function toggle(kind,val){
     if(existing){state.hashtags.delete(existing);currentPage=1;return}
     val=canonicalHashtag(val);
   }
-  if(kind==="universe" && isCompactMobile()){
+  if(kind==="universe"){
     const existing=selectedUniverse(val);
     if(existing){state.universes.delete(existing);currentPage=1;return}
     val=canonicalUniverse(val);
@@ -334,6 +371,7 @@ function toggle(kind,val){
 }
 
 function valuesForFilter(kind){
+  if(kind === "setting") return allSettings();
   if(kind === "tag") return allTags();
   if(kind === "author") return uniq("author");
   if(kind === "universe") return uniq("universe");
@@ -379,15 +417,15 @@ function openPopover(btn,kind){
     pop.style.setProperty("bottom","auto","important");
   }
   $("#popoverSearch").value="";
-  $("#popoverSearch").placeholder=({author:"Find author...",hashtag:"Find tag...",universe:"Find universe...",tag:"Find tag..."})[kind]||"Find...";
+  $("#popoverSearch").placeholder=({setting:"Find setting...",author:"Find author...",hashtag:"Find tag...",universe:"Find universe...",tag:"Find tag..."})[kind]||"Find...";
   renderPopover();
   pop.hidden=false;
 }
 function renderPopover(){
   const q=($("#popoverSearch").value||"").toLowerCase();
-  const vals=valuesForFilter(activeFilter).filter(v=>v.toLowerCase().includes(q));
-  const selected = activeFilter==="tag"?state.tags:activeFilter==="author"?state.authors:activeFilter==="universe"?state.universes:activeFilter==="hashtag"?state.hashtags:state.povs;
-  $("#popoverList").innerHTML=vals.map(v=>`<button class="${activeFilter==="tag"?(hasSelectedTag(v)?'active':''):activeFilter==="hashtag"?(hasSelectedHashtag(v)?'active':''):(selected.has(v)?'active':'')}" data-option="${esc(v)}"><span>${esc(activeFilter==="tag"?tagLabel(v):activeFilter==="pov"?povLabel(v):activeFilter==="author"?'@ '+v:activeFilter==="hashtag"?'#'+cleanHashtag(v):v)}</span><small>${count(activeFilter,v)}</small></button>`).join("");
+  const vals=valuesForFilter(activeFilter).filter(v=>(activeFilter==="setting"?settingSearchText(v):v.toLowerCase()).includes(q));
+  const selected = activeFilter==="setting"?state.settings:activeFilter==="tag"?state.tags:activeFilter==="author"?state.authors:activeFilter==="universe"?state.universes:activeFilter==="hashtag"?state.hashtags:state.povs;
+  $("#popoverList").innerHTML=vals.map(v=>`<button class="${activeFilter==="tag"?(hasSelectedTag(v)?'active':''):activeFilter==="hashtag"?(hasSelectedHashtag(v)?'active':''):(selected.has(v)?'active':'')}" data-option="${esc(v)}"><span>${esc(activeFilter==="setting"?settingDisplayLabel(v):activeFilter==="tag"?tagLabel(v):activeFilter==="pov"?povLabel(v):activeFilter==="author"?'@ '+v:activeFilter==="hashtag"?'#'+cleanHashtag(v):v)}</span><small>${count(activeFilter,v)}</small></button>`).join("");
 }
 
 $$('.filter-trigger').forEach(b=>b.onclick=e=>{e.stopPropagation();openPopover(b,b.dataset.filter)});
@@ -401,6 +439,7 @@ $("#popoverList").onclick=e=>{
 };
 $("#popoverDone").onclick=()=>closeFloatingMenus();
 $("#popoverReset").onclick=()=>{
+  if(activeFilter==="setting")state.settings.clear();
   if(activeFilter==="tag")state.tags.clear();
   if(activeFilter==="author")state.authors.clear();
   if(activeFilter==="universe")state.universes.clear();
@@ -463,6 +502,7 @@ $("#drawerSortCycle").onclick=()=>{
   renderDrawer();
 };
 function drawerSelectionCount(){
+  if(drawerTab==="setting") return state.settings.size;
   if(drawerTab==="tag") return state.tags.size;
   if(drawerTab==="author") return state.authors.size;
   if(drawerTab==="universe") return state.universes.size;
@@ -473,8 +513,8 @@ function drawerActiveCount(vals){
 }
 function renderDrawer(){
   const q=($("#drawerSearch").value||"").trim().toLowerCase();
-  const allVals=(drawerTab==="tag"?allTags():drawerTab==="author"?uniq("author"):uniq("universe"));
-  let vals=allVals.filter(v=>v.toLowerCase().includes(q));
+  const allVals=(drawerTab==="setting"?allSettings():drawerTab==="tag"?allTags():drawerTab==="author"?uniq("author"):uniq("universe"));
+  let vals=allVals.filter(v=>(drawerTab==="setting"?settingSearchText(v):v.toLowerCase()).includes(q));
 
   vals.sort((a,b)=>{
     if(drawerSort==="za") return b.localeCompare(a,undefined,{sensitivity:"base"});
@@ -496,6 +536,10 @@ function renderDrawer(){
     list.innerHTML=vals.map(v=>`<button class="drawer-item drawer-tag-item ${hasSelectedTag(v)?'selected':''}" data-drawer-value="${esc(v)}"><span class="drawer-item-name">${esc(tagLabel(v))}</span><small>${String(count("tag",v)).padStart(2,"0")}</small></button>`).join("");
     return;
   }
+  if(drawerTab==="setting"){
+    list.innerHTML=vals.map(v=>`<button class="drawer-item drawer-setting-item ${state.settings.has(v)?'selected':''}" data-drawer-value="${esc(v)}"><span class="drawer-world-copy"><b>${esc(settingDisplayLabel(v))}</b><small>${String(count("setting",v)).padStart(2,"0")} RECORDS</small></span><i>→</i></button>`).join("");
+    return;
+  }
   if(drawerTab==="author"){
     list.innerHTML=vals.map(v=>`<button class="drawer-item drawer-author-item ${state.authors.has(v)?'selected':''}" data-drawer-value="${esc(v)}"><span class="drawer-author-copy"><b>@${esc(v)}</b><small>${String(count("author",v)).padStart(2,"0")} RECORDS</small></span><i>→</i></button>`).join("");
     return;
@@ -506,6 +550,7 @@ $("#drawerList").onclick=e=>{
   const b=e.target.closest("[data-drawer-value]"); if(!b)return;
   e.stopPropagation();
   const v=b.dataset.drawerValue;
+  if(drawerTab==="setting") toggle("setting",v);
   if(drawerTab==="author") toggle("author",v);
   if(drawerTab==="universe") toggle("universe",v);
   if(drawerTab==="tag"){
@@ -547,19 +592,20 @@ tagRail.addEventListener("click",e=>{
 
 $("#searchInput").oninput=e=>{state.q=e.target.value;render()};
 $("#resetBtn").onclick=resetAll;
-function resetAll(){state.q="";state.authors.clear();state.universes.clear();state.tags.clear();state.hashtags.clear();state.povs.clear();state.lorebook=false;state.sort="newest";$("#searchInput").value="";$("#sortLabel").textContent="NEWEST";render()}
+function resetAll(){state.q="";state.settings.clear();state.authors.clear();state.universes.clear();state.tags.clear();state.hashtags.clear();state.povs.clear();state.lorebook=false;state.sort="newest";$("#searchInput").value="";$("#sortLabel").textContent="NEWEST";render()}
 
 document.addEventListener("click",e=>{
   if(!e.target.closest("#popover")&&!e.target.closest(".filter-trigger"))$("#popover").hidden=true;
   if(!e.target.closest("#sortMenu")&&!e.target.closest("#sortTrigger"))$("#sortMenu").hidden=true;
   if(!e.target.closest("#pageSizeMenu")&&!e.target.closest("#pageSizeBtn"))$("#pageSizeMenu").hidden=true;
   if(e.target.closest("[data-stop]")){e.stopPropagation();return}
-  const rem=e.target.closest("[data-remove]");if(rem){const m={author:"authors",universe:"universes",tag:"tags",pov:"povs",hashtag:"hashtags"};m[rem.dataset.remove]?state[m[rem.dataset.remove]].delete(rem.dataset.value):state.lorebook=false;render();return}
+  const rem=e.target.closest("[data-remove]");if(rem){const m={setting:"settings",author:"authors",universe:"universes",tag:"tags",pov:"povs",hashtag:"hashtags"};m[rem.dataset.remove]?state[m[rem.dataset.remove]].delete(rem.dataset.value):state.lorebook=false;render();return}
   const au=e.target.closest("[data-author]");if(au){e.stopPropagation();state.authors.clear();state.authors.add(au.dataset.author);closeModal();render();return}
   const passiveCardTags=e.target.closest(".card .card-tags, .card .card-hashtags");
   if(passiveCardTags && window.matchMedia?.("(max-width:760px)").matches){e.stopPropagation();return}
   const tg=e.target.closest("[data-tag]");if(tg){e.stopPropagation();toggle("tag",tg.dataset.tag);closeModal();render();return}
   const hs=e.target.closest("[data-hashtag]");if(hs){e.stopPropagation();toggle("hashtag",hs.dataset.hashtag);closeModal();render();return}
+  const qs=e.target.closest("[data-quick-setting]");if(qs){e.stopPropagation();toggle("setting",qs.dataset.quickSetting);closeModal();render();return}
   const qu=e.target.closest("[data-quick-universe]");if(qu){toggle("universe",qu.dataset.quickUniverse);closeModal();render();return}
   const actionToggle=e.target.closest(".mobile-action-toggle");
   if(actionToggle){
@@ -667,9 +713,15 @@ function openModal(b,keepOpen=false){
   $("#modalAuthor").setAttribute("aria-label",`Show all bots by @${b.author}`);
   $("#modalAuthorBadge").textContent=`@${b.author}`;
   $("#modalAuthorBadge").dataset.author=b.author;
-  $("#modalUniverse").innerHTML=`${globeSvg}<span>UNIVERSE / ${esc(isCompactMobile()?canonicalUniverse(b.universe):b.universe)}</span>`;
-  $("#modalUniverse").dataset.quickUniverse=b.universe;
-  $("#modalUniverse").title=`Show universe: ${b.universe}`;
+  const settings=b.settingIds||[];
+  $("#modalSettingRow").hidden=!settings.length;
+  $("#modalSetting").innerHTML=settings.map(id=>`<button data-quick-setting="${esc(id)}">${esc(settingLabel(id))}</button>`).join("");
+  const universe=canonicalUniverse(b.universe);
+  $(".modal-universe-row").hidden=!universe&&!b.lorebook;
+  $("#modalUniverse").hidden=!universe;
+  $("#modalUniverse").innerHTML=universe?`${globeSvg}<span>UNIVERSE / ${esc(universe)}</span>`:"";
+  $("#modalUniverse").dataset.quickUniverse=universe;
+  $("#modalUniverse").title=universe?`Show universe: ${universe}`:"";
   $("#modalLoreFlag").innerHTML=b.lorebook?bookSvg:"";
   $("#modalLoreFlag").title=b.lorebook?"Lorebook available":"";
   $("#modalPov").textContent=povLabel(b.pov);
@@ -734,7 +786,7 @@ $$('.modal-tab').forEach(t=>t.onclick=()=>{
 });
 
 // Small archive anomalies: decorative only, never block interaction.
-const anomalyTargets=["#catalogOpen",".hashtag-trigger",".universe-trigger","#sortTrigger","#loreToggle","#povCycle","#randomBtn"];
+const anomalyTargets=["#catalogOpen",".hashtag-trigger",".setting-trigger","#sortTrigger","#loreToggle","#povCycle","#randomBtn"];
 anomalyTargets.forEach(sel=>{const el=$(sel);if(!el)return;el.addEventListener("mouseenter",()=>{if(Math.random()<.045){el.classList.add("archive-flicker");setTimeout(()=>el.classList.remove("archive-flicker"),620)}})});
 
 // Easter egg — LOST DIRECTORY

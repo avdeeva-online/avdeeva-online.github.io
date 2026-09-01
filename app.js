@@ -789,7 +789,7 @@ function openModal(b,keepOpen=false){
     $("#modal").hidden=false;
     document.body.style.overflow="hidden";
   }
-  hydrateModalDetail(b);
+  if(!window.archiveDefinitionLoaderActive)hydrateModalDetail(b);
 }
 function closeModal(){$("#modal").hidden=true;document.body.style.overflow=""}
 function renderModalPanel(){

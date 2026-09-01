@@ -1,4 +1,5 @@
 (()=>{
+  window.archiveDefinitionLoaderActive=true;
   const cache=new Map();
   const TIMEOUT_MS=12000;
   let activeUuid='';
@@ -27,11 +28,10 @@
     if(!uuid)return null;
     if(cache.has(uuid))return cache.get(uuid);
     const promise=(async()=>{
-      const r=await fetchWithTimeout(`/api/characters/${encodeURIComponent(uuid)}/card`);
-      if(!r.ok)throw new Error(`CARD_HTTP_${r.status}`);
-      const card=await r.json();
-      const d=card?.data||{};
-      return {description:String(d.description||d.personality||'').trim(),scenario:String(d.scenario||'').trim(),intros:cleanList(d.first_mes,d.alternate_greetings)};
+      const r=await fetchWithTimeout(`/api/characters/${encodeURIComponent(uuid)}`);
+      if(!r.ok)throw new Error(`DETAIL_HTTP_${r.status}`);
+      const payload=await r.json(),d=payload?.character||{};
+      return {description:String(d.full||'').trim(),scenario:String(d.scenario||'').trim(),intros:cleanList(d.intros?.[0],d.intros?.slice(1))};
     })();
     cache.set(uuid,promise);
     try{return await promise}catch(e){cache.delete(uuid);throw e}

@@ -20,11 +20,16 @@ const bookSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><pa
 const globeSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.2 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.7 8.6 12s1.2 6.1 3.4 8.5"/></svg>`;
 const eyeSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-5.5 9.5-5.5S21.5 12 21.5 12 18.2 17.5 12 17.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>`;
 
-const tagKey = value => String(value ?? "").trim().replace(/\s+/g," ").toLocaleLowerCase();
-const preferredTags = new Map([...TAG_ORDER,...Object.keys(TAG_META)].map(tag=>[tagKey(tag),tag]));
-const displayTag = value => preferredTags.get(tagKey(value)) || String(value ?? "").trim().replace(/\s+/g," ");
+const cleanTag = value => String(value ?? "").trim().replace(/\s+/g," ");
+const rawTagKey = value => cleanTag(value).toLocaleLowerCase();
+const TAG_ALIASES = new Map([
+  ["enemy to lovers","enemies to lovers"]
+]);
+const tagKey = value => TAG_ALIASES.get(rawTagKey(value)) || rawTagKey(value);
+const staticTags = new Map([...TAG_ORDER,...Object.keys(TAG_META)].map(tag=>[tagKey(tag),tag]));
+const displayTag = value => cleanTag(value);
 const tagLabel = value => {
-  const tag=displayTag(value),metaKey=preferredTags.get(tagKey(tag));
+  const tag=displayTag(value),metaKey=staticTags.get(tagKey(tag));
   return `${TAG_META[metaKey] || ""} ${tag}`.trim();
 };
 const povLabel = p => p === "AnyPOV" ? "◌ AnyPOV" : p === "FemPOV" ? "♀ FemPOV" : p === "MalePOV" ? "♂ MalePOV" : p;
@@ -32,10 +37,16 @@ const uniq = key => [...new Set(B.map(x => x[key]).filter(Boolean))].sort((a,b)=
 const allTags = () => {
   syncBots();
   const tags=new Map();
+  const importedKeys=new Set();
   TAG_ORDER.forEach(tag=>tags.set(tagKey(tag),displayTag(tag)));
   B.flatMap(bot=>bot.tags||[]).forEach(tag=>{
     const key=tagKey(tag);
-    if(key && !tags.has(key)) tags.set(key,displayTag(tag));
+    // The label supplied by an imported card wins over our built-in spelling.
+    // B is newest-first, so the newest imported spelling also wins conflicts.
+    if(key && !importedKeys.has(key)){
+      tags.set(key,displayTag(tag));
+      importedKeys.add(key);
+    }
   });
   const preferred=TAG_ORDER.map(tag=>tags.get(tagKey(tag))).filter(Boolean);
   const preferredKeys=new Set(preferred.map(tagKey));
@@ -47,6 +58,8 @@ const canonicalTag = value => {
   return allTags().find(tag=>tagKey(tag)===key) || displayTag(value);
 };
 const botHasTag = (bot,value) => (bot.tags||[]).some(tag=>tagKey(tag)===tagKey(value));
+const selectedTag = value => [...state.tags].find(tag=>tagKey(tag)===tagKey(value));
+const hasSelectedTag = value => Boolean(selectedTag(value));
 const allHashtags = () => [...new Set(B.flatMap(b => b.hashtags || []))].sort((a,b)=>a.localeCompare(b));
 
 function selectionCoversAll(set, values){
@@ -230,12 +243,12 @@ function renderQuickTags(){
   const everyTag = allTags();
   // Mobile uses one continuous swipe rail: selected tags stay first, but every
   // tag remains reachable without opening the catalog or expanding the page.
-  const mobileTags = [...new Set([...state.tags, ...everyTag])];
+  const mobileTags = [...new Map([...state.tags, ...everyTag].map(tag=>[tagKey(tag),tag])).values()];
   const visibleTags = compactMobile ? mobileTags : everyTag;
   el.classList.toggle("quick-expanded", tagsExpanded);
   el.classList.toggle("quick-collapsed", !tagsExpanded);
   el.classList.toggle("quick-mobile-shortlist", compactMobile);
-  el.innerHTML = visibleTags.map(t=>`<button class="${state.tags.has(t)?'active':''}" data-quick-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("");
+  el.innerHTML = visibleTags.map(t=>`<button class="${hasSelectedTag(t)?'active':''}" data-quick-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("");
   $("#clearQuickTags").hidden = state.tags.size === 0;
   $("#toggleAllTags").textContent = tagsExpanded ? "LESS −" : "ALL TAGS +";
 }
@@ -268,7 +281,11 @@ function setCount(sel,n){const e=$(sel);if(!e)return;e.textContent=n||"";e.class
 
 function toggle(kind,val){
   const map={tag:"tags",author:"authors",universe:"universes",pov:"povs",hashtag:"hashtags"};
-  if(kind==="tag") val=canonicalTag(val);
+  if(kind==="tag"){
+    const existing=selectedTag(val);
+    if(existing){state.tags.delete(existing);currentPage=1;return}
+    val=canonicalTag(val);
+  }
   const set=state[map[kind]]; if(!set)return;
   set.has(val)?set.delete(val):set.add(val);
   currentPage=1;
@@ -319,7 +336,7 @@ function renderPopover(){
   const q=($("#popoverSearch").value||"").toLowerCase();
   const vals=valuesForFilter(activeFilter).filter(v=>v.toLowerCase().includes(q));
   const selected = activeFilter==="tag"?state.tags:activeFilter==="author"?state.authors:activeFilter==="universe"?state.universes:activeFilter==="hashtag"?state.hashtags:state.povs;
-  $("#popoverList").innerHTML=vals.map(v=>`<button class="${selected.has(v)?'active':''}" data-option="${esc(v)}"><span>${esc(activeFilter==="tag"?tagLabel(v):activeFilter==="pov"?povLabel(v):activeFilter==="author"?'@ '+v:activeFilter==="hashtag"?'#'+v:v)}</span><small>${count(activeFilter,v)}</small></button>`).join("");
+  $("#popoverList").innerHTML=vals.map(v=>`<button class="${activeFilter==="tag"?(hasSelectedTag(v)?'active':''):(selected.has(v)?'active':'')}" data-option="${esc(v)}"><span>${esc(activeFilter==="tag"?tagLabel(v):activeFilter==="pov"?povLabel(v):activeFilter==="author"?'@ '+v:activeFilter==="hashtag"?'#'+v:v)}</span><small>${count(activeFilter,v)}</small></button>`).join("");
 }
 
 $$('.filter-trigger').forEach(b=>b.onclick=e=>{e.stopPropagation();openPopover(b,b.dataset.filter)});
@@ -425,7 +442,7 @@ function renderDrawer(){
   if(sortBtn) sortBtn.querySelector("b").textContent=({az:"A→Z",za:"Z→A",most:"MOST",least:"LEAST"})[drawerSort];
 
   if(drawerTab==="tag"){
-    list.innerHTML=vals.map(v=>`<button class="drawer-item drawer-tag-item ${state.tags.has(v)?'selected':''}" data-drawer-value="${esc(v)}"><span class="drawer-item-name">${esc(tagLabel(v))}</span><small>${String(count("tag",v)).padStart(2,"0")}</small></button>`).join("");
+    list.innerHTML=vals.map(v=>`<button class="drawer-item drawer-tag-item ${hasSelectedTag(v)?'selected':''}" data-drawer-value="${esc(v)}"><span class="drawer-item-name">${esc(tagLabel(v))}</span><small>${String(count("tag",v)).padStart(2,"0")}</small></button>`).join("");
     return;
   }
   if(drawerTab==="author"){

@@ -1189,10 +1189,9 @@ wireHashtagGhosts();
 
   function drawerIsOpen(){ return drawer.classList.contains('open'); }
 
-  // Replace the inherited delegated handler with a capture-phase handler so no
-  // older click behavior can close the drawer after a selection.
-  list.onclick = null;
-  list.addEventListener('click', function(e){
+  // Replace the inherited delegated handler so one click produces one toggle
+  // and the drawer remains open after a selection.
+  list.onclick = function(e){
     const item = e.target.closest('[data-drawer-value]');
     if(!item || !list.contains(item)) return;
     e.preventDefault();
@@ -1213,7 +1212,7 @@ wireHashtagGhosts();
       drawer.setAttribute('aria-hidden','false');
       if(shade) shade.hidden = false;
     }
-  }, true);
+  };
 
   // Clicking anywhere outside the drawer closes it. Clicks inside never do.
   document.addEventListener('pointerdown', function(e){

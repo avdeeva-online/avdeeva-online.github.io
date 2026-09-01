@@ -1,37 +1,3 @@
-window.TAG_META = {
-  "Dominant":"😈",
-  "Submissive":"🧎",
-  "Switch":"☯️",
-  "Game":"🎮",
-  "Anime":"🌸",
-  "Multiple":"👥",
-  "Non-Human":"👽",
-  "Demi-Human":"🐾",
-  "Vampire":"🧛",
-  "Smut":"🔥",
-  "Fluff":"🧸",
-  "Angst":"💔",
-  "Horror":"🩸",
-  "Comedy":"😂",
-  "Enemies to Lovers":"⚔️",
-  "Dead Dove":"🕊️",
-  "Magical":"✨",
-  "Historical":"📜",
-  "Sci-Fi":"🚀",
-  "Royalty":"👑",
-  "Villain":"🦹",
-  "Hero":"🦸",
-  "RPG":"🎲",
-  "Scenario":"🎭"
-};
-
-// Popular/commonly useful tags are intentionally placed first in the quick rail.
-window.TAG_ORDER = [
-  "Angst","Fluff","Smut","Dominant","Dead Dove","Enemies to Lovers","Demi-Human","Non-Human",
-  "Horror","Historical","Royalty","Magical","Vampire","Switch","Submissive","Sci-Fi",
-  "Multiple","Villain","Hero","Comedy","Game","Anime","RPG","Scenario"
-];
-
 window.BOTS = [
   {id:"matvey-kalinin",nameRu:"Матвей Калинин",nameEn:"Matvey Kalinin",author:"CrimsonGem",authorUrl:"https://example.com/@CrimsonGem",universe:"The Pace of Death",pov:"AnyPOV",tags:["Horror","Angst","Dead Dove","Multiple"],short:"Пятеро подростков украли лодку, чтобы увидеть затопленный город. Матвей — тот, кто уговорил остальных отправиться.",full:"После катастрофы город медленно уходит под воду, а оставшиеся районы отрезаны друг от друга. Матвей привык говорить так, будто всё под контролем, даже когда решение уже стало ошибкой.",image:"assets/bot-1.svg",platform:"JANITOR",url:"https://example.com/",download:"downloads/matvey-kalinin.json",isNew:true,lorebook:"downloads/matvey-kalinin-lorebook.json",intros:["Матвей первым нарушает тишину и предлагает маршрут к затопленному городу.","Лодка уже отошла от берега, когда Матвей замечает, что течение стало слишком сильным.","Матвей встречает вас у старого причала перед самым рассветом.","Старое радио оживает голосом Матвея и зовёт вас к воде.","Матвей возвращается один, хотя утром их было пятеро.","Шторм запирает вас с Матвеем в заброшенной лодочной станции.","На карте Матвей отмечает место, которого официально не существует."],hashtags:["survival","flooded-city","friends-group","dangerous-trip"]},
   {id:"arina-volkova",nameRu:"Арина Волкова",nameEn:"Arina Volkova",author:"NoxAstra",authorUrl:"https://example.com/@NoxAstra",universe:"Neon District",pov:"FemPOV",tags:["Sci-Fi","Villain","Angst"],short:"Арина чинит чужие импланты днём и продаёт запрещённые прошивки ночью. Одна ошибка связывает её с человеком, которого лучше было не встречать.",full:"В городе, где личность можно перепрошить почти так же легко, как телефон, Арина держит маленькую нелегальную мастерскую.",image:"assets/bot-2.svg",platform:"JANITOR",url:"https://example.com/",download:"downloads/arina-volkova.json",isNew:true,lorebook:null,intros:["Арина закрывает мастерскую раньше обычного и просит вас никому не говорить, что вы видели внутри.","Ваш имплант выдаёт неизвестную ошибку, и единственное имя в журнале ремонта — Арина Волкова.","Арина пишет вам среди ночи: прошивка, которую она установила, начала вести себя странно.","В неоновом переулке Арина перехватывает вас раньше людей, которые шли по вашему следу.","На рабочем столе Арины лежит файл с вашим именем, хотя вы никогда не встречались."],hashtags:["cyberpunk","implants","underground","identity"]},

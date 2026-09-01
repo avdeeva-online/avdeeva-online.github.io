@@ -7,8 +7,6 @@ function syncBots(){
   return B;
 }
 syncBots();
-const TAG_META = window.TAG_META || {};
-const TAG_ORDER = window.TAG_ORDER || Object.keys(TAG_META);
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -21,37 +19,30 @@ const globeSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><c
 const eyeSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-5.5 9.5-5.5S21.5 12 21.5 12 18.2 17.5 12 17.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>`;
 
 const cleanTag = value => String(value ?? "").trim().replace(/\s+/g," ");
-const rawTagKey = value => cleanTag(value).toLocaleLowerCase();
+// Imported tags keep their own emoji for display. Emoji are ignored only when
+// deciding whether two tags belong to the same automatic filter.
+const tagText = value => cleanTag(value).replace(/^[^\p{L}\p{N}#]+/u,"").trim();
+const rawTagKey = value => tagText(value).toLocaleLowerCase();
 const TAG_ALIASES = new Map([
   ["enemy to lovers","enemies to lovers"]
 ]);
 const tagKey = value => TAG_ALIASES.get(rawTagKey(value)) || rawTagKey(value);
-const staticTags = new Map([...TAG_ORDER,...Object.keys(TAG_META)].map(tag=>[tagKey(tag),tag]));
 const displayTag = value => cleanTag(value);
-const tagLabel = value => {
-  const tag=displayTag(value),metaKey=staticTags.get(tagKey(tag));
-  return `${TAG_META[metaKey] || ""} ${tag}`.trim();
-};
+const tagLabel = value => displayTag(value);
 const povLabel = p => p === "AnyPOV" ? "◌ AnyPOV" : p === "FemPOV" ? "♀ FemPOV" : p === "MalePOV" ? "♂ MalePOV" : p;
 const uniq = key => [...new Set(B.map(x => x[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
 const allTags = () => {
   syncBots();
   const tags=new Map();
-  const importedKeys=new Set();
-  TAG_ORDER.forEach(tag=>tags.set(tagKey(tag),displayTag(tag)));
   B.flatMap(bot=>bot.tags||[]).forEach(tag=>{
     const key=tagKey(tag);
-    // The label supplied by an imported card wins over our built-in spelling.
-    // B is newest-first, so the newest imported spelling also wins conflicts.
-    if(key && !importedKeys.has(key)){
+    // B is newest-first, so one real tag is kept per meaning and the newest
+    // imported spelling/emoji becomes its visible label.
+    if(key && !tags.has(key)){
       tags.set(key,displayTag(tag));
-      importedKeys.add(key);
     }
   });
-  const preferred=TAG_ORDER.map(tag=>tags.get(tagKey(tag))).filter(Boolean);
-  const preferredKeys=new Set(preferred.map(tagKey));
-  const imported=[...tags.values()].filter(tag=>!preferredKeys.has(tagKey(tag))).sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:"base"}));
-  return [...preferred,...imported];
+  return [...tags.values()].sort((a,b)=>tagText(a).localeCompare(tagText(b),undefined,{sensitivity:"base"}));
 };
 const canonicalTag = value => {
   const key=tagKey(value);

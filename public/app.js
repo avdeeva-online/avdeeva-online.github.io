@@ -36,6 +36,16 @@ const tagKey = value => TAG_ALIASES.get(rawTagKey(value)) || rawTagKey(value);
 const displayTag = value => cleanTag(value);
 const tagLabel = value => displayTag(value);
 const povLabel = p => p === "AnyPOV" ? "◌ AnyPOV" : p === "FemPOV" ? "♀ FemPOV" : p === "MalePOV" ? "♂ MalePOV" : p;
+const povKey = value => tagText(value).toLocaleLowerCase().replace(/[^a-z]/g,"");
+const botPov = bot => {
+  for(const tag of bot.tags||[]){
+    const key=povKey(tag);
+    if(key==="fempov"||key==="femalepov")return "FemPOV";
+    if(key==="malepov")return "MalePOV";
+    if(key==="anypov")return "AnyPOV";
+  }
+  return "";
+};
 const isCompactMobile = () => Boolean(window.matchMedia?.("(max-width:760px)").matches);
 const SETTING_DEFS = [
   ["omegaverse","Omegaverse","","abo a/b/o alpha beta omega"],
@@ -54,7 +64,7 @@ const SETTING_DEFS = [
   ["fantasy","Fantasy","","фэнтези"],
   ["sci-fi","Sci-Fi","","science fiction научная фантастика"],
   ["cyberpunk","Cyberpunk","","киберпанк"],
-  ["supernatural","Supernatural","","urban fantasy сверхъестественное"],
+  ["supernatural","Supernatural / Folklore","","urban fantasy supernatural folklore slavic folklore mythology mythological сверхъестественное фольклор славянский фольклор мифология"],
   ["college","School / University","","school high school college university школа старшая школа университет универ колледж"],
   ["slice-of-life","Slice of Life / Everyday","","slice of life everyday modern day повседневность современность"],
   ["mafia","Mafia / Crime","","mafia organized crime криминал"]
@@ -145,7 +155,7 @@ function count(kind, val){
   if(kind === "tag") result=B.filter(b => botHasTag(b,val)).length;
   if(kind === "author") result=B.filter(b => b.author === val).length;
   if(kind === "universe") result=B.filter(b => botHasUniverse(b,val)).length;
-  if(kind === "pov") result=B.filter(b => b.pov === val).length;
+  if(kind === "pov") result=B.filter(b => botPov(b) === val).length;
   if(kind === "hashtag") result=B.filter(b => botHasHashtag(b,val)).length;
   countCache.set(cacheKey,result);
   return result;
@@ -155,14 +165,14 @@ function applyFilters(){
   syncBots();
   const q = state.q.trim().toLowerCase();
   let list = B.filter(b => {
-    const hay = [b.nameRu,b.nameEn,b.author,b.universe,b.pov,b.short,b.full,b.scenario,...(b.intros||[]),...(b.settingIds||[]).flatMap(id=>[settingLabel(id),settingSearchText(id)]),...(b.tags||[]),...(b.hashtags||[])].join(" ").toLowerCase();
+    const hay = [b.nameRu,b.nameEn,b.author,b.universe,botPov(b),b.short,b.full,b.scenario,...(b.intros||[]),...(b.settingIds||[]).flatMap(id=>[settingLabel(id),settingSearchText(id)]),...(b.tags||[]),...(b.hashtags||[])].join(" ").toLowerCase();
     if(q && !hay.includes(q)) return false;
     const allAuthorsSelected = selectionCoversAll(state.authors, uniq("author"));
     const allUniversesSelected = selectionCoversAll(state.universes, uniq("universe"));
     if(state.authors.size && !allAuthorsSelected && !state.authors.has(b.author)) return false;
     if(state.settings.size && [...state.settings].some(setting=>!botHasSetting(b,setting))) return false;
     if(state.universes.size && !allUniversesSelected && ![...state.universes].some(universe=>botHasUniverse(b,universe))) return false;
-    if(state.povs.size && !state.povs.has(b.pov)) return false;
+    if(state.povs.size && !state.povs.has(botPov(b))) return false;
     if(state.lorebook && !b.lorebook) return false;
     if([...state.tags].some(t => !botHasTag(b,t))) return false; // AND logic
     if([...state.hashtags].some(h => !botHasHashtag(b,h))) return false; // hashtag AND logic
@@ -303,17 +313,13 @@ function cardHtml(b,i){
   const universe=canonicalUniverse(b.universe);
   const setting=(b.settingIds||[]).map(canonicalSettingId).find(id=>SETTING_BY_ID.has(id))||"";
   return `<article class="card" data-id="${esc(b.id)}" style="animation-delay:${Math.min(i,12)*18}ms">
-    <div class="card-media"><img src="${esc(b.image)}" alt="${esc(b.nameEn)}" loading="${i<4?'eager':'lazy'}" decoding="async"${i<2?' fetchpriority="high"':''}>${b.isNew?'<span class="new-badge">NEW</span>':''}<a class="download-hover" href="${esc(b.download)}" download data-stop>BOT CARD ↓</a></div>
+    <div class="card-media"><img src="${esc(b.image)}" alt="${esc(b.nameEn)}" loading="${i<4?'eager':'lazy'}" decoding="async"${i<2?' fetchpriority="high"':''}>${b.isNew?'<span class="new-badge">NEW</span>':''}${b.lorebook?`<span class="card-lore-overlay" title="Lorebook available" aria-label="Lorebook available">${bookSvg}</span>`:''}<a class="download-hover" href="${esc(b.download)}" download data-stop>BOT CARD ↓</a></div>
     <div class="card-body">
       <h3 class="card-title">${esc(b.nameEn)}<span>${esc(b.nameRu)}</span></h3>
       <div class="card-author">BY <button data-author="${esc(b.author)}">@${esc(b.author)}</button></div>
       <div class="card-meta card-system-line">
         ${setting?`<button class="meta-token card-setting-token" data-quick-setting="${esc(setting)}"><span class="setting-mark">⌖</span><span>${esc(settingLabel(setting))}</span></button>`:""}
         ${universe?`<button class="meta-token card-universe-token" data-quick-universe="${esc(universe)}">${globeSvg}<span>${esc(universe)}</span></button>`:""}
-        <span class="card-status-icon card-pov-icon pov-${esc((b.pov||'AnyPOV').toLowerCase())}" title="${esc(b.pov||'AnyPOV')}" aria-label="POV: ${esc(b.pov||'AnyPOV')}">
-          <span aria-hidden="true">${b.pov==='FemPOV'?'♀':b.pov==='MalePOV'?'♂':'◎'}</span>
-        </span>
-        ${b.lorebook?`<span class="card-status-icon card-lore-icon" title="Lorebook available" aria-label="Lorebook available">${bookSvg}</span>`:''}
       </div>
       <p class="card-short">${esc(b.short)}</p>
       <div class="card-tags">${shown.map(tagChip).join("")}${more>0?`<span class="tag-more">+${more}</span>`:''}</div>
@@ -475,22 +481,22 @@ $("#loreToggle").addEventListener("click",e=>{
   render();
 });
 
-// POV is a compact cycle: Any -> Male -> Fem -> Any. It layers with every other filter.
-const POV_CYCLE=["AnyPOV","MalePOV","FemPOV"];
-function currentPov(){ return state.povs.size ? [...state.povs][0] : "AnyPOV"; }
+// Empty means no POV filter. AnyPOV is a real imported tag, not an alias for ALL.
+const POV_CYCLE=["","AnyPOV","FemPOV","MalePOV"];
+function currentPov(){ return state.povs.size ? [...state.povs][0] : ""; }
 function renderPovCycle(){
   const btn=$("#povCycle"); if(!btn)return;
   const pov=currentPov();
-  const label=pov==="MalePOV"?"MALE POV":pov==="FemPOV"?"FEM POV":"ANY POV";
+  const label=pov==="MalePOV"?"MALE POV":pov==="FemPOV"?"FEM POV":pov==="AnyPOV"?"ANY POV":"POV";
   btn.dataset.pov=pov; btn.querySelector(".pov-cycle-label").textContent=label;
-  btn.title=`POV: ${pov}`; btn.setAttribute("aria-label",`POV filter: ${pov}`);
-  btn.classList.toggle("active",pov!=="AnyPOV");
+  btn.title=pov?`POV: ${pov}`:"POV: all"; btn.setAttribute("aria-label",pov?`POV filter: ${pov}`:"POV filter: all");
+  btn.classList.toggle("active",Boolean(pov));
 }
 $("#povCycle").onclick=e=>{
   e.preventDefault(); e.stopPropagation();
   closeFloatingMenus();
   const cur=currentPov(), next=POV_CYCLE[(POV_CYCLE.indexOf(cur)+1)%POV_CYCLE.length];
-  state.povs.clear(); if(next!=="AnyPOV")state.povs.add(next); render();
+  state.povs.clear(); if(next)state.povs.add(next); render();
 };
 
 // Sort
@@ -528,6 +534,7 @@ if(drawerTabs)drawerTabs.onclick=e=>{
     if(drawerTab===requestedTab && $("#drawerList")?.dataset.layout!==requestedTab) renderDrawer();
   });
 };
+$("#drawerSearch").placeholder="SEARCH...";
 $("#drawerSearch").oninput=renderDrawer;
 $("#drawerSortCycle").onclick=()=>{
   drawerSort="most";
@@ -768,14 +775,14 @@ function openModal(b,keepOpen=false){
   $("#modalSettingRow").classList.toggle("is-empty",!settings.length);
   $("#modalSetting").innerHTML=settings.length?settings.map(id=>`<button data-quick-setting="${esc(id)}">${esc(settingLabel(id))}</button>`).join(""):`<span class="modal-setting-empty">NOT YET CLASSIFIED</span>`;
   const universe=canonicalUniverse(b.universe);
-  $(".modal-universe-row").hidden=!universe&&!b.lorebook;
+  $(".modal-universe-row").hidden=!universe;
   $("#modalUniverse").hidden=!universe;
   $("#modalUniverse").innerHTML=universe?`${globeSvg}<span>UNIVERSE / ${esc(universe)}</span>`:"";
   $("#modalUniverse").dataset.quickUniverse=universe;
   $("#modalUniverse").title=universe?`Show universe: ${universe}`:"";
-  $("#modalLoreFlag").innerHTML=b.lorebook?bookSvg:"";
-  $("#modalLoreFlag").title=b.lorebook?"Lorebook available":"";
-  $("#modalPov").textContent=povLabel(b.pov);
+  $("#modalLoreFlag").innerHTML="";
+  $("#modalLoreFlag").title="";
+  $("#modalPov").textContent="";
   $("#modalTags").innerHTML=`<div class="modal-primary-tags">${(b.tags||[]).map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}</div>${(b.hashtags||[]).length?`<div class="modal-hashtags">${(b.hashtags||[]).map(h=>`<button data-hashtag="${esc(h)}">#${esc(cleanHashtag(h))}</button>`).join("")}</div>`:''}`;
   $("#openBot").href=b.url;
   $("#openBot").textContent=`OPEN ON ${b.platform} ↗`;

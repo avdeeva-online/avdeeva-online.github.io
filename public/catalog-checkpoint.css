@@ -1,0 +1,76 @@
+/* Mobile catalog/modal checkpoint: compact navigation, direct metadata hierarchy. */
+.card-media{position:relative}
+.card-lore-overlay{
+  position:absolute;z-index:4;top:8px;right:8px;
+  display:grid;place-items:center;width:18px;height:18px;
+  color:#bdcaa6;pointer-events:none;
+  filter:drop-shadow(0 1px 2px #050705) drop-shadow(0 0 3px rgba(5,7,5,.9));
+}
+.card-lore-overlay .ui-icon{display:block;width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.65}
+
+@media(max-width:760px){
+  /* The drawer gets to the actual index sooner without shrinking tap targets. */
+  .catalog-drawer{padding-top:6px!important}
+  .drawer-head{min-height:32px!important;padding-bottom:3px!important}
+  .drawer-head strong{margin-top:1px!important;font-size:10px!important}
+  .drawer-head-copy>span{display:none!important}
+  .drawer-head button{width:27px!important;height:27px!important}
+  .drawer-status{min-height:18px!important;height:18px!important}
+  .drawer-tabs .drawer-tab{min-height:28px!important;height:28px!important;padding:2px 1px!important}
+  .drawer-query-row{min-height:31px!important;height:31px!important;gap:3px!important}
+  .drawer-search{height:29px!important;min-height:29px!important;margin:3px 0!important;padding-inline:6px!important}
+  .drawer-search input{font-size:14px!important}
+  .drawer-tool-btn{min-width:45px!important;min-height:29px!important;height:29px!important;padding:2px 4px!important}
+
+  /* Image first, then the record identity and only existing metadata. */
+  .modal-heading-row{order:1!important}
+  .modal-setting-row{order:2!important}
+  .modal-universe-row{order:3!important}
+  .modal-author-row{order:4!important}
+  .modal-tags{order:5!important}
+  .modal-public-summary{order:6!important}
+  .card-data-shell{order:7!important}
+  .modal-action-groups{order:8!important}
+  .modal-heading-row h2{margin-bottom:6px!important}
+  .modal-setting-row{
+    display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;
+    align-items:center!important;column-gap:7px!important;
+    margin:0 0 4px!important;padding:4px 6px!important;
+  }
+  .modal-setting-row[hidden],.modal-universe-row[hidden]{display:none!important}
+  .modal-setting-heading{display:inline-flex!important;align-items:center!important;gap:4px!important;padding:0!important;line-height:1!important}
+  .modal-setting-heading i{display:grid;place-items:center;width:12px;height:12px;line-height:12px}
+  .modal-setting-row>div{align-items:center!important;min-width:0!important}
+  .modal-setting-row button,.modal-setting-empty{line-height:1.15!important}
+  .modal-universe-row{min-height:0!important;margin:0 0 3px!important}
+  .modal-author-row{margin-top:0!important}
+  .modal-author-row .pov-label:empty{display:none!important}
+
+  /* Tags are normal document flow: no clipped last chip or nested swipe rail. */
+  .modal-primary-tags,.modal-hashtags{
+    flex-wrap:wrap!important;height:auto!important;max-height:none!important;
+    padding-right:1px!important;overflow:visible!important;touch-action:auto!important;
+  }
+  .modal-primary-tags button,.modal-hashtags button{
+    flex:0 1 auto!important;max-width:100%!important;height:auto!important;
+    white-space:normal!important;overflow-wrap:anywhere!important;text-align:left!important;
+  }
+
+  /* One mobile scrolling surface: collapse/fade instead of an inner scrollbar. */
+  .modal-public-summary:not(.expanded) .modal-public-body{
+    max-height:116px!important;overflow:hidden!important;
+    -webkit-mask-image:linear-gradient(to bottom,#000 0,#000 70%,transparent 100%);
+    mask-image:linear-gradient(to bottom,#000 0,#000 70%,transparent 100%);
+  }
+  .modal-public-summary.expanded .modal-public-body{
+    max-height:none!important;overflow:visible!important;
+    -webkit-mask-image:none;mask-image:none;
+  }
+  .modal-public-more{
+    display:flex;align-items:center;justify-content:center;width:100%;min-height:27px;
+    margin:4px 0 -3px;border:0;border-top:1px solid rgba(154,123,82,.28);
+    background:transparent;color:#c7b58f;font:700 6.8px/1 var(--mono);
+    letter-spacing:.12em;cursor:pointer;
+  }
+  .modal-public-more[hidden]{display:none!important}
+}

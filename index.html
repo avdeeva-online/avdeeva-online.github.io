@@ -7,6 +7,7 @@
   <title>ARCHIVE.EXE</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="public/mobile-quiet.css">
+  <link rel="stylesheet" href="public/catalog-checkpoint.css">
 </head>
 <body>
 <div class="noise"></div>
@@ -68,7 +69,7 @@
         <button id="loreToggle" class="control icon-toggle lore-toggle" title="Lorebook filter: off" aria-label="Show only bots with lorebooks" aria-pressed="false">
           <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3.2-.9 5.7-.6 8.5 1.1v12c-2.8-1.7-5.3-2-8.5-1.1zM20.5 5.5c-3.2-.9-5.7-.6-8.5 1.1v12c2.8-1.7 5.3-2 8.5-1.1z"/></svg>
         </button>
-        <button id="povCycle" class="control pov-cycle" title="POV: AnyPOV" aria-label="POV filter: AnyPOV" data-pov="AnyPOV"><span class="pov-cycle-label">ANY POV</span></button>
+        <button id="povCycle" class="control pov-cycle" title="POV: all" aria-label="POV filter: all" data-pov=""><span class="pov-cycle-label">POV</span></button>
       </div>
 
       <div class="filter-group secondary-group">
@@ -154,7 +155,7 @@
     <button class="drawer-tab" data-drawer-tab="universe"><em>04</em><span>UNIVERSES</span></button>
   </div>
   <div class="drawer-query-row">
-    <label class="drawer-search"><span>⌕</span><input id="drawerSearch" placeholder="SEARCH INDEX..."></label>
+    <label class="drawer-search"><span>⌕</span><input id="drawerSearch" placeholder="SEARCH..."></label>
     <button id="drawerSortCycle" class="drawer-tool-btn" type="button" title="Sorted by bot count"><small>SORT</small><b>MOST</b></button>
   </div>
   <div id="drawerList" class="drawer-list" data-layout="setting"></div>

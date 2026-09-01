@@ -101,17 +101,17 @@
       more=document.createElement('button');
       more.type='button';
       more.className='modal-public-more';
-      more.textContent='READ MORE';
+      more.textContent='READ MORE ↓';
       more.addEventListener('click',()=>{
         const expanded=summary.classList.toggle('expanded');
-        more.textContent=expanded?'SHOW LESS':'READ MORE';
+        more.textContent=expanded?'SHOW LESS ↑':'READ MORE ↓';
         more.setAttribute('aria-expanded',expanded?'true':'false');
         if(!expanded)resetScroll(body);
       });
       summary.appendChild(more);
     }
     summary?.classList.remove('expanded');
-    if(more){more.textContent='READ MORE';more.setAttribute('aria-expanded','false');more.hidden=false}
+    if(more){more.textContent='READ MORE ↓';more.setAttribute('aria-expanded','false');more.hidden=false}
     resetScroll(body);
     requestAnimationFrame(()=>{
       if(!more)return;

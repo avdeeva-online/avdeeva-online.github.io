@@ -6842,3 +6842,8 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   }
   .mobile-action-toggle{min-height:34px!important;height:34px!important;font-size:8.5px!important}
 }
+
+/* Keep all five discovery tabs readable in the compact catalog drawer. */
+.drawer-tabs .drawer-tab{min-width:0!important;padding-inline:1px!important;font-size:6.7px!important;letter-spacing:.02em!important}
+.drawer-tabs .drawer-tab em,.drawer-tabs .drawer-tab span{display:block!important;white-space:nowrap}.drawer-tabs .drawer-tab em{margin-bottom:2px;font-size:5.5px!important}
+@media(max-width:760px){.drawer-tabs .drawer-tab{font-size:6.4px!important}}

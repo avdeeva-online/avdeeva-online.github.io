@@ -59,7 +59,7 @@ const settingSearchText = id => {const x=SETTING_BY_ID.get(id);return x?`${x.lab
 const settingDisplayLabel = id => `${SETTING_BY_ID.get(id)?.parent?'↳ ':''}${settingLabel(id)}`;
 const settingDescendsFrom = (id,parent) => {let x=SETTING_BY_ID.get(id);while(x?.parent){if(x.parent===parent)return true;x=SETTING_BY_ID.get(x.parent)}return false};
 const botHasSetting = (bot,id) => (bot.settingIds||[]).some(botId=>botId===id||settingDescendsFrom(botId,id));
-const allSettings = () => SETTING_DEFS.filter(def=>B.some(bot=>botHasSetting(bot,def.id))).map(def=>def.id);
+const allSettings = () => SETTING_DEFS.filter(def=>B.some(bot=>botHasSetting(bot,def.id))).map(def=>def.id).sort((a,b)=>count("setting",b)-count("setting",a)||settingLabel(a).localeCompare(settingLabel(b),undefined,{sensitivity:"base"}));
 const cleanUniverse = value => {
   const universe=cleanTag(value);
   if(!universe || /^(unclassified|unknown|none|null|n\/?a|setting|universe|world)\s*:?$/i.test(universe) || universe.length>80) return "";
@@ -517,6 +517,7 @@ function renderDrawer(){
   let vals=allVals.filter(v=>(drawerTab==="setting"?settingSearchText(v):v.toLowerCase()).includes(q));
 
   vals.sort((a,b)=>{
+    if(drawerTab==="setting") return count("setting",b)-count("setting",a) || settingLabel(a).localeCompare(settingLabel(b),undefined,{sensitivity:"base"});
     if(drawerSort==="za") return b.localeCompare(a,undefined,{sensitivity:"base"});
     if(drawerSort==="most") return count(drawerTab,b)-count(drawerTab,a) || a.localeCompare(b,undefined,{sensitivity:"base"});
     if(drawerSort==="least") return count(drawerTab,a)-count(drawerTab,b) || a.localeCompare(b,undefined,{sensitivity:"base"});
@@ -530,7 +531,7 @@ function renderDrawer(){
   $("#drawerFootStatus").textContent=q?`${String(vals.length).padStart(2,"0")} MATCHES`:"STABLE";
 
   const sortBtn=$("#drawerSortCycle");
-  if(sortBtn) sortBtn.querySelector("b").textContent=({az:"A→Z",za:"Z→A",most:"MOST",least:"LEAST"})[drawerSort];
+  if(sortBtn) sortBtn.querySelector("b").textContent=drawerTab==="setting"?"MOST":({az:"A→Z",za:"Z→A",most:"MOST",least:"LEAST"})[drawerSort];
 
   if(drawerTab==="tag"){
     list.innerHTML=vals.map(v=>`<button class="drawer-item drawer-tag-item ${hasSelectedTag(v)?'selected':''}" data-drawer-value="${esc(v)}"><span class="drawer-item-name">${esc(tagLabel(v))}</span><small>${String(count("tag",v)).padStart(2,"0")}</small></button>`).join("");
@@ -714,8 +715,9 @@ function openModal(b,keepOpen=false){
   $("#modalAuthorBadge").textContent=`@${b.author}`;
   $("#modalAuthorBadge").dataset.author=b.author;
   const settings=b.settingIds||[];
-  $("#modalSettingRow").hidden=!settings.length;
-  $("#modalSetting").innerHTML=settings.map(id=>`<button data-quick-setting="${esc(id)}">${esc(settingLabel(id))}</button>`).join("");
+  $("#modalSettingRow").hidden=false;
+  $("#modalSettingRow").classList.toggle("is-empty",!settings.length);
+  $("#modalSetting").innerHTML=settings.length?settings.map(id=>`<button data-quick-setting="${esc(id)}">${esc(settingLabel(id))}</button>`).join(""):`<span class="modal-setting-empty">NOT YET CLASSIFIED</span>`;
   const universe=canonicalUniverse(b.universe);
   $(".modal-universe-row").hidden=!universe&&!b.lorebook;
   $("#modalUniverse").hidden=!universe;
@@ -756,6 +758,7 @@ function openModal(b,keepOpen=false){
 function closeModal(){$("#modal").hidden=true;document.body.style.overflow=""}
 function renderModalPanel(){
   const panel=$("#modalPanel");
+  panel.dataset.panel=modalTab;
   if(!current){panel.innerHTML="";return}
   if(modalTab==="description"){
     panel.innerHTML=`<p class="modal-copy">${esc(current.short)}</p>`;
@@ -1196,7 +1199,8 @@ wireHashtagGhosts();
     e.stopImmediatePropagation();
 
     const value = item.dataset.drawerValue;
-    if(drawerTab === 'author') toggle('author', value);
+    if(drawerTab === 'setting') toggle('setting', value);
+    else if(drawerTab === 'author') toggle('author', value);
     else if(drawerTab === 'universe') toggle('universe', value);
     else if(drawerTab === 'tag') toggle('tag', value);
 

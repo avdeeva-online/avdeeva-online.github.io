@@ -72,7 +72,7 @@
 
       <div class="filter-group secondary-group">
         <button class="control subtle-control filter-trigger hashtag-trigger" data-filter="hashtag" title="Filter by hashtags"><span class="hash-mark">#</span><span>HASHTAGS</span><em id="hashtagCount"></em></button>
-        <button class="control subtle-control filter-trigger setting-trigger" data-filter="setting" title="Filter by setting"><span>SETTING</span><em id="settingCount"></em></button>
+        <button class="control subtle-control filter-trigger setting-trigger" data-filter="setting" title="Filter by setting"><span class="setting-filter-mark" aria-hidden="true">⌖</span><span>SETTING</span><em id="settingCount"></em></button>
         <button id="sortTrigger" class="control subtle-control"><span class="sort-mark">↕</span><span id="sortLabel">NEWEST</span><span class="chev">⌄</span></button>
       </div>
 
@@ -170,7 +170,7 @@
       <div class="modal-heading-row">
         <h2 id="modalTitle"></h2>
       </div>
-      <div id="modalSettingRow" class="modal-setting-row" hidden><span>SETTING</span><div id="modalSetting"></div></div>
+      <div id="modalSettingRow" class="modal-setting-row"><span class="modal-setting-heading"><i aria-hidden="true">⌖</i> SETTING</span><div id="modalSetting"></div></div>
       <div class="modal-universe-row">
         <button id="modalUniverse" class="universe-link modal-universe-under-title"></button>
         <span id="modalLoreFlag" class="modal-lore-flag"></span>

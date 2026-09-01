@@ -194,3 +194,96 @@
   .hero{height:82px!important;min-height:82px!important;max-height:82px!important}
   .hero-art{background-size:auto 82px!important}
 }
+
+/* v1.6 — balanced mobile controls and a warmer reading anchor. */
+@media (max-width:760px){
+  .toolbar-row{
+    grid-template-columns:repeat(12,minmax(0,1fr))!important;
+    column-gap:4px!important;
+    row-gap:5px!important;
+  }
+  .toolbar-row>#catalogOpen{
+    grid-column:1 / 2!important;
+    grid-row:1!important;
+    justify-self:start!important;
+    width:32px!important;
+    min-width:32px!important;
+    height:32px!important;
+  }
+  .toolbar-row>#importOpen{
+    grid-column:4 / 10!important;
+    grid-row:1!important;
+    width:100%!important;
+    border-color:rgba(151,121,75,.78)!important;
+    background:linear-gradient(180deg,rgba(62,50,31,.42),rgba(29,27,20,.66))!important;
+    color:#d8c5a1!important;
+    box-shadow:inset 0 0 0 1px rgba(178,142,82,.035)!important;
+  }
+  .toolbar-row>#randomBtn{
+    grid-column:12 / 13!important;
+    grid-row:1!important;
+    justify-self:end!important;
+    width:32px!important;
+    min-width:32px!important;
+    height:32px!important;
+    padding:0!important;
+  }
+  .toolbar-row>#randomBtn>span:last-child{display:none!important}
+  .toolbar-row>#randomBtn .random-mark,
+  .toolbar-row>#randomBtn .dice-icon{width:13px!important;min-width:13px!important;height:13px!important}
+
+  .searchbar{grid-column:1 / 13!important;grid-row:2!important}
+
+  .primary-group>.control,
+  .secondary-group>.control,
+  #povCycle,#loreToggle{
+    grid-row:3!important;
+    justify-self:stretch!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+  }
+  .primary-group>.control:nth-child(1){grid-column:1 / 3!important}
+  .primary-group>.control:nth-child(2){grid-column:3 / 5!important}
+  .primary-group>.control:nth-child(3){grid-column:5 / 7!important}
+  .secondary-group>.control:nth-child(1){grid-column:7 / 9!important}
+  .secondary-group>.control:nth-child(2){grid-column:9 / 11!important}
+  .secondary-group>.control:nth-child(3){grid-column:11 / 13!important}
+
+  .primary-group>.filter-trigger[data-filter="author"]::before,
+  #povCycle::before,
+  .universe-trigger::before,
+  .hashtag-trigger .hash-mark,
+  #sortTrigger .sort-mark,
+  .setting-filter-mark,
+  #loreToggle .ui-icon{
+    box-sizing:border-box!important;
+    display:grid!important;
+    place-items:center!important;
+    width:15px!important;
+    min-width:15px!important;
+    height:15px!important;
+    margin:0!important;
+    padding:0!important;
+    font-family:Arial,sans-serif!important;
+    font-size:13px!important;
+    font-weight:400!important;
+    line-height:15px!important;
+  }
+  #loreToggle .ui-icon{display:block!important;width:14px!important;min-width:14px!important;height:14px!important}
+  .primary-group>.control::after,.secondary-group>.control::after{
+    min-height:7px!important;
+    line-height:7px!important;
+  }
+
+  .modal-public-summary{
+    border-color:rgba(145,113,72,.60)!important;
+    background:linear-gradient(135deg,rgba(83,61,37,.38),rgba(49,57,37,.48))!important;
+    box-shadow:inset 3px 0 0 rgba(164,127,79,.36),inset 0 0 24px rgba(129,91,49,.07)!important;
+  }
+  .modal-public-head{
+    border-bottom-color:rgba(154,123,82,.28)!important;
+    background:rgba(67,53,34,.13)!important;
+  }
+  .modal-public-body{background:transparent!important}
+}

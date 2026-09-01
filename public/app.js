@@ -513,7 +513,21 @@ $("#sortMenu").onclick=e=>{const b=e.target.closest("[data-sort]");if(!b)return;
 function openDrawer(){$("#catalogDrawer").classList.add("open");$("#catalogDrawer").setAttribute("aria-hidden","false");$("#drawerShade").hidden=false;if(isCompactMobile())document.body.classList.add("drawer-open")}
 function closeDrawer(){$("#catalogDrawer").classList.remove("open");$("#catalogDrawer").setAttribute("aria-hidden","true");$("#drawerShade").hidden=true;document.body.classList.remove("drawer-open")}
 $("#catalogOpen").onclick=openDrawer;$("#catalogClose").onclick=closeDrawer;$("#drawerShade").onclick=closeDrawer;
-$$('.drawer-tab').forEach(b=>b.onclick=()=>{drawerTab=b.dataset.drawerTab;$$('.drawer-tab').forEach(x=>x.classList.toggle('active',x===b));$("#drawerSearch").value="";renderDrawer()});
+const drawerTabs=$(".drawer-tabs");
+if(drawerTabs)drawerTabs.onclick=e=>{
+  const b=e.target.closest(".drawer-tab");
+  if(!b || !["setting","tag","author","universe"].includes(b.dataset.drawerTab)) return;
+  const requestedTab=b.dataset.drawerTab;
+  drawerTab=requestedTab;
+  $$('.drawer-tab').forEach(x=>x.classList.toggle('active',x===b));
+  $("#drawerSearch").value="";
+  renderDrawer();
+  // A second lightweight check prevents a late catalog refresh from leaving
+  // the highlighted tab and the rendered list out of sync on mobile Safari.
+  requestAnimationFrame(()=>{
+    if(drawerTab===requestedTab && $("#drawerList")?.dataset.layout!==requestedTab) renderDrawer();
+  });
+};
 $("#drawerSearch").oninput=renderDrawer;
 $("#drawerSortCycle").onclick=()=>{
   drawerSort="most";
@@ -1134,8 +1148,10 @@ function catalogLabelAnomaly(){
     }
   }
 }
-$('#catalogOpen')?.addEventListener('click',()=>setTimeout(catalogLabelAnomaly,120));
-$$('.drawer-tab').forEach(t=>t.addEventListener('click',()=>setTimeout(catalogLabelAnomaly,90)));
+if(!isCompactMobile()){
+  $('#catalogOpen')?.addEventListener('click',()=>setTimeout(catalogLabelAnomaly,120));
+  $$('.drawer-tab').forEach(t=>t.addEventListener('click',()=>setTimeout(catalogLabelAnomaly,90)));
+}
 
 // Small count anomaly: the archive occasionally counts one record that is not actually returned.
 let countGhostTimer;

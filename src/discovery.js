@@ -2,7 +2,7 @@ const clean = value => String(value ?? '').replace(/\s+/g,' ').trim();
 const fold = value => clean(value).toLocaleLowerCase();
 
 export const SETTING_DEFINITIONS = [
-  {id:'omegaverse',label:'Omegaverse',aliases:['abo','a/b/o','alpha beta omega'],any:[/\bomegaverse\b/i,/\ba\/?b\/?o\b/i,/alpha\s*[\/·,]\s*beta\s*[\/·,]\s*omega/i,/secondary genders?/i]},
+  {id:'omegaverse',label:'Omegaverse',aliases:['abo','a/b/o','alpha beta omega'],any:[/\bomegaverse\b/i,/\ba\/?b\/?o\b/i,/alpha\s*[\/·,]\s*beta\s*[\/·,]\s*omega/i,/secondary genders?/i,/\bgo(?:es|ing)? into (?:rut|heat)\b/i,/\b(?:rut|heat) cycle\b/i,/\bmate mark(?:s|ing|ed)?\b/i,/\bbreeder\b/i]},
   {id:'post-apocalypse',label:'Post-apocalypse',aliases:['post apocalypse','postapocalypse','апокалипсис','постапокалипсис'],any:[/post[- ]?apocal/i,/постапокалип/i,/after (?:the )?(?:collapse|fall|apocalypse)/i,/nuclear fallout/i,/\bwasteland\b/i]},
   {id:'zombie-apocalypse',label:'Zombie apocalypse',parent:'post-apocalypse',aliases:['zombie apocalypse','зомби апокалипсис'],any:[/zombie.?apocal/i,/зомби.?апокалип/i,/\bzombies?\b/i,/\bundead\b/i,/\bhorde\b/i]},
   {id:'rusreal',label:'Rusreal',aliases:['русреал','russian realism','modern russia','современная россия'],any:[/\bрусреал\b/i,/\brusreal\b/i,/russian realism/i,/\b(?:russia|moscow)\b/i,/\b(?:росси[яи]|москв[аеыу])\b/i]},
@@ -19,9 +19,9 @@ export const SETTING_DEFINITIONS = [
   {id:'sci-fi',label:'Sci-Fi',aliases:['science fiction','научная фантастика'],any:[/\bsci[- ]?fi\b/i,/science fiction/i,/научн(?:ая|ой) фантаст/i,/\bintergalactic\b/i]},
   {id:'cyberpunk',label:'Cyberpunk',aliases:['киберпанк'],any:[/\bcyberpunk\b/i,/\bкиберпанк\b/i,/neon dystopia/i]},
   {id:'supernatural',label:'Supernatural',aliases:['urban fantasy','сверхъестественное'],any:[/\bsupernatural\b/i,/urban fantasy/i,/сверхъестествен/i]},
-  {id:'college',label:'College / University',aliases:['college','university','университет','колледж'],any:[/\bcollege\b/i,/\buniversity\b/i,/\bcampus\b/i,/университет/i,/колледж/i]},
+  {id:'college',label:'College / University',aliases:['college','university','университет','колледж'],any:[/\b(?:college|university) (?:students?|roommates?|roomies|professors?|teachers?|classmates?|campus|courses?|lectures?|classes?|life|housing|dorms?|parties|setting|au)\b/i,/\b(?:students?|roommates?|roomies|professors?|teachers?|classmates?) (?:at|in|from) (?:a |the )?(?:college|university)\b/i,/\b(?:campus|dormitory|dorm room|fraternity|sorority)\b/i,/\bhale university\b/i,/\b[A-Z][A-Z' -]{2,30} UNIVERSITY\b/,/университетск|студент.{0,18}университет|колледж.{0,18}(?:студент|общежит|сосед)/i]},
   {id:'high-school',label:'High school',aliases:['school setting','старшая школа'],any:[/\bhigh school\b/i,/\bschool setting\b/i,/старш(?:ая|ей) школ/i]},
-  {id:'mafia',label:'Mafia / Crime',aliases:['mafia','organized crime','криминал'],any:[/\bmafia\b/i,/organized crime/i,/crime family/i,/\bмафи/i,/криминальн/i]}
+  {id:'mafia',label:'Mafia / Crime',aliases:['mafia','organized crime','криминал'],any:[/\bmafia\b/i,/organized crime/i,/crime family/i,/\bsyndicate\b/i,/\bgang(?:ster)?\b/i,/\bмафи/i,/криминальн/i]}
 ];
 
 const definitionById = new Map(SETTING_DEFINITIONS.map(x=>[x.id,x]));
@@ -30,7 +30,10 @@ const descendants = id => SETTING_DEFINITIONS.filter(x=>isDescendant(x.id,id));
 
 export function inferSettingIds(source,row={}){
   const scripts=Array.isArray(source?.scripts)?source.scripts:[];
-  const parts=[source?.name,source?.chat_name,source?.description,source?.rawDescription,source?.scenario,row?.name,row?.short_description,row?.description,row?.scenario,row?.universe,...jsonArray(row?.tags),...jsonArray(row?.hashtags),...jsonArray(row?.intros),...scripts.map(x=>x?.title)];
+  // Full imported descriptions frequently end with promotional lists for other
+  // bots. Restrict automatic classification to fields that describe this
+  // record directly, otherwise a promo for a university/mafia bot pollutes it.
+  const parts=[source?.name,source?.chat_name,source?.scenario,row?.name,row?.short_description,row?.scenario,row?.universe,...jsonArray(row?.tags),...jsonArray(row?.hashtags),...jsonArray(row?.intros),...scripts.map(x=>x?.title)];
   const text=parts.filter(Boolean).join('\n');
   const matched=SETTING_DEFINITIONS.filter(def=>{
     if(def.all?.length && def.all.every(re=>re.test(text)))return true;

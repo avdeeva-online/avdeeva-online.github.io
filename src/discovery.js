@@ -19,8 +19,8 @@ export const SETTING_DEFINITIONS = [
   {id:'sci-fi',label:'Sci-Fi',aliases:['science fiction','научная фантастика'],any:[/\bsci[- ]?fi\b/i,/science fiction/i,/научн(?:ая|ой) фантаст/i,/\bintergalactic\b/i]},
   {id:'cyberpunk',label:'Cyberpunk',aliases:['киберпанк'],any:[/\bcyberpunk\b/i,/\bкиберпанк\b/i,/neon dystopia/i]},
   {id:'supernatural',label:'Supernatural',aliases:['urban fantasy','сверхъестественное'],any:[/\bsupernatural\b/i,/urban fantasy/i,/сверхъестествен/i]},
-  {id:'college',label:'College / University',aliases:['college','university','университет','колледж'],any:[/\b(?:college|university) (?:students?|roommates?|roomies|professors?|teachers?|classmates?|campus|courses?|lectures?|classes?|life|housing|dorms?|parties|setting|au)\b/i,/\b(?:students?|roommates?|roomies|professors?|teachers?|classmates?) (?:at|in|from) (?:a |the )?(?:college|university)\b/i,/\b(?:campus|dormitory|dorm room|fraternity|sorority)\b/i,/\bhale university\b/i,/\b[A-Z][A-Z' -]{2,30} UNIVERSITY\b/,/университетск|студент.{0,18}университет|колледж.{0,18}(?:студент|общежит|сосед)/i]},
-  {id:'high-school',label:'High school',aliases:['school setting','старшая школа'],any:[/\bhigh school\b/i,/\bschool setting\b/i,/старш(?:ая|ей) школ/i]},
+  {id:'college',label:'School / University',aliases:['school','high school','college','university','школа','старшая школа','университет','универ','колледж'],any:[/\b(?:high school|college|university) (?:students?|roommates?|roomies|professors?|teachers?|classmates?|campus|courses?|lectures?|classes?|life|housing|dorms?|parties|setting|au)\b/i,/\b(?:students?|roommates?|roomies|professors?|teachers?|classmates?) (?:at|in|from) (?:a |the )?(?:high school|college|university)\b/i,/\b(?:high school|school setting|campus|dormitory|dorm room|fraternity|sorority)\b/i,/\bhale university\b/i,/\b[A-Z][A-Z' -]{2,30} UNIVERSITY\b/,/старш(?:ая|ей) школ|школьн(?:ик|иц|ый|ая)|университетск|студент.{0,18}университет|колледж.{0,18}(?:студент|общежит|сосед)/i]},
+  {id:'slice-of-life',label:'Slice of Life / Everyday',aliases:['slice of life','everyday','modern day','повседневность','современность'],any:[/\bslice of life\b/i,/\beveryday life\b/i,/\bmodern[- ]day\b/i,/\b(?:boyfriend|girlfriend|husband|wife|ex[- ]?(?:boyfriend|girlfriend|husband|wife)|best friend|coworker|boss|neighbor|roommate|single (?:dad|mom|father|mother)|office|workplace|apartment|dating app|vacation)\b/i,/\b(?:парень|девушка|муж|жена|бывш(?:ий|ая)|лучш(?:ий|ая) друг|коллега|начальник|сосед|соседка|сожитель|офис|квартира|повседневн|современн)\b/i]},
   {id:'mafia',label:'Mafia / Crime',aliases:['mafia','organized crime','криминал'],any:[/\bmafia\b/i,/organized crime/i,/crime family/i,/\bsyndicate\b/i,/\bgang(?:ster)?\b/i,/\bмафи/i,/криминальн/i]}
 ];
 
@@ -40,7 +40,10 @@ export function inferSettingIds(source,row={}){
     return Boolean(def.any?.some(re=>re.test(text)));
   }).map(x=>x.id);
   const set=new Set(matched);
-  return matched.filter(id=>!descendants(id).some(child=>set.has(child.id)));
+  // Everyday life is the broad fallback. A more specific detected setting
+  // (school, mafia, fantasy, etc.) should win instead of producing two labels.
+  if(set.size>1)set.delete('slice-of-life');
+  return [...set].filter(id=>!descendants(id).some(child=>set.has(child.id)));
 }
 
 export function settingLabels(ids){return jsonArray(ids).map(id=>definitionById.get(id)?.label).filter(Boolean)}

@@ -12,7 +12,7 @@ const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const state = { q:"", settings:new Set(), authors:new Set(), universes:new Set(), tags:new Set(), hashtags:new Set(), povs:new Set(), lorebook:false, sort:"newest" };
-let activeFilter = null, drawerTab = "setting", drawerSort = "az", current = null, modalTab = "description", tagsExpanded = false, openIntro = 0;
+let activeFilter = null, drawerTab = "setting", drawerSort = "most", current = null, modalTab = "description", tagsExpanded = false, openIntro = 0;
 
 const bookSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3.2-.9 5.7-.6 8.5 1.1v12c-2.8-1.7-5.3-2-8.5-1.1zM20.5 5.5c-3.2-.9-5.7-.6-8.5 1.1v12c2.8-1.7 5.3-2 8.5-1.1z"/></svg>`;
 const globeSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.2 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.7 8.6 12s1.2 6.1 3.4 8.5"/></svg>`;
@@ -49,16 +49,17 @@ const SETTING_DEFS = [
   ["sci-fi","Sci-Fi","","science fiction научная фантастика"],
   ["cyberpunk","Cyberpunk","","киберпанк"],
   ["supernatural","Supernatural","","urban fantasy сверхъестественное"],
-  ["college","College / University","","college university университет колледж"],
-  ["high-school","High school","","school setting старшая школа"],
+  ["college","School / University","","school high school college university школа старшая школа университет универ колледж"],
+  ["slice-of-life","Slice of Life / Everyday","","slice of life everyday modern day повседневность современность"],
   ["mafia","Mafia / Crime","","mafia organized crime криминал"]
 ].map(([id,label,parent,aliases])=>({id,label,parent,aliases}));
 const SETTING_BY_ID = new Map(SETTING_DEFS.map(x=>[x.id,x]));
+const canonicalSettingId = id => id==="high-school" ? "college" : id;
 const settingLabel = id => SETTING_BY_ID.get(id)?.label || id;
 const settingSearchText = id => {const x=SETTING_BY_ID.get(id);return x?`${x.label} ${x.aliases}`.toLocaleLowerCase():String(id).toLocaleLowerCase()};
 const settingDisplayLabel = id => `${SETTING_BY_ID.get(id)?.parent?'↳ ':''}${settingLabel(id)}`;
 const settingDescendsFrom = (id,parent) => {let x=SETTING_BY_ID.get(id);while(x?.parent){if(x.parent===parent)return true;x=SETTING_BY_ID.get(x.parent)}return false};
-const botHasSetting = (bot,id) => (bot.settingIds||[]).some(botId=>botId===id||settingDescendsFrom(botId,id));
+const botHasSetting = (bot,id) => (bot.settingIds||[]).some(rawId=>{const botId=canonicalSettingId(rawId),wanted=canonicalSettingId(id);return botId===wanted||settingDescendsFrom(botId,wanted)});
 const allSettings = () => SETTING_DEFS.filter(def=>B.some(bot=>botHasSetting(bot,def.id))).map(def=>def.id).sort((a,b)=>count("setting",b)-count("setting",a)||settingLabel(a).localeCompare(settingLabel(b),undefined,{sensitivity:"base"}));
 const cleanUniverse = value => {
   const universe=cleanTag(value);
@@ -73,12 +74,12 @@ const allUniverses = () => {
     const universe=cleanUniverse(bot.universe),key=universeKey(universe);
     if(key && !universes.has(key)) universes.set(key,universe);
   });
-  return [...universes.values()].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:"base"}));
+  return [...universes.values()].sort((a,b)=>count("universe",b)-count("universe",a)||a.localeCompare(b,undefined,{sensitivity:"base"}));
 };
 const canonicalUniverse = value => allUniverses().find(universe=>universeKey(universe)===universeKey(value)) || cleanUniverse(value);
 const botHasUniverse = (bot,value) => universeKey(bot.universe)===universeKey(value);
 const selectedUniverse = value => [...state.universes].find(universe=>universeKey(universe)===universeKey(value));
-const uniq = key => key==="universe" ? allUniverses() : [...new Set(B.map(x => x[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+const uniq = key => key==="universe" ? allUniverses() : [...new Set(B.map(x => x[key]).filter(Boolean))].sort((a,b)=>key==="author"?(count("author",b)-count("author",a)||a.localeCompare(b,undefined,{sensitivity:"base"})):a.localeCompare(b,undefined,{sensitivity:"base"}));
 const allTags = () => {
   syncBots();
   const tags=new Map();
@@ -90,7 +91,7 @@ const allTags = () => {
       tags.set(key,displayTag(tag));
     }
   });
-  return [...tags.values()].sort((a,b)=>tagText(a).localeCompare(tagText(b),undefined,{sensitivity:"base"}));
+  return [...tags.values()].sort((a,b)=>count("tag",b)-count("tag",a)||tagText(a).localeCompare(tagText(b),undefined,{sensitivity:"base"}));
 };
 const canonicalTag = value => {
   const key=tagKey(value);
@@ -108,7 +109,7 @@ const allHashtags = () => {
     const key=hashtagKey(hashtag);
     if(key && !hashtags.has(key)) hashtags.set(key,cleanHashtag(hashtag));
   });
-  return [...hashtags.values()].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:"base"}));
+  return [...hashtags.values()].sort((a,b)=>count("hashtag",b)-count("hashtag",a)||a.localeCompare(b,undefined,{sensitivity:"base"}));
 };
 const canonicalHashtag = value => {
   const key=hashtagKey(value);
@@ -282,7 +283,7 @@ function cardHtml(b,i){
   const tagChip = tag => passiveMobile ? `<span>${esc(tagLabel(tag))}</span>` : `<button data-tag="${esc(tag)}">${esc(tagLabel(tag))}</button>`;
   const hashtagChip = hashtag => passiveMobile ? `<span>#${esc(cleanHashtag(hashtag))}</span>` : `<button data-hashtag="${esc(hashtag)}">#${esc(cleanHashtag(hashtag))}</button>`;
   const universe=canonicalUniverse(b.universe);
-  const setting=(b.settingIds||[])[0]||"";
+  const setting=(b.settingIds||[]).map(canonicalSettingId).find(id=>SETTING_BY_ID.has(id))||"";
   return `<article class="card" data-id="${esc(b.id)}" style="animation-delay:${Math.min(i,12)*18}ms">
     <div class="card-media"><img src="${esc(b.image)}" alt="${esc(b.nameEn)}" loading="${i<4?'eager':'lazy'}" decoding="async"${i<2?' fetchpriority="high"':''}>${b.isNew?'<span class="new-badge">NEW</span>':''}<a class="download-hover" href="${esc(b.download)}" download data-stop>BOT CARD ↓</a></div>
     <div class="card-body">
@@ -375,7 +376,7 @@ function valuesForFilter(kind){
   if(kind === "tag") return allTags();
   if(kind === "author") return uniq("author");
   if(kind === "universe") return uniq("universe");
-  if(kind === "pov") return ["AnyPOV","FemPOV","MalePOV"];
+  if(kind === "pov") return ["AnyPOV","FemPOV","MalePOV"].sort((a,b)=>count("pov",b)-count("pov",a)||a.localeCompare(b));
   if(kind === "hashtag") return allHashtags();
   return [];
 }
@@ -497,8 +498,7 @@ $("#catalogOpen").onclick=openDrawer;$("#catalogClose").onclick=closeDrawer;$("#
 $$('.drawer-tab').forEach(b=>b.onclick=()=>{drawerTab=b.dataset.drawerTab;$$('.drawer-tab').forEach(x=>x.classList.toggle('active',x===b));$("#drawerSearch").value="";renderDrawer()});
 $("#drawerSearch").oninput=renderDrawer;
 $("#drawerSortCycle").onclick=()=>{
-  const order=["az","za","most","least"];
-  drawerSort=order[(order.indexOf(drawerSort)+1)%order.length];
+  drawerSort="most";
   renderDrawer();
 };
 function drawerSelectionCount(){
@@ -517,11 +517,8 @@ function renderDrawer(){
   let vals=allVals.filter(v=>(drawerTab==="setting"?settingSearchText(v):v.toLowerCase()).includes(q));
 
   vals.sort((a,b)=>{
-    if(drawerTab==="setting") return count("setting",b)-count("setting",a) || settingLabel(a).localeCompare(settingLabel(b),undefined,{sensitivity:"base"});
-    if(drawerSort==="za") return b.localeCompare(a,undefined,{sensitivity:"base"});
-    if(drawerSort==="most") return count(drawerTab,b)-count(drawerTab,a) || a.localeCompare(b,undefined,{sensitivity:"base"});
-    if(drawerSort==="least") return count(drawerTab,a)-count(drawerTab,b) || a.localeCompare(b,undefined,{sensitivity:"base"});
-    return a.localeCompare(b,undefined,{sensitivity:"base"});
+    const label=value=>drawerTab==="setting"?settingLabel(value):value;
+    return count(drawerTab,b)-count(drawerTab,a) || label(a).localeCompare(label(b),undefined,{sensitivity:"base"});
   });
 
   const list=$("#drawerList");
@@ -531,7 +528,7 @@ function renderDrawer(){
   $("#drawerFootStatus").textContent=q?`${String(vals.length).padStart(2,"0")} MATCHES`:"STABLE";
 
   const sortBtn=$("#drawerSortCycle");
-  if(sortBtn) sortBtn.querySelector("b").textContent=drawerTab==="setting"?"MOST":({az:"A→Z",za:"Z→A",most:"MOST",least:"LEAST"})[drawerSort];
+  if(sortBtn) sortBtn.querySelector("b").textContent="MOST";
 
   if(drawerTab==="tag"){
     list.innerHTML=vals.map(v=>`<button class="drawer-item drawer-tag-item ${hasSelectedTag(v)?'selected':''}" data-drawer-value="${esc(v)}"><span class="drawer-item-name">${esc(tagLabel(v))}</span><small>${String(count("tag",v)).padStart(2,"0")}</small></button>`).join("");
@@ -714,7 +711,7 @@ function openModal(b,keepOpen=false){
   $("#modalAuthor").setAttribute("aria-label",`Show all bots by @${b.author}`);
   $("#modalAuthorBadge").textContent=`@${b.author}`;
   $("#modalAuthorBadge").dataset.author=b.author;
-  const settings=b.settingIds||[];
+  const settings=[...new Set((b.settingIds||[]).map(canonicalSettingId).filter(id=>SETTING_BY_ID.has(id)))];
   $("#modalSettingRow").hidden=false;
   $("#modalSettingRow").classList.toggle("is-empty",!settings.length);
   $("#modalSetting").innerHTML=settings.length?settings.map(id=>`<button data-quick-setting="${esc(id)}">${esc(settingLabel(id))}</button>`).join(""):`<span class="modal-setting-empty">NOT YET CLASSIFIED</span>`;

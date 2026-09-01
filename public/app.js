@@ -1189,31 +1189,6 @@ wireHashtagGhosts();
 
   function drawerIsOpen(){ return drawer.classList.contains('open'); }
 
-  // Replace the inherited delegated handler so one click produces one toggle
-  // and the drawer remains open after a selection.
-  list.onclick = function(e){
-    const item = e.target.closest('[data-drawer-value]');
-    if(!item || !list.contains(item)) return;
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-
-    const value = item.dataset.drawerValue;
-    if(drawerTab === 'setting') toggle('setting', value);
-    else if(drawerTab === 'author') toggle('author', value);
-    else if(drawerTab === 'universe') toggle('universe', value);
-    else if(drawerTab === 'tag') toggle('tag', value);
-
-    // Update the main catalog and all counters, then explicitly preserve drawer state.
-    const wasOpen = drawerIsOpen();
-    render();
-    if(wasOpen){
-      drawer.classList.add('open');
-      drawer.setAttribute('aria-hidden','false');
-      if(shade) shade.hidden = false;
-    }
-  };
-
   // Clicking anywhere outside the drawer closes it. Clicks inside never do.
   document.addEventListener('pointerdown', function(e){
     if(!drawerIsOpen()) return;

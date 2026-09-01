@@ -51,7 +51,24 @@ const canonicalTag = value => {
 const botHasTag = (bot,value) => (bot.tags||[]).some(tag=>tagKey(tag)===tagKey(value));
 const selectedTag = value => [...state.tags].find(tag=>tagKey(tag)===tagKey(value));
 const hasSelectedTag = value => Boolean(selectedTag(value));
-const allHashtags = () => [...new Set(B.flatMap(b => b.hashtags || []))].sort((a,b)=>a.localeCompare(b));
+const cleanHashtag = value => cleanTag(value).replace(/^#+\s*/,"");
+const hashtagKey = value => cleanHashtag(value).toLocaleLowerCase();
+const allHashtags = () => {
+  syncBots();
+  const hashtags=new Map();
+  B.flatMap(bot=>bot.hashtags||[]).forEach(hashtag=>{
+    const key=hashtagKey(hashtag);
+    if(key && !hashtags.has(key)) hashtags.set(key,cleanHashtag(hashtag));
+  });
+  return [...hashtags.values()].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:"base"}));
+};
+const canonicalHashtag = value => {
+  const key=hashtagKey(value);
+  return allHashtags().find(hashtag=>hashtagKey(hashtag)===key) || cleanHashtag(value);
+};
+const botHasHashtag = (bot,value) => (bot.hashtags||[]).some(hashtag=>hashtagKey(hashtag)===hashtagKey(value));
+const selectedHashtag = value => [...state.hashtags].find(hashtag=>hashtagKey(hashtag)===hashtagKey(value));
+const hasSelectedHashtag = value => Boolean(selectedHashtag(value));
 
 function selectionCoversAll(set, values){
   return values.length > 0 && values.every(v => set.has(v));
@@ -62,7 +79,7 @@ function count(kind, val){
   if(kind === "author") return B.filter(b => b.author === val).length;
   if(kind === "universe") return B.filter(b => b.universe === val).length;
   if(kind === "pov") return B.filter(b => b.pov === val).length;
-  if(kind === "hashtag") return B.filter(b => (b.hashtags||[]).includes(val)).length;
+  if(kind === "hashtag") return B.filter(b => botHasHashtag(b,val)).length;
   return 0;
 }
 
@@ -79,7 +96,7 @@ function applyFilters(){
     if(state.povs.size && !state.povs.has(b.pov)) return false;
     if(state.lorebook && !b.lorebook) return false;
     if([...state.tags].some(t => !botHasTag(b,t))) return false; // AND logic
-    if([...state.hashtags].some(h => !(b.hashtags||[]).includes(h))) return false; // hashtag AND logic
+    if([...state.hashtags].some(h => !botHasHashtag(b,h))) return false; // hashtag AND logic
     return true;
   });
   if(state.sort === "az") list.sort((a,b)=>a.nameEn.localeCompare(b.nameEn));
@@ -223,7 +240,7 @@ function cardHtml(b,i){
       </div>
       <p class="card-short">${esc(b.short)}</p>
       <div class="card-tags">${shown.map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}${more>0?`<span class="tag-more">+${more}</span>`:''}</div>
-      ${(b.hashtags||[]).length?`<div class="card-hashtags">${(b.hashtags||[]).slice(0,3).map(h=>`<button data-hashtag="${esc(h)}">#${esc(h)}</button>`).join("")}${(b.hashtags||[]).length>3?`<span>+${(b.hashtags||[]).length-3}</span>`:''}</div>`:''}
+      ${(b.hashtags||[]).length?`<div class="card-hashtags">${(b.hashtags||[]).slice(0,3).map(h=>`<button data-hashtag="${esc(h)}">#${esc(cleanHashtag(h))}</button>`).join("")}${(b.hashtags||[]).length>3?`<span>+${(b.hashtags||[]).length-3}</span>`:''}</div>`:''}
     </div>
   </article>`;
 }
@@ -250,7 +267,7 @@ function renderActiveFilters(){
   const chips = [];
   state.authors.forEach(v=>chips.push(["author",v,`@ ${v}`]));
   state.universes.forEach(v=>chips.push(["universe",v,`UNIVERSE / ${v}`]));
-  state.hashtags.forEach(v=>chips.push(["hashtag",v,`#${v}`]));
+  state.hashtags.forEach(v=>chips.push(["hashtag",v,`#${cleanHashtag(v)}`]));
   const box = $("#activeFilters");
   box.classList.toggle("has", chips.length>0);
   box.innerHTML = chips.map(([type,value,label])=>`<button class="filter-chip" data-remove="${type}" data-value="${esc(value)}">${esc(label)} ×</button>`).join("");
@@ -276,6 +293,11 @@ function toggle(kind,val){
     const existing=selectedTag(val);
     if(existing){state.tags.delete(existing);currentPage=1;return}
     val=canonicalTag(val);
+  }
+  if(kind==="hashtag"){
+    const existing=selectedHashtag(val);
+    if(existing){state.hashtags.delete(existing);currentPage=1;return}
+    val=canonicalHashtag(val);
   }
   const set=state[map[kind]]; if(!set)return;
   set.has(val)?set.delete(val):set.add(val);
@@ -327,7 +349,7 @@ function renderPopover(){
   const q=($("#popoverSearch").value||"").toLowerCase();
   const vals=valuesForFilter(activeFilter).filter(v=>v.toLowerCase().includes(q));
   const selected = activeFilter==="tag"?state.tags:activeFilter==="author"?state.authors:activeFilter==="universe"?state.universes:activeFilter==="hashtag"?state.hashtags:state.povs;
-  $("#popoverList").innerHTML=vals.map(v=>`<button class="${activeFilter==="tag"?(hasSelectedTag(v)?'active':''):(selected.has(v)?'active':'')}" data-option="${esc(v)}"><span>${esc(activeFilter==="tag"?tagLabel(v):activeFilter==="pov"?povLabel(v):activeFilter==="author"?'@ '+v:activeFilter==="hashtag"?'#'+v:v)}</span><small>${count(activeFilter,v)}</small></button>`).join("");
+  $("#popoverList").innerHTML=vals.map(v=>`<button class="${activeFilter==="tag"?(hasSelectedTag(v)?'active':''):activeFilter==="hashtag"?(hasSelectedHashtag(v)?'active':''):(selected.has(v)?'active':'')}" data-option="${esc(v)}"><span>${esc(activeFilter==="tag"?tagLabel(v):activeFilter==="pov"?povLabel(v):activeFilter==="author"?'@ '+v:activeFilter==="hashtag"?'#'+cleanHashtag(v):v)}</span><small>${count(activeFilter,v)}</small></button>`).join("");
 }
 
 $$('.filter-trigger').forEach(b=>b.onclick=e=>{e.stopPropagation();openPopover(b,b.dataset.filter)});
@@ -606,7 +628,7 @@ function openModal(b,keepOpen=false){
   $("#modalLoreFlag").innerHTML=b.lorebook?bookSvg:"";
   $("#modalLoreFlag").title=b.lorebook?"Lorebook available":"";
   $("#modalPov").textContent=povLabel(b.pov);
-  $("#modalTags").innerHTML=`<div class="modal-primary-tags">${(b.tags||[]).map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}</div>${(b.hashtags||[]).length?`<div class="modal-hashtags">${(b.hashtags||[]).map(h=>`<button data-hashtag="${esc(h)}">#${esc(h)}</button>`).join("")}</div>`:''}`;
+  $("#modalTags").innerHTML=`<div class="modal-primary-tags">${(b.tags||[]).map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}</div>${(b.hashtags||[]).length?`<div class="modal-hashtags">${(b.hashtags||[]).map(h=>`<button data-hashtag="${esc(h)}">#${esc(cleanHashtag(h))}</button>`).join("")}</div>`:''}`;
   $("#openBot").href=b.url;
   $("#openBot").textContent=`OPEN ON ${b.platform} ↗`;
   $("#openBot").dataset.mobileLabel=`${b.platform} PAGE ↗`;

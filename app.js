@@ -1,4 +1,6 @@
 let B = [];
+let countCacheSource = null, countCache = new Map();
+let facetCacheSource = null, facetCache = Object.create(null);
 let pageSize = 30;
 let currentPage = 1;
 function syncBots(){
@@ -7,6 +9,10 @@ function syncBots(){
   return B;
 }
 syncBots();
+function cachedFacet(name,build){
+  if(facetCacheSource!==B){facetCacheSource=B;facetCache=Object.create(null)}
+  return facetCache[name]||(facetCache[name]=build());
+}
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -60,7 +66,7 @@ const settingSearchText = id => {const x=SETTING_BY_ID.get(id);return x?`${x.lab
 const settingDisplayLabel = id => `${SETTING_BY_ID.get(id)?.parent?'↳ ':''}${settingLabel(id)}`;
 const settingDescendsFrom = (id,parent) => {let x=SETTING_BY_ID.get(id);while(x?.parent){if(x.parent===parent)return true;x=SETTING_BY_ID.get(x.parent)}return false};
 const botHasSetting = (bot,id) => (bot.settingIds||[]).some(rawId=>{const botId=canonicalSettingId(rawId),wanted=canonicalSettingId(id);return botId===wanted||settingDescendsFrom(botId,wanted)});
-const allSettings = () => SETTING_DEFS.filter(def=>B.some(bot=>botHasSetting(bot,def.id))).map(def=>def.id).sort((a,b)=>count("setting",b)-count("setting",a)||settingLabel(a).localeCompare(settingLabel(b),undefined,{sensitivity:"base"}));
+const allSettings = () => cachedFacet("settings",()=>SETTING_DEFS.filter(def=>B.some(bot=>botHasSetting(bot,def.id))).map(def=>def.id).sort((a,b)=>count("setting",b)-count("setting",a)||settingLabel(a).localeCompare(settingLabel(b),undefined,{sensitivity:"base"})));
 const cleanUniverse = value => {
   const universe=cleanTag(value);
   if(!universe || /^(unclassified|unknown|none|null|n\/?a|setting|universe|world)\s*:?$/i.test(universe) || universe.length>80) return "";
@@ -69,19 +75,22 @@ const cleanUniverse = value => {
 const universeKey = value => cleanUniverse(value).toLocaleLowerCase();
 const allUniverses = () => {
   syncBots();
+  return cachedFacet("universes",()=>{
   const universes=new Map();
   B.forEach(bot=>{
     const universe=cleanUniverse(bot.universe),key=universeKey(universe);
     if(key && !universes.has(key)) universes.set(key,universe);
   });
   return [...universes.values()].sort((a,b)=>count("universe",b)-count("universe",a)||a.localeCompare(b,undefined,{sensitivity:"base"}));
+  });
 };
 const canonicalUniverse = value => allUniverses().find(universe=>universeKey(universe)===universeKey(value)) || cleanUniverse(value);
 const botHasUniverse = (bot,value) => universeKey(bot.universe)===universeKey(value);
 const selectedUniverse = value => [...state.universes].find(universe=>universeKey(universe)===universeKey(value));
-const uniq = key => key==="universe" ? allUniverses() : [...new Set(B.map(x => x[key]).filter(Boolean))].sort((a,b)=>key==="author"?(count("author",b)-count("author",a)||a.localeCompare(b,undefined,{sensitivity:"base"})):a.localeCompare(b,undefined,{sensitivity:"base"}));
+const uniq = key => key==="universe" ? allUniverses() : cachedFacet(`uniq:${key}`,()=>[...new Set(B.map(x => x[key]).filter(Boolean))].sort((a,b)=>key==="author"?(count("author",b)-count("author",a)||a.localeCompare(b,undefined,{sensitivity:"base"})):a.localeCompare(b,undefined,{sensitivity:"base"})));
 const allTags = () => {
   syncBots();
+  return cachedFacet("tags",()=>{
   const tags=new Map();
   B.flatMap(bot=>bot.tags||[]).forEach(tag=>{
     const key=tagKey(tag);
@@ -92,6 +101,7 @@ const allTags = () => {
     }
   });
   return [...tags.values()].sort((a,b)=>count("tag",b)-count("tag",a)||tagText(a).localeCompare(tagText(b),undefined,{sensitivity:"base"}));
+  });
 };
 const canonicalTag = value => {
   const key=tagKey(value);
@@ -104,12 +114,14 @@ const cleanHashtag = value => cleanTag(value).replace(/^#+\s*/,"");
 const hashtagKey = value => cleanHashtag(value).toLocaleLowerCase();
 const allHashtags = () => {
   syncBots();
+  return cachedFacet("hashtags",()=>{
   const hashtags=new Map();
   B.flatMap(bot=>bot.hashtags||[]).forEach(hashtag=>{
     const key=hashtagKey(hashtag);
     if(key && !hashtags.has(key)) hashtags.set(key,cleanHashtag(hashtag));
   });
   return [...hashtags.values()].sort((a,b)=>count("hashtag",b)-count("hashtag",a)||a.localeCompare(b,undefined,{sensitivity:"base"}));
+  });
 };
 const canonicalHashtag = value => {
   const key=hashtagKey(value);
@@ -124,13 +136,19 @@ function selectionCoversAll(set, values){
 }
 
 function count(kind, val){
-  if(kind === "setting") return B.filter(b => botHasSetting(b,val)).length;
-  if(kind === "tag") return B.filter(b => botHasTag(b,val)).length;
-  if(kind === "author") return B.filter(b => b.author === val).length;
-  if(kind === "universe") return B.filter(b => botHasUniverse(b,val)).length;
-  if(kind === "pov") return B.filter(b => b.pov === val).length;
-  if(kind === "hashtag") return B.filter(b => botHasHashtag(b,val)).length;
-  return 0;
+  if(countCacheSource!==B){countCacheSource=B;countCache=new Map()}
+  const normalized=kind==="setting"?canonicalSettingId(val):kind==="tag"?tagKey(val):kind==="hashtag"?hashtagKey(val):kind==="universe"?universeKey(val):String(val);
+  const cacheKey=`${kind}\u0000${normalized}`;
+  if(countCache.has(cacheKey))return countCache.get(cacheKey);
+  let result=0;
+  if(kind === "setting") result=B.filter(b => botHasSetting(b,val)).length;
+  if(kind === "tag") result=B.filter(b => botHasTag(b,val)).length;
+  if(kind === "author") result=B.filter(b => b.author === val).length;
+  if(kind === "universe") result=B.filter(b => botHasUniverse(b,val)).length;
+  if(kind === "pov") result=B.filter(b => b.pov === val).length;
+  if(kind === "hashtag") result=B.filter(b => botHasHashtag(b,val)).length;
+  countCache.set(cacheKey,result);
+  return result;
 }
 
 function applyFilters(){

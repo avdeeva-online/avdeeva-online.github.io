@@ -13,8 +13,9 @@
 .modal-setting-row button:hover,.card-setting-token:hover{border-color:#84936e;color:#e1ead7}
 .setting-mark{font-size:13px!important;line-height:1}.card-setting-token{border-color:#536047!important}.card-universe-token{opacity:.78}
 .drawer-setting-item{min-height:48px}.drawer-setting-item>i{font-style:normal;color:#596354}.drawer-setting-item.selected{box-shadow:inset 2px 0 0 #9aaa7d;background:rgba(128,147,102,.08)}
+.drawer-tabs .drawer-tab{min-width:0!important;padding-inline:1px!important;font-size:6.7px!important;letter-spacing:.02em!important}
 @media(max-width:760px){
-  .drawer-tabs .drawer-tab{font-size:7px!important;padding-inline:1px!important}
+  .drawer-tabs .drawer-tab{font-size:6.4px!important}
   .modal-setting-row{margin:2px 0 5px!important;gap:7px!important;font-size:7px!important}.modal-setting-row>span{padding-top:6px}.modal-setting-row button{padding:4px 7px!important;font-size:8px!important}
   .card-system-line{flex-wrap:wrap}.card-system-line .meta-token{max-width:100%}.card-universe-token{flex-basis:auto!important}
 }

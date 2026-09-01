@@ -1473,3 +1473,11 @@ wireHashtagGhosts();
 
 
 // Main-page hover glitches intentionally disabled in final16.
+
+// The live catalog arrives asynchronously and can take longer than the short
+// startup retry window on mobile networks. Expose the current render/open
+// handlers to the loader and repaint whenever fresh records arrive.
+const liveCatalogRender=render;
+window.render=function(){syncBots();liveCatalogRender()};
+window.openModal=openModal;
+window.addEventListener('archive:catalog-updated',()=>{syncBots();liveCatalogRender()});

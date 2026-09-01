@@ -30,7 +30,26 @@ const tagKey = value => TAG_ALIASES.get(rawTagKey(value)) || rawTagKey(value);
 const displayTag = value => cleanTag(value);
 const tagLabel = value => displayTag(value);
 const povLabel = p => p === "AnyPOV" ? "◌ AnyPOV" : p === "FemPOV" ? "♀ FemPOV" : p === "MalePOV" ? "♂ MalePOV" : p;
-const uniq = key => [...new Set(B.map(x => x[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+const isCompactMobile = () => Boolean(window.matchMedia?.("(max-width:760px)").matches);
+const cleanUniverse = value => {
+  const universe=cleanTag(value);
+  if(!universe || /^(setting|universe|world)\s*:?$/i.test(universe) || universe.length>120) return "UNCLASSIFIED";
+  return universe;
+};
+const universeKey = value => cleanUniverse(value).toLocaleLowerCase();
+const allUniverses = () => {
+  syncBots();
+  const universes=new Map();
+  B.forEach(bot=>{
+    const universe=cleanUniverse(bot.universe),key=universeKey(universe);
+    if(key && !universes.has(key)) universes.set(key,universe);
+  });
+  return [...universes.values()].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:"base"}));
+};
+const canonicalUniverse = value => allUniverses().find(universe=>universeKey(universe)===universeKey(value)) || cleanUniverse(value);
+const botHasUniverse = (bot,value) => universeKey(bot.universe)===universeKey(value);
+const selectedUniverse = value => [...state.universes].find(universe=>universeKey(universe)===universeKey(value));
+const uniq = key => key==="universe" && isCompactMobile() ? allUniverses() : [...new Set(B.map(x => x[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
 const allTags = () => {
   syncBots();
   const tags=new Map();
@@ -77,7 +96,7 @@ function selectionCoversAll(set, values){
 function count(kind, val){
   if(kind === "tag") return B.filter(b => botHasTag(b,val)).length;
   if(kind === "author") return B.filter(b => b.author === val).length;
-  if(kind === "universe") return B.filter(b => b.universe === val).length;
+  if(kind === "universe") return B.filter(b => isCompactMobile() ? botHasUniverse(b,val) : b.universe===val).length;
   if(kind === "pov") return B.filter(b => b.pov === val).length;
   if(kind === "hashtag") return B.filter(b => botHasHashtag(b,val)).length;
   return 0;
@@ -92,16 +111,17 @@ function applyFilters(){
     const allAuthorsSelected = selectionCoversAll(state.authors, uniq("author"));
     const allUniversesSelected = selectionCoversAll(state.universes, uniq("universe"));
     if(state.authors.size && !allAuthorsSelected && !state.authors.has(b.author)) return false;
-    if(state.universes.size && !allUniversesSelected && !state.universes.has(b.universe)) return false;
+    if(state.universes.size && !allUniversesSelected && !(isCompactMobile() ? [...state.universes].some(universe=>botHasUniverse(b,universe)) : state.universes.has(b.universe))) return false;
     if(state.povs.size && !state.povs.has(b.pov)) return false;
     if(state.lorebook && !b.lorebook) return false;
     if([...state.tags].some(t => !botHasTag(b,t))) return false; // AND logic
     if([...state.hashtags].some(h => !botHasHashtag(b,h))) return false; // hashtag AND logic
     return true;
   });
-  if(state.sort === "az") list.sort((a,b)=>a.nameEn.localeCompare(b.nameEn));
-  if(state.sort === "za") list.sort((a,b)=>b.nameEn.localeCompare(a.nameEn));
-  if(state.sort === "author") list.sort((a,b)=>a.author.localeCompare(b.author)||a.nameEn.localeCompare(b.nameEn));
+  const sortName = bot => isCompactMobile() ? cleanTag(bot.nameEn).replace(/^[^\p{L}\p{N}]+/u,"") : bot.nameEn;
+  if(state.sort === "az") list.sort((a,b)=>sortName(a).localeCompare(sortName(b),undefined,{sensitivity:"base",numeric:true}));
+  if(state.sort === "za") list.sort((a,b)=>sortName(b).localeCompare(sortName(a),undefined,{sensitivity:"base",numeric:true}));
+  if(state.sort === "author") list.sort((a,b)=>a.author.localeCompare(b.author)||sortName(a).localeCompare(sortName(b)));
   if(state.sort === "newest") list.sort((a,b)=>Number(b.isNew)-Number(a.isNew));
   return list;
 }
@@ -138,7 +158,7 @@ function render(){
   if(meta) meta.classList.toggle("has-filters", filtered);
   if(catalogOpen) catalogOpen.classList.toggle("has-filters", filtered);
   if(reset) reset.hidden = !filtered;
-  $("#totalMeta").textContent = `${String(B.length).padStart(3,"0")} RECORDS`;
+  $("#totalMeta").textContent = filtered && isCompactMobile() ? `${String(list.length).padStart(3,"0")} / ${String(B.length).padStart(3,"0")} RECORDS` : `${String(B.length).padStart(3,"0")} RECORDS`;
   $("#empty").hidden = !!list.length;
   $("#grid").innerHTML = visible.map((b,i)=>cardHtml(b,i)).join("");
 
@@ -189,7 +209,7 @@ function renderPagination(totalItems){
       if(btn.disabled) return;
       currentPage=Number(btn.dataset.page)||1;
       render();
-      $("#catalogMeta")?.scrollIntoView({behavior:"smooth",block:"start"});
+      $(isCompactMobile()?"#grid":"#catalogMeta")?.scrollIntoView({behavior:"smooth",block:"start"});
     };
   });
 }
@@ -226,21 +246,25 @@ function cardHtml(b,i){
   const tags = b.tags || [];
   const shown = tags.slice(0,4);
   const more = tags.length - shown.length;
+  const passiveMobile = isCompactMobile();
+  const tagChip = tag => passiveMobile ? `<span>${esc(tagLabel(tag))}</span>` : `<button data-tag="${esc(tag)}">${esc(tagLabel(tag))}</button>`;
+  const hashtagChip = hashtag => passiveMobile ? `<span>#${esc(cleanHashtag(hashtag))}</span>` : `<button data-hashtag="${esc(hashtag)}">#${esc(cleanHashtag(hashtag))}</button>`;
+  const universe=passiveMobile?canonicalUniverse(b.universe):b.universe;
   return `<article class="card" data-id="${esc(b.id)}" style="animation-delay:${Math.min(i,12)*18}ms">
-    <div class="card-media"><img src="${esc(b.image)}" alt="${esc(b.nameEn)}">${b.isNew?'<span class="new-badge">NEW</span>':''}<a class="download-hover" href="${esc(b.download)}" download data-stop>BOT CARD ↓</a></div>
+    <div class="card-media"><img src="${esc(b.image)}" alt="${esc(b.nameEn)}" loading="${i<4?'eager':'lazy'}" decoding="async"${i<2?' fetchpriority="high"':''}>${b.isNew?'<span class="new-badge">NEW</span>':''}<a class="download-hover" href="${esc(b.download)}" download data-stop>BOT CARD ↓</a></div>
     <div class="card-body">
       <h3 class="card-title">${esc(b.nameEn)}<span>${esc(b.nameRu)}</span></h3>
       <div class="card-author">BY <button data-author="${esc(b.author)}">@${esc(b.author)}</button></div>
       <div class="card-meta card-system-line">
-        <button class="meta-token" data-quick-universe="${esc(b.universe)}">${globeSvg}<span>${esc(b.universe)}</span></button>
+        <button class="meta-token" data-quick-universe="${esc(universe)}">${globeSvg}<span>${esc(universe)}</span></button>
         <span class="card-status-icon card-pov-icon pov-${esc((b.pov||'AnyPOV').toLowerCase())}" title="${esc(b.pov||'AnyPOV')}" aria-label="POV: ${esc(b.pov||'AnyPOV')}">
           <span aria-hidden="true">${b.pov==='FemPOV'?'♀':b.pov==='MalePOV'?'♂':'◎'}</span>
         </span>
         ${b.lorebook?`<span class="card-status-icon card-lore-icon" title="Lorebook available" aria-label="Lorebook available">${bookSvg}</span>`:''}
       </div>
       <p class="card-short">${esc(b.short)}</p>
-      <div class="card-tags">${shown.map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}${more>0?`<span class="tag-more">+${more}</span>`:''}</div>
-      ${(b.hashtags||[]).length?`<div class="card-hashtags">${(b.hashtags||[]).slice(0,3).map(h=>`<button data-hashtag="${esc(h)}">#${esc(cleanHashtag(h))}</button>`).join("")}${(b.hashtags||[]).length>3?`<span>+${(b.hashtags||[]).length-3}</span>`:''}</div>`:''}
+      <div class="card-tags">${shown.map(tagChip).join("")}${more>0?`<span class="tag-more">+${more}</span>`:''}</div>
+      ${(b.hashtags||[]).length?`<div class="card-hashtags">${(b.hashtags||[]).slice(0,3).map(hashtagChip).join("")}${(b.hashtags||[]).length>3?`<span>+${(b.hashtags||[]).length-3}</span>`:''}</div>`:''}
     </div>
   </article>`;
 }
@@ -298,6 +322,11 @@ function toggle(kind,val){
     const existing=selectedHashtag(val);
     if(existing){state.hashtags.delete(existing);currentPage=1;return}
     val=canonicalHashtag(val);
+  }
+  if(kind==="universe" && isCompactMobile()){
+    const existing=selectedUniverse(val);
+    if(existing){state.universes.delete(existing);currentPage=1;return}
+    val=canonicalUniverse(val);
   }
   const set=state[map[kind]]; if(!set)return;
   set.has(val)?set.delete(val):set.add(val);
@@ -414,8 +443,8 @@ $("#sortTrigger").onclick=e=>{
 $("#sortMenu").onclick=e=>{const b=e.target.closest("[data-sort]");if(!b)return;state.sort=b.dataset.sort;$("#sortLabel").textContent={newest:"NEWEST",az:"A → Z",za:"Z → A",author:"AUTHOR"}[state.sort];closeFloatingMenus();render()};
 
 // Drawer
-function openDrawer(){$("#catalogDrawer").classList.add("open");$("#catalogDrawer").setAttribute("aria-hidden","false");$("#drawerShade").hidden=false}
-function closeDrawer(){$("#catalogDrawer").classList.remove("open");$("#catalogDrawer").setAttribute("aria-hidden","true");$("#drawerShade").hidden=true}
+function openDrawer(){$("#catalogDrawer").classList.add("open");$("#catalogDrawer").setAttribute("aria-hidden","false");$("#drawerShade").hidden=false;if(isCompactMobile())document.body.classList.add("drawer-open")}
+function closeDrawer(){$("#catalogDrawer").classList.remove("open");$("#catalogDrawer").setAttribute("aria-hidden","true");$("#drawerShade").hidden=true;document.body.classList.remove("drawer-open")}
 $("#catalogOpen").onclick=openDrawer;$("#catalogClose").onclick=closeDrawer;$("#drawerShade").onclick=closeDrawer;
 $$('.drawer-tab').forEach(b=>b.onclick=()=>{drawerTab=b.dataset.drawerTab;$$('.drawer-tab').forEach(x=>x.classList.toggle('active',x===b));$("#drawerSearch").value="";renderDrawer()});
 $("#drawerSearch").oninput=renderDrawer;
@@ -542,6 +571,10 @@ const randomWhispers=["RECOVERING LOST RECORD...","UNINDEXED TRACE DETECTED","AR
 function archiveWhisper(text,rare=false){const box=$("#archiveWhisper");$("#whisperText").textContent=text;box.classList.toggle("rare",rare);box.hidden=false;requestAnimationFrame(()=>box.classList.add("show"));clearTimeout(archiveWhisper.timer);archiveWhisper.timer=setTimeout(()=>{box.classList.remove("show");setTimeout(()=>box.hidden=true,220)},2600)}
 $("#randomBtn").onclick=()=>{
   const btn=$("#randomBtn");
+  if(isCompactMobile() && hasActiveFilters() && !applyFilters().length){
+    archiveWhisper("NO MATCHING RECORDS — RESET FILTERS",true);
+    return;
+  }
   btn.classList.add("active");
   btn.querySelector("span:last-child").textContent="SEARCHING...";
   const unknownHit=Math.random()<.01;
@@ -556,7 +589,8 @@ $("#prevBot").onclick=()=>browseModal(-1);
 $("#nextBot").onclick=()=>browseModal(1);
 
 function browseModal(direction){
-  const pool=applyFilters().length?applyFilters():B;
+  const filteredPool=applyFilters();
+  const pool=filteredPool.length || !hasActiveFilters() || !isCompactMobile() ? (filteredPool.length?filteredPool:B) : [];
   if(!pool.length) return;
   let index=current?pool.findIndex(b=>b.id===current.id):-1;
   if(index<0) index=0;
@@ -566,7 +600,7 @@ function browseModal(direction){
 
 function randomModal(){
   let pool=applyFilters().filter(b=>!current||b.id!==current.id);
-  if(!pool.length) pool=B.filter(b=>!current||b.id!==current.id);
+  if(!pool.length && (!hasActiveFilters() || !isCompactMobile())) pool=B.filter(b=>!current||b.id!==current.id);
   if(pool.length) switchModalRecord(pool[Math.floor(Math.random()*pool.length)], Math.random()<.5?-1:1);
 }
 
@@ -622,7 +656,7 @@ function openModal(b,keepOpen=false){
   $("#modalAuthor").setAttribute("aria-label",`Show all bots by @${b.author}`);
   $("#modalAuthorBadge").textContent=`@${b.author}`;
   $("#modalAuthorBadge").dataset.author=b.author;
-  $("#modalUniverse").innerHTML=`${globeSvg}<span>UNIVERSE / ${esc(b.universe)}</span>`;
+  $("#modalUniverse").innerHTML=`${globeSvg}<span>UNIVERSE / ${esc(isCompactMobile()?canonicalUniverse(b.universe):b.universe)}</span>`;
   $("#modalUniverse").dataset.quickUniverse=b.universe;
   $("#modalUniverse").title=`Show universe: ${b.universe}`;
   $("#modalLoreFlag").innerHTML=b.lorebook?bookSvg:"";
@@ -1174,7 +1208,7 @@ wireHashtagGhosts();
 (function initHeroAtmosphere(){
   const hero = document.querySelector('.hero');
   const dust = document.getElementById('heroDust');
-  if(!hero || !dust) return;
+  if(!hero || !dust || window.matchMedia?.('(max-width:760px)').matches) return;
 
   const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   if(reduced) return;
@@ -1235,7 +1269,7 @@ wireHashtagGhosts();
 (function initGuaranteedHeroMoments(){
   const flare=document.querySelector(".hero-light-sweep");
   const terminal=document.querySelector(".hero-terminal-glitch");
-  if(!flare || !terminal) return;
+  if(!flare || !terminal || window.matchMedia?.('(max-width:760px)').matches) return;
 
   function pulse(el,cls,duration){
     el.classList.remove(cls);
@@ -1288,7 +1322,7 @@ wireHashtagGhosts();
 (function initHeroFxV2(){
   const flare=document.querySelector(".hero-solar-flare-v2");
   const crt=document.querySelector(".hero-terminal-crt-v2");
-  if(!flare || !crt) return;
+  if(!flare || !crt || window.matchMedia?.('(max-width:760px)').matches) return;
 
   function pulse(el,cls,duration){
     el.classList.remove(cls);
@@ -1320,6 +1354,7 @@ wireHashtagGhosts();
 // Catalog/drawer is intentionally excluded and keeps its legacy behavior.
 // ============================================================
 (function initAmbientUiGlitches(){
+  if(window.matchMedia?.('(max-width:760px)').matches) return;
   const selectors=[
     "#catalogOpen",
     ".toolbar .control",

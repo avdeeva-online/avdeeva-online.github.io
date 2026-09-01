@@ -1191,6 +1191,7 @@ wireHashtagGhosts();
 
   // Replace the inherited delegated handler with a capture-phase handler so no
   // older click behavior can close the drawer after a selection.
+  list.onclick = null;
   list.addEventListener('click', function(e){
     const item = e.target.closest('[data-drawer-value]');
     if(!item || !list.contains(item)) return;

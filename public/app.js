@@ -63,6 +63,7 @@ const SETTING_DEFS = [
   ["historical","Historical","","historical setting исторический сеттинг"],
   ["fantasy","Fantasy","","фэнтези"],
   ["sci-fi","Sci-Fi","","science fiction научная фантастика"],
+  ["dystopia","Dystopia","","dystopian world антиутопия"],
   ["cyberpunk","Cyberpunk","","киберпанк"],
   ["supernatural","Supernatural","","urban fantasy supernatural paranormal сверхъестественное"],
   ["folklore","Folklore","","folklore slavic folklore mythology mythological фольклор славянский фольклор мифология"],

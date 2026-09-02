@@ -8,7 +8,8 @@
   function normalizePovTags(values){
     const tags=Array.isArray(values)?values.map(clean).filter(Boolean):[];
     const povTags=tags.filter(tag=>['anypov','fempov','femalepov','malepov'].includes(povKey(tag)));
-    const chosen=povTags.length===1?povTags[0]:'AnyPOV';
+    const key=povTags.length===1?povKey(povTags[0]):'anypov';
+    const chosen=key==='fempov'||key==='femalepov'?'👩 FemPov':key==='malepov'?'👨 MalePov':'👤 AnyPOV';
     return [...tags.filter(tag=>!['anypov','fempov','femalepov','malepov'].includes(povKey(tag))),chosen];
   }
   function universesOf(bot){

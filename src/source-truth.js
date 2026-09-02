@@ -6,7 +6,7 @@ function arr(v){try{const x=JSON.parse(v||'[]');return Array.isArray(x)?x:[]}cat
 function clean(v){return typeof v==='string'?v.trim():''}
 function povKey(raw){return String(raw||'').replace(/^[^\p{L}\p{N}#]+/u,'').toLocaleLowerCase().replace(/[^a-z]/g,'')}
 function isPovTag(raw){return['fempov','femalepov','malepov','anypov'].includes(povKey(raw))}
-function normalizePovTags(values){const tags=(Array.isArray(values)?values:[]).map(clean).filter(Boolean),povs=tags.filter(isPovTag),chosen=povs.length===1?povs[0]:'AnyPOV';return[...tags.filter(tag=>!isPovTag(tag)),chosen]}
+function normalizePovTags(values){const tags=(Array.isArray(values)?values:[]).map(clean).filter(Boolean),povs=tags.filter(isPovTag),key=povs.length===1?povKey(povs[0]):'anypov',chosen=key==='fempov'||key==='femalepov'?'👩 FemPov':key==='malepov'?'👨 MalePov':'👤 AnyPOV';return[...tags.filter(tag=>!isPovTag(tag)),chosen]}
 function povFromTags(tags){for(const raw of normalizePovTags(tags)){const key=povKey(raw);if(key==='fempov'||key==='femalepov')return'FemPOV';if(key==='malepov')return'MalePOV';if(key==='anypov')return'AnyPOV'}return'AnyPOV'}
 function extractUuid(v){const m=String(v||'').match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);return m?m[0].toLowerCase():''}
 function safeFilename(v,f='lorebook'){return String(v||f).replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,' ').trim().slice(0,120)||f}

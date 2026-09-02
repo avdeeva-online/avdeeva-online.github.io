@@ -44,19 +44,19 @@ const botPov = bot => {
     if(key==="malepov")return "MalePOV";
     if(key==="anypov")return "AnyPOV";
   }
-  return "";
+  return "AnyPOV";
 };
 const isCompactMobile = () => Boolean(window.matchMedia?.("(max-width:760px)").matches);
 const SETTING_DEFS = [
   ["omegaverse","Omegaverse","","abo a/b/o alpha beta omega"],
   ["post-apocalypse","Post-apocalypse","","post apocalypse postapocalypse апокалипсис постапокалипсис"],
-  ["zombie-apocalypse","Zombie apocalypse","post-apocalypse","zombie apocalypse зомби апокалипсис"],
+  ["zombie-apocalypse","Zombie apocalypse","","zombie apocalypse зомби апокалипсис"],
   ["rusreal","Rusreal","","русреал russian realism modern russia современная россия"],
-  ["rusreal-2000s","2000s Rusreal","rusreal","нулевые 2000s russia россия нулевых"],
+  ["rusreal-2000s","2000s Rusreal","","нулевые 2000s russia россия нулевых"],
   ["china","China","","китай chinese setting"],
-  ["ancient-china","Ancient China","china","древний китай imperial china historical china"],
+  ["ancient-china","Ancient China","","древний китай imperial china historical china"],
   ["egypt","Egypt","","египет egyptian setting"],
-  ["ancient-egypt","Ancient Egypt","egypt","древний египет"],
+  ["ancient-egypt","Ancient Egypt","","древний египет"],
   ["medieval","Medieval","","middle ages средневековье"],
   ["regency","Regency","","regency era"],
   ["victorian","Victorian","","victorian era"],
@@ -64,38 +64,40 @@ const SETTING_DEFS = [
   ["fantasy","Fantasy","","фэнтези"],
   ["sci-fi","Sci-Fi","","science fiction научная фантастика"],
   ["cyberpunk","Cyberpunk","","киберпанк"],
-  ["supernatural","Supernatural / Folklore","","urban fantasy supernatural folklore slavic folklore mythology mythological сверхъестественное фольклор славянский фольклор мифология"],
-  ["college","School / University","","school high school college university школа старшая школа университет универ колледж"],
-  ["slice-of-life","Slice of Life / Everyday","","slice of life everyday modern day повседневность современность"],
-  ["mafia","Mafia / Crime","","mafia organized crime криминал"]
+  ["supernatural","Supernatural","","urban fantasy supernatural paranormal сверхъестественное"],
+  ["folklore","Folklore","","folklore slavic folklore mythology mythological фольклор славянский фольклор мифология"],
+  ["college","School & University","","school high school college university школа старшая школа университет универ колледж"],
+  ["slice-of-life","Everyday","","slice of life everyday modern day повседневность современность"],
+  ["mafia","Mafia","","mafia crime family мафия"],
+  ["crime","Crime","","organized crime criminal syndicate gang криминал"]
 ].map(([id,label,parent,aliases])=>({id,label,parent,aliases}));
 const SETTING_BY_ID = new Map(SETTING_DEFS.map(x=>[x.id,x]));
 const canonicalSettingId = id => id==="high-school" ? "college" : id;
 const settingLabel = id => SETTING_BY_ID.get(id)?.label || id;
 const settingSearchText = id => {const x=SETTING_BY_ID.get(id);return x?`${x.label} ${x.aliases}`.toLocaleLowerCase():String(id).toLocaleLowerCase()};
-const settingDisplayLabel = id => `${SETTING_BY_ID.get(id)?.parent?'↳ ':''}${settingLabel(id)}`;
-const settingDescendsFrom = (id,parent) => {let x=SETTING_BY_ID.get(id);while(x?.parent){if(x.parent===parent)return true;x=SETTING_BY_ID.get(x.parent)}return false};
-const botHasSetting = (bot,id) => (bot.settingIds||[]).some(rawId=>{const botId=canonicalSettingId(rawId),wanted=canonicalSettingId(id);return botId===wanted||settingDescendsFrom(botId,wanted)});
+const settingDisplayLabel = id => settingLabel(id);
+const botHasSetting = (bot,id) => (bot.settingIds||[]).flatMap(rawId=>cleanTag(rawId).split(/\s*\/\s*/)).some(rawId=>canonicalSettingId(rawId)===canonicalSettingId(id));
 const allSettings = () => cachedFacet("settings",()=>SETTING_DEFS.filter(def=>B.some(bot=>botHasSetting(bot,def.id))).map(def=>def.id).sort((a,b)=>count("setting",b)-count("setting",a)||settingLabel(a).localeCompare(settingLabel(b),undefined,{sensitivity:"base"})));
-const cleanUniverse = value => {
-  const universe=cleanTag(value);
-  if(!universe || /^(unclassified|unknown|none|null|n\/?a|setting|universe|world)\s*:?$/i.test(universe) || universe.length>80) return "";
-  return universe;
+const cleanUniverses = value => {
+  const source=Array.isArray(value)?value:[value],seen=new Set(),out=[];
+  for(const part of source.flatMap(v=>cleanTag(v).split(/\s*\/\s*/))){const key=part.toLocaleLowerCase();if(!part||/^(unclassified|unknown|none|null|n\/?a|setting|universe|world)\s*:?$/i.test(part)||part.length>80||seen.has(key))continue;seen.add(key);out.push(part)}
+  return out;
 };
+const botUniverses = bot => cleanUniverses(Array.isArray(bot?.universes)&&bot.universes.length?bot.universes:bot?.universe);
+const cleanUniverse = value => cleanUniverses(value)[0]||"";
 const universeKey = value => cleanUniverse(value).toLocaleLowerCase();
 const allUniverses = () => {
   syncBots();
   return cachedFacet("universes",()=>{
   const universes=new Map();
   B.forEach(bot=>{
-    const universe=cleanUniverse(bot.universe),key=universeKey(universe);
-    if(key && !universes.has(key)) universes.set(key,universe);
+    for(const universe of botUniverses(bot)){const key=universeKey(universe);if(key&&!universes.has(key))universes.set(key,universe)}
   });
   return [...universes.values()].sort((a,b)=>count("universe",b)-count("universe",a)||a.localeCompare(b,undefined,{sensitivity:"base"}));
   });
 };
 const canonicalUniverse = value => allUniverses().find(universe=>universeKey(universe)===universeKey(value)) || cleanUniverse(value);
-const botHasUniverse = (bot,value) => universeKey(bot.universe)===universeKey(value);
+const botHasUniverse = (bot,value) => botUniverses(bot).some(universe=>universeKey(universe)===universeKey(value));
 const selectedUniverse = value => [...state.universes].find(universe=>universeKey(universe)===universeKey(value));
 const uniq = key => key==="universe" ? allUniverses() : cachedFacet(`uniq:${key}`,()=>[...new Set(B.map(x => x[key]).filter(Boolean))].sort((a,b)=>key==="author"?(count("author",b)-count("author",a)||a.localeCompare(b,undefined,{sensitivity:"base"})):a.localeCompare(b,undefined,{sensitivity:"base"})));
 const allTags = () => {
@@ -165,20 +167,20 @@ function applyFilters(){
   syncBots();
   const q = state.q.trim().toLowerCase();
   let list = B.filter(b => {
-    const hay = [b.nameRu,b.nameEn,b.author,b.universe,botPov(b),b.short,b.full,b.scenario,...(b.intros||[]),...(b.settingIds||[]).flatMap(id=>[settingLabel(id),settingSearchText(id)]),...(b.tags||[]),...(b.hashtags||[])].join(" ").toLowerCase();
+    const hay = [b.nameRu,b.nameEn,b.author,...botUniverses(b),botPov(b),b.short,b.full,b.scenario,...(b.intros||[]),...(b.settingIds||[]).flatMap(id=>[settingLabel(id),settingSearchText(id)]),...(b.tags||[]),...(b.hashtags||[])].join(" ").toLowerCase();
     if(q && !hay.includes(q)) return false;
     const allAuthorsSelected = selectionCoversAll(state.authors, uniq("author"));
     const allUniversesSelected = selectionCoversAll(state.universes, uniq("universe"));
     if(state.authors.size && !allAuthorsSelected && !state.authors.has(b.author)) return false;
     if(state.settings.size && [...state.settings].some(setting=>!botHasSetting(b,setting))) return false;
-    if(state.universes.size && !allUniversesSelected && ![...state.universes].some(universe=>botHasUniverse(b,universe))) return false;
+    if(state.universes.size && !allUniversesSelected && [...state.universes].some(universe=>!botHasUniverse(b,universe))) return false;
     if(state.povs.size && !state.povs.has(botPov(b))) return false;
     if(state.lorebook && !b.lorebook) return false;
     if([...state.tags].some(t => !botHasTag(b,t))) return false; // AND logic
     if([...state.hashtags].some(h => !botHasHashtag(b,h))) return false; // hashtag AND logic
     return true;
   });
-  const sortName = bot => isCompactMobile() ? cleanTag(bot.nameEn).replace(/^[^\p{L}\p{N}]+/u,"") : bot.nameEn;
+  const sortName = bot => cleanTag(bot.nameEn).replace(/^[^\p{L}\p{N}]+/u,"");
   if(state.sort === "az") list.sort((a,b)=>sortName(a).localeCompare(sortName(b),undefined,{sensitivity:"base",numeric:true}));
   if(state.sort === "za") list.sort((a,b)=>sortName(b).localeCompare(sortName(a),undefined,{sensitivity:"base",numeric:true}));
   if(state.sort === "author") list.sort((a,b)=>a.author.localeCompare(b.author)||sortName(a).localeCompare(sortName(b)));
@@ -270,7 +272,7 @@ function renderPagination(totalItems){
       if(btn.disabled) return;
       currentPage=Number(btn.dataset.page)||1;
       render();
-      $(isCompactMobile()?"#grid":"#catalogMeta")?.scrollIntoView({behavior:"smooth",block:"start"});
+      $(isCompactMobile()?"#grid":"#catalogMeta")?.scrollIntoView({behavior:"auto",block:"start"});
     };
   });
 }
@@ -310,16 +312,16 @@ function cardHtml(b,i){
   const passiveMobile = isCompactMobile();
   const tagChip = tag => passiveMobile ? `<span>${esc(tagLabel(tag))}</span>` : `<button data-tag="${esc(tag)}">${esc(tagLabel(tag))}</button>`;
   const hashtagChip = hashtag => passiveMobile ? `<span>#${esc(cleanHashtag(hashtag))}</span>` : `<button data-hashtag="${esc(hashtag)}">#${esc(cleanHashtag(hashtag))}</button>`;
-  const universe=canonicalUniverse(b.universe);
-  const setting=(b.settingIds||[]).map(canonicalSettingId).find(id=>SETTING_BY_ID.has(id))||"";
-  return `<article class="card" data-id="${esc(b.id)}" style="animation-delay:${Math.min(i,12)*18}ms">
+  const universes=botUniverses(b).map(canonicalUniverse);
+  const settings=[...new Set((b.settingIds||[]).flatMap(id=>cleanTag(id).split(/\s*\/\s*/)).map(canonicalSettingId).filter(id=>SETTING_BY_ID.has(id)))];
+  return `<article class="card" data-id="${esc(b.id)}" role="button" tabindex="0" aria-label="Open ${esc(b.nameEn)}" style="animation-delay:${Math.min(i,12)*18}ms">
     <div class="card-media"><img src="${esc(b.image)}" alt="${esc(b.nameEn)}" loading="${i<4?'eager':'lazy'}" decoding="async"${i<2?' fetchpriority="high"':''}>${b.isNew?'<span class="new-badge">NEW</span>':''}${b.lorebook?`<span class="card-lore-overlay" title="Lorebook available" aria-label="Lorebook available">${bookSvg}</span>`:''}<a class="download-hover" href="${esc(b.download)}" download data-stop>BOT CARD ↓</a></div>
     <div class="card-body">
       <h3 class="card-title">${esc(b.nameEn)}<span>${esc(b.nameRu)}</span></h3>
       <div class="card-author">BY <button data-author="${esc(b.author)}">@${esc(b.author)}</button></div>
       <div class="card-meta card-system-line">
-        ${setting?`<button class="meta-token card-setting-token" data-quick-setting="${esc(setting)}"><span class="setting-mark">⌖</span><span>${esc(settingLabel(setting))}</span></button>`:""}
-        ${universe?`<button class="meta-token card-universe-token" data-quick-universe="${esc(universe)}">${globeSvg}<span>${esc(universe)}</span></button>`:""}
+        ${settings.slice(0,2).map(setting=>`<button class="meta-token card-setting-token" data-quick-setting="${esc(setting)}"><span class="setting-mark">⌖</span><span>${esc(settingLabel(setting))}</span></button>`).join("")}
+        ${universes.slice(0,2).map(universe=>`<button class="meta-token card-universe-token" data-quick-universe="${esc(universe)}">${globeSvg}<span>${esc(universe)}</span></button>`).join("")}
       </div>
       <p class="card-short">${esc(b.short)}</p>
       <div class="card-tags">${shown.map(tagChip).join("")}${more>0?`<span class="tag-more">+${more}</span>`:''}</div>
@@ -657,6 +659,12 @@ document.addEventListener("click",e=>{
   const card=e.target.closest(".card");if(card)openModal(B.find(b=>b.id===card.dataset.id));
   if(e.target.matches("[data-close]"))closeModal();
 });
+document.addEventListener("keydown",e=>{
+  if((e.key!=="Enter"&&e.key!==" ")||!e.target.matches?.("#grid .card"))return;
+  e.preventDefault();
+  const bot=B.find(b=>b.id===e.target.dataset.id);
+  if(bot)openModal(bot);
+});
 
 // Random + modal
 const randomWhispers=["RECOVERING LOST RECORD...","UNINDEXED TRACE DETECTED","ARCHIVE ROUTE SHIFTED","FOUND BETWEEN DIRECTORIES","SIGNAL FROM NODE_??"];
@@ -756,6 +764,13 @@ async function hydrateModalDetail(b){
 }
 
 function openModal(b,keepOpen=false){
+  const oldUniverseNode=$("#modalUniverse");
+  if(oldUniverseNode?.tagName==="BUTTON"){
+    const container=document.createElement("div");
+    container.id="modalUniverse";
+    container.className="modal-universe-under-title";
+    oldUniverseNode.replaceWith(container);
+  }
   current=b;
   modalTab="description";
   openIntro=0;
@@ -770,16 +785,14 @@ function openModal(b,keepOpen=false){
   $("#modalAuthor").setAttribute("aria-label",`Show all bots by @${b.author}`);
   $("#modalAuthorBadge").textContent=`@${b.author}`;
   $("#modalAuthorBadge").dataset.author=b.author;
-  const settings=[...new Set((b.settingIds||[]).map(canonicalSettingId).filter(id=>SETTING_BY_ID.has(id)))];
+  const settings=[...new Set((b.settingIds||[]).flatMap(id=>cleanTag(id).split(/\s*\/\s*/)).map(canonicalSettingId).filter(id=>SETTING_BY_ID.has(id)))];
   $("#modalSettingRow").hidden=false;
   $("#modalSettingRow").classList.toggle("is-empty",!settings.length);
   $("#modalSetting").innerHTML=settings.length?settings.map(id=>`<button data-quick-setting="${esc(id)}">${esc(settingLabel(id))}</button>`).join(""):`<span class="modal-setting-empty">NOT YET CLASSIFIED</span>`;
-  const universe=canonicalUniverse(b.universe);
-  $(".modal-universe-row").hidden=!universe;
-  $("#modalUniverse").hidden=!universe;
-  $("#modalUniverse").innerHTML=universe?`${globeSvg}<span>UNIVERSE / ${esc(universe)}</span>`:"";
-  $("#modalUniverse").dataset.quickUniverse=universe;
-  $("#modalUniverse").title=universe?`Show universe: ${universe}`:"";
+  const universes=botUniverses(b).map(canonicalUniverse);
+  $(".modal-universe-row").hidden=!universes.length;
+  $("#modalUniverse").hidden=!universes.length;
+  $("#modalUniverse").innerHTML=universes.map(universe=>`<button class="universe-link" data-quick-universe="${esc(universe)}" title="Show universe: ${esc(universe)}">${globeSvg}<span>${esc(universe)}</span></button>`).join("");
   $("#modalLoreFlag").innerHTML="";
   $("#modalLoreFlag").title="";
   $("#modalPov").textContent="";

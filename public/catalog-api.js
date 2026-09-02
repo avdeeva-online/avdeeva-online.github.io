@@ -4,6 +4,19 @@
   let liveBots=[];
 
   const clean=s=>String(s||'').replace(/\s+/g,' ').trim();
+  const povKey=value=>clean(value).replace(/^[^\p{L}\p{N}#]+/u,'').toLocaleLowerCase().replace(/[^a-z]/g,'');
+  function normalizePovTags(values){
+    const tags=Array.isArray(values)?values.map(clean).filter(Boolean):[];
+    const povTags=tags.filter(tag=>['anypov','fempov','femalepov','malepov'].includes(povKey(tag)));
+    const chosen=povTags.length===1?povTags[0]:'AnyPOV';
+    return [...tags.filter(tag=>!['anypov','fempov','femalepov','malepov'].includes(povKey(tag))),chosen];
+  }
+  function universesOf(bot){
+    const source=Array.isArray(bot.universes)?bot.universes:[bot.universe];
+    const seen=new Set(),out=[];
+    for(const value of source.flatMap(v=>clean(v).split(/\s*\/\s*/))){const key=value.toLocaleLowerCase();if(value&&!seen.has(key)){seen.add(key);out.push(value)}}
+    return out;
+  }
   function canonicalDisplay(values){
     const groups=new Map();
     for(const raw of values){const v=clean(raw);if(!v)continue;const k=v.toLocaleLowerCase();if(!groups.has(k))groups.set(k,[]);groups.get(k).push(v)}
@@ -17,7 +30,7 @@
   }
   function normalizeCatalog(list){
     const authors=canonicalDisplay(list.map(x=>x.author));
-    return list.map(b=>({...b,author:authors.get(clean(b.author).toLocaleLowerCase())||clean(b.author)||'Unknown',universe:clean(b.universe),settingIds:Array.isArray(b.settingIds)?b.settingIds:[],settings:Array.isArray(b.settings)?b.settings:[]}));
+    return list.map(b=>{const universes=universesOf(b);return {...b,author:authors.get(clean(b.author).toLocaleLowerCase())||clean(b.author)||'Unknown',universe:universes[0]||'',universes,tags:normalizePovTags(b.tags),pov:b.pov||'AnyPOV',settingIds:Array.isArray(b.settingIds)?b.settingIds.flatMap(v=>clean(v).split(/\s*\/\s*/)).filter(Boolean):[],settings:Array.isArray(b.settings)?b.settings:[]}});
   }
   function mergeBots(){
     const seen=new Set(),all=[];

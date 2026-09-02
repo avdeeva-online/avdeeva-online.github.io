@@ -4,13 +4,13 @@ const fold = value => clean(value).toLocaleLowerCase();
 export const SETTING_DEFINITIONS = [
   {id:'omegaverse',label:'Omegaverse',aliases:['abo','a/b/o','alpha beta omega'],any:[/\bomegaverse\b/i,/\ba\/?b\/?o\b/i,/alpha\s*[\/·,]\s*beta\s*[\/·,]\s*omega/i,/secondary genders?/i,/\bgo(?:es|ing)? into (?:rut|heat)\b/i,/\b(?:rut|heat) cycle\b/i,/\bmate mark(?:s|ing|ed)?\b/i,/\bbreeder\b/i]},
   {id:'post-apocalypse',label:'Post-apocalypse',aliases:['post apocalypse','postapocalypse','апокалипсис','постапокалипсис'],any:[/post[- ]?apocal/i,/постапокалип/i,/after (?:the )?(?:collapse|fall|apocalypse)/i,/nuclear fallout/i,/\bwasteland\b/i]},
-  {id:'zombie-apocalypse',label:'Zombie apocalypse',parent:'post-apocalypse',aliases:['zombie apocalypse','зомби апокалипсис'],any:[/zombie.?apocal/i,/зомби.?апокалип/i,/\bzombies?\b/i,/\bundead\b/i,/\bhorde\b/i]},
+  {id:'zombie-apocalypse',label:'Zombie apocalypse',aliases:['zombie apocalypse','зомби апокалипсис'],any:[/zombie.?apocal/i,/зомби.?апокалип/i,/\bzombies?\b/i,/\bundead\b/i,/\bhorde\b/i]},
   {id:'rusreal',label:'Rusreal',aliases:['русреал','russian realism','modern russia','современная россия'],any:[/\bрусреал\b/i,/\brusreal\b/i,/russian realism/i,/\b(?:russia|moscow)\b/i,/\b(?:росси[яи]|москв[аеыу])\b/i]},
-  {id:'rusreal-2000s',label:'2000s Rusreal',parent:'rusreal',aliases:['нулевые','2000s russia','россия нулевых'],all:[/(?:\b200\d\b|\b2000s\b|нулев(?:ые|ых))/i,/(?:rusreal|русреал|russia|росси|moscow|москв)/i]},
+  {id:'rusreal-2000s',label:'2000s Rusreal',aliases:['нулевые','2000s russia','россия нулевых'],all:[/(?:\b200\d\b|\b2000s\b|нулев(?:ые|ых))/i,/(?:rusreal|русреал|russia|росси|moscow|москв)/i]},
   {id:'china',label:'China',aliases:['китай','chinese setting'],any:[/\bchina\b/i,/\bchinese\b/i,/\bкита[йяе]\b/i,/\b(?:wuxia|xianxia)\b/i,/\bcultivation\b/i]},
-  {id:'ancient-china',label:'Ancient China',parent:'china',aliases:['древний китай','imperial china','historical china'],all:[/(?:ancient|imperial|historical|dynasty|древн|импер|династ)/i,/(?:china|chinese|кита|wuxia|xianxia|cultivation)/i]},
+  {id:'ancient-china',label:'Ancient China',aliases:['древний китай','imperial china','historical china'],all:[/(?:ancient|imperial|historical|dynasty|древн|импер|династ)/i,/(?:china|chinese|кита|wuxia|xianxia|cultivation)/i]},
   {id:'egypt',label:'Egypt',aliases:['египет','egyptian setting'],any:[/\begypt\b/i,/\begyptian\b/i,/\bегип/i]},
-  {id:'ancient-egypt',label:'Ancient Egypt',parent:'egypt',aliases:['древний египет'],all:[/(?:ancient|pharaoh|древн|фараон)/i,/(?:egypt|egyptian|егип)/i]},
+  {id:'ancient-egypt',label:'Ancient Egypt',aliases:['древний египет'],all:[/(?:ancient|pharaoh|древн|фараон)/i,/(?:egypt|egyptian|егип)/i]},
   {id:'medieval',label:'Medieval',aliases:['middle ages','средневековье'],any:[/\bmedieval\b/i,/middle ages/i,/средневек/i]},
   {id:'regency',label:'Regency',aliases:['regency era'],any:[/\bregency\b/i,/бриджертон/i,/\bbridgerton\b/i]},
   {id:'victorian',label:'Victorian',aliases:['victorian era'],any:[/\bvictorian\b/i,/викториан/i]},
@@ -18,10 +18,12 @@ export const SETTING_DEFINITIONS = [
   {id:'fantasy',label:'Fantasy',aliases:['фэнтези'],any:[/\bfantasy\b/i,/\bфэнтези\b/i,/\bmagic kingdom\b/i]},
   {id:'sci-fi',label:'Sci-Fi',aliases:['science fiction','научная фантастика'],any:[/\bsci[- ]?fi\b/i,/science fiction/i,/научн(?:ая|ой) фантаст/i,/\bintergalactic\b/i]},
   {id:'cyberpunk',label:'Cyberpunk',aliases:['киберпанк'],any:[/\bcyberpunk\b/i,/\bкиберпанк\b/i,/neon dystopia/i]},
-  {id:'supernatural',label:'Supernatural / Folklore',aliases:['urban fantasy','folklore','slavic folklore','mythology','сверхъестественное','фольклор','славянский фольклор','мифология'],any:[/\bsupernatural\b/i,/urban fantasy/i,/\b(?:slavic ?folklore|folklore|mythology|mythological|mythic creature)\b/i,/сверхъестествен/i,/фольклор/i,/славянск.{0,12}(?:фольклор|мифолог)/i,/мифолог/i]},
-  {id:'college',label:'School / University',aliases:['school','high school','college','university','школа','старшая школа','университет','универ','колледж'],any:[/\b(?:high school|college|university) (?:students?|roommates?|roomies|professors?|teachers?|classmates?|campus|courses?|lectures?|classes?|life|housing|dorms?|parties|setting|au)\b/i,/\b(?:students?|roommates?|roomies|professors?|teachers?|classmates?) (?:at|in|from) (?:a |the )?(?:high school|college|university)\b/i,/\b(?:high school|school setting|campus|dormitory|dorm room|fraternity|sorority)\b/i,/\bhale university\b/i,/\b[A-Z][A-Z' -]{2,30} UNIVERSITY\b/,/старш(?:ая|ей) школ|школьн(?:ик|иц|ый|ая)|университетск|студент.{0,18}университет|колледж.{0,18}(?:студент|общежит|сосед)/i]},
-  {id:'slice-of-life',label:'Slice of Life / Everyday',aliases:['slice of life','everyday','modern day','повседневность','современность'],any:[/\bslice of life\b/i,/\beveryday life\b/i,/\bmodern[- ]day\b/i,/\b(?:boyfriend|girlfriend|husband|wife|ex[- ]?(?:boyfriend|girlfriend|husband|wife)|best friend|coworker|boss|neighbor|roommate|single (?:dad|mom|father|mother)|office|workplace|apartment|dating app|vacation)\b/i,/\b(?:парень|девушка|муж|жена|бывш(?:ий|ая)|лучш(?:ий|ая) друг|коллега|начальник|сосед|соседка|сожитель|офис|квартира|повседневн|современн)\b/i]},
-  {id:'mafia',label:'Mafia / Crime',aliases:['mafia','organized crime','криминал'],any:[/\bmafia\b/i,/organized crime/i,/crime family/i,/\bsyndicate\b/i,/\bgang(?:ster)?\b/i,/\bмафи/i,/криминальн/i]}
+  {id:'supernatural',label:'Supernatural',aliases:['urban fantasy','сверхъестественное'],any:[/\bsupernatural\b/i,/urban fantasy/i,/сверхъестествен/i,/\bparanormal\b/i]},
+  {id:'folklore',label:'Folklore',aliases:['folklore','slavic folklore','mythology','фольклор','славянский фольклор','мифология'],any:[/\b(?:slavic ?folklore|folklore|mythology|mythological|mythic creature)\b/i,/фольклор/i,/славянск.{0,12}(?:фольклор|мифолог)/i,/мифолог/i]},
+  {id:'college',label:'School & University',aliases:['school','high school','college','university','школа','старшая школа','университет','универ','колледж'],any:[/\b(?:high school|college|university) (?:students?|roommates?|roomies|professors?|teachers?|classmates?|campus|courses?|lectures?|classes?|life|housing|dorms?|parties|setting|au)\b/i,/\b(?:students?|roommates?|roomies|professors?|teachers?|classmates?) (?:at|in|from) (?:a |the )?(?:high school|college|university)\b/i,/\b(?:high school|school setting|campus|dormitory|dorm room|fraternity|sorority)\b/i,/\bhale university\b/i,/\b[A-Z][A-Z' -]{2,30} UNIVERSITY\b/,/старш(?:ая|ей) школ|школьн(?:ик|иц|ый|ая)|университетск|студент.{0,18}университет|колледж.{0,18}(?:студент|общежит|сосед)/i]},
+  {id:'slice-of-life',label:'Everyday',aliases:['slice of life','everyday','modern day','повседневность','современность'],any:[/\bslice of life\b/i,/\beveryday life\b/i,/\bmodern[- ]day\b/i,/\b(?:boyfriend|girlfriend|husband|wife|ex[- ]?(?:boyfriend|girlfriend|husband|wife)|best friend|coworker|boss|neighbor|roommate|single (?:dad|mom|father|mother)|office|workplace|apartment|dating app|vacation)\b/i,/\b(?:парень|девушка|муж|жена|бывш(?:ий|ая)|лучш(?:ий|ая) друг|коллега|начальник|сосед|соседка|сожитель|офис|квартира|повседневн|современн)\b/i]},
+  {id:'mafia',label:'Mafia',aliases:['mafia','organized crime family','мафия'],any:[/\bmafia\b/i,/crime family/i,/\bмафи/i]},
+  {id:'crime',label:'Crime',aliases:['organized crime','криминал'],any:[/organized crime/i,/\bsyndicate\b/i,/\bgang(?:ster)?\b/i,/\bcriminal\b/i,/криминальн/i]}
 ];
 
 const definitionById = new Map(SETTING_DEFINITIONS.map(x=>[x.id,x]));
@@ -33,23 +35,32 @@ export function inferSettingIds(source,row={}){
   // Full imported descriptions frequently end with promotional lists for other
   // bots. Restrict automatic classification to fields that describe this
   // record directly, otherwise a promo for a university/mafia bot pollutes it.
-  const parts=[source?.name,source?.chat_name,source?.scenario,row?.name,row?.short_description,row?.scenario,row?.universe,...jsonArray(row?.tags),...jsonArray(row?.hashtags),...jsonArray(row?.intros),...scripts.map(x=>x?.title)];
+  const directDescription=clean(source?.description||source?.rawDescription||source?.raw_description||row?.description).slice(0,2400).split(/\n\s*(?:more bots|other bots|check out|links?|credits?)\s*[:：-]/i)[0];
+  const parts=[source?.name,source?.chat_name,source?.scenario,directDescription,row?.name,row?.short_description,row?.scenario,...normalizeUniverses(row?.universes||row?.universe),...jsonArray(row?.tags),...jsonArray(row?.hashtags),...jsonArray(row?.intros),...scripts.map(x=>x?.title)];
   const text=parts.filter(Boolean).join('\n');
   const matched=SETTING_DEFINITIONS.filter(def=>{
     if(def.all?.length && def.all.every(re=>re.test(text)))return true;
     return Boolean(def.any?.some(re=>re.test(text)));
   }).map(x=>x.id);
-  const set=new Set(matched);
-  // Everyday life is the broad fallback. A more specific detected setting
-  // (school, mafia, fantasy, etc.) should win instead of producing two labels.
-  if(set.size>1)set.delete('slice-of-life');
-  return [...set].filter(id=>!descendants(id).some(child=>set.has(child.id)));
+  return [...new Set(matched)];
 }
 
 export function settingLabels(ids){return jsonArray(ids).map(id=>definitionById.get(id)?.label).filter(Boolean)}
 
+export function normalizeUniverses(value){
+  const raw=Array.isArray(value)?value:jsonArray(value).length?jsonArray(value):[value];
+  const seen=new Set(),out=[];
+  for(const entry of raw.flatMap(v=>clean(v).split(/\s*\/\s*/))){
+    const universe=clean(entry);
+    const key=fold(universe);
+    if(!universe||/^(?:unclassified|unknown|none|null|n\/?a|setting|universe|world)\s*:?$/i.test(universe)||universe.length>80||seen.has(key))continue;
+    seen.add(key);out.push(universe);
+  }
+  return out;
+}
+
 export function cleanUniverse(value){
-  const universe=clean(value);
+  const universe=normalizeUniverses(value)[0]||'';
   if(!universe || /^(?:unclassified|unknown|none|null|n\/?a|setting|universe|world)\s*:?$/i.test(universe) || universe.length>80)return'';
   return universe;
 }
@@ -63,18 +74,18 @@ export function resolveUniverseRows(rows){
     for(const key of row._lorebookKeys){if(!linked.has(key))linked.set(key,[]);linked.get(key).push(row)}
   }
   for(const row of rows){
-    const explicit=cleanUniverse(row.universe);
-    if(explicit){row.resolved_universe=explicit;row.resolved_universe_source=row.universe_source_field||'source';continue}
+    const explicit=normalizeUniverses(jsonArray(row.universes).length?row.universes:row.universe);
+    if(explicit.length){row.resolved_universes=explicit;row.resolved_universe=explicit[0];row.resolved_universe_source=row.universe_source_field||'source';continue}
     const candidates=new Map();
     for(const loreKey of row._lorebookKeys){
       const values=new Map();
-      for(const peer of linked.get(loreKey)||[]){if(fold(row.author)&&fold(peer.author)!==fold(row.author))continue;const value=cleanUniverse(peer.universe),key=universeKey(value);if(key)values.set(key,value)}
+      for(const peer of linked.get(loreKey)||[]){if(fold(row.author)&&fold(peer.author)!==fold(row.author))continue;for(const value of normalizeUniverses(jsonArray(peer.universes).length?peer.universes:peer.universe)){const key=universeKey(value);if(key)values.set(key,value)}}
       if(values.size!==1)continue;
       const [key,value]=values.entries().next().value,current=candidates.get(key)||{value,votes:0};
       current.votes++;candidates.set(key,current);
     }
-    if(candidates.size===1){const winner=candidates.values().next().value;row.resolved_universe=winner.value;row.resolved_universe_source=`lorebook:${winner.votes}`}
-    else{row.resolved_universe='';row.resolved_universe_source=''}
+    if(candidates.size===1){const winner=candidates.values().next().value;row.resolved_universes=[winner.value];row.resolved_universe=winner.value;row.resolved_universe_source=`lorebook:${winner.votes}`}
+    else{row.resolved_universes=[];row.resolved_universe='';row.resolved_universe_source=''}
   }
   return rows;
 }

@@ -3,69 +3,156 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0d0f0d">
+  <meta name="theme-color" content="#0b0d0b">
   <title>ARCHIVE.EXE</title>
   <style>
     *{box-sizing:border-box}
-    :root{--bg:#0d0f0d;--panel:rgba(17,20,17,.82);--line:#394037;--line2:#59624f;--text:#e5dfd2;--muted:#7c8478;--olive:#9ca879;--sand:#c9bea1;--mono:"Courier New",monospace}
+    :root{
+      --bg:#090b09;--panel:#111511;--panel2:#171b16;--line:#3d4638;--line2:#66715b;
+      --text:#e6dfcf;--muted:#7f8879;--olive:#9daa7c;--sand:#cdbf9d;--rust:#7e5f45;
+      --mono:"Courier New",monospace;
+    }
     html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
-    body{min-height:100dvh;overflow:hidden;background:#0b0d0b}
+    body{min-height:100dvh;overflow:hidden;background:#080a08}
     a{color:inherit;text-decoration:none}
-    .noise{position:fixed;inset:0;z-index:20;pointer-events:none;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitchTiles'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E")}
-    .landing{position:relative;min-height:100dvh;display:flex;flex-direction:column;isolation:isolate;overflow:hidden;background:#0a0c0a}
-    .landing:before{content:"";position:absolute;inset:-2%;z-index:-3;background-image:url('assets/header.png');background-size:cover;background-position:center 54%;filter:brightness(.48) saturate(.76) contrast(1.03);transform:scale(1.02)}
-    .landing:after{content:"";position:absolute;inset:0;z-index:-2;background:linear-gradient(180deg,rgba(8,10,8,.3) 0%,rgba(8,10,8,.18) 35%,rgba(8,10,8,.72) 76%,rgba(8,10,8,.96) 100%),linear-gradient(90deg,rgba(7,9,7,.82) 0%,rgba(7,9,7,.25) 24%,rgba(7,9,7,.14) 72%,rgba(7,9,7,.72) 100%)}
-    .scan{position:absolute;inset:0;z-index:-1;pointer-events:none;background:repeating-linear-gradient(180deg,rgba(255,255,255,.012) 0 1px,transparent 1px 4px)}
-    .topbar{display:flex;justify-content:space-between;gap:30px;padding:28px 38px 0;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em}
-    .brand strong{display:block;font-size:28px;letter-spacing:.04em;color:#ddd6c7}.brand small{display:block;margin-top:4px;font-size:9px;color:#777f73;letter-spacing:.15em}
-    .status{display:grid;grid-template-columns:auto auto;gap:4px 14px;align-content:start;font-size:8px;color:#646c62;text-align:right}.status b{font-weight:400;color:#8e987c}.status i{width:5px;height:5px;border-radius:50%;background:#8da06b;box-shadow:0 0 8px rgba(141,160,107,.4);align-self:center;justify-self:end}
-    .stage{flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:end;gap:18px;width:min(1180px,calc(100% - 72px));margin:0 auto;padding:13vh 0 8vh}
-    .intro{grid-column:1/-1;align-self:end;display:flex;justify-content:space-between;align-items:end;gap:30px;padding:0 8px 18px}.intro-copy{font-family:var(--mono);max-width:540px}.eyebrow{font-size:9px;letter-spacing:.18em;color:#78816f;margin-bottom:11px}.intro h1{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(34px,4.2vw,68px);letter-spacing:-.035em;color:#e3dccd;text-shadow:0 4px 22px rgba(0,0,0,.55)}.intro p{margin:13px 0 0;color:#9ba394;font:10px/1.65 var(--mono);letter-spacing:.08em}.motto{font:9px/1.55 var(--mono);letter-spacing:.14em;color:#8e7f68;text-align:right;text-transform:uppercase}.motto:after{content:"";display:block;width:28px;height:1px;margin:10px 0 0 auto;background:#8a7a63}
-    .choice{position:relative;min-height:220px;border:1px solid rgba(91,101,84,.62);border-radius:5px;background:linear-gradient(180deg,rgba(19,23,19,.82),rgba(12,15,12,.9));backdrop-filter:blur(8px);overflow:hidden;transition:transform .2s,border-color .2s,background .2s,box-shadow .2s}.choice:before{content:"";position:absolute;inset:0;opacity:.26;background:linear-gradient(120deg,transparent 0 55%,rgba(153,167,121,.08) 75%,transparent 100%);pointer-events:none}.choice:hover{transform:translateY(-4px);border-color:#7b8867;background:linear-gradient(180deg,rgba(24,29,23,.9),rgba(14,17,14,.95));box-shadow:0 18px 50px rgba(0,0,0,.34)}
-    .choice>a{position:absolute;inset:0;z-index:2;padding:26px 28px;display:flex;flex-direction:column;justify-content:space-between}.choice-top{display:flex;justify-content:space-between;color:#626a60;font:8px var(--mono);letter-spacing:.1em}.choice-icon{width:46px;height:46px;border:1px solid #40483c;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#a7b08f;font:24px/1 var(--mono);background:rgba(7,10,7,.3)}
-    .choice h2{margin:18px 0 7px;font-family:Georgia,"Times New Roman",serif;font-size:30px;letter-spacing:.01em;color:#ddd7ca}.choice p{margin:0;max-width:360px;color:#979f92;font:9px/1.6 var(--mono);letter-spacing:.05em}.enter{display:flex;justify-content:space-between;align-items:center;margin-top:22px;padding-top:12px;border-top:1px solid rgba(83,92,77,.45);color:#b4ad98;font:8px var(--mono);letter-spacing:.14em;text-transform:uppercase}.enter span:last-child{font-size:22px;color:#a7b38c;transition:transform .2s}.choice:hover .enter span:last-child{transform:translateX(5px)}
-    .choice.characters{border-color:rgba(112,122,90,.72)}.choice.hub{border-color:rgba(100,86,68,.58)}.choice.hub .choice-icon{color:#b39a78;border-color:#544938}.choice.hub:hover{border-color:#89745b}
-    .footer{display:flex;justify-content:space-between;gap:20px;padding:0 38px 24px;color:#535b52;font:7px var(--mono);letter-spacing:.13em;text-transform:uppercase}.footer b{font-weight:400;color:#737c6e}
+
+    .gateway{position:relative;min-height:100dvh;overflow:hidden;isolation:isolate;background:#080a08}
+    .gateway-bg{position:absolute;inset:-2%;z-index:-6;background:url('assets/header.png') center 56%/cover no-repeat;filter:brightness(.52) saturate(.76) contrast(1.04);transform:scale(1.025)}
+    .gateway-vignette{position:absolute;inset:0;z-index:-5;background:
+      radial-gradient(circle at 52% 36%,rgba(205,168,103,.08),transparent 28%),
+      linear-gradient(180deg,rgba(5,7,5,.24),rgba(5,7,5,.12) 34%,rgba(5,7,5,.46) 68%,rgba(5,7,5,.9) 100%),
+      linear-gradient(90deg,rgba(5,7,5,.86) 0%,rgba(5,7,5,.26) 18%,rgba(5,7,5,.1) 50%,rgba(5,7,5,.24) 78%,rgba(5,7,5,.86) 100%)}
+    .scanlines{position:absolute;inset:0;z-index:30;pointer-events:none;opacity:.34;background:repeating-linear-gradient(180deg,rgba(255,255,255,.015) 0 1px,transparent 1px 4px)}
+    .noise{position:absolute;inset:0;z-index:29;pointer-events:none;opacity:.032;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
+
+    .brand-block{position:absolute;left:38px;top:28px;z-index:5;font-family:var(--mono);text-transform:uppercase;text-shadow:0 2px 18px rgba(0,0,0,.55)}
+    .brand{font:700 27px/1 var(--mono);letter-spacing:.045em;color:#ded6c6}
+    .brand-sub{margin-top:7px;font:8px/1.4 var(--mono);letter-spacing:.15em;color:#70796d}
+    .boot{margin-top:28px;display:grid;gap:5px;color:#6d7669;font:7px/1.2 var(--mono);letter-spacing:.11em}
+    .boot span:before{content:'> ';color:#8b987a}.boot .ok{color:#9ba785}
+
+    .right-index{position:absolute;right:38px;top:31px;z-index:5;text-align:right;color:#626b60;font:7px/1.55 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+    .right-index b{color:#8b967c;font-weight:400}.online-dot{display:inline-block;width:5px;height:5px;margin-left:7px;border-radius:50%;background:#93a56d;box-shadow:0 0 8px rgba(147,165,109,.45)}
+
+    .motto{position:absolute;left:50%;top:27%;z-index:4;transform:translateX(-50%);text-align:center;color:#b9a98d;font:9px/1.55 var(--mono);letter-spacing:.16em;text-transform:uppercase;text-shadow:0 3px 16px rgba(0,0,0,.65)}
+    .motto:after{content:'';display:block;width:26px;height:1px;margin:11px auto 0;background:#9b896e}
+
+    .side-note{position:absolute;z-index:4;color:#60695f;font:7px/1.55 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+    .side-note.left{left:22px;bottom:24%;max-width:120px;color:#6f795f}
+    .side-note.right{right:22px;bottom:22%;text-align:right;max-width:120px;color:#756b59}
+    .side-note .signal{color:#8a976f}
+
+    .access-deck{position:absolute;z-index:6;left:50%;bottom:12.5vh;transform:translateX(-50%);width:min(980px,78vw);display:grid;grid-template-columns:1.08fr .92fr;gap:20px;align-items:end}
+    .terminal-card{position:relative;min-height:220px;background:
+      linear-gradient(180deg,rgba(18,23,18,.92),rgba(9,12,9,.96)),
+      repeating-linear-gradient(90deg,rgba(255,255,255,.02) 0 1px,transparent 1px 5px);
+      border:1px solid rgba(95,107,86,.62);box-shadow:0 18px 42px rgba(0,0,0,.38),inset 0 0 0 1px rgba(0,0,0,.28);overflow:hidden;transition:transform .18s,border-color .18s,box-shadow .18s,background .18s}
+    .terminal-card:before,.terminal-card:after{content:'';position:absolute;pointer-events:none}
+    .terminal-card:before{inset:7px;border:1px solid rgba(99,110,89,.18)}
+    .terminal-card:after{left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(194,205,164,.35),transparent)}
+    .terminal-card:hover{transform:translateY(-4px);border-color:#7d8b69;box-shadow:0 24px 54px rgba(0,0,0,.46),0 0 0 1px rgba(130,145,106,.08)}
+    .terminal-card.characters{min-height:238px;border-color:rgba(116,130,96,.72)}
+    .terminal-card.hub{min-height:218px;border-color:rgba(105,91,70,.62)}
+    .terminal-card.hub:hover{border-color:#8e785c}
+    .terminal-card a{display:flex;flex-direction:column;justify-content:space-between;position:absolute;inset:0;padding:24px 27px 22px}
+
+    .node-row{display:flex;justify-content:space-between;align-items:center;color:#677064;font:7px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+    .node-row b{font-weight:400;color:#79826f}
+    .terminal-main{display:grid;grid-template-columns:56px 1fr;gap:20px;align-items:center;margin-top:18px}
+    .glyph{width:54px;height:54px;border:1px solid #46503f;display:grid;place-items:center;background:rgba(6,9,6,.34);color:#a2ad8d;font:25px/1 var(--mono);box-shadow:inset 0 0 20px rgba(0,0,0,.24)}
+    .hub .glyph{color:#b39b79;border-color:#5b4b39}
+    .terminal-copy h2{margin:0;color:#ddd5c5;font:700 28px/1 Georgia,"Times New Roman",serif;letter-spacing:.01em}
+    .terminal-copy p{margin:9px 0 0;max-width:360px;color:#929a8d;font:8px/1.55 var(--mono);letter-spacing:.045em}
+    .enter{display:flex;justify-content:space-between;align-items:center;margin-top:22px;padding-top:11px;border-top:1px solid rgba(92,103,84,.42);color:#b7af98;font:7px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+    .enter-arrow{font-size:21px;color:#a9b78f;transition:transform .18s}.hub .enter-arrow{color:#b89a76}.terminal-card:hover .enter-arrow{transform:translateX(5px)}
+
+    .deck-shadow{position:absolute;left:50%;bottom:8.5vh;transform:translateX(-50%);width:min(1100px,86vw);height:110px;z-index:2;background:radial-gradient(ellipse at center,rgba(0,0,0,.56),transparent 68%);filter:blur(10px);pointer-events:none}
+
+    .statusbar{position:absolute;left:0;right:0;bottom:0;z-index:7;display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center;padding:13px 32px 14px;border-top:1px solid rgba(80,90,75,.22);background:linear-gradient(180deg,rgba(5,7,5,.18),rgba(5,7,5,.72));color:#545d53;font:6.5px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase}
+    .statusbar .center{text-align:center;color:#687266}.statusbar .right{text-align:right}.statusbar b{font-weight:400;color:#7b8576}
+
+    @media(max-width:900px){
+      .access-deck{width:min(860px,88vw);gap:14px}.terminal-card.characters{min-height:220px}.terminal-card.hub{min-height:205px}.terminal-card a{padding:21px}.terminal-copy h2{font-size:24px}
+    }
+
     @media(max-width:760px){
-      body{overflow:auto}.landing{min-height:100dvh;overflow:visible}.landing:before{background-position:42% center;filter:brightness(.4) saturate(.72)}.landing:after{background:linear-gradient(180deg,rgba(8,10,8,.45),rgba(8,10,8,.28) 24%,rgba(8,10,8,.8) 62%,rgba(8,10,8,.98) 100%)}
-      .topbar{padding:18px 18px 0}.brand strong{font-size:21px}.brand small{font-size:7px}.status{display:none}
-      .stage{width:calc(100% - 28px);grid-template-columns:1fr;align-items:stretch;gap:10px;padding:24vh 0 28px}.intro{grid-column:1;display:block;padding:0 4px 11px}.intro h1{font-size:34px}.intro p{font-size:8px;line-height:1.55;max-width:290px}.motto{margin-top:15px;text-align:left;font-size:7px}.motto:after{margin-left:0;margin-right:auto}
-      .choice{min-height:142px}.choice>a{padding:17px 18px}.choice-icon{width:34px;height:34px;font-size:18px}.choice h2{font-size:22px;margin:9px 0 4px}.choice p{font-size:7.5px;line-height:1.45}.enter{margin-top:10px;padding-top:8px;font-size:6.7px}.enter span:last-child{font-size:18px}
-      .footer{padding:0 18px 17px;font-size:6px}.footer span:last-child{display:none}
+      body{overflow:auto}.gateway{min-height:100dvh;overflow:visible;padding-bottom:64px}.gateway-bg{background-position:44% center;filter:brightness(.42) saturate(.72)}
+      .gateway-vignette{background:linear-gradient(180deg,rgba(5,7,5,.28),rgba(5,7,5,.3) 24%,rgba(5,7,5,.72) 55%,rgba(5,7,5,.98) 100%),linear-gradient(90deg,rgba(5,7,5,.56),rgba(5,7,5,.1),rgba(5,7,5,.5))}
+      .brand-block{position:relative;left:auto;top:auto;padding:18px 18px 0}.brand{font-size:21px}.brand-sub{font-size:6.5px}.boot{margin-top:16px;font-size:6px;gap:3px}
+      .right-index,.side-note{display:none}
+      .motto{position:relative;left:auto;top:auto;transform:none;margin:18vh auto 0;font-size:7px;width:max-content}
+      .access-deck{position:relative;left:auto;bottom:auto;transform:none;width:calc(100% - 28px);margin:24px auto 0;grid-template-columns:1fr;gap:11px}
+      .terminal-card,.terminal-card.characters,.terminal-card.hub{min-height:148px}
+      .terminal-card a{padding:16px 17px}.node-row{font-size:6px}.terminal-main{grid-template-columns:42px 1fr;gap:13px;margin-top:10px}.glyph{width:40px;height:40px;font-size:19px}.terminal-copy h2{font-size:21px}.terminal-copy p{font-size:7px;line-height:1.45;margin-top:5px}.enter{margin-top:10px;padding-top:8px;font-size:6px}.enter-arrow{font-size:17px}
+      .deck-shadow{display:none}.statusbar{position:relative;margin-top:20px;padding:12px 16px;grid-template-columns:1fr auto;font-size:5.5px}.statusbar .center{display:none}
+    }
+
+    @media(max-width:390px){
+      .motto{margin-top:15vh}.terminal-card,.terminal-card.characters,.terminal-card.hub{min-height:142px}.terminal-copy h2{font-size:20px}.terminal-copy p{max-width:235px}
     }
   </style>
 </head>
 <body>
-<div class="noise"></div>
-<main class="landing">
-  <div class="scan"></div>
-  <header class="topbar">
-    <div class="brand"><strong>ARCHIVE.EXE</strong><small>TAVO RESOURCE DATABASE</small></div>
-    <div class="status"><span>DATABASE</span><b>ONLINE</b><span>NODE</span><b>00</b><span></span><i></i></div>
-  </header>
+  <main class="gateway">
+    <div class="gateway-bg" aria-hidden="true"></div>
+    <div class="gateway-vignette" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="noise" aria-hidden="true"></div>
 
-  <section class="stage">
-    <div class="intro">
-      <div class="intro-copy"><div class="eyebrow">SYSTEM DIRECTORY / ACCESS POINT</div><h1>ARCHIVE.EXE</h1><p>FILES / CHARACTERS / RESOURCES / WORLDS</p></div>
-      <div class="motto">SAME PEOPLE.<br>DIFFERENT FILES.</div>
+    <header class="brand-block">
+      <div class="brand">ARCHIVE.EXE</div>
+      <div class="brand-sub">TAVO RESOURCE DATABASE</div>
+      <div class="boot" aria-hidden="true">
+        <span>SYSTEM BOOT: <b class="ok">OK</b></span>
+        <span>DATABASE: <b class="ok">ONLINE</b></span>
+        <span>WELCOME, VISITOR.</span>
+      </div>
+    </header>
+
+    <div class="right-index" aria-hidden="true">
+      // CHARACTERS<br>// RESOURCES<br>// COMMUNITY<br>// AND MORE_<br><br>
+      <b>NODE_00 / ONLINE</b><span class="online-dot"></span>
     </div>
 
-    <article class="choice characters">
-      <a href="characters.html" aria-label="Open character archive">
-        <div><div class="choice-top"><span>[01]</span><span>CHARACTER DATABASE</span></div><div class="choice-icon">◫</div><h2>CHARACTERS</h2><p>Explore the bot archive. Characters, stories, settings, universes and lore.</p></div>
-        <div class="enter"><span>ENTER ARCHIVE</span><span>→</span></div>
-      </a>
-    </article>
+    <div class="motto">SAME PEOPLE.<br>DIFFERENT FILES.</div>
 
-    <article class="choice hub">
-      <a href="hub.html" aria-label="Open TAVO Hub">
-        <div><div class="choice-top"><span>[02]</span><span>RESOURCE DIRECTORY</span></div><div class="choice-icon">▰</div><h2>TAVO HUB</h2><p>Presets, themes, plugins, creators, guides, links and useful resources.</p></div>
-        <div class="enter"><span>OPEN DIRECTORY</span><span>→</span></div>
-      </a>
-    </article>
-  </section>
+    <div class="side-note left" aria-hidden="true"><span class="signal">A QUIETER INTERNET</span><br>FOR DEEPER STORIES.<br>&gt; _</div>
+    <div class="side-note right" aria-hidden="true">BOTS<br>PRESETS<br>THEMES<br>PLUGINS<br>GUIDES<br>AUTHORS</div>
 
-  <footer class="footer"><span>ARCHIVE.EXE / GATEWAY_00</span><span>// STILL HERE. // STILL GROWING.</span><span><b>STATUS:</b> STABLE</span></footer>
-</main>
+    <div class="deck-shadow" aria-hidden="true"></div>
+    <section class="access-deck" aria-label="Choose archive directory">
+      <article class="terminal-card characters">
+        <a href="characters.html" aria-label="Open character archive">
+          <div>
+            <div class="node-row"><span>[01]</span><b>CHARACTER DATABASE</b></div>
+            <div class="terminal-main">
+              <div class="glyph" aria-hidden="true">◫</div>
+              <div class="terminal-copy"><h2>CHARACTERS</h2><p>Explore the archive. Characters, stories, settings, universes and lore.</p></div>
+            </div>
+          </div>
+          <div class="enter"><span>ENTER ARCHIVE</span><span class="enter-arrow">→</span></div>
+        </a>
+      </article>
+
+      <article class="terminal-card hub">
+        <a href="hub.html" aria-label="Open TAVO Hub">
+          <div>
+            <div class="node-row"><span>[02]</span><b>RESOURCE DIRECTORY</b></div>
+            <div class="terminal-main">
+              <div class="glyph" aria-hidden="true">▰</div>
+              <div class="terminal-copy"><h2>TAVO HUB</h2><p>Resources, tools, presets, themes, creators, guides and useful links.</p></div>
+            </div>
+          </div>
+          <div class="enter"><span>OPEN DIRECTORY</span><span class="enter-arrow">→</span></div>
+        </a>
+      </article>
+    </section>
+
+    <footer class="statusbar">
+      <div>ARCHIVE.EXE // GATEWAY_00</div>
+      <div class="center">// STILL HERE. // STILL GROWING. // THANK YOU.</div>
+      <div class="right"><b>STATUS:</b> STABLE</div>
+    </footer>
+  </main>
 </body>
 </html>

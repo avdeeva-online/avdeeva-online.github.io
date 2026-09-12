@@ -1,5 +1,6 @@
 const clean = value => String(value ?? '').replace(/\s+/g,' ').trim();
 const fold = value => clean(value).toLocaleLowerCase();
+const universeSemanticKey = value => fold(value).replace(/[^\p{L}\p{N}]+/gu,'');
 
 export const SETTING_DEFINITIONS = [
   {id:'omegaverse',label:'Omegaverse',aliases:['abo','a/b/o','alpha beta omega'],any:[/\bomegavers(?:e)?\b/i,/\ba\/?b\/?o\b/i,/alpha\s*[\/·,]\s*beta\s*[\/·,]\s*omega/i,/secondary genders?/i,/\bgo(?:es|ing)? into (?:rut|heat)\b/i,/\b(?:rut|heat) cycle\b/i,/\b(?:rutting|fated mates?)\b/i,/\bmate mark(?:s|ing|ed)?\b/i,/\bbreeder\b/i]},
@@ -31,13 +32,51 @@ const definitionById = new Map(SETTING_DEFINITIONS.map(x=>[x.id,x]));
 function isDescendant(childId,parentId){let current=definitionById.get(childId);while(current?.parent){if(current.parent===parentId)return true;current=definitionById.get(current.parent)}return false}
 const descendants = id => SETTING_DEFINITIONS.filter(x=>isDescendant(x.id,id));
 
+const CANONICAL_UNIVERSE_LABELS=new Map([
+  ['thevault','The Vault'],['thewild','The Wild'],['bayucrew','Bayu Crew'],['bayoucrew','Bayu Crew'],
+  ['bayucrewnextgen','Bayu Crew Next Gen'],['bayoucrewnextgen','Bayu Crew Next Gen'],['voodooboys','Voodoo Boys'],
+  ['voodooboysnextgen','Voodoo Boys Next Gen'],['demigods','Demi Gods'],['helluniversity','Hell University'],
+  ['helluuniversity','Hell University'],['hellu','Hell University'],['hellutitans','HellU Titans'],['hellyoutitans','HellU Titans'],
+  ['helltitans','HellU Titans'],['arena','Arena'],['212kings','212 Kings'],['thefirm','The Firm'],['valentinos','Valentinos'],
+  ['kingtober','Kingtober'],['bridgerton','Bridgerton'],['intergalactic','Intergalactic'],['collab','Collabs'],['collabs','Collabs'],
+  ['dewald','DeWald'],['cashcasinos','Cash Casinos'],['hellreapers','Hell Reapers'],['bycnextgen','B-Y-C Next Gen'],
+  ['sacuniversenoncanon','SAC Universe Noncanon'],['sacnoncanon','SAC Noncanon'],['suvauniversity','SUVA University'],
+  ['thegroupchat','The Group Chat'],['vincericardossyndicate',"Vince Ricardo's Syndicate"]
+]);
+
+function curateUniverseEntry(value,row={}){
+  const raw=clean(value),key=universeSemanticKey(raw),nameKey=universeSemanticKey(row?.name||row?.nameEn||'');
+  if(!raw||!key)return[];
+  if(key.startsWith('thevault')&&(key.includes('aka')||key.includes('privatebot')))return['The Vault'];
+  if(key.startsWith('thewild')&&(key.includes('aka')||key.includes('privatebot')))return['The Wild'];
+  if((key.includes('demigods')&&key.includes('greekgod'))||(key.includes('greekgod')&&key.includes('alt')))return['Demi Gods'];
+  if(key==='helluniversityxvdb')return['Hell University'];
+  if(key.includes('thewild')&&key.includes('miniseries'))return['Hell University','HellU Titans'];
+  if(key==='endplot')return['The Wild'];
+  if(key==='birthdaybot')return['Kingtober'];
+  if(['bayucrewandvoodooboys','bayucrewxvoodooboys','bayoucrewandvoodooboys','bayoucrewxvoodooboys'].includes(key))return['Bayu Crew','Voodoo Boys'];
+  if(['voodooboysxbayoucrew','voodooboysandbayoucrew','voodooboysxbayucrew','voodooboysandbayucrew'].includes(key))return['Voodoo Boys','Bayu Crew'];
+  if(key==='thefirmxthevalentinos'||key==='valentinosxthefirm')return['The Firm','Valentinos'];
+  if(key.startsWith('intergalacticby'))return['Intergalactic','Collabs'];
+  if(['janitorcup','crownrecordsrappercollab','fourhorsemencollab','footballfightboyscollab','ledgercollab'].includes(key))return['Collabs'];
+  if(key==='bridgertoninspiredcollab')return['Bridgerton','Collabs'];
+  if(key==='bridgertoninspiredau')return['Bridgerton'];
+  if(key==='hellu')return nameKey.includes('ashton')&&nameKey.includes('dewald')?['Hell University','DeWald']:['Hell University'];
+  if(key==='helluuniversityoutcasts')return['Hell University'];
+  if(key.includes('hellvalkyries')&&(key.includes('woman')||key.includes('women')))return['Hell University'];
+  if(key.startsWith('dewaldbotsmadeespeciallyfor'))return['DeWald'];
+  if((key.includes('walt')||key.includes('dewald'))&&key.includes('botsmadeforme'))return['DeWald'];
+  if(key==='aualt'&&nameKey.includes('emilio')&&nameKey.includes('royal'))return['Bayu Crew Next Gen'];
+  return[CANONICAL_UNIVERSE_LABELS.get(key)||raw];
+}
+
 export function inferSettingIds(source,row={}){
   const scripts=Array.isArray(source?.scripts)?source.scripts:[];
   // Full imported descriptions frequently end with promotional lists for other
   // bots. Restrict automatic classification to fields that describe this
   // record directly, otherwise a promo for a university/mafia bot pollutes it.
   const directDescription=clean(source?.description||source?.rawDescription||source?.raw_description||row?.description).slice(0,2400).split(/\n\s*(?:more bots|other bots|check out|links?|credits?)\s*[:：-]/i)[0];
-  const parts=[source?.name,source?.chat_name,source?.scenario,directDescription,row?.name,row?.short_description,row?.scenario,...normalizeUniverses(row?.universes||row?.universe),...jsonArray(row?.tags),...jsonArray(row?.hashtags),...jsonArray(row?.intros),...scripts.map(x=>x?.title)];
+  const parts=[source?.name,source?.chat_name,source?.scenario,directDescription,row?.name,row?.short_description,row?.scenario,...normalizeUniverses(row?.universes||row?.universe,row),...jsonArray(row?.tags),...jsonArray(row?.hashtags),...jsonArray(row?.intros),...scripts.map(x=>x?.title)];
   const text=parts.filter(Boolean).join('\n');
   const matched=SETTING_DEFINITIONS.filter(def=>{
     if(def.all?.length && def.all.every(re=>re.test(text)))return true;
@@ -48,14 +87,13 @@ export function inferSettingIds(source,row={}){
 
 export function settingLabels(ids){return jsonArray(ids).map(id=>definitionById.get(id)?.label).filter(Boolean)}
 
-export function normalizeUniverses(value){
+export function normalizeUniverses(value,row={}){
   const raw=Array.isArray(value)?value:jsonArray(value).length?jsonArray(value):[value];
   const seen=new Set(),out=[];
-  for(const entry of raw.flatMap(v=>clean(v).split(/\s*\/\s*/))){
-    const universe=clean(entry);
-    const key=fold(universe);
-    if(!universe||/^(?:unclassified|unknown|none|null|n\/?a|setting|universe|world)\s*:?$/i.test(universe)||universe.length>80||seen.has(key))continue;
-    seen.add(key);out.push(universe);
+  for(const universe of raw.flatMap(v=>clean(v).split(/\s*\/\s*/)).flatMap(v=>curateUniverseEntry(v,row))){
+    const normalized=clean(universe),key=universeSemanticKey(normalized);
+    if(!normalized||/^(?:unclassified|unknown|none|null|n\/?a|setting|universe|world)\s*:?$/i.test(normalized)||normalized.length>80||seen.has(key))continue;
+    seen.add(key);out.push(CANONICAL_UNIVERSE_LABELS.get(key)||normalized);
   }
   return out;
 }
@@ -66,7 +104,7 @@ export function cleanUniverse(value){
   return universe;
 }
 
-export function universeKey(value){return fold(cleanUniverse(value))}
+export function universeKey(value){return universeSemanticKey(cleanUniverse(value))}
 
 export function resolveUniverseRows(rows){
   const linked=new Map();
@@ -75,12 +113,12 @@ export function resolveUniverseRows(rows){
     for(const key of row._lorebookKeys){if(!linked.has(key))linked.set(key,[]);linked.get(key).push(row)}
   }
   for(const row of rows){
-    const explicit=normalizeUniverses(jsonArray(row.universes).length?row.universes:row.universe);
+    const explicit=normalizeUniverses(jsonArray(row.universes).length?row.universes:row.universe,row);
     if(explicit.length){row.resolved_universes=explicit;row.resolved_universe=explicit[0];row.resolved_universe_source=row.universe_source_field||'source';continue}
     const candidates=new Map();
     for(const loreKey of row._lorebookKeys){
       const values=new Map();
-      for(const peer of linked.get(loreKey)||[]){if(fold(row.author)&&fold(peer.author)!==fold(row.author))continue;for(const value of normalizeUniverses(jsonArray(peer.universes).length?peer.universes:peer.universe)){const key=universeKey(value);if(key)values.set(key,value)}}
+      for(const peer of linked.get(loreKey)||[]){if(fold(row.author)&&fold(peer.author)!==fold(row.author))continue;for(const value of normalizeUniverses(jsonArray(peer.universes).length?peer.universes:peer.universe,peer)){const key=universeKey(value);if(key)values.set(key,value)}}
       if(values.size!==1)continue;
       const [key,value]=values.entries().next().value,current=candidates.get(key)||{value,votes:0};
       current.votes++;candidates.set(key,current);

@@ -110,6 +110,9 @@
     style.id='archiveFacetPresentation';
     style.textContent=`
       @media(max-width:760px){
+        .drawer-query-row{gap:3px!important}
+        .drawer-search{height:29px!important;min-height:29px!important;margin:3px 0!important;padding-inline:6px!important}
+        .drawer-tool-btn{min-width:45px!important;height:29px!important;min-height:29px!important;padding:2px 4px!important}
         .card-title{order:1!important}
         .card-mobile-universe-row{order:2!important}
         .card-short{order:3!important}

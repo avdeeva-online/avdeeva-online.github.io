@@ -6,7 +6,16 @@
     'cyberpunk','supernatural','folklore','college','slice-of-life','mafia','crime'
   ]);
   const normalizeSetting=id=>id==='high-school'?'college':id;
-  const findBot=id=>(Array.isArray(window.BOTS)?window.BOTS:[]).find(bot=>String(bot?.id)===String(id));
+  let botIndexSource=null,botIndex=new Map();
+  function getBotIndex(){
+    const source=Array.isArray(window.BOTS)?window.BOTS:[];
+    if(source!==botIndexSource){
+      botIndexSource=source;
+      botIndex=new Map(source.map(bot=>[String(bot?.id),bot]));
+    }
+    return botIndex;
+  }
+  const findBot=id=>getBotIndex().get(String(id));
 
   function settingCount(bot){
     return new Set((bot?.settingIds||[])
@@ -54,6 +63,7 @@
 
   function decorateCards(root=document){
     if(!mobile())return;
+    getBotIndex();
     if(root?.matches?.('.card'))decorateCard(root);
     root?.querySelectorAll?.('.card').forEach(decorateCard);
   }
@@ -143,6 +153,7 @@
   }
 
   function refresh(){
+    botIndexSource=null;
     decorateCards(document.querySelector('#grid')||document);
     ensureDrawerReset();
   }

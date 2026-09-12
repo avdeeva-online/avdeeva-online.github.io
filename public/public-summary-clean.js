@@ -16,8 +16,6 @@
     .public-summary-section p{margin:0!important;font:11.3px/1.52 Arial,sans-serif!important;color:#c0c6bb!important}
     .public-summary-continuation{display:grid;gap:7px}
     .public-summary-continuation p{margin:0!important;font:11.3px/1.52 Arial,sans-serif!important;color:#c0c6bb!important}
-    .public-summary-mobile-full{display:grid;gap:8px;min-height:max-content}
-    .public-summary-mobile-full p{margin:0!important;font:11.3px/1.52 Arial,sans-serif!important;color:#c0c6bb!important;white-space:pre-wrap!important}
     .public-summary-chapters{display:grid;gap:7px}
     .public-summary-chapter{padding-left:10px;border-left:1px solid rgba(125,139,111,.42)}
     .public-summary-chapter b{display:block;font:700 8.4px/1.4 var(--mono);color:#bac3ae;margin-bottom:3px}
@@ -30,9 +28,14 @@
         height:148px!important;
         min-height:148px!important;
         max-height:148px!important;
-        overflow-y:auto!important;
+        overflow-y:scroll!important;
         overflow-x:hidden!important;
-        padding-right:10px!important;
+        padding:2px 10px 2px 0!important;
+        white-space:pre-wrap!important;
+        overflow-wrap:anywhere!important;
+        word-break:normal!important;
+        color:#c0c6bb!important;
+        font:11.3px/1.52 Arial,sans-serif!important;
         -webkit-overflow-scrolling:touch!important;
         overscroll-behavior-y:contain!important;
         touch-action:pan-y!important;
@@ -40,11 +43,12 @@
         mask-image:none!important;
         scrollbar-width:thin!important;
         scrollbar-color:#566151 rgba(0,0,0,.14)!important;
+        contain:none!important;
+        isolation:auto!important;
       }
       #modalPublicBody::-webkit-scrollbar{width:4px!important}
       #modalPublicBody::-webkit-scrollbar-track{background:rgba(0,0,0,.12)!important;border-radius:8px!important}
       #modalPublicBody::-webkit-scrollbar-thumb{background:#566151!important;border-radius:8px!important}
-      #modalPublicBody>.public-summary-mobile-full{height:auto!important;min-height:max-content!important;max-height:none!important;overflow:visible!important}
       .modal-public-more{display:none!important}
     }
   `;
@@ -108,37 +112,13 @@
     return html+'</div>';
   }
 
-  function mobileMarkup(raw){
+  function mobileText(raw){
     const serviceLine=/^\s*character\s*:\s*/i;
-    const lines=String(raw||'').replace(/\r/g,'').split('\n')
-      .map(clean)
-      .filter(line=>line&&!serviceLine.test(line));
-    if(!lines.length)return '<div class="modal-public-empty">NO PUBLIC DESCRIPTION AVAILABLE</div>';
-    return `<div class="public-summary-mobile-full">${lines.map(line=>`<p>${esc(line)}</p>`).join('')}</div>`;
-  }
-
-  function forceMobileScroll(body){
-    if(!body||window.innerWidth>760)return;
-    const set=(name,value)=>body.style.setProperty(name,value,'important');
-    set('display','block');
-    set('box-sizing','border-box');
-    set('width','100%');
-    set('height','148px');
-    set('min-height','148px');
-    set('max-height','148px');
-    set('overflow-y','scroll');
-    set('overflow-x','hidden');
-    set('-webkit-overflow-scrolling','touch');
-    set('overscroll-behavior-y','contain');
-    set('touch-action','pan-y');
-    set('-webkit-mask-image','none');
-    set('mask-image','none');
-    set('padding-right','10px');
-    if(body.dataset.nativeScrollBound!=='1'){
-      body.dataset.nativeScrollBound='1';
-      body.addEventListener('touchmove',event=>event.stopPropagation(),{passive:true});
-      body.addEventListener('wheel',event=>event.stopPropagation(),{passive:true});
-    }
+    return String(raw||'').replace(/\r/g,'').split('\n')
+      .map(line=>clean(line))
+      .filter(line=>line&&!serviceLine.test(line))
+      .join('\n\n')
+      .trim();
   }
 
   function resetScroll(body){
@@ -149,20 +129,33 @@
     requestAnimationFrame(home);
   }
 
+  function applyMobileScrollStyles(body){
+    const values={
+      display:'block',boxSizing:'border-box',width:'100%',height:'148px',minHeight:'148px',maxHeight:'148px',
+      overflowY:'scroll',overflowX:'hidden',whiteSpace:'pre-wrap',overflowWrap:'anywhere',wordBreak:'normal',
+      WebkitOverflowScrolling:'touch',overscrollBehaviorY:'contain',touchAction:'pan-y',contain:'none',isolation:'auto'
+    };
+    for(const [prop,value] of Object.entries(values))body.style.setProperty(prop.replace(/[A-Z]/g,m=>'-'+m.toLowerCase()),value,'important');
+  }
+
   function render(bot){
     const body=document.querySelector('#modalPublicBody');
     if(!body||!bot)return;
     const raw=String(bot.publicDescription||bot.short||'').trim();
     const mobile=window.matchMedia&&window.matchMedia('(max-width:760px)').matches;
-    body.innerHTML=mobile?mobileMarkup(raw):markup(raw);
+    if(mobile){
+      const text=mobileText(raw);
+      body.replaceChildren(document.createTextNode(text||'NO PUBLIC DESCRIPTION AVAILABLE'));
+      applyMobileScrollStyles(body);
+    }else{
+      body.innerHTML=markup(raw);
+    }
     body.dataset.summaryOwner='public-summary-clean';
-    forceMobileScroll(body);
     const summary=body.closest('.modal-public-summary');
     const more=summary?.querySelector('.modal-public-more');
     summary?.classList.remove('expanded');
     if(more)more.hidden=true;
     resetScroll(body);
-    requestAnimationFrame(()=>forceMobileScroll(body));
   }
 
   window.renderArchivePublicSummary=render;

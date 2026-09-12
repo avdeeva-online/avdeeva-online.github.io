@@ -100,28 +100,4 @@
     flex:0 1 auto!important;max-width:100%!important;height:auto!important;
     white-space:normal!important;overflow-wrap:anywhere!important;text-align:left!important;
   }
-
-  /* Bot description gets a real fixed mobile scroll viewport. */
-  .modal-public-summary .modal-public-body,
-  .modal-public-summary:not(.expanded) .modal-public-body,
-  .modal-public-summary.expanded .modal-public-body{
-    box-sizing:border-box!important;
-    height:138px!important;
-    min-height:138px!important;
-    max-height:138px!important;
-    overflow-y:scroll!important;
-    overflow-x:hidden!important;
-    padding-right:12px!important;
-    -webkit-overflow-scrolling:touch!important;
-    overscroll-behavior:contain!important;
-    touch-action:pan-y!important;
-    -webkit-mask-image:none!important;
-    mask-image:none!important;
-    scrollbar-width:thin!important;
-    scrollbar-color:rgba(116,132,105,.72) rgba(31,37,30,.34)!important;
-  }
-  .modal-public-summary .modal-public-body::-webkit-scrollbar{width:5px!important}
-  .modal-public-summary .modal-public-body::-webkit-scrollbar-track{background:rgba(31,37,30,.34)!important;border-radius:8px!important}
-  .modal-public-summary .modal-public-body::-webkit-scrollbar-thumb{background:rgba(116,132,105,.72)!important;border-radius:8px!important}
-  .modal-public-more{display:none!important}
 }

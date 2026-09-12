@@ -24,7 +24,7 @@
     if(png){const href=pngUrl(bot);if(href)png.href=href;else png.removeAttribute('href');png.classList.toggle('disabled',!href)}
     if(json){const href=String(bot.download||'').trim();if(href)json.href=href;else json.removeAttribute('href');json.classList.toggle('disabled',!href);json.textContent='JSON CARD ↓'}
     if(author){const href=String(bot.authorUrl||'').trim();if(href){author.href=href;author.classList.remove('disabled');author.removeAttribute('aria-disabled');author.textContent=`@${bot.author||'AUTHOR'} ↗`}else{author.removeAttribute('href');author.classList.add('disabled');author.setAttribute('aria-disabled','true');author.textContent='AUTHOR LINK — N/A'}}
-    if(lore){const href=String(bot.lorebook||'').trim();if(href){lore.href=href;const n=Number(bot.lorebookCount||1);lore.textContent=`LOREBOOKS [${n}] ↓`;lore.title=`${n} attached lorebook${n===1?'':'s'} — choose files`;lore.classList.remove('disabled');lore.removeAttribute('aria-disabled')}else{lore.removeAttribute('href');lore.textContent='LOREBOOK — NOT AVAILABLE';lore.title='';lore.classList.add('disabled');lore.setAttribute('aria-disabled','true')}}
+    if(lore){const href=String(bot.lorebook||'').trim();if(href){lore.href=href;const n=Number(bot.lorebookCount||1);lore.textContent=`LOREBOOKS [${n}] ↓`;lore.title=`${n} attached lorebook${n===1?'':'s'} — choose files`;lore.classList.remove('disabled');lore.removeAttribute('aria-disabled')}else{lore.removeAttribute('href');lore.textContent='LOREBOOK — NOT AVAILABLE';lore.title='No lorebook is attached to this record.';lore.classList.add('disabled');lore.setAttribute('aria-disabled','true')}}
   }
 
   ensureFileButtons();

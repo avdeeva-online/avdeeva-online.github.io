@@ -84,7 +84,7 @@
     const button=document.createElement('button');
     button.id='drawerResetFilters';
     button.type='button';
-    button.textContent='CLEAR FILTERS';
+    button.textContent='RESET FILTERS';
     button.style.cssText='margin-left:auto;border:1px solid rgba(133,103,81,.48);border-radius:4px;background:rgba(58,38,29,.30);color:#c9ad94;padding:5px 7px;font:700 6.5px/1 var(--mono);letter-spacing:.07em;cursor:pointer';
     button.addEventListener('click',()=>{
       const publicReset=document.querySelector('#resetBtn');

@@ -52,12 +52,11 @@
     .terminal-card>a{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:space-between;padding:19px 20px 16px;overflow:hidden;border-radius:16px}
 
     .vine{position:absolute;z-index:4;pointer-events:none;background-repeat:no-repeat;filter:drop-shadow(0 4px 7px rgba(0,0,0,.34));opacity:.86}
-    .characters .vine-top{background-image:url('assets/ivytop1.png');width:98%;height:110px;left:-4px;top:-18px;background-size:100% auto;background-position:left top}
-    .characters .vine-side{background-image:url('assets/ivysidetopleft.png');width:132px;height:132px;left:-18px;top:-8px;background-size:100% 100%;background-position:left top}
-    .characters .vine-bottom{background-image:url('assets/ivybottom.png');width:80%;height:86px;right:-1px;bottom:-15px;background-size:100% auto;background-position:right bottom}
-    .hub .vine-top{background-image:url('assets/ivytop2.png');width:98%;height:110px;right:-4px;top:-18px;background-size:100% auto;background-position:right top}
-    .hub .vine-side{background-image:url('assets/ivysideright.png');width:78px;height:205px;right:-11px;top:-2px;background-size:100% auto;background-position:right top}
-    .hub .vine-bottom{background-image:url('assets/ivybottomleft.png');width:124px;height:124px;left:-17px;bottom:-10px;background-size:100% 100%;background-position:left bottom}
+    .characters .vine-top{background-image:url('assets/ivytop1.png');width:100%;height:113px;left:0;top:-12px;background-size:100% 100%;background-position:left top}
+    .characters .vine-side{background-image:url('assets/ivysidetopleft.png');width:130px;height:130px;left:-15px;top:-15px;background-size:100% 100%;background-position:left top}
+    .characters .vine-bottom{background-image:url('assets/ivybottom.png');width:80%;height:90px;right:0;bottom:-28px;background-size:100% 100%;background-position:right bottom}
+    .hub .vine-top{background-image:url('assets/ivytop2.png');width:100%;height:113px;right:0;top:-12px;background-size:100% 100%;background-position:right top}
+    .hub .vine-side{background-image:url('assets/ivysideright.png');width:68px;height:203px;right:-4px;top:-1px;background-size:100% 100%;background-position:right top}
 
     .node-row{display:flex;justify-content:space-between;align-items:center;text-transform:uppercase;font:5px/1 var(--mono);letter-spacing:.12em;color:#7f8a7b}
     .node-row b{font-weight:400;color:#929d88}
@@ -74,7 +73,7 @@
     .statusbar{position:absolute;left:0;right:0;bottom:0;z-index:14;display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center;padding:13px 26px 14px;border-top:1px solid rgba(94,106,87,.18);background:linear-gradient(180deg,rgba(4,6,4,.00),rgba(4,6,4,.36));text-transform:uppercase;font:5.9px/1 var(--mono);letter-spacing:.13em;color:#788278;text-shadow:0 2px 10px rgba(0,0,0,.8)}
     .statusbar .center{text-align:center;color:#879188}.statusbar .right{text-align:right}.statusbar b{font-weight:400;color:#98a18e}
 
-    @media(max-width:1100px){.access-deck{width:min(650px,68vw);gap:18px}.terminal-card,.terminal-card.characters,.terminal-card.hub{height:189px;min-height:189px}.terminal-card>a{padding:17px 18px 15px}.terminal-copy h2{font-size:23px}}
+    @media(max-width:1100px){.access-deck{width:min(650px,68vw);gap:18px}.terminal-card,.terminal-card.characters,.terminal-card.hub{height:189px;min-height:189px}.terminal-card>a{padding:17px 18px 15px}.terminal-copy h2{font-size:23px}.characters .vine-top,.hub .vine-top{height:105px}.characters .vine-side{width:122px;height:122px;left:-14px;top:-14px}.characters .vine-bottom{height:84px;bottom:-26px}.hub .vine-side{width:63px;height:191px}}
 
     @media(max-width:760px){
       body{overflow:auto}.gateway{min-height:100dvh;overflow:visible;padding-bottom:64px}.scene{background-position:50% 58%;filter:brightness(.68) saturate(.86)}
@@ -84,7 +83,7 @@
       .access-deck{position:relative;left:auto;top:auto;transform:none;width:calc(100% - 34px);margin:26px auto 0;grid-template-columns:1fr;gap:18px}
       .terminal-card,.terminal-card.characters,.terminal-card.hub{height:158px;min-height:158px;margin:0;border-radius:15px}
       .terminal-card>a{padding:15px 16px 13px;border-radius:15px}.node-row{font-size:5.4px}.terminal-main{grid-template-columns:40px 1fr;gap:12px;margin-top:9px}.glyph{width:38px;height:38px;font-size:18px;border-radius:8px}.terminal-copy h2{font-size:20px}.terminal-copy p{font-size:6.6px;line-height:1.45;margin-top:5px}.enter{padding-top:8px;font-size:5.5px}.enter-arrow{font-size:15px}
-      .vine{opacity:.7;transform:scale(.9)}.characters .vine-top,.hub .vine-top{top:-14px}.characters .vine-side{left:-14px}.hub .vine-side{right:-9px}.hub .vine-bottom{left:-14px}.characters .vine-bottom{bottom:-12px}
+      .vine{opacity:.7}.characters .vine-top,.hub .vine-top{height:calc((100vw - 34px)/3);top:-10px}.characters .vine-side{width:108px;height:108px;left:-12px;top:-12px}.characters .vine-bottom{height:76px;bottom:-23px}.hub .vine-side{width:53px;height:160px;right:-3px;top:-1px}
       .ground-shadow{display:none}.statusbar{position:relative;margin-top:20px;padding:11px 15px;grid-template-columns:1fr auto;font-size:5.3px}.statusbar .center{display:none}
     }
   </style>
@@ -136,7 +135,6 @@
       <article class="terminal-card hub">
         <span class="vine vine-top" aria-hidden="true"></span>
         <span class="vine vine-side" aria-hidden="true"></span>
-        <span class="vine vine-bottom" aria-hidden="true"></span>
         <a href="hub.html" aria-label="Open TAVO Hub">
           <div>
             <div class="node-row"><span>[02]</span><b>RESOURCE DIRECTORY</b></div>

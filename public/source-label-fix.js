@@ -40,8 +40,9 @@
   function rebuildUniverseRow(card,bot,title){
     card.querySelector('.card-mobile-universe-row')?.remove();
     const values=universes(bot),shown=values.slice(0,3),hidden=values.length-shown.length;
-    if(!shown.length)return null;
     const row=document.createElement('div');row.className='card-mobile-universe-row card-universe-text-row';
+    const label=document.createElement('span');label.className='card-universe-label';label.textContent='UNIVERSE:';row.appendChild(label);
+    if(!shown.length){const none=document.createElement('span');none.className='card-universe-none';none.textContent='NONE';row.appendChild(none)}
     shown.forEach((value,index)=>{
       if(index){const sep=document.createElement('span');sep.className='card-universe-separator';sep.textContent='·';row.appendChild(sep)}
       const button=document.createElement('button');button.type='button';button.className='card-universe-text';button.dataset.quickUniverse=value;button.textContent=value;button.title=`Show universe: ${value}`;row.appendChild(button)
@@ -89,7 +90,7 @@
     const body=card.querySelector('.card-body');
     if(body){
       body.appendChild(title);
-      if(universeRow)body.appendChild(universeRow);
+      body.appendChild(universeRow);
       if(author)body.appendChild(author);
       body.appendChild(meta);
       if(short)body.appendChild(short);
@@ -123,12 +124,13 @@
     if(document.getElementById('archiveFacetPresentation'))return;
     const style=document.createElement('style');style.id='archiveFacetPresentation';style.textContent=`
       .card-body{display:flex!important;flex-direction:column!important}
-      .card-title{order:1!important}
+      .card-title{order:1!important;min-height:2.4em!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important}
       .card-universe-text-row{order:2!important;display:flex!important;align-items:center!important;flex-wrap:nowrap!important;gap:4px!important;width:100%!important;min-width:0!important;margin:3px 0 0!important;overflow:hidden!important;color:#737c72!important;font:7px/1.25 var(--mono)!important}
+      .card-universe-label{flex:0 0 auto!important;color:#515a51!important;letter-spacing:.06em!important}.card-universe-none{color:#565f56!important}
       .card-universe-text{min-width:0!important;max-width:100%!important;padding:0!important;border:0!important;background:none!important;color:#737c72!important;font:inherit!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;cursor:pointer!important;text-align:left!important}
       .card-universe-text:hover{color:#aeb8a8!important;text-decoration:underline!important;text-underline-offset:2px!important}
       .card-universe-separator{flex:0 0 auto!important;color:#485047!important}.card-universe-more{flex:0 0 auto!important;color:#697268!important;font:inherit!important}
-      .card-author{order:3!important}.card-meta{order:4!important}.card-short{order:5!important}.card-tags{order:6!important}.card-hashtags{order:7!important}
+      .card-author{order:3!important}.card-meta{order:4!important}.card-short{order:5!important;display:-webkit-box!important;-webkit-line-clamp:3!important;-webkit-box-orient:vertical!important;overflow:hidden!important;min-height:4.35em!important}.card-tags{order:6!important}.card-hashtags{order:7!important}
       .card-meta{display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:5px!important;overflow:visible!important}
       .card-setting-more,.card-hashtag-more{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;color:#697067!important;font-size:7px!important}
       .card-tags button,.card-tags span{font-family:Arial,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif!important}

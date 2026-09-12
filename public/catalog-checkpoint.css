@@ -14,6 +14,9 @@
 .card-lore-overlay .ui-icon{display:block;width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.65}
 
 @media(max-width:760px){
+  /* Full-screen SVG turbulence is a costly fixed compositing layer on phones. */
+  .noise{display:none!important}
+
   /* The drawer gets to the actual index sooner without shrinking tap targets. */
   .catalog-drawer{padding-top:6px!important}
   .drawer-head{min-height:32px!important;padding-bottom:3px!important}

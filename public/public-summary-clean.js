@@ -118,5 +118,4 @@
   }
 
   window.addEventListener('archive:modal-public-ready',e=>render(e.detail?.bot));
-  window.addEventListener('archive:modal-definition-ready',e=>render(e.detail?.bot));
 })();

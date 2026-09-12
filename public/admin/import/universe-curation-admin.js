@@ -45,7 +45,6 @@
       return `<div class="universe-row ${rule.active?'':'flagged'}" data-curation-source="${esc(rule.source)}">
         <div class="universe-copy"><b>${esc(rule.source)}</b><small>PUBLIC → ${esc(publicText)}</small>${hierarchy?`<div class="review-note">${esc(hierarchy)}</div>`:''}</div>
         <div class="universe-edit"><button class="btn" data-curation-edit type="button">EDIT</button><button class="btn ${rule.active?'':'warn'}" data-curation-toggle type="button">${rule.active?'DISABLE':'ENABLE'}</button></div>
-        <button class="btn" data-curation-delete type="button">DELETE</button>
       </div>`;
     }).join(''):'<div class="empty">NO CURATION RULES</div>';
   }
@@ -67,13 +66,9 @@
   async function listAction(event){
     const row=event.target.closest('[data-curation-source]');if(!row)return;const source=row.dataset.curationSource,rule=data.rules.find(x=>x.source===source),status=$('#curationStatus'),button=event.target.closest('button');if(!button||button.disabled)return;
     if(button.matches('[data-curation-edit]')){if(rule)fillForm(rule);return}
+    if(!button.matches('[data-curation-toggle]'))return;
     button.disabled=true;
-    try{
-      if(button.matches('[data-curation-toggle]'))await post({action:'toggle',source});
-      else if(button.matches('[data-curation-delete]')){if(!confirm(`Delete curation rule for "${source}"? Imported source data will stay untouched.`))return;await post({action:'delete',source})}
-      else return;
-      await load();
-    }catch(e){status.textContent=`CURATION ACTION FAILED: ${e.message}`}finally{if(button.isConnected)button.disabled=false}
+    try{await post({action:'toggle',source});await load()}catch(e){status.textContent=`CURATION ACTION FAILED: ${e.message}`}finally{if(button.isConnected)button.disabled=false}
   }
 
   function init(){ensureUi();load();document.querySelector('[data-mode="universes"]')?.addEventListener('click',load)}

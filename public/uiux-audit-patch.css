@@ -264,7 +264,9 @@
   }
   .toolbar-meta .page-size-wrap,.toolbar-meta .total-count{font-size:6.5px!important}
 
-  .tags-results-actions{gap:7px!important}
+  /* Old mobile layer hides this whole group; expose only the conditional clear action. */
+  .tags-results-actions{display:flex!important;margin-left:auto!important;align-items:center!important;gap:0!important}
+  .tags-result-status{display:none!important}
   #resetBtn:not([hidden]){min-height:23px!important;padding:0 7px!important;font-size:6.8px!important}
 
   .card-body{min-height:0!important;padding-top:7px!important}

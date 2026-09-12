@@ -29,11 +29,12 @@
 
   ensureFileButtons();
   const original=window.openModal;
-  if(typeof original==='function')window.openModal=function(bot,...args){activeBot=bot;const out=original.call(this,bot,...args);enhance(bot);return out};
+  if(typeof original==='function'&&!original.__archiveUiFixWrapped){
+    const wrapped=function(bot,...args){activeBot=bot;const out=original.call(this,bot,...args);enhance(bot);return out};
+    wrapped.__archiveUiFixWrapped=true;
+    window.openModal=wrapped;
+  }
 
   window.addEventListener('archive:open-character',e=>{const bot=e.detail?.bot;if(!bot)return;activeBot=bot;if(typeof window.openModal==='function')window.openModal(bot);else enhance(bot)});
-  window.addEventListener('archive:modal-public-ready',e=>{if(e.detail?.bot){activeBot=e.detail.bot;enhance(activeBot)}});
-
-  const modal=$('#modal');
-  if(modal){const mo=new MutationObserver(()=>{if(!modal.hidden&&activeBot)enhance(activeBot)});mo.observe(modal,{attributes:true,attributeFilter:['hidden']})}
+  window.addEventListener('archive:modal-public-ready',e=>{if(e.detail?.bot&&e.detail.bot!==activeBot){activeBot=e.detail.bot;enhance(activeBot)}});
 })();

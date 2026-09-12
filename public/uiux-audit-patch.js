@@ -51,36 +51,6 @@
     row.dataset.auditNormalized='1';
   }
 
-  function syncMobileUniversePlacement(root=document){
-    const cards=[];
-    if(root?.matches?.('.card'))cards.push(root);
-    root?.querySelectorAll?.('.card').forEach(card=>cards.push(card));
-    const mobile=window.innerWidth<=760;
-
-    for(const card of cards){
-      const body=card.querySelector('.card-body');
-      const title=card.querySelector('.card-title');
-      const meta=card.querySelector('.card-meta');
-      if(!body||!title||!meta)continue;
-
-      const moved=body.querySelector(':scope > .card-mobile-universe');
-      if(mobile){
-        if(!moved){
-          const universe=meta.querySelector('.card-universe-token');
-          if(universe){
-            universe.classList.add('card-mobile-universe');
-            title.insertAdjacentElement('afterend',universe);
-          }
-        }
-      }else if(moved){
-        moved.classList.remove('card-mobile-universe');
-        const firstUniverse=meta.querySelector('.card-universe-token');
-        if(firstUniverse)meta.insertBefore(moved,firstUniverse);
-        else meta.appendChild(moved);
-      }
-    }
-  }
-
   function scrubTextNode(node){
     if(node&&SERVICE_LINE.test(node.textContent||''))node.remove();
   }
@@ -89,7 +59,6 @@
     if(!root||root.nodeType!==1)return;
     if(root.matches?.('.card-tags'))normalizeCardRow(root);
     root.querySelectorAll?.('.card-tags').forEach(normalizeCardRow);
-    syncMobileUniversePlacement(root);
 
     if(root.matches?.(TEXT_SELECTOR))scrubTextNode(root);
     root.querySelectorAll?.(TEXT_SELECTOR).forEach(scrubTextNode);
@@ -424,7 +393,6 @@
   window.addEventListener('resize',()=>{
     scheduleArrowPosition();
     normalizeMobilePagination();
-    syncMobileUniversePlacement(document.body);
   },{passive:true});
   window.addEventListener('archive:modal-public-ready',()=>{
     annotateLorebookState();

@@ -79,6 +79,33 @@
     retry.insertAdjacentElement('afterend',back);
   }
 
+  function ensureModalGeometryGuard(){
+    if(document.getElementById('archiveModalGeometryGuard'))return;
+    const style=document.createElement('style');
+    style.id='archiveModalGeometryGuard';
+    style.textContent=`
+      @media(min-width:761px){
+        .modal-card{
+          height:min(446px,84vh)!important;
+          min-height:0!important;
+          max-height:min(446px,84vh)!important;
+        }
+        .modal-cover{
+          height:100%!important;
+          min-height:0!important;
+        }
+        .modal-content{
+          height:100%!important;
+          min-height:0!important;
+        }
+        .modal-action-groups{
+          margin-top:12px!important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function positionModalArrows(){
     const modal=document.querySelector('#modal');
     const card=modal?.querySelector('.modal-card');
@@ -116,6 +143,7 @@
   scan(document.body);
   annotateLorebookState();
   ensureTerminalExit();
+  ensureModalGeometryGuard();
   scheduleArrowPosition();
 
   window.addEventListener('resize',scheduleArrowPosition,{passive:true});

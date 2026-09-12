@@ -54,6 +54,25 @@
     });
   }
 
+  function ensurePersistentTagDrawer(){
+    const list=document.querySelector('#drawerList');
+    const drawer=document.querySelector('#catalogDrawer');
+    const shade=document.querySelector('#drawerShade');
+    if(!list||!drawer||list.dataset.auditPersistentTags==='1')return;
+    list.dataset.auditPersistentTags='1';
+    list.addEventListener('click',event=>{
+      if(window.innerWidth>760||!event.target.closest('[data-drawer-value]'))return;
+      const active=document.querySelector('.drawer-tab.active')?.dataset.drawerTab;
+      if(active!=='tag')return;
+      queueMicrotask(()=>{
+        drawer.classList.add('open');
+        drawer.setAttribute('aria-hidden','false');
+        if(shade)shade.hidden=false;
+        document.body.classList.add('drawer-open');
+      });
+    });
+  }
+
   function ensureTerminalExit(){
     const retry=document.querySelector('#terminalRetry');
     if(!retry||document.querySelector('.terminal-back-home'))return;
@@ -112,6 +131,7 @@
   cleanBotData();
   normalizeAuditLabels();
   ensureCatalogToggle();
+  ensurePersistentTagDrawer();
   ensureTerminalExit();
   refreshModalRuntime();
 

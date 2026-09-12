@@ -97,8 +97,7 @@
   ensureTerminalExit();
   refreshModalRuntime();
 
-  window.addEventListener('archive:catalog-updated',event=>{
-    cleanBotData(event.detail?.characters);
+  window.addEventListener('archive:catalog-updated',()=>{
     cleanBotData(window.BOTS);
     normalizeAuditLabels();
   });

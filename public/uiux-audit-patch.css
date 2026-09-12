@@ -10,6 +10,10 @@
       linear-gradient(90deg,transparent 0%,transparent 48%,rgba(8,10,8,.18) 68%,rgba(8,10,8,.5) 100%);
   }
   .hero-copy{text-shadow:0 2px 22px rgba(0,0,0,.72)}
+
+  /* Keep modal paging controls visually separate from the card. */
+  .modal-prev{left:clamp(34px,5vw,76px)!important}
+  .modal-next{right:clamp(34px,5vw,76px)!important}
 }
 
 /* ---------- Toolbar hierarchy ---------- */

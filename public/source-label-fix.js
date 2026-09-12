@@ -1,24 +1,182 @@
 (()=>{
   const clean=s=>String(s||'').replace(/\r/g,'').replace(/\*+/g,'').trim();
   const missing=s=>!clean(s)||clean(s).toUpperCase()==='UNCLASSIFIED';
-  const universeKey=s=>clean(s).toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu,'');
-  const uniqueUniverses=values=>{const out=[],seen=new Set();for(const raw of values||[]){const value=clean(raw),key=universeKey(value);if(!value||!key||seen.has(key))continue;seen.add(key);out.push(value)}return out};
-  function explicitUniverse(bot){if(!bot||!missing(bot.universe))return null;const source=String(bot.publicDescription||bot.full||bot.short||'').replace(/\r/g,'');for(const label of ['UNIVERSE','WORLD','FRANCHISE','SERIES']){const rx=new RegExp(`(?:^|\\n)\\s*\\*{0,3}${label}\\*{0,3}(?:\\s*[:：-]\\s*|\\s+)([^\\n]+)`,'i'),m=source.match(rx),value=clean(m?.[1]||'').replace(/^[:：-]\s*/,'').trim();if(value)return{value,label}}return null}
-  function curatedReplacement(value,bot){const raw=clean(value),key=universeKey(raw),nameKey=universeKey(bot?.nameEn||bot?.name||'');if(key.startsWith('thevault')&&key.includes('aka'))return['The Vault'];if(key.startsWith('thewild')&&key.includes('aka'))return['The Wild'];if(key.includes('demigods')&&key.includes('greekgod'))return['Demi Gods'];if(key==='helluniversityxvdb')return['Hell University'];if(key.includes('thewild')&&key.includes('miniseries'))return['Hell University','HellU Titans'];if(key==='endplot')return['The Wild'];if(key==='birthdaybot')return['Kingtober'];if(['bayucrewandvoodooboys','bayucrewxvoodooboys','bayoucrewandvoodooboys','bayoucrewxvoodooboys'].includes(key))return['Bayu Crew','Voodoo Boys'];if(['voodooboysxbayoucrew','voodooboysandbayoucrew','voodooboysxbayucrew','voodooboysandbayucrew'].includes(key))return['Voodoo Boys','Bayu Crew'];if(key==='thefirmxthevalentinos'||key==='valentinosxthefirm')return['The Firm','Valentinos'];if(key.startsWith('intergalacticby'))return['Intergalactic','Collabs'];if(['crownrecordsrappercollab','fourhorsemencollab','footballfightboyscollab','ledgercollab'].includes(key))return['Collabs'];if(key==='bridgertoninspiredcollab')return['Bridgerton','Collabs'];if(key==='bridgertoninspiredau')return['Bridgerton'];if(key==='hellu'){if(nameKey.includes('ashton')&&nameKey.includes('dewald'))return['Hell University','DeWald'];return['Hell University']}if(key==='helluuniversityoutcasts')return['Hell University'];if(key.includes('hellvalkyries')&&(key.includes('woman')||key.includes('women')))return['Hell University'];if(key.startsWith('dewaldbotsmadeespeciallyfor'))return['DeWald'];if((key.includes('walt')||key.includes('dewald'))&&key.includes('botsmadeforme'))return['DeWald'];if(key==='aualt'&&nameKey.includes('emilio')&&nameKey.includes('royal'))return['Bayu Crew Next Gen'];return[raw]}
-  function curateBotUniverses(bot){if(!bot)return false;const current=Array.isArray(bot.universes)&&bot.universes.length?bot.universes:[bot.universe].filter(Boolean);if(!current.length)return false;const next=uniqueUniverses(current.flatMap(value=>curatedReplacement(value,bot))),before=uniqueUniverses(current),changed=before.length!==next.length||before.some((value,index)=>universeKey(value)!==universeKey(next[index]));if(!changed)return false;bot.universes=next;bot.universe=next[0]||'';bot.universeCuration='manual-confirmed-v2';return true}
-  function patch(list){let changed=false;if(!Array.isArray(list))return changed;for(const bot of list){const found=explicitUniverse(bot);if(found){bot.universe=found.value;if(!Array.isArray(bot.universes)||!bot.universes.length)bot.universes=[found.value];if(!bot.universeSourceField)bot.universeSourceField=`source-description:${found.label}`;changed=true}if(curateBotUniverses(bot))changed=true}return changed}
+  function explicitUniverse(bot){
+    if(!bot||!missing(bot.universe))return null;
+    const source=String(bot.publicDescription||bot.full||bot.short||'').replace(/\r/g,'');
+    for(const label of ['UNIVERSE','WORLD','FRANCHISE','SERIES']){
+      const rx=new RegExp(`(?:^|\\n)\\s*\*{0,3}${label}\*{0,3}(?:\\s*[:：-]\\s*|\\s+)([^\\n]+)`,'i');
+      const m=source.match(rx);
+      const value=clean(m?.[1]||'').replace(/^[:：-]\s*/,'').trim();
+      if(value)return{value,label};
+    }
+    return null;
+  }
+  function patch(list){
+    let changed=false;
+    if(!Array.isArray(list))return changed;
+    for(const bot of list){
+      const found=explicitUniverse(bot);
+      if(!found)continue;
+      bot.universe=found.value;
+      if(!bot.universeSourceField)bot.universeSourceField=`source-description:${found.label}`;
+      changed=true;
+    }
+    return changed;
+  }
+
   const mobile=()=>window.matchMedia?.('(max-width:760px)').matches;
-  const KNOWN_SETTINGS=new Set(['omegaverse','post-apocalypse','zombie-apocalypse','rusreal','rusreal-2000s','china','ancient-china','egypt','ancient-egypt','medieval','regency','victorian','historical','fantasy','sci-fi','dystopia','cyberpunk','supernatural','folklore','college','slice-of-life','mafia','crime']);
+  const KNOWN_SETTINGS=new Set([
+    'omegaverse','post-apocalypse','zombie-apocalypse','rusreal','rusreal-2000s','china','ancient-china',
+    'egypt','ancient-egypt','medieval','regency','victorian','historical','fantasy','sci-fi','dystopia',
+    'cyberpunk','supernatural','folklore','college','slice-of-life','mafia','crime'
+  ]);
   const normalizeSetting=id=>id==='high-school'?'college':id;
   const findBot=id=>(Array.isArray(window.BOTS)?window.BOTS:[]).find(bot=>String(bot?.id)===String(id));
-  function settingCount(bot){return new Set((bot?.settingIds||[]).flatMap(value=>String(value||'').split(/\s*\/\s*/)).map(value=>normalizeSetting(value.trim())).filter(value=>KNOWN_SETTINGS.has(value))).size}
-  function decorateCard(card){if(!card||!mobile())return;const title=card.querySelector('.card-title'),meta=card.querySelector('.card-meta');if(!title||!meta)return;let row=card.querySelector('.card-mobile-universe-row');const existingInRow=row?.querySelector('.card-universe-token'),universeNodes=[...meta.querySelectorAll('.card-universe-token')],primaryUniverse=existingInRow||universeNodes.shift();if(primaryUniverse){if(!row){row=document.createElement('div');row.className='card-mobile-universe-row';title.insertAdjacentElement('afterend',row)}primaryUniverse.classList.add('card-mobile-universe-token');row.appendChild(primaryUniverse);universeNodes.forEach(node=>node.remove())}else if(row)row.remove();meta.querySelector('.card-setting-more')?.remove();const bot=findBot(card.dataset.id),visible=meta.querySelectorAll('.card-setting-token').length,hidden=Math.max(0,settingCount(bot)-visible);if(hidden>0){const more=document.createElement('span');more.className='card-setting-more';more.textContent=`+${hidden}`;more.title=`${hidden} more setting${hidden===1?'':'s'}`;meta.appendChild(more)}}
-  function decorateCards(root=document){if(!mobile())return;if(root?.matches?.('.card'))decorateCard(root);root?.querySelectorAll?.('.card').forEach(decorateCard)}
-  function decorateModalSettings(){if(!mobile())return;const setting=document.querySelector('#modalSetting');if(!setting)return;const buttons=[...setting.querySelectorAll('button[data-quick-setting]')];buttons.forEach((button,index)=>button.classList.toggle('modal-setting-extra',index>=2));const hidden=Math.max(0,buttons.length-2);let more=setting.querySelector('.modal-setting-more');if(hidden>0){if(!more){more=document.createElement('span');more.className='modal-setting-more';setting.appendChild(more)}more.textContent=`+${hidden}`;more.title=buttons.slice(2).map(button=>button.textContent.trim()).join(', ')}else more?.remove()}
-  function ensureDrawerReset(){const drawer=document.querySelector('#catalogDrawer'),foot=drawer?.querySelector('.drawer-foot');if(!drawer||!foot||drawer.querySelector('#drawerResetFilters'))return;const button=document.createElement('button');button.id='drawerResetFilters';button.type='button';button.textContent='RESET FILTERS';button.style.cssText='margin-left:auto;border:1px solid rgba(133,103,81,.48);border-radius:4px;background:rgba(58,38,29,.30);color:#c9ad94;padding:5px 7px;font:700 6.5px/1 var(--mono);letter-spacing:.07em;cursor:pointer';button.addEventListener('click',()=>{const publicReset=document.querySelector('#resetBtn');if(publicReset&&!publicReset.hidden){publicReset.click();return}if(typeof window.resetAll==='function')window.resetAll()});foot.appendChild(button)}
-  function ensurePresentationStyles(){if(document.getElementById('archiveFacetPresentation'))return;const style=document.createElement('style');style.id='archiveFacetPresentation';style.textContent=`@media(max-width:760px){.card-title{order:1!important}.card-mobile-universe-row{order:2!important}.card-short{order:3!important}.card-author{order:4!important}.card-meta{order:5!important}.card-tags{order:6!important}.card-hashtags{order:7!important}.card-mobile-universe-row{box-sizing:border-box!important;display:flex!important;align-items:center!important;width:100%!important;height:13px!important;min-height:13px!important;margin:1px 0 2px!important;overflow:hidden!important}.card-mobile-universe-token{display:inline-flex!important;align-items:center!important;gap:3px!important;width:auto!important;max-width:100%!important;height:13px!important;min-height:13px!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:#687168!important;opacity:.78!important;font:6.6px/13px var(--mono)!important;letter-spacing:.025em!important;overflow:hidden!important;white-space:nowrap!important;text-overflow:ellipsis!important}.card-mobile-universe-token .ui-icon{width:8px!important;height:8px!important;min-width:8px!important;opacity:.68!important}.card-mobile-universe-token span{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}.card-meta{display:flex!important;align-items:center!important;flex-wrap:nowrap!important;gap:4px!important;overflow:hidden!important}.card-setting-token{flex:1 1 0!important;min-width:0!important;max-width:none!important}.card-setting-token span:last-child{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}.card-setting-more{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;height:22px!important;min-width:24px!important;padding:0 6px!important;border:1px solid rgba(82,94,78,.46)!important;border-radius:5px!important;background:rgba(18,22,18,.38)!important;color:#7f897d!important;font:6.5px/1 var(--mono)!important}#modalSetting .modal-setting-extra{display:none!important}.modal-setting-more{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;min-width:24px!important;min-height:22px!important;padding:4px 7px!important;border:1px solid #4a5542!important;border-radius:999px!important;background:rgba(91,107,77,.08)!important;color:#899582!important;font:7px/1 var(--mono)!important}.modal-universe-row{display:flex!important;align-items:center!important;min-height:13px!important;margin:0 0 5px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}.modal-universe-row[hidden],#modalUniverse[hidden]{display:none!important}#modalUniverse{display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:5px 8px!important;min-width:0!important}#modalUniverse .universe-link{display:inline-flex!important;align-items:center!important;gap:4px!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:#6b756b!important;opacity:.76!important;font:6.8px/1.25 var(--mono)!important}#modalUniverse .universe-link .ui-icon{width:8px!important;height:8px!important;opacity:.66!important}}`;document.head.appendChild(style)}
-  ensurePresentationStyles();ensureDrawerReset();
-  const originalRender=window.render;if(typeof originalRender==='function'&&!originalRender.__facetPresentationWrapped){const wrapped=function(...args){const result=originalRender.apply(this,args);decorateCards(document.querySelector('#grid')||document);ensureDrawerReset();return result};wrapped.__facetPresentationWrapped=true;window.render=wrapped}
-  function refresh(list){const a=patch(list),b=patch(window.BOTS);if((a||b)&&typeof window.render==='function')window.render();else decorateCards(document.querySelector('#grid')||document);ensureDrawerReset()}
-  refresh(window.BOTS);window.addEventListener('archive:catalog-updated',e=>refresh(e.detail?.characters));window.addEventListener('archive:modal-public-ready',decorateModalSettings);const modalSetting=document.querySelector('#modalSetting');if(modalSetting)new MutationObserver(decorateModalSettings).observe(modalSetting,{childList:true});
+  function settingCount(bot){
+    return new Set((bot?.settingIds||[])
+      .flatMap(value=>String(value||'').split(/\s*\/\s*/))
+      .map(value=>normalizeSetting(value.trim()))
+      .filter(value=>KNOWN_SETTINGS.has(value))).size;
+  }
+
+  function decorateCard(card){
+    if(!card||!mobile())return;
+    const title=card.querySelector('.card-title');
+    const meta=card.querySelector('.card-meta');
+    if(!title||!meta)return;
+
+    let row=card.querySelector('.card-mobile-universe-row');
+    const existingInRow=row?.querySelector('.card-universe-token');
+    const universeNodes=[...meta.querySelectorAll('.card-universe-token')];
+    const primaryUniverse=existingInRow||universeNodes.shift();
+
+    if(primaryUniverse){
+      if(!row){
+        row=document.createElement('div');
+        row.className='card-mobile-universe-row';
+        title.insertAdjacentElement('afterend',row);
+      }
+      primaryUniverse.classList.add('card-mobile-universe-token');
+      row.appendChild(primaryUniverse);
+      universeNodes.forEach(node=>node.remove());
+    }else if(row){
+      row.remove();
+    }
+
+    meta.querySelector('.card-setting-more')?.remove();
+    const bot=findBot(card.dataset.id);
+    const visible=meta.querySelectorAll('.card-setting-token').length;
+    const hidden=Math.max(0,settingCount(bot)-visible);
+    if(hidden>0){
+      const more=document.createElement('span');
+      more.className='card-setting-more';
+      more.textContent=`+${hidden}`;
+      more.title=`${hidden} more setting${hidden===1?'':'s'}`;
+      meta.appendChild(more);
+    }
+  }
+
+  function decorateCards(root=document){
+    if(!mobile())return;
+    if(root?.matches?.('.card'))decorateCard(root);
+    root?.querySelectorAll?.('.card').forEach(decorateCard);
+  }
+
+  function decorateModalSettings(){
+    if(!mobile())return;
+    const setting=document.querySelector('#modalSetting');
+    if(!setting)return;
+    const buttons=[...setting.querySelectorAll('button[data-quick-setting]')];
+    buttons.forEach((button,index)=>button.classList.toggle('modal-setting-extra',index>=2));
+    const hidden=Math.max(0,buttons.length-2);
+    let more=setting.querySelector('.modal-setting-more');
+    if(hidden>0){
+      if(!more){
+        more=document.createElement('span');
+        more.className='modal-setting-more';
+        setting.appendChild(more);
+      }
+      more.textContent=`+${hidden}`;
+      more.title=buttons.slice(2).map(button=>button.textContent.trim()).join(', ');
+    }else more?.remove();
+  }
+
+  function ensureDrawerReset(){
+    const drawer=document.querySelector('#catalogDrawer');
+    const foot=drawer?.querySelector('.drawer-foot');
+    if(!drawer||!foot||drawer.querySelector('#drawerResetFilters'))return;
+    const button=document.createElement('button');
+    button.id='drawerResetFilters';
+    button.type='button';
+    button.textContent='RESET FILTERS';
+    button.style.cssText='margin-left:auto;border:1px solid rgba(133,103,81,.48);border-radius:4px;background:rgba(58,38,29,.30);color:#c9ad94;padding:5px 7px;font:700 6.5px/1 var(--mono);letter-spacing:.07em;cursor:pointer';
+    button.addEventListener('click',()=>{
+      const publicReset=document.querySelector('#resetBtn');
+      if(publicReset&&!publicReset.hidden){publicReset.click();return}
+      if(typeof window.resetAll==='function')window.resetAll();
+    });
+    foot.appendChild(button);
+  }
+
+  function ensurePresentationStyles(){
+    if(document.getElementById('archiveFacetPresentation'))return;
+    const style=document.createElement('style');
+    style.id='archiveFacetPresentation';
+    style.textContent=`
+      @media(max-width:760px){
+        .card-title{order:1!important}
+        .card-mobile-universe-row{order:2!important}
+        .card-short{order:3!important}
+        .card-author{order:4!important}
+        .card-meta{order:5!important}
+        .card-tags{order:6!important}
+        .card-hashtags{order:7!important}
+        .card-mobile-universe-row{box-sizing:border-box!important;display:flex!important;align-items:center!important;width:100%!important;height:13px!important;min-height:13px!important;margin:1px 0 2px!important;overflow:hidden!important}
+        .card-mobile-universe-token{display:inline-flex!important;align-items:center!important;gap:3px!important;width:auto!important;max-width:100%!important;height:13px!important;min-height:13px!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:#687168!important;opacity:.78!important;font:6.6px/13px var(--mono)!important;letter-spacing:.025em!important;overflow:hidden!important;white-space:nowrap!important;text-overflow:ellipsis!important}
+        .card-mobile-universe-token .ui-icon{width:8px!important;height:8px!important;min-width:8px!important;opacity:.68!important}
+        .card-mobile-universe-token span{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+        .card-meta{display:flex!important;align-items:center!important;flex-wrap:nowrap!important;gap:4px!important;overflow:hidden!important}
+        .card-setting-token{flex:1 1 0!important;min-width:0!important;max-width:none!important}
+        .card-setting-token span:last-child{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+        .card-setting-more{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;height:22px!important;min-width:24px!important;padding:0 6px!important;border:1px solid rgba(82,94,78,.46)!important;border-radius:5px!important;background:rgba(18,22,18,.38)!important;color:#7f897d!important;font:6.5px/1 var(--mono)!important}
+        #modalSetting .modal-setting-extra{display:none!important}
+        .modal-setting-more{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;min-width:24px!important;min-height:22px!important;padding:4px 7px!important;border:1px solid #4a5542!important;border-radius:999px!important;background:rgba(91,107,77,.08)!important;color:#899582!important;font:7px/1 var(--mono)!important}
+        .modal-universe-row{display:flex!important;align-items:center!important;min-height:13px!important;margin:0 0 5px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
+        .modal-universe-row[hidden],#modalUniverse[hidden]{display:none!important}
+        #modalUniverse{display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:5px 8px!important;min-width:0!important}
+        #modalUniverse .universe-link{display:inline-flex!important;align-items:center!important;gap:4px!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:#6b756b!important;opacity:.76!important;font:6.8px/1.25 var(--mono)!important}
+        #modalUniverse .universe-link .ui-icon{width:8px!important;height:8px!important;opacity:.66!important}
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  ensurePresentationStyles();
+  ensureDrawerReset();
+
+  const originalRender=window.render;
+  if(typeof originalRender==='function'&&!originalRender.__facetPresentationWrapped){
+    const wrapped=function(...args){
+      const result=originalRender.apply(this,args);
+      decorateCards(document.querySelector('#grid')||document);
+      ensureDrawerReset();
+      return result;
+    };
+    wrapped.__facetPresentationWrapped=true;
+    window.render=wrapped;
+  }
+
+  function refresh(list){
+    const a=patch(list),b=patch(window.BOTS);
+    if((a||b)&&typeof window.render==='function')window.render();
+    else decorateCards(document.querySelector('#grid')||document);
+    ensureDrawerReset();
+  }
+
+  refresh(window.BOTS);
+  window.addEventListener('archive:catalog-updated',e=>refresh(e.detail?.characters));
+  window.addEventListener('archive:modal-public-ready',decorateModalSettings);
+  const modalSetting=document.querySelector('#modalSetting');
+  if(modalSetting)new MutationObserver(decorateModalSettings).observe(modalSetting,{childList:true});
 })();

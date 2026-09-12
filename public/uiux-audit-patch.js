@@ -79,23 +79,63 @@
     retry.insertAdjacentElement('afterend',back);
   }
 
+  function positionModalArrows(){
+    const modal=document.querySelector('#modal');
+    const card=modal?.querySelector('.modal-card');
+    const prev=document.querySelector('#prevBot');
+    const next=document.querySelector('#nextBot');
+    if(!modal||!card||!prev||!next)return;
+
+    if(window.innerWidth<=760||modal.hidden){
+      prev.style.removeProperty('left');
+      prev.style.removeProperty('right');
+      next.style.removeProperty('left');
+      next.style.removeProperty('right');
+      return;
+    }
+
+    const rect=card.getBoundingClientRect();
+    const gap=44;
+    const edge=12;
+    const prevWidth=prev.getBoundingClientRect().width||35;
+    const nextWidth=next.getBoundingClientRect().width||35;
+    const prevLeft=Math.max(edge,rect.left-gap-prevWidth);
+    const nextLeft=Math.min(window.innerWidth-edge-nextWidth,rect.right+gap);
+
+    prev.style.setProperty('left',`${Math.round(prevLeft)}px`,'important');
+    prev.style.setProperty('right','auto','important');
+    next.style.setProperty('left',`${Math.round(nextLeft)}px`,'important');
+    next.style.setProperty('right','auto','important');
+  }
+
+  function scheduleArrowPosition(){
+    requestAnimationFrame(()=>requestAnimationFrame(positionModalArrows));
+  }
+
   cleanBotData();
   scan(document.body);
   annotateLorebookState();
   ensureTerminalExit();
+  scheduleArrowPosition();
+
+  window.addEventListener('resize',scheduleArrowPosition,{passive:true});
 
   const observer=new MutationObserver(mutations=>{
     let lorebookMayHaveChanged=false;
+    let modalMayHaveChanged=false;
     for(const mutation of mutations){
       if(mutation.target?.id==='downloadLore')lorebookMayHaveChanged=true;
+      if(mutation.target?.id==='modal'||mutation.target?.classList?.contains('modal-card'))modalMayHaveChanged=true;
       for(const node of mutation.addedNodes){
         if(node.nodeType===1){
           scan(node);
           if(node.id==='downloadLore'||node.querySelector?.('#downloadLore'))lorebookMayHaveChanged=true;
+          if(node.id==='modal'||node.matches?.('.modal-card')||node.querySelector?.('#modal,.modal-card'))modalMayHaveChanged=true;
         }
       }
     }
     if(lorebookMayHaveChanged)annotateLorebookState();
+    if(modalMayHaveChanged)scheduleArrowPosition();
   });
-  observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','aria-disabled','href']});
+  observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','aria-disabled','href','hidden']});
 })();

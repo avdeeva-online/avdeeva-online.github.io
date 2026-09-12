@@ -105,13 +105,21 @@
     root?.querySelectorAll?.('.card').forEach(decorateCard);
   }
 
-  function decorateModalSettings(){
-    if(!mobile())return;
-    const setting=document.querySelector('#modalSetting');if(!setting)return;
-    const buttons=[...setting.querySelectorAll('button[data-quick-setting]')];
-    buttons.forEach((button,index)=>button.classList.toggle('modal-setting-extra',index>=3));
-    const hidden=Math.max(0,buttons.length-3);let more=setting.querySelector('.modal-setting-more');
-    if(hidden>0){if(!more){more=document.createElement('span');more.className='modal-setting-more';setting.appendChild(more)}more.textContent=`+${hidden}`;more.title=buttons.slice(3).map(button=>button.textContent.trim()).join(', ')}else more?.remove();
+  function capModalGroup(container,selector,moreClass){
+    if(!container)return;
+    container.querySelector(`.${moreClass}`)?.remove();
+    const items=[...container.querySelectorAll(selector)];
+    items.forEach((item,index)=>item.classList.toggle('facet-extra',index>=3));
+    const hidden=Math.max(0,items.length-3);
+    if(hidden>0){const more=makeMore(moreClass,hidden,items.slice(3).map(item=>item.textContent.trim()).join(', '));container.appendChild(more)}
+  }
+
+  function decorateModalFacets(){
+    const setting=document.querySelector('#modalSetting');
+    capModalGroup(setting,'button[data-quick-setting]','modal-setting-more');
+    capModalGroup(document.querySelector('#modalUniverse'),'button[data-quick-universe]','modal-universe-more');
+    capModalGroup(document.querySelector('#modalTags .modal-primary-tags'),'button[data-tag]','modal-tag-more');
+    capModalGroup(document.querySelector('#modalTags .modal-hashtags'),'button[data-hashtag]','modal-hashtag-more');
   }
 
   function ensureDrawerReset(){
@@ -135,11 +143,21 @@
       .card-setting-more,.card-hashtag-more{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;color:#697067!important;font-size:7px!important}
       .card-tags button,.card-tags span{font-family:Arial,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif!important}
       .card-hashtags button,.card-hashtags span{font-family:Arial,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif!important}
+      .facet-extra{display:none!important}.modal-setting-more,.modal-universe-more,.modal-tag-more,.modal-hashtag-more{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;color:#6f796e!important;font:7px/1 var(--mono)!important}
+      @media(min-width:761px){
+        .modal-content{position:relative!important}
+        .modal-author-row{position:absolute!important;top:50px!important;right:20px!important;z-index:3!important;margin:0!important;padding:0!important;font-size:0!important;color:#788276!important;white-space:nowrap!important}
+        .modal-author-row:before{content:'BY ';font:700 7px/1 var(--mono)!important;letter-spacing:.09em!important;color:#667164!important}
+        .modal-author-row #modalAuthor{margin:0 0 0 4px!important;padding:0!important;border:0!important;background:none!important;color:#b9c2b2!important;font:700 8.5px/1 var(--mono)!important;text-decoration:underline!important;text-underline-offset:2px!important;cursor:pointer!important}
+        .modal-author-row #modalPov{display:none!important}.modal-setting-row,.modal-universe-row{padding-right:118px!important}
+        #modalTags .modal-hashtags{position:absolute!important;left:20px!important;right:20px!important;bottom:59px!important;z-index:2!important;display:flex!important;align-items:center!important;gap:9px!important;width:auto!important;min-height:15px!important;height:auto!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important}
+        #modalTags .modal-hashtags button{font-size:8px!important}.modal-hashtag-more{margin-left:2px!important}
+      }
       @media(max-width:760px){
         .drawer-query-row{gap:3px!important}.drawer-search{height:29px!important;min-height:29px!important;margin:3px 0!important;padding-inline:6px!important}.drawer-tool-btn{min-width:45px!important;height:29px!important;min-height:29px!important;padding:2px 4px!important}
         .card-universe-text-row{height:13px!important;min-height:13px!important;margin:1px 0 2px!important;font:6.6px/13px var(--mono)!important}
         .card-meta{flex-wrap:nowrap!important;gap:4px!important;overflow:hidden!important}.card-setting-token{flex:1 1 0!important;min-width:0!important;max-width:none!important}.card-setting-token span:last-child{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}.card-setting-more{height:22px!important;min-width:24px!important;padding:0 5px!important;border:0!important;background:none!important}
-        #modalSetting .modal-setting-extra{display:none!important}.modal-setting-more{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;min-width:24px!important;min-height:22px!important;padding:4px 7px!important;border:1px solid #4a5542!important;border-radius:999px!important;background:rgba(91,107,77,.08)!important;color:#899582!important;font:7px/1 var(--mono)!important}
+        .modal-setting-more{min-width:24px!important;min-height:22px!important;padding:4px 7px!important;border:1px solid #4a5542!important;border-radius:999px!important;background:rgba(91,107,77,.08)!important;color:#899582!important}
         .modal-universe-row{display:flex!important;align-items:center!important;min-height:13px!important;margin:0 0 5px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}.modal-universe-row[hidden],#modalUniverse[hidden]{display:none!important}#modalUniverse{display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:5px 8px!important;min-width:0!important}#modalUniverse .universe-link{display:inline-flex!important;align-items:center!important;gap:4px!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:#6b756b!important;opacity:.76!important;font:6.8px/1.25 var(--mono)!important}#modalUniverse .universe-link .ui-icon{width:8px!important;height:8px!important;opacity:.66!important}
       }
     `;document.head.appendChild(style);
@@ -148,5 +166,5 @@
   ensurePresentationStyles();ensureDrawerReset();
   const originalRender=window.render;
   if(typeof originalRender==='function'&&!originalRender.__facetPresentationWrapped){const wrapped=function(...args){const result=originalRender.apply(this,args);decorateCards(document.querySelector('#grid')||document);ensureDrawerReset();return result};wrapped.__facetPresentationWrapped=true;window.render=wrapped}
-  decorateCards(document.querySelector('#grid')||document);ensureDrawerReset();window.addEventListener('archive:modal-public-ready',decorateModalSettings);
+  decorateCards(document.querySelector('#grid')||document);ensureDrawerReset();window.addEventListener('archive:modal-public-ready',decorateModalFacets);
 })();

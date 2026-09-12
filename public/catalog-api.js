@@ -36,7 +36,7 @@
   function mergeBots(){
     const seen=new Set(),all=[];
     for(const b of [...liveBots,...baseBots]){const key=b.janitorUuid||b.id||`${String(b.author).toLowerCase()}:${b.nameEn}`;if(seen.has(key))continue;seen.add(key);all.push(b)}
-    window.BOTS=normalizeCatalog(all);
+    window.BOTS=all;
     if(typeof window.render==='function')window.render();
   }
 
@@ -71,5 +71,12 @@
   async function waitFor(uuid){for(let i=0;i<24;i++){await new Promise(r=>setTimeout(r,5000));const r=await fetch(`/api/import/status?uuid=${encodeURIComponent(uuid)}`,{cache:'no-store'}),d=await r.json();if(r.ok&&d.ready)return d;if([401,403,410,500].includes(r.status))throw new Error(d.state||d.error||`HTTP ${r.status}`);setState(`RECOVERING CHARACTER DATA… ${Math.min((i+1)*5,120)}s`)}throw new Error('Retrieval is taking longer than expected. Try again in a minute.')}
   async function runImport(){const input=$('#archiveImportUrl'),go=$('#archiveImportGo'),url=String(input?.value||'').trim();if(!uuidFrom(url)){setState('PASTE A VALID JANITORAI CHARACTER LINK.','error');return}go.disabled=true;go.textContent='IMPORTING…';setState('CHECKING ARCHIVE → DATACAT…');try{let r=await fetch('/api/import',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url})}),d=await r.json();if(r.status===202&&d.state==='RETRIEVAL_QUEUED'){setState('CHARACTER NOT CACHED YET — RECOVERING…');d=await waitFor(d.janitorUuid||uuidFrom(url))}else if(!r.ok)throw new Error(d.state||d.error||d.message||`HTTP ${r.status}`);await loadLive();const uuid=d.janitorUuid||uuidFrom(url),bot=liveBots.find(x=>x.janitorUuid===uuid)||window.BOTS.find(x=>x.janitorUuid===uuid);if(!bot)throw new Error('Imported, but catalog record could not be loaded.');setState('IMPORTED. OPENING RECORD…','ok');setTimeout(()=>{closeImport();if(typeof window.openModal==='function')window.openModal(bot);else window.dispatchEvent(new CustomEvent('archive:open-character',{detail:{bot}}))},180)}catch(e){setState(String(e.message||e),'error');go.disabled=false;go.textContent='IMPORT'}}
   function loadAddon(src,key){if(document.querySelector(`script[data-${key}]`))return;const s=document.createElement('script');s.src=src;s.setAttribute(`data-${key}`,'1');document.body.appendChild(s)}
-  const start=()=>{baseBots=Array.isArray(window.BOTS)?[...window.BOTS]:baseBots;bindTrigger();buildModal();loadAddon('lorebooks.js','archive-lorebooks');loadAddon('ui-fixes.js','archive-ui-fixes');loadLive()};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+  const start=()=>{
+    baseBots=normalizeCatalog(Array.isArray(window.BOTS)?[...window.BOTS]:baseBots);
+    bindTrigger();
+    buildModal();
+    loadAddon('ui-fixes.js','archive-ui-fixes');
+    loadLive().finally(()=>loadAddon('lorebooks.js','archive-lorebooks'));
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

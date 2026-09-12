@@ -1,0 +1,151 @@
+/* ARCHIVE.EXE — UI/UX audit patch 2026-09-12
+   Safe visual fixes layered after the existing mobile/catalog checkpoints. */
+
+/* ---------- Desktop hero: keep the archive mood, expose the catalog sooner ---------- */
+@media (min-width:761px){
+  .hero{height:clamp(300px,38vh,390px)}
+  .hero-fade{
+    background:
+      linear-gradient(180deg,rgba(13,15,13,.02) 34%,rgba(13,15,13,.42) 70%,var(--bg) 100%),
+      linear-gradient(90deg,transparent 0%,transparent 48%,rgba(8,10,8,.18) 68%,rgba(8,10,8,.5) 100%);
+  }
+  .hero-copy{text-shadow:0 2px 22px rgba(0,0,0,.72)}
+}
+
+/* ---------- Toolbar hierarchy ---------- */
+.toolbar-meta{
+  margin-left:auto;
+  min-width:max-content;
+  padding:0 2px 0 8px!important;
+  border-left:1px solid rgba(69,77,66,.5);
+}
+#catalogOpen{font-weight:700}
+#importOpen{
+  border-color:#554b3d;
+  background:#171512;
+  color:#b7a58b;
+}
+#importOpen:hover{border-color:#80694f;background:#211b16;color:#e1c8a6}
+.random-trigger{font-weight:700}
+
+/* ---------- Quick-tag rail: obvious overflow + selected state ---------- */
+.tag-zone:after{
+  content:"";
+  position:absolute;
+  right:0;
+  bottom:11px;
+  width:34px;
+  height:33px;
+  pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--bg));
+}
+.quick-list.quick-expanded~.tag-scroll-hint+.tag-zone:after{display:none}
+.quick-list button.active{
+  background:#3a261d!important;
+  border-color:#b0714f!important;
+  color:#ffe1cf!important;
+  box-shadow:inset 0 0 0 1px rgba(205,132,91,.12)!important;
+}
+#resetBtn:not([hidden]),#clearQuickTags:not([hidden]){color:#c8aa8e!important}
+
+/* ---------- Catalog cards: consistent rhythm / hierarchy ---------- */
+.card-body{display:flex;flex-direction:column;min-height:145px}
+.card-title{
+  min-height:34px;
+  color:#f1ede4!important;
+  font-weight:800!important;
+  letter-spacing:-.01em;
+}
+.card-title span{color:#6c746b!important;font-weight:400!important}
+.card-author{font-size:8px!important;color:#697168!important;letter-spacing:.035em}
+.card-author button{color:#8f9988!important}
+.card-short{
+  min-height:29px;
+  max-height:29px;
+  -webkit-line-clamp:2!important;
+  line-clamp:2;
+  overflow:hidden;
+}
+.card-tags{
+  min-height:25px;
+  max-height:25px;
+  flex-wrap:nowrap!important;
+  overflow:hidden;
+  align-items:center;
+}
+.card-tags button,.card-tags span{
+  flex:0 1 auto;
+  min-width:0;
+  max-width:38%;
+  height:24px;
+  display:inline-flex;
+  align-items:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  border-radius:5px!important;
+  padding:5px 7px!important;
+  line-height:1!important;
+}
+.card-tags .tag-more{flex:0 0 auto;max-width:none!important;cursor:help!important}
+.card-hashtags{
+  min-height:15px;
+  max-height:15px;
+  overflow:hidden;
+  flex-wrap:nowrap!important;
+}
+
+/* ---------- Drawer: scrollbar never eats counts/text ---------- */
+.drawer-list{padding-right:12px!important;scrollbar-gutter:stable}
+.drawer-list>*{max-width:100%}
+.catalog-drawer{background:#111411!important}
+
+/* ---------- Detail modal: clearer interactive affordances ---------- */
+.modal-lang{border-color:rgba(130,146,116,.55)!important}
+.modal-lang button{color:#8c9786!important}
+.modal-lang button.active{background:rgba(137,157,113,.22)!important;color:#eef2e8!important}
+.card-data-toggle{
+  min-height:29px!important;
+  border-radius:4px;
+  padding:0 5px!important;
+  transition:background .16s,color .16s;
+}
+.card-data-toggle:hover,.card-data-toggle:focus-visible{background:rgba(112,128,96,.08);color:#d3dacb!important;outline:none}
+.card-data-toggle:after{content:"EXPAND";margin-left:auto;margin-right:8px;color:#65705f;font:6px var(--mono);letter-spacing:.1em}
+.card-data-shell.open .card-data-toggle:after{content:"COLLAPSE"}
+
+/* ---------- Lost directory: keep error red readable ---------- */
+.terminal-lines .warn{color:#c88468!important}
+.terminal-card{background:#0f120f!important}
+.terminal-back-home{
+  height:31px;
+  margin-left:7px;
+  border:1px solid #343c32;
+  border-radius:5px;
+  background:#121612;
+  color:#929c88;
+  font:8px var(--mono);
+  cursor:pointer;
+  padding:0 12px;
+}
+.terminal-back-home:hover{border-color:#566050;color:#d2d9ca;background:#191e18}
+
+/* ---------- Mobile: preserve the compact app-like checkpoint ---------- */
+@media(max-width:760px){
+  .hero{height:190px!important}
+  .card-body{min-height:0!important}
+  .card-title{min-height:0!important}
+  .card-short{min-height:0;max-height:none}
+  .card-tags{min-height:24px;max-height:24px}
+  .card-tags button,.card-tags span{height:24px;max-width:43%;padding:5px 6px!important}
+  .drawer-list{padding-right:9px!important}
+  .catalog-drawer{background:#101310!important}
+  .tag-zone:after{bottom:9px;height:29px;width:26px}
+  .card-data-toggle:after{display:none}
+}
+
+@media(max-width:420px){
+  .card-title{font-size:13px!important}
+  .card-author{font-size:7.5px!important}
+  .card-tags button,.card-tags span{max-width:44%;font-size:8px!important}
+}

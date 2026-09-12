@@ -95,6 +95,31 @@
     retry.insertAdjacentElement('afterend',back);
   }
 
+  function ensureMobileFilesLinks(reset=false){
+    const groups=document.querySelector('#modal .modal-action-groups');
+    if(!groups)return;
+    let toggle=document.getElementById('modalFilesLinksToggle');
+    if(!toggle){
+      toggle=document.createElement('button');
+      toggle.id='modalFilesLinksToggle';
+      toggle.className='modal-files-links-toggle';
+      toggle.type='button';
+      toggle.setAttribute('aria-expanded','false');
+      toggle.innerHTML='<span>FILES / LINKS</span><i aria-hidden="true">⌄</i>';
+      groups.insertAdjacentElement('beforebegin',toggle);
+      toggle.addEventListener('click',()=>{
+        const open=groups.classList.toggle('mobile-actions-open');
+        toggle.classList.toggle('open',open);
+        toggle.setAttribute('aria-expanded',open?'true':'false');
+      });
+    }
+    if(reset||window.innerWidth>760){
+      groups.classList.remove('mobile-actions-open');
+      toggle.classList.remove('open');
+      toggle.setAttribute('aria-expanded','false');
+    }
+  }
+
   function ensureBackToTop(){
     if(document.getElementById('archiveBackToTop'))return;
     if(!document.getElementById('archiveBackToTopStyles')){
@@ -161,6 +186,7 @@
     requestAnimationFrame(()=>{
       scrubModalText();
       showFullModalFacets();
+      ensureMobileFilesLinks(true);
     });
     scheduleArrowPosition();
   }
@@ -170,6 +196,7 @@
   ensureCatalogToggle();
   ensurePersistentTagDrawer();
   ensureTerminalExit();
+  ensureMobileFilesLinks();
   ensureBackToTop();
   refreshModalRuntime();
 
@@ -178,6 +205,6 @@
     normalizeAuditLabels();
   });
   window.addEventListener('archive:modal-public-ready',refreshModalRuntime);
-  window.addEventListener('archive:modal-definition-ready',refreshModalRuntime);
-  window.addEventListener('resize',scheduleArrowPosition,{passive:true});
+  window.addEventListener('archive:modal-definition-ready',()=>requestAnimationFrame(()=>{scrubModalText();showFullModalFacets()}));
+  window.addEventListener('resize',()=>{scheduleArrowPosition();ensureMobileFilesLinks(false)},{passive:true});
 })();

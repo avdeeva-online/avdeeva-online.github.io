@@ -117,6 +117,30 @@
     return `<div class="public-summary-mobile-full">${lines.map(line=>`<p>${esc(line)}</p>`).join('')}</div>`;
   }
 
+  function forceMobileScroll(body){
+    if(!body||window.innerWidth>760)return;
+    const set=(name,value)=>body.style.setProperty(name,value,'important');
+    set('display','block');
+    set('box-sizing','border-box');
+    set('width','100%');
+    set('height','148px');
+    set('min-height','148px');
+    set('max-height','148px');
+    set('overflow-y','scroll');
+    set('overflow-x','hidden');
+    set('-webkit-overflow-scrolling','touch');
+    set('overscroll-behavior-y','contain');
+    set('touch-action','pan-y');
+    set('-webkit-mask-image','none');
+    set('mask-image','none');
+    set('padding-right','10px');
+    if(body.dataset.nativeScrollBound!=='1'){
+      body.dataset.nativeScrollBound='1';
+      body.addEventListener('touchmove',event=>event.stopPropagation(),{passive:true});
+      body.addEventListener('wheel',event=>event.stopPropagation(),{passive:true});
+    }
+  }
+
   function resetScroll(body){
     if(!body)return;
     const home=()=>{if(body.isConnected)body.scrollTop=0};
@@ -132,11 +156,13 @@
     const mobile=window.matchMedia&&window.matchMedia('(max-width:760px)').matches;
     body.innerHTML=mobile?mobileMarkup(raw):markup(raw);
     body.dataset.summaryOwner='public-summary-clean';
+    forceMobileScroll(body);
     const summary=body.closest('.modal-public-summary');
     const more=summary?.querySelector('.modal-public-more');
     summary?.classList.remove('expanded');
     if(more)more.hidden=true;
     resetScroll(body);
+    requestAnimationFrame(()=>forceMobileScroll(body));
   }
 
   window.renderArchivePublicSummary=render;

@@ -17,7 +17,7 @@
   `;
   document.head.appendChild(style);
 
-  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const clean=s=>String(s||'')
     .replace(/[\u200B-\u200D\u2060\uFEFF]/g,'')
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g,'')
@@ -81,8 +81,6 @@
     home();
     queueMicrotask(home);
     requestAnimationFrame(()=>{home();requestAnimationFrame(home)});
-    setTimeout(home,40);
-    setTimeout(home,120);
   }
 
   function render(bot){
@@ -121,10 +119,4 @@
 
   window.addEventListener('archive:modal-public-ready',e=>render(e.detail?.bot));
   window.addEventListener('archive:modal-definition-ready',e=>render(e.detail?.bot));
-  const start=()=>{
-    const modal=document.getElementById('modal');
-    if(!modal)return;
-    new MutationObserver(()=>{if(!modal.hidden)resetScroll(document.querySelector('#modalPublicBody'))}).observe(modal,{attributes:true,attributeFilter:['hidden']});
-  };
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

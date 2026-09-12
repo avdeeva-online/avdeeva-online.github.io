@@ -29,7 +29,7 @@
 @media(min-width:761px){
   .toolbar-row{
     display:grid!important;
-    grid-template-columns:auto auto minmax(280px,1fr) auto auto auto!important;
+    grid-template-columns:auto auto minmax(280px,1fr) auto auto auto auto!important;
     grid-template-areas:
       "catalog import search primary secondary random meta"!important;
     gap:7px!important;

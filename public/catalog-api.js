@@ -41,9 +41,10 @@
     if(typeof window.render==='function')window.render();
   }
 
-  async function loadLive(){
+  async function loadLive(fresh=false){
     try{
-      const r=await fetch('/api/catalog?limit=1000',{cache:'no-cache'}),data=await r.json();
+      const endpoint=fresh?'/api/characters?limit=1000':'/api/catalog?limit=1000';
+      const r=await fetch(endpoint,{cache:fresh?'no-store':'no-cache'}),data=await r.json();
       if(!r.ok||!data.ok)throw new Error(data.message||data.error||`HTTP ${r.status}`);
       liveBots=normalizeCatalog(Array.isArray(data.characters)?data.characters:[]);
       mergeBots();
@@ -70,7 +71,7 @@
   function setState(text,type=''){const el=$('#archiveImportState');if(!el)return;el.textContent=text;el.className='archive-import-state'+(type?' '+type:'')}
   function uuidFrom(v){return(String(v||'').match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i)||[])[0]?.toLowerCase()||''}
   async function waitFor(uuid){for(let i=0;i<24;i++){await new Promise(r=>setTimeout(r,5000));const r=await fetch(`/api/import/status?uuid=${encodeURIComponent(uuid)}`,{cache:'no-store'}),d=await r.json();if(r.ok&&d.ready)return d;if([401,403,410,500].includes(r.status))throw new Error(d.state||d.error||`HTTP ${r.status}`);setState(`RECOVERING CHARACTER DATA… ${Math.min((i+1)*5,120)}s`)}throw new Error('Retrieval is taking longer than expected. Try again in a minute.')}
-  async function runImport(){const input=$('#archiveImportUrl'),go=$('#archiveImportGo');if(!go||importBusy)return;const url=String(input?.value||'').trim();if(!uuidFrom(url)){setState('PASTE A VALID JANITORAI CHARACTER LINK.','error');return}importBusy=true;go.disabled=true;go.textContent='IMPORTING…';setState('CHECKING ARCHIVE → DATACAT…');try{let r=await fetch('/api/import',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url})}),d=await r.json();if(r.status===202&&d.state==='RETRIEVAL_QUEUED'){setState('CHARACTER NOT CACHED YET — RECOVERING…');d=await waitFor(d.janitorUuid||uuidFrom(url))}else if(!r.ok)throw new Error(d.state||d.error||d.message||`HTTP ${r.status}`);await loadLive();const uuid=d.janitorUuid||uuidFrom(url),bot=liveBots.find(x=>x.janitorUuid===uuid)||window.BOTS.find(x=>x.janitorUuid===uuid);if(!bot)throw new Error('Imported, but catalog record could not be loaded.');setState('IMPORTED. OPENING RECORD…','ok');setTimeout(()=>{importBusy=false;closeImport();if(typeof window.openModal==='function')window.openModal(bot);else window.dispatchEvent(new CustomEvent('archive:open-character',{detail:{bot}}))},180)}catch(e){importBusy=false;setState(String(e.message||e),'error');go.disabled=false;go.textContent='IMPORT'}}
+  async function runImport(){const input=$('#archiveImportUrl'),go=$('#archiveImportGo');if(!go||importBusy)return;const url=String(input?.value||'').trim();if(!uuidFrom(url)){setState('PASTE A VALID JANITORAI CHARACTER LINK.','error');return}importBusy=true;go.disabled=true;go.textContent='IMPORTING…';setState('CHECKING ARCHIVE → DATACAT…');try{let r=await fetch('/api/import',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url})}),d=await r.json();if(r.status===202&&d.state==='RETRIEVAL_QUEUED'){setState('CHARACTER NOT CACHED YET — RECOVERING…');d=await waitFor(d.janitorUuid||uuidFrom(url))}else if(!r.ok)throw new Error(d.state||d.error||d.message||`HTTP ${r.status}`);await loadLive(true);const uuid=d.janitorUuid||uuidFrom(url),bot=liveBots.find(x=>x.janitorUuid===uuid)||window.BOTS.find(x=>x.janitorUuid===uuid);if(!bot)throw new Error('Imported, but catalog record could not be loaded.');setState('IMPORTED. OPENING RECORD…','ok');setTimeout(()=>{importBusy=false;closeImport();if(typeof window.openModal==='function')window.openModal(bot);else window.dispatchEvent(new CustomEvent('archive:open-character',{detail:{bot}}))},180)}catch(e){importBusy=false;setState(String(e.message||e),'error');go.disabled=false;go.textContent='IMPORT'}}
   function loadAddon(src,key){if(document.querySelector(`script[data-${key}]`))return;const s=document.createElement('script');s.src=src;s.setAttribute(`data-${key}`,'1');document.body.appendChild(s)}
   const start=()=>{
     baseBots=normalizeCatalog(Array.isArray(window.BOTS)?[...window.BOTS]:baseBots);

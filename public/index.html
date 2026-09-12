@@ -49,17 +49,21 @@
 
     .access-deck{position:absolute;left:50%;top:50%;z-index:12;transform:translate(-50%,-50%);width:min(697px,62vw);display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:center}
     .terminal-card{position:relative;height:201px;min-height:201px;border-radius:16px;background:
+      radial-gradient(circle at 48% 34%,rgba(119,153,112,.08),transparent 42%),
       linear-gradient(180deg,rgba(6,10,7,.87),rgba(3,7,5,.94)),
       repeating-linear-gradient(180deg,rgba(255,255,255,.006) 0 1px,transparent 1px 3px);
-      border:1px solid rgba(124,141,112,.42);box-shadow:0 18px 44px rgba(0,0,0,.46),inset 0 0 0 1px rgba(0,0,0,.27);backdrop-filter:blur(1.4px);transition:transform .18s,border-color .18s,box-shadow .18s,filter .18s;overflow:visible}
+      border:1px solid rgba(124,141,112,.42);box-shadow:0 18px 44px rgba(0,0,0,.46),inset 0 0 0 1px rgba(0,0,0,.27),inset 0 0 34px rgba(113,148,105,.035);backdrop-filter:blur(1.4px);transition:transform .18s,border-color .18s,box-shadow .18s,filter .18s;overflow:visible}
     .terminal-card.characters,.terminal-card.hub{height:201px;min-height:201px;margin:0}
     .terminal-card.characters{border-color:rgba(137,156,121,.54)}
-    .terminal-card.hub{border-color:rgba(128,106,81,.46)}
+    .terminal-card.hub{border-color:rgba(128,106,81,.46);background:
+      radial-gradient(circle at 48% 34%,rgba(174,130,84,.07),transparent 42%),
+      linear-gradient(180deg,rgba(6,10,7,.87),rgba(3,7,5,.94)),
+      repeating-linear-gradient(180deg,rgba(255,255,255,.006) 0 1px,transparent 1px 3px)}
     .terminal-card:before{content:'';position:absolute;inset:8px;border-radius:11px;border:1px solid rgba(137,156,121,.13);pointer-events:none;z-index:1}
     .terminal-card:after{content:'';position:absolute;left:19px;right:19px;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(219,229,192,.23),transparent);pointer-events:none;z-index:1}
-    .terminal-card:hover{transform:translateY(-4px);border-color:#88977a;box-shadow:0 22px 52px rgba(0,0,0,.5),0 0 0 1px rgba(137,154,112,.06);filter:brightness(1.04)}
-    .terminal-card.hub:hover{border-color:#987d60}
-    .terminal-card>a{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:space-between;padding:18px 20px 16px;overflow:hidden;border-radius:16px;isolation:isolate}
+    .terminal-card:hover{transform:translateY(-4px);border-color:#88977a;box-shadow:0 22px 52px rgba(0,0,0,.5),0 0 0 1px rgba(137,154,112,.06),inset 0 0 48px rgba(126,165,114,.065);filter:brightness(1.04)}
+    .terminal-card.hub:hover{border-color:#987d60;box-shadow:0 22px 52px rgba(0,0,0,.5),0 0 0 1px rgba(152,125,96,.07),inset 0 0 48px rgba(166,124,82,.055)}
+    .terminal-card>a{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:space-between;padding:18px 20px 16px;overflow:hidden;border-radius:16px;isolation:isolate;background:radial-gradient(circle at 50% 38%,rgba(168,196,151,.025),transparent 62%)}
     .terminal-card>a>div{position:relative;z-index:2}
     .terminal-card>a:before,.terminal-card>a:after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0}
     .terminal-card>a:before{background:repeating-linear-gradient(180deg,transparent 0 7px,rgba(220,235,213,.085) 7px 8px,transparent 8px 14px),linear-gradient(90deg,transparent 0 4%,rgba(116,181,145,.09) 19%,transparent 44%,rgba(191,105,92,.08) 70%,transparent 96%)}
@@ -78,9 +82,9 @@
     .node-row{display:flex;justify-content:space-between;align-items:center;text-transform:uppercase;font:6.5px/1.1 var(--mono);letter-spacing:.105em;color:#a0aa9a}
     .node-row b{font-weight:400;color:#b3bea7}
     .terminal-main{display:grid;grid-template-columns:52px 1fr;gap:14px;align-items:center;margin-top:12px}
-    .glyph{width:50px;height:50px;display:grid;place-items:center;border:1px solid #69775f;background:rgba(3,6,4,.42);color:#c2cca8;box-shadow:inset 0 0 18px rgba(0,0,0,.28);border-radius:10px}
+    .glyph{width:50px;height:50px;display:grid;place-items:center;border:1px solid #69775f;background:rgba(3,6,4,.42);color:#c2cca8;box-shadow:inset 0 0 18px rgba(0,0,0,.28),0 0 18px rgba(139,172,121,.035);border-radius:10px}
     .glyph svg{width:31px;height:31px;display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-    .hub .glyph{color:#cfaf86;border-color:#765f45}
+    .hub .glyph{color:#cfaf86;border-color:#765f45;box-shadow:inset 0 0 18px rgba(0,0,0,.28),0 0 18px rgba(188,139,91,.035)}
     .terminal-copy h2{margin:0;color:#f3eadb;font:700 clamp(22px,1.75vw,28px)/1 Georgia,"Times New Roman",serif;letter-spacing:.01em;text-shadow:0 2px 12px rgba(0,0,0,.62)}
     .terminal-copy p{margin:8px 0 0;max-width:250px;color:#c4c9be;font:8px/1.48 var(--mono);letter-spacing:.025em}
     .enter{display:flex;justify-content:space-between;align-items:center;padding-top:9px;border-top:1px solid rgba(118,131,109,.37);text-transform:uppercase;font:6.7px/1 var(--mono);letter-spacing:.11em;color:#d0c5aa}
@@ -88,8 +92,17 @@
 
     .ground-shadow{position:absolute;left:50%;top:50%;z-index:5;transform:translate(-50%,18px);width:min(765px,64vw);height:62px;background:radial-gradient(ellipse at center,rgba(0,0,0,.28),transparent 72%);filter:blur(12px);pointer-events:none}
 
+    .activity-layer{position:absolute;left:50%;top:67.8%;z-index:11;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:9px;width:min(650px,60vw);pointer-events:none}
+    .archive-metrics{display:grid;grid-template-columns:repeat(4,minmax(92px,1fr));width:100%;border-top:1px solid rgba(113,130,104,.18);border-bottom:1px solid rgba(113,130,104,.12);background:linear-gradient(90deg,transparent,rgba(7,11,8,.28) 15%,rgba(7,11,8,.34) 50%,rgba(7,11,8,.28) 85%,transparent);padding:7px 16px;gap:8px;text-transform:uppercase;text-shadow:0 2px 10px rgba(0,0,0,.86)}
+    .metric{display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:baseline;font:6.5px/1 var(--mono);letter-spacing:.1em;color:#798479}
+    .metric b{justify-self:end;color:#aebba4;font-weight:400}
+    .metric.sync b{color:#c0a77f}
+    .quick-action{pointer-events:auto;display:inline-flex;align-items:center;gap:9px;padding:7px 11px;border:1px solid rgba(125,143,111,.26);border-radius:7px;background:rgba(5,9,6,.52);color:#c3ccb8;font:7px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;box-shadow:0 7px 18px rgba(0,0,0,.19);transition:border-color .18s,background .18s,transform .18s,color .18s}
+    .quick-action:hover{transform:translateY(-1px);border-color:rgba(164,185,143,.46);background:rgba(7,12,8,.72);color:#e2e7dc}
+    .quick-action .dice{font-size:11px;color:#b6c99b;line-height:1}
+
     .statusbar{position:absolute;left:0;right:0;bottom:0;z-index:14;display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center;padding:13px 26px 14px;border-top:1px solid rgba(94,106,87,.20);background:linear-gradient(180deg,rgba(4,6,4,.02),rgba(4,6,4,.44));text-transform:uppercase;font:6.8px/1 var(--mono);letter-spacing:.105em;color:#9aa49a;text-shadow:0 2px 10px rgba(0,0,0,.88)}
-    .statusbar .center{text-align:center;color:#a2aca1}.statusbar .right{text-align:right}.statusbar b{font-weight:400;color:#b0b9a9}
+    .statusbar .center{text-align:center;color:#a2aca1}.statusbar .right{text-align:right}.statusbar b{font-weight:400;color:#b0b9a9}.runtime-state{display:inline-block;color:#b8c79f;min-width:42px}.runtime-state.syncing{color:#c8a276;animation:runtimeBlink .7s steps(1,end) infinite}
 
     @keyframes logoGlitch{
       0%,88%,100%{transform:none;text-shadow:none;opacity:1}
@@ -160,8 +173,9 @@
       79%{text-shadow:-1px 0 rgba(173,219,189,.3),1px 0 rgba(225,119,103,.25)}
       82%{text-shadow:inherit}
     }
+    @keyframes runtimeBlink{0%,100%{opacity:1}50%{opacity:.42}}
 
-    @media(max-width:1100px){.access-deck{width:min(650px,68vw);gap:18px}.terminal-card,.terminal-card.characters,.terminal-card.hub{height:189px;min-height:189px}.terminal-card>a{padding:16px 18px 14px}.terminal-copy h2{font-size:24px}.terminal-copy p{font-size:7.6px}.node-row{font-size:6.1px}.enter{font-size:6.3px}.characters .vine-top,.hub .vine-top{height:109px;top:-15px}.characters .vine-side{width:140px;height:140px;left:-18px;top:-17px}.characters .vine-bottom{height:105px;left:-18px;bottom:-37px}.hub .vine-side{width:70px;height:193px;right:-7px;top:-7px}}
+    @media(max-width:1100px){.access-deck{width:min(650px,68vw);gap:18px}.terminal-card,.terminal-card.characters,.terminal-card.hub{height:189px;min-height:189px}.terminal-card>a{padding:16px 18px 14px}.terminal-copy h2{font-size:24px}.terminal-copy p{font-size:7.6px}.node-row{font-size:6.1px}.enter{font-size:6.3px}.characters .vine-top,.hub .vine-top{height:109px;top:-15px}.characters .vine-side{width:140px;height:140px;left:-18px;top:-17px}.characters .vine-bottom{height:105px;left:-18px;bottom:-37px}.hub .vine-side{width:70px;height:193px;right:-7px;top:-7px}.activity-layer{top:68.8%;width:min(610px,66vw)}}
 
     @media(max-width:760px){
       body{overflow:auto}.gateway{min-height:100dvh;overflow:visible;padding-bottom:64px}.scene{background-position:50% 58%;filter:brightness(.57) saturate(.78)}
@@ -173,10 +187,11 @@
       .terminal-card,.terminal-card.characters,.terminal-card.hub{height:158px;min-height:158px;margin:0;border-radius:15px}
       .terminal-card>a{padding:14px 16px 12px;border-radius:15px}.node-row{font-size:6px}.terminal-main{grid-template-columns:44px 1fr;gap:12px;margin-top:8px}.glyph{width:42px;height:42px;border-radius:9px}.glyph svg{width:26px;height:26px}.terminal-copy h2{font-size:21px}.terminal-copy p{font-size:7.2px;line-height:1.42;margin-top:5px}.enter{padding-top:8px;font-size:6px}.enter-arrow{font-size:15px}
       .vine{opacity:.62}.characters .vine-top,.hub .vine-top{height:calc((100vw - 34px)/3);top:-12px}.characters .vine-side{width:122px;height:122px;left:-16px;top:-14px}.characters .vine-bottom{height:94px;left:-15px;bottom:-33px}.hub .vine-side{width:58px;height:162px;right:-6px;top:-6px}
+      .activity-layer{position:relative;left:auto;top:auto;transform:none;width:calc(100% - 34px);margin:18px auto 0;gap:8px}.archive-metrics{grid-template-columns:1fr 1fr;padding:8px 10px;row-gap:7px}.metric{font-size:6px}.quick-action{font-size:6.3px;padding:7px 10px}
       .ground-shadow{display:none}.statusbar{position:relative;margin-top:20px;padding:11px 15px;grid-template-columns:1fr auto;font-size:6px}.statusbar .center{display:none}
     }
 
-    @media (prefers-reduced-motion:reduce){.brand,.top-index,.online,.online-text,.edge-value.warn,.terminal-card>a:before,.terminal-card>a:after,.terminal-copy h2,.node-row,.enter{animation:none!important;transition:none!important}}
+    @media (prefers-reduced-motion:reduce){.brand,.top-index,.online,.online-text,.edge-value.warn,.terminal-card>a:before,.terminal-card>a:after,.terminal-copy h2,.node-row,.enter,.runtime-state{animation:none!important;transition:none!important}}
   </style>
 </head>
 <body>
@@ -255,11 +270,55 @@
       </article>
     </section>
 
+    <section class="activity-layer" aria-label="Archive activity">
+      <div class="archive-metrics" aria-live="polite">
+        <div class="metric"><span>RECORDS</span><b id="metricRecords">--</b></div>
+        <div class="metric"><span>AUTHORS</span><b id="metricAuthors">--</b></div>
+        <div class="metric"><span>WORLDS</span><b id="metricWorlds">--</b></div>
+        <div class="metric sync"><span>SYNC</span><b id="metricSync">--:--</b></div>
+      </div>
+      <a class="quick-action" href="characters.html?gatewayRandom=1" aria-label="Open a random character record"><span class="dice" aria-hidden="true">◇</span><span>RANDOM RECORD</span><span aria-hidden="true">→</span></a>
+    </section>
+
     <footer class="statusbar">
       <div>ARCHIVE.EXE // GATEWAY_00</div>
       <div class="center">// STILL HERE. // STILL GROWING. // THANK YOU.</div>
-      <div class="right"><b>STATUS:</b> STABLE</div>
+      <div class="right"><b>STATUS:</b> <span id="runtimeStatus" class="runtime-state">STABLE</span></div>
     </footer>
   </main>
+  <script>
+    (()=>{
+      const pad=n=>String(n).padStart(2,'0');
+      const syncEl=document.getElementById('metricSync');
+      const setSync=()=>{const d=new Date();syncEl.textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}`};
+      setSync();
+      fetch('/api/catalog?limit=1000',{cache:'no-cache'})
+        .then(r=>r.ok?r.json():Promise.reject(new Error('catalog unavailable')))
+        .then(data=>{
+          const list=Array.isArray(data.characters)?data.characters:[];
+          const authors=new Set(list.map(x=>String(x.author||'').trim().toLowerCase()).filter(Boolean));
+          const worlds=new Set();
+          list.forEach(x=>{
+            const values=Array.isArray(x.universes)&&x.universes.length?x.universes:[x.universe];
+            values.flatMap(v=>String(v||'').split(/\s*\/\s*/)).map(v=>v.trim().toLowerCase()).filter(Boolean).forEach(v=>worlds.add(v));
+          });
+          document.getElementById('metricRecords').textContent=String(list.length).padStart(3,'0');
+          document.getElementById('metricAuthors').textContent=String(authors.size).padStart(2,'0');
+          document.getElementById('metricWorlds').textContent=String(worlds.size).padStart(2,'0');
+        })
+        .catch(()=>{
+          document.getElementById('metricRecords').textContent='---';
+          document.getElementById('metricAuthors').textContent='--';
+          document.getElementById('metricWorlds').textContent='--';
+        });
+
+      const status=document.getElementById('runtimeStatus');
+      const cycle=()=>{
+        status.textContent='SYNCING';status.classList.add('syncing');
+        setTimeout(()=>{status.textContent='STABLE';status.classList.remove('syncing');setSync()},1350);
+      };
+      setInterval(cycle,11000);
+    })();
+  </script>
 </body>
 </html>

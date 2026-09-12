@@ -37,10 +37,15 @@
     .connection-status .online-text{display:inline-block;color:#c0d2a2;font-weight:700;animation:onlineTextFault 6.1s infinite steps(1,end)}
     .connection-status .online{display:inline-block;width:7px;height:7px;border-radius:50%;background:#a9bb80;box-shadow:0 0 9px rgba(169,187,128,.7);animation:onlineFault 6.1s infinite steps(1,end)}
 
-    .edge-note{position:absolute;z-index:9;text-transform:uppercase;font:7.8px/1.52 var(--mono);letter-spacing:.085em;text-shadow:0 2px 10px rgba(0,0,0,.92);color:#a8b39c}
-    .edge-note.left{left:16px;bottom:19%;width:165px}
-    .edge-note.right{right:18px;bottom:18.5%;width:125px;text-align:right;color:#a79a85}
-    .edge-label{display:block;margin-bottom:7px;color:#c2cbb5;letter-spacing:.14em}
+    .edge-note{position:absolute;z-index:9;text-transform:uppercase;font:7.4px/1.48 var(--mono);letter-spacing:.08em;text-shadow:0 2px 10px rgba(0,0,0,.94);color:#9aa697}
+    .edge-note.left{left:20px;bottom:17%;width:154px}
+    .edge-note.right{right:22px;top:56%;width:146px;text-align:left}
+    .edge-label{display:block;margin-bottom:8px;color:#bec7b4;letter-spacing:.15em;opacity:.88}
+    .edge-row{display:flex;justify-content:space-between;gap:14px;margin:3px 0;white-space:nowrap}
+    .edge-key{color:#778279}
+    .edge-value{color:#aeb9a8}
+    .edge-value.good{color:#b8c79f}
+    .edge-value.warn{color:#b98d69;animation:edgeFault 9.6s infinite steps(1,end)}
 
     .access-deck{position:absolute;left:50%;top:50%;z-index:12;transform:translate(-50%,-50%);width:min(697px,62vw);display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:center}
     .terminal-card{position:relative;height:201px;min-height:201px;border-radius:16px;background:
@@ -120,6 +125,13 @@
       61%{opacity:1;color:#e36e66;transform:translateX(2px)}
       62%{color:#c0d2a2;transform:none;text-shadow:none}
     }
+    @keyframes edgeFault{
+      0%,82%,100%{color:#b98d69;opacity:1;text-shadow:none}
+      83%{color:#dc7468;opacity:1;text-shadow:-1px 0 rgba(255,68,68,.45),1px 0 rgba(130,205,155,.18)}
+      85%{color:#8f4a46;opacity:.35}
+      87%{color:#dc7468;opacity:.9}
+      89%{color:#b98d69;opacity:1;text-shadow:none}
+    }
     @keyframes hoverInterference{
       0%,100%{transform:translateX(0);opacity:.52}
       18%{transform:translateX(-2px);opacity:.8}
@@ -164,7 +176,7 @@
       .ground-shadow{display:none}.statusbar{position:relative;margin-top:20px;padding:11px 15px;grid-template-columns:1fr auto;font-size:6px}.statusbar .center{display:none}
     }
 
-    @media (prefers-reduced-motion:reduce){.brand,.top-index,.online,.online-text,.terminal-card>a:before,.terminal-card>a:after,.terminal-copy h2,.node-row,.enter{animation:none!important;transition:none!important}}
+    @media (prefers-reduced-motion:reduce){.brand,.top-index,.online,.online-text,.edge-value.warn,.terminal-card>a:before,.terminal-card>a:after,.terminal-copy h2,.node-row,.enter{animation:none!important;transition:none!important}}
   </style>
 </head>
 <body>
@@ -191,8 +203,19 @@
 
     <div class="motto">SAME PEOPLE.<br>DIFFERENT FILES.</div>
     <div class="connection-status" aria-hidden="true"><span class="signal-label">NODE_00 // LINK:</span><span class="online-text">ONLINE</span><span class="online"></span></div>
-    <div class="edge-note left" aria-hidden="true"><span class="edge-label">// SIGNAL NOTE</span>A QUIETER INTERNET<br>FOR DEEPER STORIES.<br>NOISE FILTER: ON</div>
-    <div class="edge-note right" aria-hidden="true"><span class="edge-label">// AVAILABLE</span>BOTS<br>PRESETS<br>THEMES<br>PLUGINS<br>GUIDES<br>AUTHORS</div>
+    <div class="edge-note left" aria-hidden="true">
+      <span class="edge-label">// RECOVERY LOG</span>
+      <span class="edge-row"><span class="edge-key">SIGNAL</span><span class="edge-value">WEAK</span></span>
+      <span class="edge-row"><span class="edge-key">CACHE</span><span class="edge-value">PARTIAL</span></span>
+      <span class="edge-row"><span class="edge-key">INDEX</span><span class="edge-value good">RESTORED</span></span>
+    </div>
+    <div class="edge-note right" aria-hidden="true">
+      <span class="edge-label">// NODE TRACE</span>
+      <span class="edge-row"><span class="edge-key">NODE</span><span class="edge-value">00</span></span>
+      <span class="edge-row"><span class="edge-key">SECTOR</span><span class="edge-value">04</span></span>
+      <span class="edge-row"><span class="edge-key">ROUTE</span><span class="edge-value">GATEWAY</span></span>
+      <span class="edge-row"><span class="edge-key">LINK</span><span class="edge-value warn">UNSTABLE</span></span>
+    </div>
 
     <div class="ground-shadow" aria-hidden="true"></div>
     <section class="access-deck" aria-label="Choose archive directory">

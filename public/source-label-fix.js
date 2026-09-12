@@ -102,13 +102,29 @@
     }else more?.remove();
   }
 
+  function ensureDrawerReset(){
+    const drawer=document.querySelector('#catalogDrawer');
+    const foot=drawer?.querySelector('.drawer-foot');
+    if(!drawer||!foot||drawer.querySelector('#drawerResetFilters'))return;
+    const button=document.createElement('button');
+    button.id='drawerResetFilters';
+    button.type='button';
+    button.textContent='RESET FILTERS';
+    button.style.cssText='margin-left:auto;border:1px solid rgba(133,103,81,.48);border-radius:4px;background:rgba(58,38,29,.30);color:#c9ad94;padding:5px 7px;font:700 6.5px/1 var(--mono);letter-spacing:.07em;cursor:pointer';
+    button.addEventListener('click',()=>{
+      const publicReset=document.querySelector('#resetBtn');
+      if(publicReset&&!publicReset.hidden){publicReset.click();return}
+      if(typeof window.resetAll==='function')window.resetAll();
+    });
+    foot.appendChild(button);
+  }
+
   function ensurePresentationStyles(){
     if(document.getElementById('archiveFacetPresentation'))return;
     const style=document.createElement('style');
     style.id='archiveFacetPresentation';
     style.textContent=`
       @media(max-width:760px){
-        /* Explicit mobile reading order: name → universe → description → author → settings → tags. */
         .card-title{order:1!important}
         .card-mobile-universe-row{order:2!important}
         .card-short{order:3!important}
@@ -116,110 +132,20 @@
         .card-meta{order:5!important}
         .card-tags{order:6!important}
         .card-hashtags{order:7!important}
-
-        .card-mobile-universe-row{
-          box-sizing:border-box!important;
-          display:flex!important;
-          align-items:center!important;
-          width:100%!important;
-          height:13px!important;
-          min-height:13px!important;
-          margin:1px 0 2px!important;
-          overflow:hidden!important;
-        }
-        .card-mobile-universe-token{
-          display:inline-flex!important;
-          align-items:center!important;
-          gap:3px!important;
-          width:auto!important;
-          max-width:100%!important;
-          height:13px!important;
-          min-height:13px!important;
-          margin:0!important;
-          padding:0!important;
-          border:0!important;
-          border-radius:0!important;
-          background:transparent!important;
-          box-shadow:none!important;
-          color:#687168!important;
-          opacity:.78!important;
-          font:6.6px/13px var(--mono)!important;
-          letter-spacing:.025em!important;
-          overflow:hidden!important;
-          white-space:nowrap!important;
-          text-overflow:ellipsis!important;
-        }
+        .card-mobile-universe-row{box-sizing:border-box!important;display:flex!important;align-items:center!important;width:100%!important;height:13px!important;min-height:13px!important;margin:1px 0 2px!important;overflow:hidden!important}
+        .card-mobile-universe-token{display:inline-flex!important;align-items:center!important;gap:3px!important;width:auto!important;max-width:100%!important;height:13px!important;min-height:13px!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:#687168!important;opacity:.78!important;font:6.6px/13px var(--mono)!important;letter-spacing:.025em!important;overflow:hidden!important;white-space:nowrap!important;text-overflow:ellipsis!important}
         .card-mobile-universe-token .ui-icon{width:8px!important;height:8px!important;min-width:8px!important;opacity:.68!important}
         .card-mobile-universe-token span{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
-
-        /* Settings keep their normal visual weight and share the row evenly. */
         .card-meta{display:flex!important;align-items:center!important;flex-wrap:nowrap!important;gap:4px!important;overflow:hidden!important}
         .card-setting-token{flex:1 1 0!important;min-width:0!important;max-width:none!important}
         .card-setting-token span:last-child{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
-        .card-setting-more{
-          display:inline-flex!important;
-          align-items:center!important;
-          justify-content:center!important;
-          flex:0 0 auto!important;
-          height:22px!important;
-          min-width:24px!important;
-          padding:0 6px!important;
-          border:1px solid rgba(82,94,78,.46)!important;
-          border-radius:5px!important;
-          background:rgba(18,22,18,.38)!important;
-          color:#7f897d!important;
-          font:6.5px/1 var(--mono)!important;
-        }
-
-        /* Detail card: preserve prominent Setting pills, make Universe secondary text only. */
+        .card-setting-more{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;height:22px!important;min-width:24px!important;padding:0 6px!important;border:1px solid rgba(82,94,78,.46)!important;border-radius:5px!important;background:rgba(18,22,18,.38)!important;color:#7f897d!important;font:6.5px/1 var(--mono)!important}
         #modalSetting .modal-setting-extra{display:none!important}
-        .modal-setting-more{
-          display:inline-flex!important;
-          align-items:center!important;
-          justify-content:center!important;
-          flex:0 0 auto!important;
-          min-width:24px!important;
-          min-height:22px!important;
-          padding:4px 7px!important;
-          border:1px solid #4a5542!important;
-          border-radius:999px!important;
-          background:rgba(91,107,77,.08)!important;
-          color:#899582!important;
-          font:7px/1 var(--mono)!important;
-        }
-        .modal-universe-row{
-          display:flex!important;
-          align-items:center!important;
-          min-height:13px!important;
-          margin:0 0 5px!important;
-          padding:0!important;
-          border:0!important;
-          background:transparent!important;
-          box-shadow:none!important;
-        }
+        .modal-setting-more{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;min-width:24px!important;min-height:22px!important;padding:4px 7px!important;border:1px solid #4a5542!important;border-radius:999px!important;background:rgba(91,107,77,.08)!important;color:#899582!important;font:7px/1 var(--mono)!important}
+        .modal-universe-row{display:flex!important;align-items:center!important;min-height:13px!important;margin:0 0 5px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
         .modal-universe-row[hidden],#modalUniverse[hidden]{display:none!important}
-        #modalUniverse{
-          display:flex!important;
-          align-items:center!important;
-          flex-wrap:wrap!important;
-          gap:5px 8px!important;
-          min-width:0!important;
-        }
-        #modalUniverse .universe-link{
-          display:inline-flex!important;
-          align-items:center!important;
-          gap:4px!important;
-          min-height:0!important;
-          margin:0!important;
-          padding:0!important;
-          border:0!important;
-          border-radius:0!important;
-          background:transparent!important;
-          box-shadow:none!important;
-          color:#6b756b!important;
-          opacity:.76!important;
-          font:6.8px/1.25 var(--mono)!important;
-        }
+        #modalUniverse{display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:5px 8px!important;min-width:0!important}
+        #modalUniverse .universe-link{display:inline-flex!important;align-items:center!important;gap:4px!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:#6b756b!important;opacity:.76!important;font:6.8px/1.25 var(--mono)!important}
         #modalUniverse .universe-link .ui-icon{width:8px!important;height:8px!important;opacity:.66!important}
       }
     `;
@@ -227,12 +153,14 @@
   }
 
   ensurePresentationStyles();
+  ensureDrawerReset();
 
   const originalRender=window.render;
   if(typeof originalRender==='function'&&!originalRender.__facetPresentationWrapped){
     const wrapped=function(...args){
       const result=originalRender.apply(this,args);
       decorateCards(document.querySelector('#grid')||document);
+      ensureDrawerReset();
       return result;
     };
     wrapped.__facetPresentationWrapped=true;
@@ -243,6 +171,7 @@
     const a=patch(list),b=patch(window.BOTS);
     if((a||b)&&typeof window.render==='function')window.render();
     else decorateCards(document.querySelector('#grid')||document);
+    ensureDrawerReset();
   }
 
   refresh(window.BOTS);

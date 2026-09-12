@@ -11,6 +11,8 @@
     .public-summary-section{display:grid;gap:5px}
     .public-summary-section h4{margin:0;text-transform:uppercase}
     .public-summary-section p{margin:0!important;font:11.3px/1.52 Arial,sans-serif!important;color:#c0c6bb!important}
+    .public-summary-continuation{display:grid;gap:7px}
+    .public-summary-continuation p{margin:0!important;font:11.3px/1.52 Arial,sans-serif!important;color:#c0c6bb!important}
     .public-summary-chapters{display:grid;gap:7px}
     .public-summary-chapter{padding-left:10px;border-left:1px solid rgba(125,139,111,.42)}
     .public-summary-chapter b{display:block;font:700 8.4px/1.4 var(--mono);color:#bac3ae;margin-bottom:3px}
@@ -37,7 +39,7 @@
     const stop=lines.findIndex(x=>creatorStop.test(x)||promoStop.test(x));
     if(stop>=0)lines=lines.slice(0,stop);
     while(lines.length&&!lines[lines.length-1])lines.pop();
-    const out={hook:'',lead:'',meta:[],sections:[],chapters:[]};
+    const out={hook:'',lead:'',meta:[],sections:[],chapters:[],continuation:[]};
     let i=0;
     while(i<lines.length&&!lines[i])i++;
     if(i<lines.length && /^['"“].+['"”]$/.test(lines[i])) out.hook=lines[i++];
@@ -58,6 +60,7 @@
       if(current&&!current.kind){current.text+=(current.text?' ':'')+line;continue}
       const n=norm(line);
       if(leadNorm&&n&&((n===leadNorm)||n.includes(leadNorm)||leadNorm.includes(n)))continue;
+      out.continuation.push(line);
     }
     return out;
   }
@@ -70,6 +73,7 @@
     if(d.lead)html+=`<div class="public-summary-lead">${esc(d.lead)}</div>`;
     if(meta.length)html+=`<div class="public-summary-meta">${meta.map(([k,v])=>`<b>${esc(k)}</b><span>${esc(v)}</span>`).join('')}</div>`;
     html+=d.sections.filter(x=>x.text).map(x=>`<section class="public-summary-section"><h4>${esc(x.title)}</h4><p>${esc(x.text)}</p></section>`).join('');
+    if(d.continuation.length)html+=`<div class="public-summary-continuation">${d.continuation.map(line=>`<p>${esc(line)}</p>`).join('')}</div>`;
     if(d.chapters.length)html+=`<section class="public-summary-section"><h4>CHAPTERS</h4><div class="public-summary-chapters">${d.chapters.map(x=>`<div class="public-summary-chapter"><b>${esc(x.title)}</b>${x.text?`<p>${esc(x.text)}</p>`:''}</div>`).join('')}</div></section>`;
     if(html==='<div class="public-summary">')html+='<div class="modal-public-empty">NO PUBLIC DESCRIPTION AVAILABLE</div>';
     return html+'</div>';

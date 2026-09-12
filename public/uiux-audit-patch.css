@@ -39,7 +39,6 @@
   pointer-events:none;
   background:linear-gradient(90deg,transparent,var(--bg));
 }
-.quick-list.quick-expanded~.tag-scroll-hint+.tag-zone:after{display:none}
 .quick-list button.active{
   background:#3a261d!important;
   border-color:#b0714f!important;
@@ -130,22 +129,60 @@
 }
 .terminal-back-home:hover{border-color:#566050;color:#d2d9ca;background:#191e18}
 
-/* ---------- Mobile: preserve the compact app-like checkpoint ---------- */
+/* ---------- Mobile: checkpoint wins; audit only tightens rough edges ---------- */
 @media(max-width:760px){
-  .hero{height:190px!important}
-  .card-body{min-height:0!important}
-  .card-title{min-height:0!important}
-  .card-short{min-height:0;max-height:none}
-  .card-tags{min-height:24px;max-height:24px}
-  .card-tags button,.card-tags span{height:24px;max-width:43%;padding:5px 6px!important}
+  /* Restore v1.5/v1.6 compact hero instead of overriding it. */
+  .hero{height:88px!important;min-height:88px!important;max-height:88px!important}
+  .hero-art{background-size:auto 88px!important}
+
+  /* Result metadata belongs near the records, not inside the top action row. */
+  .toolbar-meta{
+    grid-column:1 / -1!important;
+    width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:2px 2px 0!important;
+    border-left:0!important;
+    justify-content:flex-end!important;
+    gap:8px!important;
+    opacity:.72;
+  }
+  .toolbar-meta .page-size-wrap,.toolbar-meta .total-count{font-size:6.5px!important}
+
+  .card-body{min-height:0!important;padding-top:7px!important}
+  .card-title{min-height:0!important;font-size:13px!important;line-height:1.12!important}
+  .card-author{margin-top:4px!important;font-size:7.5px!important}
+  .card-meta{margin-top:5px!important;gap:3px!important}
+  .meta-token{min-height:22px!important;padding:3px 5px!important;font-size:6.5px!important}
+  .card-short{min-height:0!important;max-height:29px!important;margin-top:6px!important;font-size:9.5px!important;line-height:1.42!important}
+  .card-tags{min-height:24px!important;max-height:24px!important;margin-top:6px!important;gap:4px!important}
+  .card-tags button,.card-tags span{height:24px!important;max-width:43%!important;padding:5px 6px!important;font-size:8px!important}
+  .card-hashtags{margin-top:4px!important;min-height:12px!important;max-height:12px!important}
+  .card-hashtags button,.card-hashtags span{font-size:7.5px!important}
+
+  /* Modal image should show the character instead of aggressively cropping it. */
+  .modal-cover{height:auto!important;min-height:0!important;aspect-ratio:16/10!important;background:#0d100d!important}
+  .modal-cover img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center top!important;background:#0d100d!important}
+  .modal-card{width:min(94vw,500px)!important;max-height:94dvh!important}
+  .modal-content{padding:10px!important}
+  .modal-action-groups{gap:6px!important}
+  .modal-action-group{padding:7px!important}
+  .modal-actions a{min-height:30px!important;height:30px!important;font-size:7.5px!important}
+
   .drawer-list{padding-right:9px!important}
   .catalog-drawer{background:#101310!important}
-  .tag-zone:after{bottom:9px;height:29px;width:26px}
+  .tag-zone:after{bottom:3px;height:27px;width:22px}
   .card-data-toggle:after{display:none}
 }
 
 @media(max-width:420px){
-  .card-title{font-size:13px!important}
-  .card-author{font-size:7.5px!important}
-  .card-tags button,.card-tags span{max-width:44%;font-size:8px!important}
+  .card-title{font-size:12.5px!important}
+  .card-author{font-size:7px!important}
+  .card-tags button,.card-tags span{max-width:44%!important;font-size:7.5px!important}
+  .modal-cover{aspect-ratio:4/3!important}
+}
+
+@media(max-width:370px){
+  .hero{height:82px!important;min-height:82px!important;max-height:82px!important}
+  .hero-art{background-size:auto 82px!important}
 }

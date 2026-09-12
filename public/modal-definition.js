@@ -19,13 +19,39 @@
   async function loadDefinition(bot){
     const uuid=bot?.janitorUuid;if(!uuid)return null;
     if(cache.has(uuid))return cache.get(uuid);
-    const promise=(async()=>{const r=await fetchWithTimeout(`/api/characters/${encodeURIComponent(uuid)}`);if(!r.ok)throw new Error(`DETAIL_HTTP_${r.status}`);const payload=await r.json(),d=payload?.character||{};return{description:String(d.full||'').trim(),scenario:String(d.scenario||'').trim(),intros:cleanList(d.intros?.[0],d.intros?.slice(1))}})();
+    const promise=(async()=>{
+      const r=await fetchWithTimeout(`/api/characters/${encodeURIComponent(uuid)}`);
+      if(!r.ok)throw new Error(`DETAIL_HTTP_${r.status}`);
+      const payload=await r.json(),d=payload?.character||{};
+      return{
+        publicDescription:String(d.publicDescription||d.short||'').trim(),
+        description:String(d.full||'').trim(),
+        scenario:String(d.scenario||'').trim(),
+        intros:cleanList(d.intros?.[0],d.intros?.slice(1))
+      };
+    })();
     cache.set(uuid,promise);
     try{return await promise}catch(e){cache.delete(uuid);throw e}
   }
 
-  function preservePublicDescription(bot){if(!bot||bot.publicDescription)return;const source=String(bot.full||bot.short||'').trim();if(source)bot.publicDescription=source}
-  function apply(bot,data){if(!bot||!data)return;preservePublicDescription(bot);bot.full=data.description||'';bot.scenario=data.scenario||'';bot.intros=data.intros||[];bot._definitionReady=true;bot._definitionLoading=false;bot._definitionError=''}
+  function preservePublicDescription(bot){
+    if(!bot||bot.publicDescription)return;
+    const source=String(bot.full||bot.short||'').trim();
+    if(source)bot.publicDescription=source;
+  }
+  function apply(bot,data){
+    if(!bot||!data)return;
+    if(data.publicDescription){
+      bot.publicDescription=data.publicDescription;
+      bot.short=data.publicDescription;
+    }else preservePublicDescription(bot);
+    bot.full=data.description||'';
+    bot.scenario=data.scenario||'';
+    bot.intros=data.intros||[];
+    bot._definitionReady=true;
+    bot._definitionLoading=false;
+    bot._definitionError='';
+  }
   function modalStillShows(bot){const modal=document.querySelector('#modal');if(!modal||modal.hidden)return false;const uuid=String(bot?.janitorUuid||'').toLowerCase();return !!uuid&&uuid===activeUuid}
 
   function repaint(bot){

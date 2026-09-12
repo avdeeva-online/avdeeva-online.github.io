@@ -1,5 +1,18 @@
 /* ARCHIVE.EXE — UI/UX audit patch 2026-09-12
-   Safe visual fixes layered after the existing mobile/catalog checkpoints. */
+   Final design-audit layer. Existing mobile/catalog behavior stays authoritative. */
+
+/* ---------- Shared design tokens ---------- */
+:root{
+  --audit-text:#d8ddd3;
+  --audit-text-strong:#f1ede4;
+  --audit-muted:#879185;
+  --audit-muted-2:#687268;
+  --audit-line:rgba(72,84,70,.48);
+  --audit-line-soft:rgba(72,84,70,.28);
+  --audit-control-h:34px;
+  --audit-radius:5px;
+  --audit-gap:7px;
+}
 
 /* ---------- Desktop hero: keep the archive mood, expose the catalog sooner ---------- */
 @media (min-width:761px){
@@ -10,18 +23,34 @@
       linear-gradient(90deg,transparent 0%,transparent 48%,rgba(8,10,8,.18) 68%,rgba(8,10,8,.5) 100%);
   }
   .hero-copy{text-shadow:0 2px 22px rgba(0,0,0,.72)}
-
-  /* Keep modal paging controls visually separate from the card. */
-  .modal-prev{left:clamp(34px,5vw,76px)!important}
-  .modal-next{right:clamp(34px,5vw,76px)!important}
 }
 
-/* ---------- Toolbar hierarchy ---------- */
+/* ---------- Toolbar hierarchy / grouping ---------- */
+@media(min-width:761px){
+  .toolbar-row{
+    display:grid!important;
+    grid-template-columns:auto auto minmax(280px,1fr) auto auto auto!important;
+    grid-template-areas:
+      "catalog import search primary secondary random meta"!important;
+    gap:7px!important;
+    align-items:center!important;
+  }
+  #catalogOpen{grid-area:catalog}
+  #importOpen{grid-area:import}
+  .searchbar{grid-area:search;min-width:0!important;width:100%!important}
+  .primary-group{grid-area:primary;display:flex!important;gap:5px!important}
+  .secondary-group{grid-area:secondary;display:flex!important;gap:5px!important}
+  #randomBtn{grid-area:random}
+  .toolbar-meta{grid-area:meta}
+  .toolbar .control,.searchbar{height:var(--audit-control-h)!important;min-height:var(--audit-control-h)!important}
+  .searchbar input{min-width:0!important}
+}
+
 .toolbar-meta{
   margin-left:auto;
   min-width:max-content;
   padding:0 2px 0 8px!important;
-  border-left:1px solid rgba(69,77,66,.5);
+  border-left:1px solid var(--audit-line);
 }
 #catalogOpen{font-weight:700}
 #importOpen{
@@ -31,6 +60,24 @@
 }
 #importOpen:hover{border-color:#80694f;background:#211b16;color:#e1c8a6}
 .random-trigger{font-weight:700}
+
+/* Clear filters should read as a state action, not another filter pill. */
+#resetBtn:not([hidden]){
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:25px!important;
+  padding:0 9px!important;
+  border:1px solid rgba(133,103,81,.52)!important;
+  border-radius:var(--audit-radius)!important;
+  background:rgba(58,38,29,.36)!important;
+  color:#d5b79d!important;
+  font:700 7.4px/1 var(--mono)!important;
+  letter-spacing:.08em!important;
+  cursor:pointer!important;
+}
+#resetBtn:not([hidden]):hover{background:rgba(74,48,35,.58)!important;border-color:#8d664d!important;color:#f0d1b5!important}
+#clearQuickTags:not([hidden]){color:#c8aa8e!important}
+.active-filters{gap:5px!important}
 
 /* ---------- Quick-tag rail: obvious overflow + selected state ---------- */
 .tag-zone:after{
@@ -43,31 +90,38 @@
   pointer-events:none;
   background:linear-gradient(90deg,transparent,var(--bg));
 }
+.quick-list{gap:5px!important}
+.quick-list button{
+  min-height:25px!important;
+  border-radius:var(--audit-radius)!important;
+  padding:0 8px!important;
+  line-height:1!important;
+}
 .quick-list button.active{
   background:#3a261d!important;
   border-color:#b0714f!important;
   color:#ffe1cf!important;
   box-shadow:inset 0 0 0 1px rgba(205,132,91,.12)!important;
 }
-#resetBtn:not([hidden]),#clearQuickTags:not([hidden]){color:#c8aa8e!important}
 
 /* ---------- Catalog cards: consistent rhythm / hierarchy ---------- */
 .card-body{display:flex;flex-direction:column;min-height:145px}
 .card-title{
   min-height:34px;
-  color:#f1ede4!important;
+  color:var(--audit-text-strong)!important;
   font-weight:800!important;
   letter-spacing:-.01em;
 }
 .card-title span{color:#6c746b!important;font-weight:400!important}
-.card-author{font-size:8px!important;color:#697168!important;letter-spacing:.035em}
-.card-author button{color:#8f9988!important}
+.card-author{font-size:8px!important;color:#737d72!important;letter-spacing:.035em}
+.card-author button{color:#9aa594!important}
 .card-short{
   min-height:29px;
   max-height:29px;
   -webkit-line-clamp:2!important;
   line-clamp:2;
   overflow:hidden;
+  color:#aeb5ab!important;
 }
 .card-tags{
   min-height:25px;
@@ -75,19 +129,23 @@
   flex-wrap:nowrap!important;
   overflow:hidden;
   align-items:center;
+  gap:5px!important;
 }
 .card-tags button,.card-tags span{
+  box-sizing:border-box!important;
   flex:0 1 auto;
   min-width:0;
   max-width:38%;
-  height:24px;
+  height:24px!important;
+  min-height:24px!important;
   display:inline-flex;
   align-items:center;
+  justify-content:center;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  border-radius:5px!important;
-  padding:5px 7px!important;
+  border-radius:var(--audit-radius)!important;
+  padding:0 7px!important;
   line-height:1!important;
 }
 .card-tags .tag-more{flex:0 0 auto;max-width:none!important;cursor:help!important}
@@ -97,11 +155,45 @@
   overflow:hidden;
   flex-wrap:nowrap!important;
 }
+.meta-token{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  line-height:1!important;
+  vertical-align:middle!important;
+}
 
-/* ---------- Drawer: scrollbar never eats counts/text ---------- */
+/* ---------- Drawer: quieter tabs, stronger labels, safe scrollbar ---------- */
 .drawer-list{padding-right:12px!important;scrollbar-gutter:stable}
 .drawer-list>*{max-width:100%}
 .catalog-drawer{background:#111411!important}
+.drawer-tab em{display:none!important}
+.drawer-tab span{letter-spacing:.075em!important}
+.drawer-head-copy small,.drawer-head-copy span,.drawer-foot,.drawer-status{color:#798378!important}
+.drawer-head-copy strong{color:#d5dbd0!important}
+.drawer-query-row{gap:7px!important}
+.drawer-search,.drawer-tool-btn{min-height:32px!important}
+
+/* ---------- Typographic hierarchy / eyebrow labels ---------- */
+.tag-label,.modal-setting-heading,.modal-author-row,.modal-action-group>small,.mobile-action-label,.drawer-head-copy small,.drawer-foot,.tag-strip-head small{
+  letter-spacing:.095em!important;
+  text-transform:uppercase!important;
+}
+.modal-setting-heading,.modal-author-row,.modal-action-group>small,.tag-label{color:#8f9a8d!important}
+.total-count,.page-size-btn,.catalog-result-status{color:#7d887c!important}
+
+/* Emoji/symbol alignment: keep existing symbols, make their footprint consistent. */
+.meta-token,.modal-primary-tags button,.card-tags button,.quick-list button,.drawer-tab{
+  font-variant-emoji:text;
+}
+.meta-token{gap:4px!important}
+.random-mark,.setting-filter-mark,.hash-mark,.pov-cycle-label,.hamb{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:1em;
+  line-height:1!important;
+}
 
 /* ---------- Detail modal: clearer interactive affordances ---------- */
 .modal-lang{border-color:rgba(130,146,116,.55)!important}
@@ -117,7 +209,8 @@
 .card-data-toggle:after{content:"EXPAND";margin-left:auto;margin-right:8px;color:#65705f;font:6px var(--mono);letter-spacing:.1em}
 .card-data-shell.open .card-data-toggle:after{content:"COLLAPSE"}
 
-/* ---------- Lost directory: keep error red readable ---------- */
+/* ---------- Lost directory: keep error/muted text readable ---------- */
+.terminal-lines{color:#9ca69a!important}
 .terminal-lines .warn{color:#c88468!important}
 .terminal-card{background:#0f120f!important}
 .terminal-back-home{
@@ -126,7 +219,7 @@
   border:1px solid #343c32;
   border-radius:5px;
   background:#121612;
-  color:#929c88;
+  color:#a3ad9a;
   font:8px var(--mono);
   cursor:pointer;
   padding:0 12px;
@@ -135,11 +228,9 @@
 
 /* ---------- Mobile: checkpoint wins; audit only tightens rough edges ---------- */
 @media(max-width:760px){
-  /* Restore v1.5/v1.6 compact hero instead of overriding it. */
   .hero{height:88px!important;min-height:88px!important;max-height:88px!important}
   .hero-art{background-size:auto 88px!important}
 
-  /* Make the mixed control groups participate in one predictable grid. */
   .toolbar-row{
     display:grid!important;
     grid-template-columns:repeat(12,minmax(0,1fr))!important;
@@ -159,7 +250,6 @@
   .secondary-group>.control:nth-child(2){grid-column:9 / 11!important;grid-row:3!important}
   .secondary-group>.control:nth-child(3){grid-column:11 / 13!important;grid-row:3!important}
 
-  /* Result metadata belongs below controls, not squeezed between actions. */
   .toolbar-meta{
     grid-column:1 / 13!important;
     grid-row:4!important;
@@ -170,9 +260,12 @@
     border-left:0!important;
     justify-content:flex-end!important;
     gap:8px!important;
-    opacity:.72;
+    opacity:.76;
   }
   .toolbar-meta .page-size-wrap,.toolbar-meta .total-count{font-size:6.5px!important}
+
+  .tags-results-actions{gap:7px!important}
+  #resetBtn:not([hidden]){min-height:23px!important;padding:0 7px!important;font-size:6.8px!important}
 
   .card-body{min-height:0!important;padding-top:7px!important}
   .card-title{min-height:0!important;font-size:13px!important;line-height:1.12!important}
@@ -181,11 +274,14 @@
   .meta-token{min-height:22px!important;padding:3px 5px!important;font-size:6.5px!important}
   .card-short{min-height:0!important;max-height:29px!important;margin-top:6px!important;font-size:9.5px!important;line-height:1.42!important}
   .card-tags{min-height:24px!important;max-height:24px!important;margin-top:6px!important;gap:4px!important}
-  .card-tags button,.card-tags span{height:24px!important;max-width:43%!important;padding:5px 6px!important;font-size:8px!important}
+  .card-tags button,.card-tags span{height:24px!important;max-width:43%!important;padding:0 6px!important;font-size:8px!important}
   .card-hashtags{margin-top:4px!important;min-height:12px!important;max-height:12px!important}
   .card-hashtags button,.card-hashtags span{font-size:7.5px!important}
 
-  /* Modal image should show the character instead of aggressively cropping it. */
+  /* Keep the existing compact filter/popover workflow instead of adding a second mobile drawer. */
+  .filter-trigger,.pov-cycle,.icon-toggle,#sortTrigger{min-width:0!important;overflow:hidden!important}
+  .filter-trigger span,.pov-cycle-label,#sortLabel{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+
   .modal-cover{height:auto!important;min-height:0!important;aspect-ratio:16/10!important;background:#0d100d!important}
   .modal-cover img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center top!important;background:#0d100d!important}
   .modal-card{width:min(94vw,500px)!important;max-height:94dvh!important}

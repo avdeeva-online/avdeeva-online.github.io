@@ -41,7 +41,6 @@
   patchBots(window.BOTS);
   window.addEventListener('archive:catalog-updated',e=>{patchBots(e.detail?.characters);patchBots(window.BOTS)});
   window.addEventListener('archive:modal-public-ready',()=>queueMicrotask(patchModal));
-  window.addEventListener('archive:modal-definition-ready',()=>queueMicrotask(patchModal));
 
   document.addEventListener('click',e=>{
     const a=e.target.closest('#openAuthor');

@@ -26,6 +26,13 @@
     }
   }
 
+  function normalizeAuditLabels(){
+    const reset=document.querySelector('#resetBtn');
+    if(reset)reset.textContent='CLEAR FILTERS';
+    const drawerSearch=document.querySelector('#drawerSearch');
+    if(drawerSearch)drawerSearch.placeholder='SEARCH...';
+  }
+
   function normalizeCardRow(row){
     if(!row||row.dataset.auditNormalized==='1')return;
     const more=row.querySelector('.tag-more');
@@ -151,6 +158,7 @@
   }
 
   cleanBotData();
+  normalizeAuditLabels();
   scan(document.body);
   annotateLorebookState();
   ensureTerminalExit();
@@ -162,6 +170,7 @@
   const observer=new MutationObserver(mutations=>{
     let lorebookMayHaveChanged=false;
     let modalMayHaveChanged=false;
+    let labelsMayHaveChanged=false;
     for(const mutation of mutations){
       if(mutation.target?.id==='downloadLore')lorebookMayHaveChanged=true;
       if(mutation.target?.id==='modal'||mutation.target?.classList?.contains('modal-card'))modalMayHaveChanged=true;
@@ -170,10 +179,12 @@
           scan(node);
           if(node.id==='downloadLore'||node.querySelector?.('#downloadLore'))lorebookMayHaveChanged=true;
           if(node.id==='modal'||node.matches?.('.modal-card')||node.querySelector?.('#modal,.modal-card'))modalMayHaveChanged=true;
+          if(node.id==='resetBtn'||node.id==='drawerSearch'||node.querySelector?.('#resetBtn,#drawerSearch'))labelsMayHaveChanged=true;
         }
       }
     }
     if(lorebookMayHaveChanged)annotateLorebookState();
+    if(labelsMayHaveChanged)normalizeAuditLabels();
     if(modalMayHaveChanged)scheduleArrowPosition();
   });
   observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','aria-disabled','href','hidden']});

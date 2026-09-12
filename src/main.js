@@ -99,7 +99,8 @@ async function universeReview(request,env){
       candidates.push({reviewKey,uuid:row.janitor_uuid,name:row.name,author:row.author,currentUniverses:current,hashtag:`#${tag}`,proposedUniverse:proposed,confidence,reasons});
     }
   }
-  candidates.sort((a,b)=>({HIGH:0,MEDIUM:1,LOW:2}[a.confidence]-({HIGH:0,MEDIUM:1,LOW:2}[b.confidence])||a.author.localeCompare(b.author)||a.proposedUniverse.localeCompare(b.proposedUniverse)||a.name.localeCompare(b.name));
+  const confidenceRank={HIGH:0,MEDIUM:1,LOW:2};
+  candidates.sort((a,b)=>(confidenceRank[a.confidence]??99)-(confidenceRank[b.confidence]??99)||a.author.localeCompare(b.author)||a.proposedUniverse.localeCompare(b.proposedUniverse)||a.name.localeCompare(b.name));
   const groups=new Map();
   for(const row of rows){for(const u of universeList(row)){const key=universeKey(u);if(!groups.has(key))groups.set(key,{name:existing.get(key)||u,count:0,authors:new Set(),bots:[]});const g=groups.get(key);g.count++;g.authors.add(row.author);if(g.bots.length<8)g.bots.push({uuid:row.janitor_uuid,name:row.name,author:row.author})}}
   const universes=[...groups.entries()].map(([key,g])=>({name:g.name,count:g.count,authors:[...g.authors].sort(),bots:g.bots,flagged:flags.has(`flag:${key}`),note:flags.get(`flag:${key}`)||''})).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));

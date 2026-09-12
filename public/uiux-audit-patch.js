@@ -37,13 +37,6 @@
     if(drawerSearch)drawerSearch.placeholder='SEARCH...';
   }
 
-  function annotateLorebookState(){
-    const link=document.querySelector('#downloadLore');
-    if(!link)return;
-    const unavailable=link.matches('[aria-disabled="true"],.disabled,[disabled]')||/not available/i.test(link.textContent||'');
-    link.title=unavailable?'No lorebook is attached to this record.':'';
-  }
-
   function ensureTerminalExit(){
     const retry=document.querySelector('#terminalRetry');
     if(!retry||document.querySelector('.terminal-back-home'))return;
@@ -90,12 +83,11 @@
 
   let arrowFrame=0;
   function scheduleArrowPosition(){
-    cancelAnimationFrame(arrowFrame);
-    arrowFrame=requestAnimationFrame(()=>requestAnimationFrame(positionModalArrows));
+    if(arrowFrame)cancelAnimationFrame(arrowFrame);
+    arrowFrame=requestAnimationFrame(()=>{arrowFrame=0;positionModalArrows()});
   }
 
   function refreshModalRuntime(){
-    annotateLorebookState();
     requestAnimationFrame(scrubModalText);
     scheduleArrowPosition();
   }
@@ -113,14 +105,4 @@
   window.addEventListener('archive:modal-public-ready',refreshModalRuntime);
   window.addEventListener('archive:modal-definition-ready',refreshModalRuntime);
   window.addEventListener('resize',scheduleArrowPosition,{passive:true});
-
-  const modal=document.querySelector('#modal');
-  if(modal){
-    new MutationObserver(scheduleArrowPosition).observe(modal,{attributes:true,attributeFilter:['hidden']});
-  }
-
-  const lore=document.querySelector('#downloadLore');
-  if(lore){
-    new MutationObserver(annotateLorebookState).observe(lore,{attributes:true,attributeFilter:['class','aria-disabled','href'],childList:true});
-  }
 })();

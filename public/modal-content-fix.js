@@ -1,22 +1,5 @@
 (()=>{
   const style=document.createElement('style');style.id='archiveModalDossierStyles';style.textContent=`
-  @media(min-width:761px){
-    .modal-card{width:min(700px,88vw)!important;height:min(510px,84vh)!important;max-height:min(510px,84vh)!important;grid-template-columns:250px minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important}
-    .modal-cover{height:100%!important;min-height:0!important}
-    .modal-content{height:100%!important;max-height:none!important;min-height:0!important;overflow:hidden!important;padding:16px 17px 12px!important}
-    .modal-content h2{flex:0 0 auto;margin:7px 0 6px!important;font-size:22px!important;line-height:.98!important}
-    .modal-author-row,.modal-topline,.modal-universe-row,.modal-tags,.modal-action-groups{flex:0 0 auto}
-    .modal-author-row{margin-bottom:0!important}
-    .modal-action-groups{margin-top:auto!important;padding-top:6px!important;gap:5px!important}
-    .modal-action-group{grid-template-columns:72px minmax(0,1fr)!important;gap:5px!important}
-    .modal-action-group>small{margin:6px 0 0!important;font-size:7px!important}
-    .modal-actions{gap:5px!important}
-    .modal-actions a{height:26px!important;min-height:26px!important;padding:0 7px!important;font-size:7.5px!important}
-    .modal-tags{margin-top:4px!important}
-    .modal-primary-tags button{padding:3px 5px!important;font-size:8px!important}
-    .modal-hashtags{margin-top:4px!important;padding-top:4px!important}
-    .modal-hashtags button{font-size:8px!important}
-  }
   .card-data-shell{flex:0 0 auto;min-height:0;margin:2px 0 0;border-bottom:1px solid rgba(73,83,70,.34)}.card-data-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;height:25px;border:0;background:transparent;color:#838e7b;padding:0;font:7px var(--mono);letter-spacing:.09em;cursor:pointer;text-align:left}.card-data-toggle:hover{color:#c6cebc}.card-data-toggle span:last-child{font-size:10px;transition:transform .16s ease}.card-data-shell.open .card-data-toggle span:last-child{transform:rotate(180deg)}.card-data-body{display:none;height:120px;max-height:120px;overflow:hidden}.card-data-shell.open .card-data-body{display:block}.card-data-body .modal-tabs{margin-top:0;flex:0 0 auto}.card-data-body .modal-text-wrap{height:89px!important;max-height:89px!important;min-height:0!important;overflow:auto!important}
   .modal-dossier{padding:6px 2px 8px;color:#aab0a6;font:11px/1.5 Arial,sans-serif}.dossier-loading,.dossier-error{padding:10px 2px;color:#6f796b;font:8px var(--mono);letter-spacing:.08em}.dossier-error{color:#9b806e}.dossier-error b{display:block;margin-bottom:5px;color:#c2a58e;font-weight:600}.dossier-error small{color:#697267;font:7px var(--mono)}.dossier-section{padding:0 0 8px;margin:0 0 7px;border-bottom:1px solid rgba(72,81,70,.38)}.dossier-section:last-child{border-bottom:0;margin-bottom:0}.dossier-title{display:flex;align-items:center;gap:6px;width:100%;min-height:16px;padding:0;margin:0 0 5px;border:0;background:transparent;color:#c9cfba;font:700 8px/16px var(--mono);letter-spacing:.07em;text-transform:uppercase;text-align:left;cursor:pointer}.dossier-title:hover{color:#e0e5d2}.dossier-arrow{display:flex;align-items:center;justify-content:center;flex:0 0 9px;width:9px;height:16px;color:#899673;font:700 11px/16px var(--mono);transform:rotate(0);transform-origin:center;transition:transform .16s ease}.dossier-section.is-collapsed .dossier-arrow{transform:rotate(-90deg)}.dossier-body{display:block}.dossier-section.is-collapsed .dossier-body{display:none}.dossier-section.is-collapsed{padding-bottom:5px;margin-bottom:5px}.dossier-section.is-collapsed .dossier-title{margin-bottom:0}.dossier-list{display:grid;gap:4px;margin:0;padding:0;list-style:none}.dossier-list li{position:relative;padding-left:11px;color:#a6aca2}.dossier-list li:before{content:'·';position:absolute;left:1px;top:0;color:#78836c;font-weight:700}.dossier-list strong{color:#c5cab9;font-weight:600}.dossier-paragraph{margin:0 0 6px;color:#a8aea4;white-space:pre-wrap;overflow-wrap:break-word}.dossier-paragraph:last-child{margin-bottom:0}.dossier-plain{display:grid;gap:6px}.modal-intros .intro-display{white-space:pre-wrap;overflow-wrap:break-word}
   @media(max-width:760px){.modal-content{overflow:visible!important}.card-data-body{height:auto;max-height:none}.card-data-body .modal-text-wrap{height:auto!important;max-height:150px!important}}

@@ -166,26 +166,32 @@
   scheduleArrowPosition();
 
   window.addEventListener('resize',scheduleArrowPosition,{passive:true});
+  window.addEventListener('archive:modal-public-ready',()=>{
+    annotateLorebookState();
+    scheduleArrowPosition();
+  });
 
-  const observer=new MutationObserver(mutations=>{
-    let lorebookMayHaveChanged=false;
-    let modalMayHaveChanged=false;
+  /* Only new DOM nodes are scanned globally. Attribute watching is scoped below. */
+  const childObserver=new MutationObserver(mutations=>{
     let labelsMayHaveChanged=false;
     for(const mutation of mutations){
-      if(mutation.target?.id==='downloadLore')lorebookMayHaveChanged=true;
-      if(mutation.target?.id==='modal'||mutation.target?.classList?.contains('modal-card'))modalMayHaveChanged=true;
       for(const node of mutation.addedNodes){
-        if(node.nodeType===1){
-          scan(node);
-          if(node.id==='downloadLore'||node.querySelector?.('#downloadLore'))lorebookMayHaveChanged=true;
-          if(node.id==='modal'||node.matches?.('.modal-card')||node.querySelector?.('#modal,.modal-card'))modalMayHaveChanged=true;
-          if(node.id==='resetBtn'||node.id==='drawerSearch'||node.querySelector?.('#resetBtn,#drawerSearch'))labelsMayHaveChanged=true;
-        }
+        if(node.nodeType!==1)continue;
+        scan(node);
+        if(node.id==='resetBtn'||node.id==='drawerSearch'||node.querySelector?.('#resetBtn,#drawerSearch'))labelsMayHaveChanged=true;
       }
     }
-    if(lorebookMayHaveChanged)annotateLorebookState();
     if(labelsMayHaveChanged)normalizeAuditLabels();
-    if(modalMayHaveChanged)scheduleArrowPosition();
   });
-  observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','aria-disabled','href','hidden']});
+  childObserver.observe(document.body,{childList:true,subtree:true});
+
+  const modal=document.querySelector('#modal');
+  if(modal){
+    new MutationObserver(scheduleArrowPosition).observe(modal,{attributes:true,attributeFilter:['hidden','class']});
+  }
+
+  const lore=document.querySelector('#downloadLore');
+  if(lore){
+    new MutationObserver(annotateLorebookState).observe(lore,{attributes:true,attributeFilter:['class','aria-disabled','href'],childList:true,subtree:true});
+  }
 })();

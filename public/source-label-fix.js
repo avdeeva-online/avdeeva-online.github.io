@@ -1,6 +1,9 @@
 (()=>{
   const clean=s=>String(s||'').replace(/\r/g,'').replace(/\*+/g,'').trim();
   const missing=s=>!clean(s)||clean(s).toUpperCase()==='UNCLASSIFIED';
+  const universeKey=s=>clean(s).toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu,'');
+  const uniqueUniverses=values=>{const out=[],seen=new Set();for(const raw of values||[]){const value=clean(raw),key=universeKey(value);if(!value||!key||seen.has(key))continue;seen.add(key);out.push(value)}return out};
+
   function explicitUniverse(bot){
     if(!bot||!missing(bot.universe))return null;
     const source=String(bot.publicDescription||bot.full||bot.short||'').replace(/\r/g,'');
@@ -12,15 +15,63 @@
     }
     return null;
   }
+
+  function curatedReplacement(value,bot){
+    const raw=clean(value),key=universeKey(raw),nameKey=universeKey(bot?.nameEn||bot?.name||'');
+    if(key.startsWith('thewild')&&key.includes('aka'))return['The Wild'];
+    if(key.includes('demigods')&&key.includes('greekgod'))return['Demi Gods'];
+    if(key==='helluniversityxvdb')return['Hell University'];
+    if(key.includes('thewild')&&key.includes('miniseries'))return['Hell University','HellU Titans'];
+    if(key==='endplot')return['The Wild'];
+    if(key==='birthdaybot')return['Kingtober'];
+    if(key==='bayucrewandvoodooboys'||key==='bayucrewxvoodooboys')return['Bayu Crew','Voodoo Boys'];
+    if(key==='voodooboysxbayoucrew'||key==='voodooboysandbayoucrew')return['Voodoo Boys','Bayu Crew'];
+    if(key==='thefirmxthevalentinos'||key==='valentinosxthefirm')return['The Firm','Valentinos'];
+    if(key.startsWith('intergalacticby'))return['Intergalactic','Collabs'];
+    if(key==='crownrecordsrappercollab')return['Collabs'];
+    if(key==='fourhorsemencollab')return['Collabs'];
+    if(key==='footballfightboyscollab')return['Collabs'];
+    if(key==='ledgercollab')return['Collabs'];
+    if(key==='bridgertoninspiredcollab')return['Bridgerton','Collabs'];
+    if(key==='bridgertoninspiredau')return['Bridgerton'];
+    if(key==='hellu'){
+      if(nameKey.includes('ashton')&&nameKey.includes('dewald'))return['Hell University','DeWald'];
+      return['Hell University'];
+    }
+    if(key==='helluuniversityoutcasts')return['Hell University'];
+    if(key.includes('hellvalkyries')&&(key.includes('woman')||key.includes('women')))return['Hell University'];
+    if(key.startsWith('dewaldbotsmadeespeciallyfor'))return['DeWald'];
+    if((key.includes('walt')||key.includes('dewald'))&&key.includes('botsmadeforme'))return['DeWald'];
+    if(key==='aualt'&&nameKey.includes('emilio')&&nameKey.includes('royal'))return['Bayu Crew Next Gen'];
+    return[raw];
+  }
+
+  function curateBotUniverses(bot){
+    if(!bot)return false;
+    const current=Array.isArray(bot.universes)&&bot.universes.length?bot.universes:[bot.universe].filter(Boolean);
+    if(!current.length)return false;
+    const next=uniqueUniverses(current.flatMap(value=>curatedReplacement(value,bot)));
+    const before=uniqueUniverses(current);
+    const changed=before.length!==next.length||before.some((value,index)=>universeKey(value)!==universeKey(next[index]));
+    if(!changed)return false;
+    bot.universes=next;
+    bot.universe=next[0]||'';
+    bot.universeCuration='manual-confirmed-v1';
+    return true;
+  }
+
   function patch(list){
     let changed=false;
     if(!Array.isArray(list))return changed;
     for(const bot of list){
       const found=explicitUniverse(bot);
-      if(!found)continue;
-      bot.universe=found.value;
-      if(!bot.universeSourceField)bot.universeSourceField=`source-description:${found.label}`;
-      changed=true;
+      if(found){
+        bot.universe=found.value;
+        if(!Array.isArray(bot.universes)||!bot.universes.length)bot.universes=[found.value];
+        if(!bot.universeSourceField)bot.universeSourceField=`source-description:${found.label}`;
+        changed=true;
+      }
+      if(curateBotUniverses(bot))changed=true;
     }
     return changed;
   }

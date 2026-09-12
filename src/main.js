@@ -8,7 +8,7 @@ async function scan(request){const u=new URL(request.url),raw=u.searchParams.get
 
 function arr(v){try{const x=JSON.parse(v||'[]');return Array.isArray(x)?x:[]}catch{return[]}}
 function clean(v){return String(v||'').replace(/\s+/g,' ').trim()}
-function universeKey(v){return clean(v).toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu,'')}
+function universeKey(v){return clean(v).toLocaleLowerCase()}
 function uniq(values){const out=[],seen=new Set();for(const raw of values||[]){const v=clean(raw),k=universeKey(v);if(!v||!k||seen.has(k))continue;seen.add(k);out.push(v)}return out}
 function universeList(row){const raw=arr(row?.universes),source=raw.length?raw:[row?.universe];return uniq(source)}
 function hashtagLabel(v){return clean(v).replace(/^#+/,'').trim()}

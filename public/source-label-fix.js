@@ -59,11 +59,12 @@
     const bot=findBot(card.dataset.id);
     const total=settingCount(bot);
     const visible=meta.querySelectorAll('.card-setting-token').length;
-    if(total>visible){
+    const hidden=Math.max(0,total-visible);
+    if(hidden>0){
       const more=document.createElement('span');
       more.className='card-setting-more';
-      more.textContent=`+${total-visible}`;
-      more.title=`${total-visible} more setting${total-visible-visible===1?'':'s'}`;
+      more.textContent=`+${hidden}`;
+      more.title=`${hidden} more setting${hidden===1?'':'s'}`;
       meta.appendChild(more);
     }
   }
@@ -80,15 +81,20 @@
     const universe=document.querySelector('#modalUniverse');
     const universeRow=document.querySelector('.modal-universe-row');
     if(setting){
-      setting.querySelector('.modal-setting-more')?.remove();
       const buttons=[...setting.querySelectorAll('button')];
       buttons.forEach((button,index)=>button.classList.toggle('modal-setting-extra',index>=2));
-      if(buttons.length>2){
-        const more=document.createElement('span');
-        more.className='modal-setting-more';
-        more.textContent=`+${buttons.length-2}`;
+      const hidden=Math.max(0,buttons.length-2);
+      let more=setting.querySelector('.modal-setting-more');
+      if(hidden>0){
+        if(!more){
+          more=document.createElement('span');
+          more.className='modal-setting-more';
+          setting.appendChild(more);
+        }
+        more.textContent=`+${hidden}`;
         more.title=buttons.slice(2).map(button=>button.textContent.trim()).join(', ');
-        setting.appendChild(more);
+      }else if(more){
+        more.remove();
       }
     }
     if(universe)universe.classList.add('modal-universe-quiet');

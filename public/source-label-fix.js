@@ -53,9 +53,9 @@
 
   function rebuildSettings(meta,bot){
     meta.innerHTML='';
-    const values=settingIds(bot),shown=values.slice(0,3),hidden=values.length-shown.length;
+    const values=settingIds(bot),shown=values.slice(0,2),hidden=values.length-shown.length;
     shown.forEach(id=>{const button=document.createElement('button');button.type='button';button.className='meta-token card-setting-token';button.dataset.quickSetting=id;const mark=document.createElement('span');mark.className='setting-mark';mark.textContent='⌖';const label=document.createElement('span');label.textContent=SETTING_LABELS.get(id)||id;button.append(mark,label);meta.appendChild(button)});
-    const more=makeMore('card-setting-more',hidden,values.slice(3).map(id=>SETTING_LABELS.get(id)||id).join(', '));if(more)meta.appendChild(more);
+    const more=makeMore('card-setting-more',hidden,values.slice(2).map(id=>SETTING_LABELS.get(id)||id).join(', '));if(more)meta.appendChild(more);
     meta.hidden=!values.length;
   }
 
@@ -114,9 +114,15 @@
     if(hidden>0){const more=makeMore(moreClass,hidden,items.slice(3).map(item=>item.textContent.trim()).join(', '));container.appendChild(more)}
   }
 
-  function decorateModalFacets(){
+  function showAllModalSettings(){
     const setting=document.querySelector('#modalSetting');
-    capModalGroup(setting,'button[data-quick-setting]','modal-setting-more');
+    if(!setting)return;
+    setting.querySelector('.modal-setting-more')?.remove();
+    setting.querySelectorAll('button[data-quick-setting]').forEach(button=>button.classList.remove('facet-extra','modal-setting-extra'));
+  }
+
+  function decorateModalFacets(){
+    showAllModalSettings();
     capModalGroup(document.querySelector('#modalUniverse'),'button[data-quick-universe]','modal-universe-more');
     capModalGroup(document.querySelector('#modalTags .modal-primary-tags'),'button[data-tag]','modal-tag-more');
     capModalGroup(document.querySelector('#modalTags .modal-hashtags'),'button[data-hashtag]','modal-hashtag-more');

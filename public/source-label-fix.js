@@ -105,15 +105,6 @@
     root?.querySelectorAll?.('.card').forEach(decorateCard);
   }
 
-  function capModalGroup(container,selector,moreClass){
-    if(!container)return;
-    container.querySelector(`.${moreClass}`)?.remove();
-    const items=[...container.querySelectorAll(selector)];
-    items.forEach((item,index)=>item.classList.toggle('facet-extra',index>=3));
-    const hidden=Math.max(0,items.length-3);
-    if(hidden>0){const more=makeMore(moreClass,hidden,items.slice(3).map(item=>item.textContent.trim()).join(', '));container.appendChild(more)}
-  }
-
   function showAllModalGroup(container,selector,moreClass){
     if(!container)return;
     container.querySelector(`.${moreClass}`)?.remove();
@@ -122,9 +113,9 @@
 
   function decorateModalFacets(){
     showAllModalGroup(document.querySelector('#modalSetting'),'button[data-quick-setting]','modal-setting-more');
-    capModalGroup(document.querySelector('#modalUniverse'),'button[data-quick-universe]','modal-universe-more');
+    showAllModalGroup(document.querySelector('#modalUniverse'),'button[data-quick-universe]','modal-universe-more');
     showAllModalGroup(document.querySelector('#modalTags .modal-primary-tags'),'button[data-tag]','modal-tag-more');
-    capModalGroup(document.querySelector('#modalTags .modal-hashtags'),'button[data-hashtag]','modal-hashtag-more');
+    showAllModalGroup(document.querySelector('#modalTags .modal-hashtags'),'button[data-hashtag]','modal-hashtag-more');
   }
 
   function ensureDrawerReset(){
@@ -150,7 +141,9 @@
       .card-hashtags button,.card-hashtags span{font-family:Arial,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif!important}
       .facet-extra{display:none!important}.modal-setting-more,.modal-universe-more,.modal-tag-more,.modal-hashtag-more{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;color:#6f796e!important;font:7px/1 var(--mono)!important}
       @media(min-width:761px){
-        .modal-content{position:relative!important}
+        .modal-card{height:min(446px,84vh)!important;min-height:min(446px,84vh)!important;max-height:min(446px,84vh)!important}
+        .modal-cover{height:100%!important;min-height:0!important}
+        .modal-content{position:relative!important;height:100%!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important}
         .modal-author-row{position:absolute!important;top:50px!important;right:20px!important;z-index:3!important;margin:0!important;padding:0!important;font-size:0!important;color:#788276!important;white-space:nowrap!important}
         .modal-author-row:before{content:'BY ';font:700 7px/1 var(--mono)!important;letter-spacing:.09em!important;color:#667164!important}
         .modal-author-row #modalAuthor{margin:0 0 0 4px!important;padding:0!important;border:0!important;background:none!important;color:#b9c2b2!important;font:700 8.5px/1 var(--mono)!important;text-decoration:underline!important;text-underline-offset:2px!important;cursor:pointer!important}

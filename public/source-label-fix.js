@@ -155,13 +155,7 @@
     window.render=wrapped;
   }
 
-  function refresh(){
-    botIndexSource=null;
-    decorateCards(document.querySelector('#grid')||document);
-    ensureDrawerReset();
-  }
-
-  refresh();
-  window.addEventListener('archive:catalog-updated',refresh);
+  decorateCards(document.querySelector('#grid')||document);
+  ensureDrawerReset();
   window.addEventListener('archive:modal-public-ready',decorateModalSettings);
 })();

@@ -18,11 +18,29 @@ function adminGuard(request,env,url){
   }
   return null;
 }
+async function adminHealth(env){
+  const one=async sql=>{try{return Number((await env.DB.prepare(sql).first())?.n||0)}catch{return null}};
+  const [characters,resources,files,chunks,lorebooks,lorebookBlobs,orphanLorebooks,orphanBlobs]=await Promise.all([
+    one('SELECT COUNT(*) AS n FROM characters'),
+    one('SELECT COUNT(*) AS n FROM hub_resources'),
+    one('SELECT COUNT(*) AS n FROM hub_resource_files'),
+    one('SELECT COUNT(*) AS n FROM hub_resource_file_chunks'),
+    one('SELECT COUNT(*) AS n FROM lorebooks'),
+    one('SELECT COUNT(*) AS n FROM lorebook_blobs'),
+    one('SELECT COUNT(*) AS n FROM lorebooks WHERE id NOT IN (SELECT DISTINCT lorebook_id FROM character_lorebooks)'),
+    one("SELECT COUNT(*) AS n FROM lorebook_blobs WHERE content_hash NOT IN (SELECT DISTINCT content_hash FROM lorebooks WHERE content_hash IS NOT NULL AND content_hash != '')")
+  ]);
+  return json({ok:true,db:true,adminTokenConfigured:Boolean(String(env.ADMIN_ACCESS_TOKEN||'').trim()),counts:{characters,resources,files,chunks,lorebooks,lorebookBlobs,orphanLorebooks,orphanBlobs},checkedAt:new Date().toISOString()});
+}
 
 export default{
   async fetch(request,env,ctx){
     const url=new URL(request.url);
     const blocked=adminGuard(request,env,url);if(blocked)return blocked;
+    if(url.pathname==='/api/admin/health'){
+      if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
+      return adminHealth(env);
+    }
     if(url.pathname==='/api/admin/characters'){
       if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
       return listAdminCharacters(request,env);

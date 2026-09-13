@@ -6,57 +6,97 @@ const parseJson=(v,fallback=[])=>{try{const x=JSON.parse(v||'');return x??fallba
 const ALLOWED_SETTINGS=new Set(['modern','fantasy','medieval','post-apocalypse','sci-fi','omegaverse','rusreal']);
 const normalizeSettings=v=>[...new Set(arr(v).map(x=>{x=clean(x).toLowerCase();if(x==='historical')return'medieval';if(x==='magic')return'fantasy';return x}).filter(x=>ALLOWED_SETTINGS.has(x)))];
 let ready=null;
-async function ensureSchema(env){if(ready)return ready;ready=(async()=>{await env.DB.prepare(`CREATE TABLE IF NOT EXISTS hub_resources (id TEXT PRIMARY KEY,source_url TEXT NOT NULL UNIQUE,source_type TEXT NOT NULL DEFAULT 'telegram',type TEXT NOT NULL,title TEXT NOT NULL,creator_name TEXT NOT NULL DEFAULT '',creator_link TEXT NOT NULL DEFAULT '',description_short TEXT NOT NULL DEFAULT '',description_full TEXT NOT NULL DEFAULT '',additional_info TEXT NOT NULL DEFAULT '',models TEXT NOT NULL DEFAULT '[]',settings TEXT NOT NULL DEFAULT '[]',tags TEXT NOT NULL DEFAULT '[]',media TEXT NOT NULL DEFAULT '[]',confidence TEXT NOT NULL DEFAULT '{}',status TEXT NOT NULL DEFAULT 'published',created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();try{await env.DB.prepare(`ALTER TABLE hub_resources ADD COLUMN additional_info TEXT NOT NULL DEFAULT ''`).run()}catch{}await env.DB.prepare(`CREATE TABLE IF NOT EXISTS hub_resource_files (id TEXT PRIMARY KEY,resource_id TEXT NOT NULL,name TEXT NOT NULL,mime TEXT NOT NULL DEFAULT 'application/octet-stream',size INTEGER NOT NULL DEFAULT 0,is_primary INTEGER NOT NULL DEFAULT 0,data BLOB,external_url TEXT NOT NULL DEFAULT '',created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();await env.DB.prepare(`CREATE INDEX IF NOT EXISTS hub_resource_files_resource_idx ON hub_resource_files(resource_id)`).run()})();try{await ready}catch(e){ready=null;throw e}return ready}
-function normalizeDraft(d){const source=d?.source||{};return{editingId:clean(d?.editing_id),sourceUrl:clean(source.url),sourceType:clean(source.type)||'telegram',type:clean(d?.type).toLowerCase(),title:clean(d?.title),creatorName:clean(d?.creator?.name),creatorLink:clean(d?.creator?.link),short:clean(d?.description_short),full:clean(d?.description_full),additionalInfo:clean(d?.additional_info),models:arr(d?.models).map(clean).filter(Boolean),settings:normalizeSettings(d?.settings),tags:arr(d?.tags).map(clean).filter(Boolean),media:arr(d?.media),confidence:d?.confidence&&typeof d.confidence==='object'?d.confidence:{}}}
-async function parsePublishRequest(request){const ct=request.headers.get('content-type')||'';if(ct.includes('multipart/form-data')){const form=await request.formData(),resourcePart=form.get('resource');let raw='{}';if(resourcePart instanceof File)raw=await resourcePart.text();else if(resourcePart!=null)raw=String(resourcePart);let draft={};try{draft=JSON.parse(raw||'{}')}catch{throw new Error('INVALID_RESOURCE_JSON')}const files=[],remoteFiles=[];for(const [key,value] of form.entries()){if(key==='files'&&value instanceof File)files.push(value);if(key==='remoteFiles'&&typeof value==='string'){try{const x=JSON.parse(value);if(x?.url)remoteFiles.push(x)}catch{}}}return{draft,files,remoteFiles}}let draft;try{draft=await request.json()}catch{throw new Error('INVALID_JSON')}return{draft,files:[],remoteFiles:arr(draft?.files).filter(x=>x?.source==='telegram'&&x?.url)}}
-export async function publishHubResource(request,env){
-  await ensureSchema(env);
-  let parsed;
-  try{parsed=await parsePublishRequest(request)}catch(e){return json({ok:false,error:String(e.message||e)},400)}
-  const d=normalizeDraft(parsed.draft);
-  if(!d.sourceUrl||!d.type||!d.title)return json({ok:false,error:'SOURCE_URL_TYPE_TITLE_REQUIRED'},400);
-  const total=parsed.files.reduce((n,f)=>n+Number(f.size||0),0);
-  if(parsed.files.some(f=>f.size>10*1024*1024)||total>25*1024*1024)return json({ok:false,error:'FILES_TOO_LARGE',limit:'10 MB per file / 25 MB total'},413);
-
-  let old=null;
-  if(d.editingId)old=await env.DB.prepare('SELECT id,source_url FROM hub_resources WHERE id=? LIMIT 1').bind(d.editingId).first();
-  if(!old)old=await env.DB.prepare('SELECT id,source_url FROM hub_resources WHERE source_url=? LIMIT 1').bind(d.sourceUrl).first();
-  const id=old?.id||crypto.randomUUID();
-
-  if(old?.id){
-    await env.DB.prepare(`UPDATE hub_resources SET source_url=?,source_type=?,type=?,title=?,creator_name=?,creator_link=?,description_short=?,description_full=?,additional_info=?,models=?,settings=?,tags=?,media=?,confidence=?,status='published',updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(d.sourceUrl,d.sourceType,d.type,d.title,d.creatorName,d.creatorLink,d.short,d.full,d.additionalInfo,safeJson(d.models),safeJson(d.settings),safeJson(d.tags),safeJson(d.media),JSON.stringify(d.confidence||{}),id).run();
-  }else{
-    await env.DB.prepare(`INSERT INTO hub_resources(id,source_url,source_type,type,title,creator_name,creator_link,description_short,description_full,additional_info,models,settings,tags,media,confidence,status,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'published',CURRENT_TIMESTAMP)`).bind(id,d.sourceUrl,d.sourceType,d.type,d.title,d.creatorName,d.creatorLink,d.short,d.full,d.additionalInfo,safeJson(d.models),safeJson(d.settings),safeJson(d.tags),safeJson(d.media),JSON.stringify(d.confidence||{})).run();
-  }
-
-  const manifest=arr(parsed.draft?.files),markedName=clean(manifest.find(x=>x&&x.primary&&!x.id)?.name);let primaryAssigned=false,replacedFiles=0;
-  if(markedName)await env.DB.prepare('UPDATE hub_resource_files SET is_primary=0 WHERE resource_id=?').bind(id).run();
-
-  for(let i=0;i<parsed.files.length;i++){
-    const f=parsed.files[i],name=clean(f.name)||`file-${i+1}`,buf=await f.arrayBuffer(),makePrimary=Boolean(markedName&&name===markedName);
-    if(old?.id){
-      const same=await env.DB.prepare('SELECT id,is_primary FROM hub_resource_files WHERE resource_id=? AND lower(name)=lower(?) ORDER BY created_at DESC LIMIT 1').bind(id,name).first();
-      if(same?.id){await env.DB.prepare('DELETE FROM hub_resource_files WHERE id=? AND resource_id=?').bind(same.id,id).run();replacedFiles++;if(same.is_primary&&!markedName)await env.DB.prepare('UPDATE hub_resource_files SET is_primary=0 WHERE resource_id=?').bind(id).run()}
-    }
-    await env.DB.prepare(`INSERT INTO hub_resource_files(id,resource_id,name,mime,size,is_primary,data,external_url) VALUES(?,?,?,?,?,?,?,'')`).bind(crypto.randomUUID(),id,name,clean(f.type)||'application/octet-stream',f.size,makePrimary?1:0,buf).run();
-    if(makePrimary)primaryAssigned=true;
-  }
-
-  for(const rf of parsed.remoteFiles){
-    const remoteUrl=clean(rf.url);if(!remoteUrl)continue;
-    const exists=await env.DB.prepare('SELECT id FROM hub_resource_files WHERE resource_id=? AND external_url=? LIMIT 1').bind(id,remoteUrl).first();if(exists)continue;
-    const rfName=clean(rf.name)||'telegram-file',makePrimary=Boolean(markedName&&rfName===markedName);
-    if(old?.id){const same=await env.DB.prepare('SELECT id FROM hub_resource_files WHERE resource_id=? AND lower(name)=lower(?) AND external_url<>? LIMIT 1').bind(id,rfName,remoteUrl).first();if(same?.id){await env.DB.prepare('DELETE FROM hub_resource_files WHERE id=? AND resource_id=?').bind(same.id,id).run();replacedFiles++}}
-    await env.DB.prepare(`INSERT INTO hub_resource_files(id,resource_id,name,mime,size,is_primary,data,external_url) VALUES(?,?,?,?,?,?,NULL,?)`).bind(crypto.randomUUID(),id,rfName,clean(rf.type)||'application/octet-stream',Number(rf.size)||0,makePrimary?1:0,remoteUrl).run();if(makePrimary)primaryAssigned=true;
-  }
-
-  const hasPrimary=await env.DB.prepare('SELECT id FROM hub_resource_files WHERE resource_id=? AND is_primary=1 LIMIT 1').bind(id).first();
-  if(!hasPrimary){const first=await env.DB.prepare('SELECT id FROM hub_resource_files WHERE resource_id=? ORDER BY created_at ASC LIMIT 1').bind(id).first();if(first?.id)await env.DB.prepare('UPDATE hub_resource_files SET is_primary=1 WHERE id=?').bind(first.id).run()}
-  return json({ok:true,id,updated:Boolean(old),files:parsed.files.length+parsed.remoteFiles.length,replaced_files:replacedFiles,primaryChanged:primaryAssigned});
+async function ensureSchema(env){
+  if(ready)return ready;
+  ready=(async()=>{
+    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS hub_resources (id TEXT PRIMARY KEY,source_url TEXT NOT NULL UNIQUE,source_type TEXT NOT NULL DEFAULT 'telegram',type TEXT NOT NULL,title TEXT NOT NULL,creator_name TEXT NOT NULL DEFAULT '',creator_link TEXT NOT NULL DEFAULT '',description_short TEXT NOT NULL DEFAULT '',description_full TEXT NOT NULL DEFAULT '',additional_info TEXT NOT NULL DEFAULT '',models TEXT NOT NULL DEFAULT '[]',settings TEXT NOT NULL DEFAULT '[]',tags TEXT NOT NULL DEFAULT '[]',media TEXT NOT NULL DEFAULT '[]',confidence TEXT NOT NULL DEFAULT '{}',status TEXT NOT NULL DEFAULT 'published',created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    try{await env.DB.prepare(`ALTER TABLE hub_resources ADD COLUMN additional_info TEXT NOT NULL DEFAULT ''`).run()}catch{}
+    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS hub_resource_files (id TEXT PRIMARY KEY,resource_id TEXT NOT NULL,name TEXT NOT NULL,mime TEXT NOT NULL DEFAULT 'application/octet-stream',size INTEGER NOT NULL DEFAULT 0,is_primary INTEGER NOT NULL DEFAULT 0,is_extra INTEGER NOT NULL DEFAULT 0,data BLOB,external_url TEXT NOT NULL DEFAULT '',created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    try{await env.DB.prepare(`ALTER TABLE hub_resource_files ADD COLUMN is_extra INTEGER NOT NULL DEFAULT 0`).run()}catch{}
+    await env.DB.prepare(`CREATE INDEX IF NOT EXISTS hub_resource_files_resource_idx ON hub_resource_files(resource_id)`).run();
+  })();
+  try{await ready}catch(e){ready=null;throw e}
+  return ready;
 }
-export async function deleteHubResourceFile(env,resourceId,fileId){await ensureSchema(env);const row=await env.DB.prepare('SELECT id,is_primary FROM hub_resource_files WHERE id=? AND resource_id=? LIMIT 1').bind(fileId,resourceId).first();if(!row)return json({ok:false,error:'FILE_NOT_FOUND'},404);await env.DB.prepare('DELETE FROM hub_resource_files WHERE id=? AND resource_id=?').bind(fileId,resourceId).run();if(row.is_primary){const next=await env.DB.prepare('SELECT id FROM hub_resource_files WHERE resource_id=? ORDER BY created_at ASC LIMIT 1').bind(resourceId).first();if(next?.id)await env.DB.prepare('UPDATE hub_resource_files SET is_primary=1 WHERE id=?').bind(next.id).run()}return json({ok:true})}
-export async function setHubResourcePrimary(env,resourceId,fileId){await ensureSchema(env);const row=await env.DB.prepare('SELECT id FROM hub_resource_files WHERE id=? AND resource_id=? LIMIT 1').bind(fileId,resourceId).first();if(!row)return json({ok:false,error:'FILE_NOT_FOUND'},404);await env.DB.prepare('UPDATE hub_resource_files SET is_primary=0 WHERE resource_id=?').bind(resourceId).run();await env.DB.prepare('UPDATE hub_resource_files SET is_primary=1 WHERE id=? AND resource_id=?').bind(fileId,resourceId).run();return json({ok:true})}
+function normalizeDraft(d){const source=d?.source||{};return{editingId:clean(d?.editing_id),sourceUrl:clean(source.url),sourceType:clean(source.type)||'telegram',type:clean(d?.type).toLowerCase(),title:clean(d?.title),creatorName:clean(d?.creator?.name),creatorLink:clean(d?.creator?.link),short:clean(d?.description_short),full:clean(d?.description_full),additionalInfo:clean(d?.additional_info),models:arr(d?.models).map(clean).filter(Boolean),settings:normalizeSettings(d?.settings),tags:arr(d?.tags).map(clean).filter(Boolean),media:arr(d?.media),confidence:d?.confidence&&typeof d.confidence==='object'?d.confidence:{}}}
+async function parsePublishRequest(request){
+  const ct=request.headers.get('content-type')||'';
+  if(ct.includes('multipart/form-data')){
+    const form=await request.formData(),resourcePart=form.get('resource');let raw='{}';
+    if(resourcePart instanceof File)raw=await resourcePart.text();else if(resourcePart!=null)raw=String(resourcePart);
+    let draft={};try{draft=JSON.parse(raw||'{}')}catch{throw new Error('INVALID_RESOURCE_JSON')}
+    const files=[],extraImages=[],remoteFiles=[];
+    for(const [key,value] of form.entries()){
+      if(key==='files'&&value instanceof File)files.push(value);
+      if(key==='extraImages'&&value instanceof File)extraImages.push(value);
+      if(key==='remoteFiles'&&typeof value==='string'){try{const x=JSON.parse(value);if(x?.url)remoteFiles.push(x)}catch{}}
+    }
+    return{draft,files,extraImages,remoteFiles};
+  }
+  let draft;try{draft=await request.json()}catch{throw new Error('INVALID_JSON')}
+  return{draft,files:[],extraImages:[],remoteFiles:arr(draft?.files).filter(x=>x?.source==='telegram'&&x?.url)};
+}
+export async function publishHubResource(request,env){
+  try{
+    await ensureSchema(env);
+    let parsed;try{parsed=await parsePublishRequest(request)}catch(e){return json({ok:false,error:String(e.message||e)},400)}
+    const d=normalizeDraft(parsed.draft);
+    if(!d.sourceUrl||!d.type||!d.title)return json({ok:false,error:'SOURCE_URL_TYPE_TITLE_REQUIRED'},400);
+    const normalTotal=parsed.files.reduce((n,f)=>n+Number(f.size||0),0);
+    const extraTotal=parsed.extraImages.reduce((n,f)=>n+Number(f.size||0),0);
+    if(parsed.files.some(f=>f.size>10*1024*1024)||normalTotal>25*1024*1024)return json({ok:false,error:'FILES_TOO_LARGE',limit:'10 MB per file / 25 MB total'},413);
+    if(parsed.extraImages.some(f=>f.size>1800*1024)||extraTotal>7*1024*1024)return json({ok:false,error:'EXTRA_IMAGE_TOO_LARGE',limit:'1.8 MB per image / 7 MB total'},413);
+
+    let old=null;
+    if(d.editingId)old=await env.DB.prepare('SELECT id,source_url FROM hub_resources WHERE id=? LIMIT 1').bind(d.editingId).first();
+    if(!old)old=await env.DB.prepare('SELECT id,source_url FROM hub_resources WHERE source_url=? LIMIT 1').bind(d.sourceUrl).first();
+    const id=old?.id||crypto.randomUUID();
+    if(old?.id){
+      await env.DB.prepare(`UPDATE hub_resources SET source_url=?,source_type=?,type=?,title=?,creator_name=?,creator_link=?,description_short=?,description_full=?,additional_info=?,models=?,settings=?,tags=?,media=?,confidence=?,status='published',updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(d.sourceUrl,d.sourceType,d.type,d.title,d.creatorName,d.creatorLink,d.short,d.full,d.additionalInfo,safeJson(d.models),safeJson(d.settings),safeJson(d.tags),safeJson(d.media),JSON.stringify(d.confidence||{}),id).run();
+    }else{
+      await env.DB.prepare(`INSERT INTO hub_resources(id,source_url,source_type,type,title,creator_name,creator_link,description_short,description_full,additional_info,models,settings,tags,media,confidence,status,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'published',CURRENT_TIMESTAMP)`).bind(id,d.sourceUrl,d.sourceType,d.type,d.title,d.creatorName,d.creatorLink,d.short,d.full,d.additionalInfo,safeJson(d.models),safeJson(d.settings),safeJson(d.tags),safeJson(d.media),JSON.stringify(d.confidence||{})).run();
+    }
+
+    const manifest=arr(parsed.draft?.files),markedName=clean(manifest.find(x=>x&&x.primary&&!x.id)?.name);let primaryAssigned=false,replacedFiles=0;
+    if(markedName)await env.DB.prepare('UPDATE hub_resource_files SET is_primary=0 WHERE resource_id=? AND is_extra=0').bind(id).run();
+
+    const storeLocal=async(f,isExtra=false)=>{
+      const name=clean(f.name)||`file-${crypto.randomUUID()}`,buf=await f.arrayBuffer(),makePrimary=!isExtra&&Boolean(markedName&&name===markedName);
+      if(old?.id){
+        const same=await env.DB.prepare('SELECT id,is_primary FROM hub_resource_files WHERE resource_id=? AND lower(name)=lower(?) AND is_extra=? ORDER BY created_at DESC LIMIT 1').bind(id,name,isExtra?1:0).first();
+        if(same?.id){await env.DB.prepare('DELETE FROM hub_resource_files WHERE id=? AND resource_id=?').bind(same.id,id).run();replacedFiles++;}
+      }
+      await env.DB.prepare(`INSERT INTO hub_resource_files(id,resource_id,name,mime,size,is_primary,is_extra,data,external_url) VALUES(?,?,?,?,?,?,?,?,?)`).bind(crypto.randomUUID(),id,name,clean(f.type)||'application/octet-stream',f.size,makePrimary?1:0,isExtra?1:0,buf,'').run();
+      if(makePrimary)primaryAssigned=true;
+    };
+    for(const f of parsed.files)await storeLocal(f,false);
+    for(const f of parsed.extraImages)await storeLocal(f,true);
+
+    for(const rf of parsed.remoteFiles){
+      const remoteUrl=clean(rf.url);if(!remoteUrl)continue;
+      const exists=await env.DB.prepare('SELECT id FROM hub_resource_files WHERE resource_id=? AND external_url=? LIMIT 1').bind(id,remoteUrl).first();if(exists)continue;
+      const rfName=clean(rf.name)||'telegram-file',makePrimary=Boolean(markedName&&rfName===markedName);
+      await env.DB.prepare(`INSERT INTO hub_resource_files(id,resource_id,name,mime,size,is_primary,is_extra,data,external_url) VALUES(?,?,?,?,?,?,0,NULL,?)`).bind(crypto.randomUUID(),id,rfName,clean(rf.type)||'application/octet-stream',Number(rf.size)||0,makePrimary?1:0,remoteUrl).run();if(makePrimary)primaryAssigned=true;
+    }
+
+    const hasPrimary=await env.DB.prepare('SELECT id FROM hub_resource_files WHERE resource_id=? AND is_primary=1 AND is_extra=0 LIMIT 1').bind(id).first();
+    if(!hasPrimary){const first=await env.DB.prepare('SELECT id FROM hub_resource_files WHERE resource_id=? AND is_extra=0 ORDER BY created_at ASC LIMIT 1').bind(id).first();if(first?.id)await env.DB.prepare('UPDATE hub_resource_files SET is_primary=1 WHERE id=?').bind(first.id).run()}
+    return json({ok:true,id,updated:Boolean(old),files:parsed.files.length+parsed.remoteFiles.length,extra_images:parsed.extraImages.length,replaced_files:replacedFiles,primaryChanged:primaryAssigned});
+  }catch(e){
+    console.error('publishHubResource failed',e);
+    return json({ok:false,error:'HUB_RESOURCE_UPDATE_FAILED',detail:String(e?.message||e)},500);
+  }
+}
+export async function deleteHubResourceFile(env,resourceId,fileId){await ensureSchema(env);const row=await env.DB.prepare('SELECT id,is_primary,is_extra FROM hub_resource_files WHERE id=? AND resource_id=? LIMIT 1').bind(fileId,resourceId).first();if(!row)return json({ok:false,error:'FILE_NOT_FOUND'},404);await env.DB.prepare('DELETE FROM hub_resource_files WHERE id=? AND resource_id=?').bind(fileId,resourceId).run();if(row.is_primary&&!row.is_extra){const next=await env.DB.prepare('SELECT id FROM hub_resource_files WHERE resource_id=? AND is_extra=0 ORDER BY created_at ASC LIMIT 1').bind(resourceId).first();if(next?.id)await env.DB.prepare('UPDATE hub_resource_files SET is_primary=1 WHERE id=?').bind(next.id).run()}return json({ok:true})}
+export async function setHubResourcePrimary(env,resourceId,fileId){await ensureSchema(env);const row=await env.DB.prepare('SELECT id,is_extra FROM hub_resource_files WHERE id=? AND resource_id=? LIMIT 1').bind(fileId,resourceId).first();if(!row)return json({ok:false,error:'FILE_NOT_FOUND'},404);if(row.is_extra)return json({ok:false,error:'EXTRA_IMAGE_CANNOT_BE_PRIMARY'},400);await env.DB.prepare('UPDATE hub_resource_files SET is_primary=0 WHERE resource_id=?').bind(resourceId).run();await env.DB.prepare('UPDATE hub_resource_files SET is_primary=1 WHERE id=? AND resource_id=?').bind(fileId,resourceId).run();return json({ok:true})}
 export async function deleteHubResource(env,resourceId){await ensureSchema(env);const row=await env.DB.prepare('SELECT id FROM hub_resources WHERE id=? LIMIT 1').bind(resourceId).first();if(!row)return json({ok:false,error:'RESOURCE_NOT_FOUND'},404);await env.DB.prepare('DELETE FROM hub_resource_files WHERE resource_id=?').bind(resourceId).run();await env.DB.prepare('DELETE FROM hub_resources WHERE id=?').bind(resourceId).run();return json({ok:true})}
-export async function listHubResources(env){await ensureSchema(env);const res=await env.DB.prepare(`SELECT r.*, (SELECT id FROM hub_resource_files f WHERE f.resource_id=r.id ORDER BY is_primary DESC,created_at ASC LIMIT 1) primary_file_id,(SELECT COUNT(*) FROM hub_resource_files f WHERE f.resource_id=r.id) file_count FROM hub_resources r WHERE status='published' ORDER BY updated_at DESC`).all(),fileRes=await env.DB.prepare(`SELECT id,resource_id,name,mime,size,is_primary,external_url FROM hub_resource_files ORDER BY is_primary DESC,created_at ASC`).all(),filesByResource=new Map();for(const f of fileRes.results||[]){if(!filesByResource.has(f.resource_id))filesByResource.set(f.resource_id,[]);filesByResource.get(f.resource_id).push({id:f.id,name:f.name,mime:f.mime,size:Number(f.size||0),primary:Boolean(f.is_primary),external_url:f.external_url||'',download_url:`/api/hub-resources/${encodeURIComponent(f.resource_id)}/files/${encodeURIComponent(f.id)}`})}const items=(res.results||[]).map(r=>({id:r.id,source_url:r.source_url,type:r.type,title:r.title,creator:{name:r.creator_name,link:r.creator_link},description_short:r.description_short,description_full:r.description_full,additional_info:r.additional_info||'',models:parseJson(r.models),settings:normalizeSettings(parseJson(r.settings)),tags:parseJson(r.tags).filter(x=>clean(x).toLowerCase()!=='magic'),media:parseJson(r.media),primary_file_id:r.primary_file_id||null,file_count:Number(r.file_count||0),files:filesByResource.get(r.id)||[],updated_at:r.updated_at}));return json({ok:true,resources:items,count:items.length})}
-export async function downloadHubFile(env,resourceId,fileId){await ensureSchema(env);const row=await env.DB.prepare('SELECT name,mime,size,data,external_url FROM hub_resource_files WHERE id=? AND resource_id=? LIMIT 1').bind(fileId,resourceId).first();if(!row)return json({ok:false,error:'FILE_NOT_FOUND'},404);if(row.external_url)return Response.redirect(row.external_url,302);if(row.data==null)return json({ok:false,error:'FILE_DATA_MISSING'},404);const headers=new Headers({'content-type':row.mime||'application/octet-stream','cache-control':'public, max-age=3600'});headers.set('content-disposition',`attachment; filename*=UTF-8''${encodeURIComponent(row.name||'download')}`);return new Response(row.data,{status:200,headers})}
+export async function listHubResources(env){
+  await ensureSchema(env);
+  const res=await env.DB.prepare(`SELECT r.*, (SELECT id FROM hub_resource_files f WHERE f.resource_id=r.id AND f.is_extra=0 ORDER BY is_primary DESC,created_at ASC LIMIT 1) primary_file_id,(SELECT COUNT(*) FROM hub_resource_files f WHERE f.resource_id=r.id AND f.is_extra=0) file_count FROM hub_resources r WHERE status='published' ORDER BY updated_at DESC`).all();
+  const fileRes=await env.DB.prepare(`SELECT id,resource_id,name,mime,size,is_primary,is_extra,external_url FROM hub_resource_files ORDER BY is_extra ASC,is_primary DESC,created_at ASC`).all(),filesByResource=new Map();
+  for(const f of fileRes.results||[]){if(!filesByResource.has(f.resource_id))filesByResource.set(f.resource_id,[]);const legacyImage=!f.is_extra&&(/^image\//i.test(String(f.mime||''))||/\.(png|jpe?g|webp|gif)$/i.test(String(f.name||'')));filesByResource.get(f.resource_id).push({id:f.id,name:f.name,mime:f.mime,size:Number(f.size||0),primary:Boolean(f.is_primary),extra:Boolean(f.is_extra||legacyImage),external_url:f.external_url||'',download_url:`/api/hub-resources/${encodeURIComponent(f.resource_id)}/files/${encodeURIComponent(f.id)}`})}
+  const items=(res.results||[]).map(r=>({id:r.id,source_url:r.source_url,type:r.type,title:r.title,creator:{name:r.creator_name,link:r.creator_link},description_short:r.description_short,description_full:r.description_full,additional_info:r.additional_info||'',models:parseJson(r.models),settings:normalizeSettings(parseJson(r.settings)),tags:parseJson(r.tags).filter(x=>clean(x).toLowerCase()!=='magic'),media:parseJson(r.media),primary_file_id:r.primary_file_id||null,file_count:Number(r.file_count||0),files:filesByResource.get(r.id)||[],updated_at:r.updated_at}));
+  return json({ok:true,resources:items,count:items.length});
+}
+export async function downloadHubFile(env,resourceId,fileId){await ensureSchema(env);const row=await env.DB.prepare('SELECT name,mime,size,is_extra,data,external_url FROM hub_resource_files WHERE id=? AND resource_id=? LIMIT 1').bind(fileId,resourceId).first();if(!row)return json({ok:false,error:'FILE_NOT_FOUND'},404);if(row.external_url)return Response.redirect(row.external_url,302);if(row.data==null)return json({ok:false,error:'FILE_DATA_MISSING'},404);const headers=new Headers({'content-type':row.mime||'application/octet-stream','cache-control':'public, max-age=3600'});if(!row.is_extra)headers.set('content-disposition',`attachment; filename*=UTF-8''${encodeURIComponent(row.name||'download')}`);return new Response(row.data,{status:200,headers})}
 export async function injectHubResources(response){return response;}

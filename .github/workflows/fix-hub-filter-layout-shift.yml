@@ -1,0 +1,33 @@
+name: fix-hub-filter-layout-shift
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-hub-filter-layout-shift.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Append layout stability patch
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('public/hub-polish.css')
+          s=p.read_text(encoding='utf-8')
+          marker='/* TAVO HUB — filter layout stability */'
+          if marker not in s:
+              s += '''\n\n/* TAVO HUB — filter layout stability */\nhtml{overflow-y:scroll;scrollbar-gutter:stable}\nbody{min-height:100vh;overflow-x:hidden}\n.hub,.page{width:100%;max-width:100%}\n.scene,.shade{left:0;right:0;width:auto;max-width:none}\n.directory{contain:layout paint}\n.resource-grid{align-content:start}\n@supports (scrollbar-gutter:stable){html{overflow-y:auto;scrollbar-gutter:stable both-edges}}\n@media(max-width:860px){html{scrollbar-gutter:stable}}\n'''
+              p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/hub-polish.css
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Stabilize TAVO Hub layout while filtering"
+          git push

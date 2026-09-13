@@ -8,9 +8,14 @@
   const label=v=>String(v||'').replaceAll('-',' ').toUpperCase();
   const fileLabel=(f,type='resource')=>{const n=String(f?.name||'FILE').trim(),t=String(type||'resource').toLowerCase();if(/regex|regexp|regix|regik|рег[еэи]кс|регикс|регик|регуляр/i.test(n))return'REGEX';if(t==='preset'&&f?.primary)return'PRESET';if(t==='preset'&&/\.zip$/i.test(n))return'PRESET';if(t==='preset'&&/\.json$/i.test(n)&&!f?.primary)return'REGEX';if(/preset|пресет/i.test(n))return t==='preset'?'PRESET':label(type);return n.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').toUpperCase()||'FILE'};
   const imageFile=f=>/^image\//i.test(String(f?.mime||''))||/\.(png|jpe?g|webp|gif)$/i.test(String(f?.name||''));
-  const validSettings=v=>(Array.isArray(v)?v:[]).filter(x=>String(x).toLowerCase()!=='school-university');
+  const allowedSettings=new Set(['modern','fantasy','medieval','post-apocalypse','sci-fi','omegaverse','rusreal','magic']);
+  const validSettings=v=>[...new Set((Array.isArray(v)?v:[]).map(x=>String(x).toLowerCase()==='historical'?'medieval':String(x).toLowerCase()).filter(x=>allowedSettings.has(x)))];
   let resources=[],currentIndex=-1;
-  document.querySelector('.tag-filter[data-value="school-university"]')?.remove();
+  const settingBox=document.querySelector('.filter-tags[data-group="setting"]');
+  settingBox?.querySelector('[data-value="historical"]')?.remove();
+  settingBox?.querySelector('[data-value="school-university"]')?.remove();
+  if(settingBox&&!settingBox.querySelector('[data-value="rusreal"]'))settingBox.insertAdjacentHTML('beforeend','<button class="tag-filter" data-value="rusreal">RUSREAL</button>');
+  if(settingBox&&!settingBox.querySelector('[data-value="magic"]'))settingBox.insertAdjacentHTML('beforeend','<button class="tag-filter" data-value="magic">MAGIC</button>');
 
   function closeModal(){const m=document.getElementById('hubResourceModal');if(!m)return;m.classList.remove('open');m.setAttribute('aria-hidden','true');document.body.classList.remove('hub-modal-lock')}
   function sameType(r){const t=String(r?.type||'').toLowerCase();return resources.filter(x=>String(x?.type||'').toLowerCase()===t)}

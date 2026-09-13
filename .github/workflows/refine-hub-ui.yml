@@ -1,24 +1,30 @@
 name: Refine TAVO Hub UI
+
 on:
   push:
-    branches: [main]
-    paths: ['.github/workflows/refine-hub-ui.yml']
+    paths:
+      - '.github/workflows/refine-hub-ui.yml'
+
 permissions:
   contents: write
+
 jobs:
   refine:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Refine hub layout and interactions
         run: |
           python - <<'PY'
           from pathlib import Path
-          p=Path('public/hub.html')
-          s=p.read_text()
-          marker='/* HUB-REFINE-2026-09-13 */'
+          p = Path('public/hub.html')
+          s = p.read_text(encoding='utf-8')
+          marker = '/* HUB-REFINE-2026-09-13 */'
           if marker not in s:
-              css=r'''
+              css = r'''
     /* HUB-REFINE-2026-09-13 */
     .top-shell{min-height:188px;padding:22px 32px 12px}
     .top-motto{top:38px;font-size:8.2px;opacity:.86}
@@ -55,13 +61,10 @@ jobs:
     @media(max-width:860px){.top-shell{min-height:174px;padding:18px 18px 10px}.top-motto{top:76px}.directory{width:calc(100% - 20px)}.directory:before,.directory:after{width:34%;height:64px;opacity:.22}.directory-head{grid-template-columns:1fr;padding:20px 16px 14px;gap:12px}.directory-body{grid-template-columns:1fr}.side{padding:12px 14px}.side-nav{grid-template-columns:repeat(4,minmax(0,1fr))}.side-link{min-height:38px;grid-template-columns:18px 1fr;padding:6px 7px}.folder{width:16px;height:12px}.content{padding:14px}.resource-grid.list-view .resource-card{grid-template-columns:115px minmax(0,1fr)}.resource-grid.list-view .card-body{grid-template-columns:1fr}.resource-grid.list-view .type,.resource-grid.list-view h3,.resource-grid.list-view p,.resource-grid.list-view .meta{grid-column:1;grid-row:auto}.resource-grid.list-view .meta{border-top:1px solid rgba(111,127,101,.18);padding-top:8px;margin-top:8px}}
     @media(max-width:560px){.top-shell{min-height:158px}.top-motto{display:none}.directory{width:calc(100% - 12px)}.directory:before,.directory:after{width:42%;height:54px;opacity:.17}.hub-title h1{font-size:26px}.side-nav{grid-template-columns:repeat(2,minmax(0,1fr))}.resource-grid{grid-template-columns:1fr}.resource-grid.list-view .resource-card{display:block}.resource-grid.list-view .thumb{height:96px;border-right:0;border-bottom:1px solid rgba(117,132,105,.22)}}
 '''
-              s=s.replace('  </style>', css+'\n  </style>')
-          # Make the decorative helper copy less noisy without altering layout structure
-          s=s.replace('FIND TOOLS.<br>FUEL IMAGINATION.<br>BUILD BRIGHTER WORLDS.','')
-          # Add functional grid/list switching once
-          js_marker='// HUB-VIEW-TOGGLE'
-          if js_marker not in s:
-              extra=r'''
+              s = s.replace('  </style>', css + '\n  </style>', 1)
+          s = s.replace('FIND TOOLS.<br>FUEL IMAGINATION.<br>BUILD BRIGHTER WORLDS.', '')
+          if '// HUB-VIEW-TOGGLE' not in s:
+              extra = r'''
   <script>
     // HUB-VIEW-TOGGLE
     (()=>{
@@ -76,14 +79,18 @@ jobs:
     })();
   </script>
 '''
-              s=s.replace('</body>',extra+'\n</body>')
-          p.write_text(s)
+              s = s.replace('</body>', extra + '\n</body>', 1)
+          p.write_text(s, encoding='utf-8')
           PY
+
       - name: Commit refinement
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "archive-exe-bot"
+          git config user.email "actions@users.noreply.github.com"
           git add public/hub.html
-          git diff --cached --quiet && exit 0
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
           git commit -m "Refine TAVO Hub layout and UX"
           git push

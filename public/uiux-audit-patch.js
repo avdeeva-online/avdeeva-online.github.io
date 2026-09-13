@@ -1,6 +1,13 @@
 (()=>{
   'use strict';
 
+  if(!document.querySelector('script[data-archive-cross-nav]')){
+    const navScript=document.createElement('script');
+    navScript.src='cross-nav.js?v=1';
+    navScript.dataset.archiveCrossNav='1';
+    document.head.appendChild(navScript);
+  }
+
   const SERVICE_LINE=/^\s*character\s*:\s*/i;
   const TEXT_SELECTOR='#modalPublicBody p,.modal-dossier p,.modal-dossier li';
 

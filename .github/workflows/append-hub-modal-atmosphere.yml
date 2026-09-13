@@ -11,8 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Append modal atmosphere styles
-        shell: python
+        shell: bash
         run: |
+          python3 <<'PY'
           from pathlib import Path
           p=Path('public/hub-polish.css')
           s=p.read_text(encoding='utf-8')
@@ -46,6 +47,7 @@ jobs:
 @media(max-width:700px){.hub-modal-tabs:before{display:none}.hub-modal-primary{padding-left:8px!important}}
 '''
               p.write_text(s,encoding='utf-8')
+          PY
       - name: Commit patch
         run: |
           git config user.name "github-actions[bot]"

@@ -25,3 +25,18 @@
 @media(max-width:1180px){.directory-head{grid-template-columns:195px minmax(0,1fr)}.directory-body{grid-template-columns:195px minmax(0,1fr)}.resource-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:860px){.top-shell{min-height:156px}.directory{border-radius:9px}.directory-head{grid-template-columns:1fr}.directory-body{grid-template-columns:1fr}.content{padding:8px 12px 16px}.toolbar{margin:0 0 8px}.preset-filters,.creator-panel{margin:0 0 9px}.side{padding:9px;background:rgba(7,11,8,.22)}.side-nav{gap:3px}.side-link{grid-template-columns:24px minmax(0,1fr) auto;min-height:35px;border-radius:9px}.resource-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.thumb{height:88px;flex-basis:88px}.filter-row{gap:9px;padding-left:10px;padding-right:10px}.filter-row:first-of-type .tag-filter{min-height:26px;padding:6px 10px}}
 @media(max-width:560px){.directory-head{padding:14px 13px 11px}.hub-title .desc{margin-top:8px;max-width:none}.resource-grid{grid-template-columns:1fr}.resource-card{min-height:0;border-radius:10px}.thumb{height:96px;flex-basis:96px;border-radius:9px 9px 5px 5px}.toolbar{min-height:38px}.preset-filters,.creator-panel{margin-bottom:8px}.filter-row{display:block}.filter-label{display:block;margin-bottom:6px}.filter-row:first-of-type .tag-filter{padding:6px 10px}.filter-row:nth-of-type(2) .tag-filter{padding:5px 8px}}
+
+/* TAVO HUB — compact directory header */
+.directory-head{grid-template-columns:168px minmax(0,1fr);padding:8px 12px 8px;gap:12px;align-items:center}
+.hub-title{align-self:center}
+.hub-title h1{font-size:24px;line-height:.96;letter-spacing:.01em}
+.hub-title .sub{margin-top:4px;font-size:6.5px;letter-spacing:.12em}
+.hub-title .desc{margin-top:5px;max-width:168px;font-size:0;line-height:1.25;color:#929c93}
+.hub-title .desc:after{content:'Presets, plugins, themes, guides & tools for TAVO.';display:block;font:6.8px/1.25 var(--mono);color:#929c93}
+.search-wrap{align-self:center}
+.search{height:33px;padding:0 11px}
+.search svg{width:14px;height:14px;flex:0 0 14px}
+.search input{font-size:8px}
+@media(min-width:1450px){.directory-head{grid-template-columns:168px minmax(0,1fr)}}
+@media(max-width:1180px){.directory-head{grid-template-columns:172px minmax(0,1fr)}}
+@media(max-width:860px){.directory-head{grid-template-columns:1fr;padding:10px 11px 9px;gap:8px}.hub-title .desc{max-width:360px}.search{height:34px}}

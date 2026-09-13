@@ -5,6 +5,12 @@
     navScript.dataset.archiveCrossNav='1';
     document.head.appendChild(navScript);
   }
+  if(!document.querySelector('script[data-hub-suggest-loader]')){
+    const suggestScript=document.createElement('script');
+    suggestScript.src='hub-suggest.js?v=20260913-1';
+    suggestScript.dataset.hubSuggestLoader='1';
+    document.head.appendChild(suggestScript);
+  }
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const slug=v=>{const s=String(v||'unknown').trim().toLowerCase().normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-|-$/g,'');return s||'unknown'};
   const plural=t=>t.endsWith('s')?t:`${t}s`;

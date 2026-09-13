@@ -34,11 +34,17 @@ async function adminHealth(env){
   ]);
   return json({ok:true,db:true,adminTokenConfigured:Boolean(String(env.ADMIN_ACCESS_TOKEN||'').trim()),counts:{characters,resources,files,chunks,lorebooks,lorebookBlobs,orphanLorebooks,orphanBlobs,suggestions},checkedAt:new Date().toISOString()});
 }
-async function injectAdminBack(response){
+async function injectAdminTools(response,url){
   const type=String(response.headers.get('content-type')||'').toLowerCase();
   if(!type.includes('text/html'))return response;
   let html=await response.text();
-  if(!html.includes('data-admin-back-script'))html=html.replace(/<\/body>/i,'<script data-admin-back-script src="/admin/admin-back.js?v=20260913"></script><script data-hub-cover-script src="/admin/hub/cover-upload.js?v=20260913-1"></script></body>');
+  const scripts=[];
+  if(!html.includes('data-admin-back-script'))scripts.push('<script data-admin-back-script src="/admin/admin-back.js?v=20260913"></script>');
+  if(url.pathname.startsWith('/admin/hub/')&&!html.includes('data-hub-cover-script'))scripts.push('<script data-hub-cover-script src="/admin/hub/cover-upload.js?v=20260913-2"></script>');
+  if(scripts.length){
+    if(/<\/body>/i.test(html))html=html.replace(/<\/body>/i,scripts.join('')+'</body>');
+    else html+=scripts.join('');
+  }
   const headers=new Headers(response.headers);
   headers.set('cache-control','no-store');
   headers.delete('content-length');
@@ -115,7 +121,7 @@ export default{
       return injectHubSuggest(response);
     }
     const response=await app.fetch(request,env,ctx);
-    if(request.method==='GET'&&url.pathname.startsWith('/admin/')&&url.pathname!=='/admin/')return injectAdminBack(response);
+    if(request.method==='GET'&&url.pathname.startsWith('/admin/')&&url.pathname!=='/admin/')return injectAdminTools(response,url);
     return response;
   }
 };

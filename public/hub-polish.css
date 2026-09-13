@@ -82,3 +82,16 @@ body{font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothin
 .brand{font-size:23px;line-height:1;letter-spacing:.045em}
 @media(max-width:860px){.top-shell{min-height:66px;padding:12px 16px 7px}}
 @media(max-width:560px){.top-shell{min-height:62px;padding:11px 13px 6px}.brand{font-size:21px}}
+
+/* TAVO HUB — balanced top identity */
+.top-shell{min-height:82px;padding:13px 30px 10px;display:grid;grid-template-columns:auto minmax(90px,1fr) auto;grid-template-rows:auto auto;column-gap:16px;align-items:end;position:relative}
+.top-shell>div:first-child{grid-column:1;grid-row:1 / span 2}
+.brand{font-size:23px;line-height:1;letter-spacing:.045em;margin:0}
+.brand-sub{display:block!important;margin-top:6px;font-size:0!important;line-height:1}
+.brand-sub:after{content:'TAVO RESOURCE ARCHIVE';display:block;font:7.2px/1.2 var(--mono);letter-spacing:.07em;color:#9fa99f}
+.boot,.top-motto{display:none!important}
+.top-index{display:block!important;grid-column:3;grid-row:1 / span 2;align-self:center;font-size:0!important;line-height:1;text-align:right;color:#9ea89d}
+.top-index:after{content:'NODE_01 // TAVO HUB';font:7.2px/1.2 var(--mono);letter-spacing:.065em;color:#aab3a8}
+.top-shell:after{content:'';grid-column:2;grid-row:1 / span 2;align-self:center;height:1px;background:linear-gradient(90deg,rgba(166,152,103,.26),rgba(126,142,113,.08) 58%,rgba(166,152,103,.22));opacity:.8}
+@media(max-width:860px){.top-shell{min-height:76px;padding:12px 16px 9px;grid-template-columns:auto 1fr auto;column-gap:12px}.brand{font-size:22px}.brand-sub:after,.top-index:after{font-size:6.9px}}
+@media(max-width:560px){.top-shell{min-height:70px;padding:11px 13px 8px;grid-template-columns:auto 1fr}.top-shell:after{grid-column:2}.top-index{display:none!important}.brand{font-size:20px}.brand-sub:after{font-size:6.7px}}

@@ -93,7 +93,9 @@ export async function publishHubResource(request,env){
 
   if(parsed.files.length){
     await env.DB.prepare('DELETE FROM hub_resource_files WHERE resource_id=? AND data IS NOT NULL').bind(id).run();
-    const primaryIndex=Math.max(0,Number(parsed.draft?.primary_file_index||0));
+    const manifest=arr(parsed.draft?.files);
+    const marked=manifest.findIndex(x=>x&&x.primary);
+    const primaryIndex=Math.max(0,marked>=0?marked:Number(parsed.draft?.primary_file_index||0));
     for(let i=0;i<parsed.files.length;i++){
       const f=parsed.files[i],buf=await f.arrayBuffer();
       await env.DB.prepare(`INSERT INTO hub_resource_files(id,resource_id,name,mime,size,is_primary,data,external_url) VALUES(?,?,?,?,?,?,?,'')`)
@@ -108,7 +110,16 @@ export async function listHubResources(env){
   const res=await env.DB.prepare(`SELECT r.*, (SELECT id FROM hub_resource_files f WHERE f.resource_id=r.id ORDER BY is_primary DESC,created_at ASC LIMIT 1) primary_file_id,
     (SELECT COUNT(*) FROM hub_resource_files f WHERE f.resource_id=r.id) file_count
     FROM hub_resources r WHERE status='published' ORDER BY updated_at DESC`).all();
-  const items=(res.results||[]).map(r=>({id:r.id,source_url:r.source_url,type:r.type,title:r.title,creator:{name:r.creator_name,link:r.creator_link},description_short:r.description_short,description_full:r.description_full,models:parseJson(r.models),settings:parseJson(r.settings),tags:parseJson(r.tags),media:parseJson(r.media),primary_file_id:r.primary_file_id||null,file_count:Number(r.file_count||0),updated_at:r.updated_at}));
+  const fileRes=await env.DB.prepare(`SELECT id,resource_id,name,mime,size,is_primary,external_url FROM hub_resource_files ORDER BY is_primary DESC,created_at ASC`).all();
+  const filesByResource=new Map();
+  for(const f of fileRes.results||[]){
+    if(!filesByResource.has(f.resource_id))filesByResource.set(f.resource_id,[]);
+    filesByResource.get(f.resource_id).push({
+      id:f.id,name:f.name,mime:f.mime,size:Number(f.size||0),primary:Boolean(f.is_primary),external_url:f.external_url||'',
+      download_url:`/api/hub-resources/${encodeURIComponent(f.resource_id)}/files/${encodeURIComponent(f.id)}`
+    });
+  }
+  const items=(res.results||[]).map(r=>({id:r.id,source_url:r.source_url,type:r.type,title:r.title,creator:{name:r.creator_name,link:r.creator_link},description_short:r.description_short,description_full:r.description_full,models:parseJson(r.models),settings:parseJson(r.settings),tags:parseJson(r.tags),media:parseJson(r.media),primary_file_id:r.primary_file_id||null,file_count:Number(r.file_count||0),files:filesByResource.get(r.id)||[],updated_at:r.updated_at}));
   return json({ok:true,resources:items,count:items.length});
 }
 

@@ -1,0 +1,75 @@
+name: Add preset tag filters
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/add-preset-tag-filters.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch TAVO Hub preset filters
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('public/hub.html')
+          s=p.read_text(encoding='utf-8')
+          css='''
+/* PRESET-TAG-FILTERS */
+.preset-filters{display:none;margin:0 0 14px;padding:11px 12px 10px;border:1px solid rgba(120,137,108,.18);border-radius:5px;background:rgba(8,12,9,.5)}
+.preset-filters.show{display:grid;gap:9px}
+.filter-row{display:flex;align-items:flex-start;gap:10px;min-width:0}
+.filter-label{flex:0 0 58px;padding-top:6px;font:7px/1 var(--mono);letter-spacing:.1em;color:#7f897f;text-transform:uppercase}
+.filter-tags{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.tag-filter{appearance:none;-webkit-appearance:none;border:1px solid rgba(126,143,114,.18);border-radius:3px;background:rgba(11,16,12,.7);color:#939d92;padding:6px 9px;font:7.2px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:.15s}
+.tag-filter:hover{border-color:rgba(166,180,145,.38);color:#c9cec3;background:rgba(120,145,105,.06)}
+.tag-filter.active{border-color:rgba(179,173,116,.58);color:#eadfbf;background:rgba(146,139,82,.11);box-shadow:inset 0 0 12px rgba(176,164,99,.03)}
+.tag-filter:focus-visible{outline:1px solid rgba(205,220,181,.82);outline-offset:2px}
+.resource-card .card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.resource-card .card-tag{border:1px solid rgba(124,140,111,.15);border-radius:2px;padding:3px 5px;color:#788278;font:6.3px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase}
+@media(max-width:860px){.preset-filters{padding:10px}.filter-row{gap:7px}.filter-label{flex-basis:48px}.filter-tags{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.filter-tags::-webkit-scrollbar{display:none}.tag-filter{flex:0 0 auto}}
+@media(max-width:560px){.preset-filters{margin-bottom:11px}.filter-row{display:block}.filter-label{padding:0 0 6px}.tag-filter{padding:6px 8px}}
+'''
+          if '/* PRESET-TAG-FILTERS */' not in s:
+              s=s.replace('</style>',css+'\n</style>',1)
+          toolbar='''            <div class="toolbar"><div class="toolbar-left">&gt; 42 RESOURCES FOUND</div><div class="toolbar-right"><label>SORT: <select aria-label="Sort resources"><option>RECENT</option><option>NAME</option><option>TYPE</option></select></label><div class="view-toggle" aria-label="View mode"><button class="view-btn active" type="button" aria-label="Grid view">▦</button><button class="view-btn" type="button" aria-label="List view">☷</button></div></div></div>'''
+          panel='''            <div class="toolbar"><div class="toolbar-left">&gt; 42 RESOURCES FOUND</div><div class="toolbar-right"><label>SORT: <select aria-label="Sort resources"><option>RECENT</option><option>NAME</option><option>TYPE</option></select></label><div class="view-toggle" aria-label="View mode"><button class="view-btn active" type="button" aria-label="Grid view">▦</button><button class="view-btn" type="button" aria-label="List view">☷</button></div></div></div>\n\n            <div class="preset-filters" aria-label="Preset filters">\n              <div class="filter-row"><div class="filter-label">MODEL</div><div class="filter-tags" data-filter-group="model"><button class="tag-filter active" type="button" data-value="all">ALL</button><button class="tag-filter" type="button" data-value="gemini">GEMINI</button><button class="tag-filter" type="button" data-value="claude">CLAUDE</button><button class="tag-filter" type="button" data-value="gpt">GPT</button><button class="tag-filter" type="button" data-value="deepseek">DEEPSEEK</button><button class="tag-filter" type="button" data-value="other">OTHER</button></div></div>\n              <div class="filter-row"><div class="filter-label">SETTING</div><div class="filter-tags" data-filter-group="setting"><button class="tag-filter active" type="button" data-value="all">ALL</button><button class="tag-filter" type="button" data-value="modern">MODERN</button><button class="tag-filter" type="button" data-value="fantasy">FANTASY</button><button class="tag-filter" type="button" data-value="medieval">MEDIEVAL</button><button class="tag-filter" type="button" data-value="post-apocalypse">POST-APOC</button><button class="tag-filter" type="button" data-value="sci-fi">SCI-FI</button><button class="tag-filter" type="button" data-value="historical">HISTORICAL</button><button class="tag-filter" type="button" data-value="school-university">SCHOOL / UNIVERSITY</button><button class="tag-filter" type="button" data-value="omegaverse">OMEGAVERSE</button></div></div>\n            </div>'''
+          if 'class="preset-filters"' not in s:
+              if toolbar not in s: raise SystemExit('toolbar target not found')
+              s=s.replace(toolbar,panel,1)
+          s=s.replace('class="resource-card" data-type="presets"><div class="thumb b"','class="resource-card" data-type="presets" data-model="gemini" data-setting="modern post-apocalypse"><div class="thumb b"',1)
+          s=s.replace('<p>Organic, muted styling for darker creative setups.</p>','<p>Organic, muted styling for darker creative setups.</p><div class="card-tags"><span class="card-tag">GEMINI</span><span class="card-tag">MODERN</span><span class="card-tag">POST-APOC</span></div>',1)
+          s=s.replace('class="resource-card" data-type="presets"><div class="thumb g"','class="resource-card" data-type="presets" data-model="claude" data-setting="modern"><div class="thumb g"',1)
+          s=s.replace('<p>A low-noise visual preset for long writing sessions.</p>','<p>A low-noise visual preset for long writing sessions.</p><div class="card-tags"><span class="card-tag">CLAUDE</span><span class="card-tag">MODERN</span></div>',1)
+          old="""      const buttons=[...document.querySelectorAll('.side-link')],cards=[...document.querySelectorAll('.resource-card')],search=document.querySelector('.search input'),found=document.querySelector('.toolbar-left');
+      const categoryNames=['all','presets','plugins','themes','guides','links','tools'];
+      let active='all';
+      function apply(){const q=search.value.trim().toLowerCase();let visible=0;cards.forEach(card=>{const okType=active==='all'||card.dataset.type===active;const okSearch=!q||card.innerText.toLowerCase().includes(q);const show=okType&&okSearch;card.style.display=show?'':'none';if(show)visible++});found.textContent=`> ${visible} RESOURCES FOUND`}
+      buttons.forEach((btn,i)=>btn.addEventListener('click',()=>{buttons.forEach(b=>b.classList.remove('active'));btn.classList.add('active');active=categoryNames[i];apply()}));
+      search.addEventListener('input',apply);"""
+          new="""      const buttons=[...document.querySelectorAll('.side-link')],cards=[...document.querySelectorAll('.resource-card')],search=document.querySelector('.search input'),found=document.querySelector('.toolbar-left'),presetFilters=document.querySelector('.preset-filters');
+      const categoryNames=['all','presets','plugins','themes','guides','links','tools'];
+      let active='all';
+      const selected={model:new Set(),setting:new Set()};
+      function matchesTags(card,group){if(active!=='presets'||selected[group].size===0)return true;const values=(card.dataset[group]||'').split(/\\s+/).filter(Boolean);return [...selected[group]].some(v=>values.includes(v))}
+      function apply(){const q=search.value.trim().toLowerCase();let visible=0;cards.forEach(card=>{const okType=active==='all'||card.dataset.type===active;const okSearch=!q||card.innerText.toLowerCase().includes(q);const okModel=matchesTags(card,'model'),okSetting=matchesTags(card,'setting');const show=okType&&okSearch&&okModel&&okSetting;card.style.display=show?'':'none';if(show)visible++});found.textContent=`> ${visible} RESOURCES FOUND`;presetFilters?.classList.toggle('show',active==='presets')}
+      document.querySelectorAll('.filter-tags').forEach(group=>{const name=group.dataset.filterGroup;const tags=[...group.querySelectorAll('.tag-filter')];tags.forEach(tag=>tag.addEventListener('click',()=>{const value=tag.dataset.value;if(value==='all'){selected[name].clear();tags.forEach(t=>t.classList.toggle('active',t.dataset.value==='all'))}else{group.querySelector('[data-value="all"]')?.classList.remove('active');tag.classList.toggle('active');if(tag.classList.contains('active'))selected[name].add(value);else selected[name].delete(value);if(selected[name].size===0)group.querySelector('[data-value="all"]')?.classList.add('active')}apply()}))});
+      buttons.forEach((btn,i)=>btn.addEventListener('click',()=>{buttons.forEach(b=>b.classList.remove('active'));btn.classList.add('active');active=categoryNames[i];apply()}));
+      search.addEventListener('input',apply);"""
+          if 'const selected={model:new Set(),setting:new Set()};' not in s:
+              if old not in s: raise SystemExit('filter JS target not found')
+              s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "archive-exe-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/hub.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Add preset model and setting tag filters"
+          git push

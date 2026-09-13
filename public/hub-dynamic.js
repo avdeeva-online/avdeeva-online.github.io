@@ -1,4 +1,10 @@
 (()=>{
+  if(!document.querySelector('script[data-archive-cross-nav]')){
+    const navScript=document.createElement('script');
+    navScript.src='cross-nav.js?v=1';
+    navScript.dataset.archiveCrossNav='1';
+    document.head.appendChild(navScript);
+  }
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const slug=v=>{const s=String(v||'unknown').trim().toLowerCase().normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-|-$/g,'');return s||'unknown'};
   const plural=t=>t.endsWith('s')?t:`${t}s`;

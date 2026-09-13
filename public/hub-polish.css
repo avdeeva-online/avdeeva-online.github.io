@@ -133,3 +133,14 @@ body{font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothin
 .hub-modal-cover{filter:saturate(.92) brightness(.93)!important}
 .hub-modal-close{background:rgba(4,8,5,.60)!important;backdrop-filter:blur(4px)!important}
 @media(max-width:700px){.hub-modal-tabs:before{display:none}.hub-modal-primary{padding-left:8px!important}}
+
+
+/* TAVO HUB — filter layout stability */
+html{overflow-y:scroll;scrollbar-gutter:stable}
+body{min-height:100vh;overflow-x:hidden}
+.hub,.page{width:100%;max-width:100%}
+.scene,.shade{left:0;right:0;width:auto;max-width:none}
+.directory{contain:layout paint}
+.resource-grid{align-content:start}
+@supports (scrollbar-gutter:stable){html{overflow-y:auto;scrollbar-gutter:stable both-edges}}
+@media(max-width:860px){html{scrollbar-gutter:stable}}

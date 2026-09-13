@@ -40,3 +40,20 @@
 @media(min-width:1450px){.directory-head{grid-template-columns:168px minmax(0,1fr)}}
 @media(max-width:1180px){.directory-head{grid-template-columns:172px minmax(0,1fr)}}
 @media(max-width:860px){.directory-head{grid-template-columns:1fr;padding:10px 11px 9px;gap:8px}.hub-title .desc{max-width:360px}.search{height:34px}}
+
+/* TAVO HUB — typography readability pass */
+body{font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+.brand-sub,.boot,.top-index,.top-motto,.side-link,.toolbar,.filter-label,.tag-filter,.creator-filter,.type,.resource-card p,.card-tag,.meta,.statusbar,.search input,.side-quote{font-family:var(--mono)}
+.boot,.top-index,.top-motto{font-size:8.4px;line-height:1.5;letter-spacing:.055em;color:#b9c1b7}
+.brand-sub{font-size:8.6px;letter-spacing:.09em;color:#c0c7bb}
+.side-link{font-size:8.5px;line-height:1.15;letter-spacing:.015em;color:#b8c0b6;font-weight:600}.side-link .count{font-size:7.4px;letter-spacing:0;color:#909991}.side-link.active{color:#f0e6ca}
+.toolbar{font-size:7.8px;letter-spacing:.045em}.toolbar-left{color:#a8b1a6;letter-spacing:.065em}.toolbar select{font-size:7.8px;color:#d0d4cc}
+.preset-filters:before{font-size:6.8px;letter-spacing:.11em;color:#879186}
+.filter-label{letter-spacing:.07em}.filter-row:first-of-type .filter-label{font-size:7.8px}.filter-row:nth-of-type(2) .filter-label{font-size:7.1px;color:#8a948a}
+.filter-row:first-of-type .tag-filter{font-size:7.7px;letter-spacing:.035em;font-weight:600}.filter-row:nth-of-type(2) .tag-filter{font-size:7px;letter-spacing:.025em;color:#929b92}
+.creator-filter{font-size:7.4px;letter-spacing:.035em}
+.search input{font-size:8.6px;letter-spacing:.015em;color:#d6dad3}.search input::placeholder{color:#8d978d;opacity:.92}
+.hub-title .sub{font-size:7px;letter-spacing:.09em;color:#cdbb93}.hub-title .desc:after{font:7.3px/1.35 var(--mono);letter-spacing:.01em;color:#aab2aa}
+.type{font-size:7.5px;letter-spacing:.055em;color:#a5aea4}.resource-card p{font-size:8.35px;line-height:1.48;color:#c0c6bd}.card-tag{font-size:6.8px;letter-spacing:.015em;color:#919a91}.meta{font-size:7.4px;letter-spacing:.01em;color:#9ca59b}.free{color:#c7d79f}
+.side-quote{font-size:7.1px;line-height:1.55;letter-spacing:.01em;color:#8e988e;opacity:.76}.statusbar{font-size:7.2px;line-height:1.2;letter-spacing:.045em;color:#bcc4b8}
+@media(max-width:560px){.side-link{font-size:8.8px}.search input{font-size:9px}.resource-card p{font-size:8.6px}.meta{font-size:7.6px}.filter-row:first-of-type .tag-filter{font-size:7.9px}.filter-row:nth-of-type(2) .tag-filter{font-size:7.2px}}

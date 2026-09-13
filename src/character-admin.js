@@ -4,6 +4,8 @@ const arr=v=>Array.isArray(v)?v:[];
 const uniq=v=>[...new Set(arr(v).map(clean).filter(Boolean))];
 const parse=v=>{try{const x=JSON.parse(v||'[]');return Array.isArray(x)?x:[]}catch{return[]}};
 const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const povKey=v=>String(v||'').replace(/^[^\p{L}\p{N}#]+/u,'').toLocaleLowerCase().replace(/[^a-z]/g,'');
+const isPovTag=v=>['fempov','femalepov','malepov','anypov'].includes(povKey(v));
 
 async function clearCatalogCache(request){
   const cache=globalThis.caches?.default;if(!cache)return;
@@ -37,10 +39,12 @@ export async function updateAdminCharacter(request,env,uuid){
   let b;try{b=await request.json()}catch{return json({ok:false,error:'INVALID_JSON'},400)}
   const current=await env.DB.prepare('SELECT janitor_uuid FROM characters WHERE janitor_uuid=? LIMIT 1').bind(uuid).first();
   if(!current)return json({ok:false,error:'CHARACTER_NOT_FOUND'},404);
-  const universes=uniq(b.universes),tags=uniq(b.tags),hashtags=uniq(b.hashtags),settingIds=uniq(b.setting_ids);
+  const universes=uniq(b.universes),hashtags=uniq(b.hashtags),settingIds=uniq(b.setting_ids);
   const pov=['FemPOV','MalePOV','AnyPOV'].includes(clean(b.pov))?clean(b.pov):'AnyPOV';
+  const povTag=pov==='FemPOV'?'👩 FemPov':pov==='MalePOV'?'👨 MalePov':'👤 AnyPOV';
+  const tags=[...uniq(b.tags).filter(x=>!isPovTag(x)),povTag];
   const status=['published','hidden'].includes(clean(b.status))?clean(b.status):'published';
-  await env.DB.prepare(`UPDATE characters SET name=?,author=?,author_url=?,short_description=?,description=?,scenario=?,tags=?,hashtags=?,universe=?,universes=?,universe_source_field='admin:manual',setting_ids=?,setting_source='admin:manual',pov=?,image_url=?,janitor_url=?,datacat_url=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?`).bind(
+  await env.DB.prepare(`UPDATE characters SET name=?,author=?,author_url=?,short_description=?,description=?,scenario=?,tags=?,hashtags=?,universe=?,universes=?,universe_source_field='admin:manual',setting_ids=?,setting_source='rules:v6',pov=?,image_url=?,janitor_url=?,datacat_url=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?`).bind(
     clean(b.name)||'UNKNOWN CHARACTER',clean(b.author)||'Unknown',clean(b.author_url),clean(b.short_description),String(b.description??'').trim(),String(b.scenario??'').trim(),JSON.stringify(tags),JSON.stringify(hashtags),universes[0]||'',JSON.stringify(universes),JSON.stringify(settingIds),pov,clean(b.image_url),clean(b.janitor_url),clean(b.datacat_url),status,uuid
   ).run();
   await clearCatalogCache(request);

@@ -1,6 +1,6 @@
 import app from './universe-curation.js';
 import { analyzeTelegramPost } from './hub-telegram.js';
-import { publishHubResource, listHubResources, downloadHubFile, injectHubResources } from './hub-resources.js';
+import { publishHubResource, listHubResources, downloadHubFile, deleteHubResourceFile, injectHubResources } from './hub-resources.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 
@@ -14,6 +14,11 @@ export default{
     if(url.pathname==='/api/admin/hub-resource'){
       if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
       return publishHubResource(request,env);
+    }
+    const adminFileMatch=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)\/files\/([^/]+)$/);
+    if(adminFileMatch){
+      if(request.method!=='DELETE')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
+      return deleteHubResourceFile(env,decodeURIComponent(adminFileMatch[1]),decodeURIComponent(adminFileMatch[2]));
     }
     if(url.pathname==='/api/hub-resources'){
       if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);

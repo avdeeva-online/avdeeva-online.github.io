@@ -4,6 +4,8 @@
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let data={rules:[],canonicalUniverses:[]},loading=false;
 
+  function ensureEditorLink(){const tabs=document.querySelector('.tabs');if(!tabs||tabs.querySelector('[data-bot-editor-link]'))return;const a=document.createElement('a');a.className='btn';a.href='edit.html';a.dataset.botEditorLink='1';a.textContent='BOT CARDS';tabs.insertBefore(a,tabs.querySelector('a[href="../hub/"]')||null)}
+
   function ensureUi(){
     const panel=$('#universePanel');
     if(!panel||$('#curationRegistryBlock'))return;
@@ -71,6 +73,6 @@
     try{await post({action:'toggle',source});await load()}catch(e){status.textContent=`CURATION ACTION FAILED: ${e.message}`}finally{if(button.isConnected)button.disabled=false}
   }
 
-  function init(){ensureUi();load();document.querySelector('[data-mode="universes"]')?.addEventListener('click',load)}
+  function init(){ensureEditorLink();ensureUi();load();document.querySelector('[data-mode="universes"]')?.addEventListener('click',load)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

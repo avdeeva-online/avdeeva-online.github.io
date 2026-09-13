@@ -3,9 +3,8 @@
   const $=s=>document.querySelector(s);
   const allowedSettings=new Set(['modern','fantasy','medieval','post-apocalypse','sci-fi','omegaverse','rusreal']);
   const normalizeSettings=arr=>[...new Set((Array.isArray(arr)?arr:[]).map(x=>{x=String(x).toLowerCase();if(x==='historical')return'medieval';if(x==='magic')return'fantasy';return x}).filter(x=>allowedSettings.has(x)))];
-  const EXTRA_PREFIX='__extra__';
   const isImageFile=f=>/^image\//i.test(String(f?.type||f?.mime||''))||/\.(png|jpe?g|webp|gif)$/i.test(String(f?.name||''));
-  const isExtraStored=f=>String(f?.name||'').startsWith(EXTRA_PREFIX)||isImageFile(f);
+  const isExtraStored=f=>Boolean(f?.extra)||String(f?.name||'').startsWith('__extra__')||isImageFile(f);
   const cleanExtraName=v=>String(v||'').replace(/^__extra__/,'');
   let editResource=null;
   let editPendingFiles=[];
@@ -62,38 +61,64 @@
   function renderExtraPending(){
     const box=$('#extraImageList'),summary=$('#extraImageSummary');if(!box||!summary)return;
     if(!extraPendingImages.length){box.innerHTML='';summary.textContent='NO EXTRA IMAGES ATTACHED';return}
-    box.innerHTML=extraPendingImages.map((f,i)=>`<div class="file-row"><div><div class="file-name">${String(f.name).replace(/[<>&]/g,'')}</div><div class="file-meta">EXTRAS IMAGE · ${Math.max(0,Number(f.size)||0)} B</div></div><button class="file-action remove" type="button" data-remove-extra="${i}">REMOVE</button></div>`).join('');
+    box.innerHTML=extraPendingImages.map((f,i)=>`<div class="file-row"><div><div class="file-name">${String(f.name).replace(/[<>&]/g,'')}</div><div class="file-meta">EXTRAS IMAGE · ${(Math.max(0,Number(f.size)||0)/1024).toFixed(0)} KB</div></div><button class="file-action remove" type="button" data-remove-extra="${i}">REMOVE</button></div>`).join('');
     summary.textContent=`${extraPendingImages.length} EXTRA IMAGE${extraPendingImages.length===1?'':'S'} READY`;
     box.querySelectorAll('[data-remove-extra]').forEach(b=>b.onclick=()=>{extraPendingImages.splice(Number(b.dataset.removeExtra),1);renderExtraPending()});
   }
-  function rememberExtraImages(list){
-    for(const f of Array.from(list||[])){
-      if(!(f instanceof File)||!isImageFile(f))continue;
-      const i=extraPendingImages.findIndex(x=>x.name===f.name);
-      if(i>=0)extraPendingImages[i]=f;else extraPendingImages.push(f);
+  async function canvasBlob(canvas,type,quality){return await new Promise(resolve=>canvas.toBlob(resolve,type,quality))}
+  async function optimizeExtraImage(file){
+    if(!(file instanceof File)||!isImageFile(file))return null;
+    if(file.type==='image/gif'&&file.size<=1700*1024)return file;
+    if(file.type==='image/gif')throw new Error(`${file.name}: GIF is larger than 1.7 MB`);
+    if(file.size<=1350*1024&&(file.type==='image/jpeg'||file.type==='image/webp'))return file;
+    let bitmap;try{bitmap=await createImageBitmap(file)}catch{return file.size<=1700*1024?file:Promise.reject(new Error(`${file.name}: image is too large and could not be optimized`))}
+    const base=file.name.replace(/\.[^.]+$/,'')||'extra-image';
+    let maxSide=1600,quality=.84,blob=null;
+    for(let attempt=0;attempt<5;attempt++){
+      const scale=Math.min(1,maxSide/Math.max(bitmap.width,bitmap.height));
+      const w=Math.max(1,Math.round(bitmap.width*scale)),h=Math.max(1,Math.round(bitmap.height*scale));
+      const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+      canvas.getContext('2d',{alpha:false}).drawImage(bitmap,0,0,w,h);
+      blob=await canvasBlob(canvas,'image/webp',quality);
+      if(blob&&blob.size<=1500*1024)break;
+      maxSide=Math.round(maxSide*.84);quality=Math.max(.64,quality-.06);
     }
-    renderExtraPending();
+    bitmap.close?.();
+    if(!blob||blob.size>1750*1024)throw new Error(`${file.name}: image is still too large after optimization`);
+    return new File([blob],`${base}.webp`,{type:'image/webp',lastModified:Date.now()});
   }
-  function extraNamedFile(f){return new File([f],EXTRA_PREFIX+f.name,{type:f.type||'application/octet-stream',lastModified:f.lastModified||Date.now()})}
+  async function rememberExtraImages(list){
+    const incoming=Array.from(list||[]).filter(f=>f instanceof File&&isImageFile(f));
+    if(!incoming.length)return;
+    setStatus('PREPARING EXTRA IMAGES...');
+    try{
+      for(const original of incoming){
+        const f=await optimizeExtraImage(original);if(!f)continue;
+        const i=extraPendingImages.findIndex(x=>x.name===f.name);
+        if(i>=0)extraPendingImages[i]=f;else extraPendingImages.push(f);
+      }
+      renderExtraPending();setStatus('EXTRA IMAGES READY.','ok');
+    }catch(e){setStatus('EXTRA IMAGE ERROR: '+e.message,'bad')}
+  }
 
   $('#fileInput')?.addEventListener('change',e=>rememberPendingFiles(e.target.files),true);
   $('#fileDrop')?.addEventListener('drop',e=>rememberPendingFiles(e.dataTransfer?.files),true);
   $('#extraImageDrop')?.addEventListener('click',()=>$('#extraImageInput')?.click());
   $('#extraImageDrop')?.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#extraImageInput')?.click()}});
-  $('#extraImageInput')?.addEventListener('change',e=>{rememberExtraImages(e.target.files);e.target.value=''});
+  $('#extraImageInput')?.addEventListener('change',async e=>{await rememberExtraImages(e.target.files);e.target.value=''});
   $('#extraImageDrop')?.addEventListener('dragover',e=>{e.preventDefault();e.currentTarget.classList.add('drag')});
   $('#extraImageDrop')?.addEventListener('dragleave',e=>e.currentTarget.classList.remove('drag'));
-  $('#extraImageDrop')?.addEventListener('drop',e=>{e.preventDefault();e.currentTarget.classList.remove('drag');rememberExtraImages(e.dataTransfer?.files)});
+  $('#extraImageDrop')?.addEventListener('drop',async e=>{e.preventDefault();e.currentTarget.classList.remove('drag');await rememberExtraImages(e.dataTransfer?.files)});
 
   window.fetch=async(input,init={})=>{
     const url=typeof input==='string'?input:input?.url||'';
     if(url.includes('/api/admin/hub-resource')&&init.method==='POST'){
       try{
         const patchDraft=d=>{d=d&&typeof d==='object'?d:{};d.settings=normalizeSettings(d.settings);d.additional_info=$('#additionalInfo')?.value?.trim()||'';if(editResource){d.editing_id=editResource.id;d.source=d.source||{};d.source.url=editResource.source_url;if(!Array.isArray(d.media)||!d.media.length)d.media=Array.isArray(editResource.media)?editResource.media:[]}return d};
-        if(init.body instanceof FormData){const fd=init.body,part=fd.get('resource');let raw='{}';if(part instanceof File||part instanceof Blob)raw=await part.text();else if(part!=null)raw=String(part);const d=patchDraft(JSON.parse(raw||'{}'));fd.set('resource',new Blob([JSON.stringify(d)],{type:'application/json'}),'resource.json');extraPendingImages.forEach(f=>fd.append('files',extraNamedFile(f),EXTRA_PREFIX+f.name))}
+        if(init.body instanceof FormData){const fd=init.body,part=fd.get('resource');let raw='{}';if(part instanceof File||part instanceof Blob)raw=await part.text();else if(part!=null)raw=String(part);const d=patchDraft(JSON.parse(raw||'{}'));fd.set('resource',new Blob([JSON.stringify(d)],{type:'application/json'}),'resource.json');extraPendingImages.forEach(f=>fd.append('extraImages',f,f.name))}
         else if(typeof init.body==='string'){
           const d=patchDraft(JSON.parse(init.body||'{}'));
-          if(extraPendingImages.length){const fd=new FormData();fd.append('resource',new Blob([JSON.stringify(d)],{type:'application/json'}),'resource.json');extraPendingImages.forEach(f=>fd.append('files',extraNamedFile(f),EXTRA_PREFIX+f.name));init={...init,headers:undefined,body:fd}}
+          if(extraPendingImages.length){const fd=new FormData();fd.append('resource',new Blob([JSON.stringify(d)],{type:'application/json'}),'resource.json');extraPendingImages.forEach(f=>fd.append('extraImages',f,f.name));init={...init,headers:undefined,body:fd}}
           else init={...init,body:JSON.stringify(d)};
         }
       }catch(e){console.warn('Admin publish patch failed',e)}
@@ -153,19 +178,19 @@
         const fd=new FormData();
         fd.append('resource',new Blob([JSON.stringify(d)],{type:'application/json'}),'resource.json');
         editPendingFiles.forEach(f=>fd.append('files',f,f.name));
-        extraPendingImages.forEach(f=>fd.append('files',extraNamedFile(f),EXTRA_PREFIX+f.name));
+        extraPendingImages.forEach(f=>fd.append('extraImages',f,f.name));
         r=await oldFetch('/api/admin/hub-resource',{method:'POST',body:fd});
       }else{
         r=await oldFetch('/api/admin/hub-resource',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(d)});
       }
-      const x=await r.json().catch(()=>({}));
-      if(!r.ok||!x.ok)throw new Error(x.error||`HTTP_${r.status}`);
+      const raw=await r.text();let x={};try{x=JSON.parse(raw||'{}')}catch{}
+      if(!r.ok||!x.ok)throw new Error([x.error||`HTTP_${r.status}`,x.detail].filter(Boolean).join(': '));
       editPendingFiles=[];extraPendingImages=[];renderExtraPending();
       const fresh=await reloadEditedResource(x.id||editResource.id);
       fillResource(fresh);
       const localList=$('#fileList');if(localList)localList.innerHTML='';
       const summary=$('#fileSummary');if(summary)summary.textContent='NO NEW DOWNLOAD FILES ATTACHED';
-      setStatus('RESOURCE UPDATED SUCCESSFULLY.\nDownload files and EXTRAS images are stored separately in the UI.','ok');
+      setStatus('RESOURCE UPDATED SUCCESSFULLY.\nDownload files and EXTRAS images are stored separately.','ok');
     }catch(e){setStatus('UPDATE FAILED: '+e.message,'bad')}
     finally{if(b)b.disabled=false}
   }

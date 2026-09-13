@@ -44,6 +44,14 @@ async function injectAdminBack(response){
   headers.delete('content-length');
   return new Response(html,{status:response.status,statusText:response.statusText,headers});
 }
+async function injectHubSuggest(response){
+  const type=String(response.headers.get('content-type')||'').toLowerCase();
+  if(!type.includes('text/html'))return response;
+  let html=await response.text();
+  if(!html.includes('data-hub-suggest-script'))html=html.replace(/<\/body>/i,'<script data-hub-suggest-script src="/hub-suggest.js?v=20260913-1"></script></body>');
+  const headers=new Headers(response.headers);headers.delete('content-length');
+  return new Response(html,{status:response.status,statusText:response.statusText,headers});
+}
 
 export default{
   async fetch(request,env,ctx){
@@ -102,8 +110,9 @@ export default{
       return downloadHubFile(env,decodeURIComponent(fileMatch[1]),decodeURIComponent(fileMatch[2]));
     }
     if(request.method==='GET'&&(url.pathname==='/hub.html'||url.pathname==='/hub'||url.pathname==='/hub/')){
-      const response=await app.fetch(request,env,ctx);
-      return injectHubResources(response,env);
+      let response=await app.fetch(request,env,ctx);
+      response=await injectHubResources(response,env);
+      return injectHubSuggest(response);
     }
     const response=await app.fetch(request,env,ctx);
     if(request.method==='GET'&&url.pathname.startsWith('/admin/')&&url.pathname!=='/admin/')return injectAdminBack(response);

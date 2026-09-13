@@ -1,7 +1,7 @@
 (()=>{
   'use strict';
   const $=s=>document.querySelector(s);
-  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let data={rules:[],canonicalUniverses:[]},loading=false,loaded=false;
 
   function ensureEditorLink(){const tabs=document.querySelector('.tabs');if(!tabs||tabs.querySelector('[data-bot-editor-link]'))return;const a=document.createElement('a');a.className='btn';a.href='edit.html';a.dataset.botEditorLink='1';a.textContent='BOT CARDS';tabs.insertBefore(a,tabs.querySelector('a[href="../hub/"]')||null)}

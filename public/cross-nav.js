@@ -22,6 +22,12 @@
 
   if(isHub){
     document.querySelector('.top-shell')?.appendChild(nav);
+    if(!document.querySelector('script[data-hub-extra-fix]')){
+      const extraScript=document.createElement('script');
+      extraScript.src='hub-extra-fix.js?v=20260913-1';
+      extraScript.dataset.hubExtraFix='1';
+      document.head.appendChild(extraScript);
+    }
     if(!document.querySelector('script[data-hub-category-filters]')){
       const categoryScript=document.createElement('script');
       categoryScript.src='hub-category-filters.js?v=20260913-4';

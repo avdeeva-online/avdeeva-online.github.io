@@ -75,3 +75,10 @@ body{font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothin
 @media(max-width:1180px){.directory-head{grid-template-columns:154px minmax(0,1fr)}.top-shell{min-height:120px}}
 @media(max-width:860px){.top-shell{min-height:132px;padding:12px 16px 6px}.top-motto{top:64px}.directory-head{grid-template-columns:1fr;padding:8px 10px;gap:7px}.hub-title .desc{max-width:320px}.search{height:32px}}
 @media(max-width:560px){.top-shell{min-height:118px}.brand{font-size:21px}.brand-sub{font-size:7.3px}.boot{font-size:7.2px}.directory-head{padding:7px 9px}.hub-title h1{font-size:19px}.hub-title .desc:after{font-size:6.6px}}
+
+/* TAVO HUB — minimal top shell */
+.brand-sub,.boot,.top-index,.top-motto{display:none!important}
+.top-shell{min-height:72px;padding:14px 30px 8px;display:block}
+.brand{font-size:23px;line-height:1;letter-spacing:.045em}
+@media(max-width:860px){.top-shell{min-height:66px;padding:12px 16px 7px}}
+@media(max-width:560px){.top-shell{min-height:62px;padding:11px 13px 6px}.brand{font-size:21px}}

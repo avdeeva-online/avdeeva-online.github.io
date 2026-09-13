@@ -1,0 +1,89 @@
+name: Refine TAVO Hub UI
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/refine-hub-ui.yml']
+permissions:
+  contents: write
+jobs:
+  refine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refine hub layout and interactions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('public/hub.html')
+          s=p.read_text()
+          marker='/* HUB-REFINE-2026-09-13 */'
+          if marker not in s:
+              css=r'''
+    /* HUB-REFINE-2026-09-13 */
+    .top-shell{min-height:188px;padding:22px 32px 12px}
+    .top-motto{top:38px;font-size:8.2px;opacity:.86}
+    .directory{width:min(1460px,calc(100% - 44px));background:linear-gradient(180deg,rgba(6,10,7,.965),rgba(5,8,6,.985));box-shadow:0 18px 58px rgba(0,0,0,.42),inset 0 0 34px rgba(115,148,105,.022)}
+    .directory:before,.directory:after{opacity:.34;filter:brightness(.50) saturate(.60) drop-shadow(0 4px 7px rgba(0,0,0,.35));height:82px;top:-15px}
+    .directory:before{width:25%;left:-5px;background-size:100% 100%}
+    .directory:after{width:23%;right:-3px;background-size:100% 100%}
+    .directory-head{grid-template-columns:280px minmax(0,1fr);gap:24px;padding:22px 26px 16px;align-items:start}
+    .hub-title h1{font-size:30px}
+    .hub-title .desc{margin-top:15px;max-width:255px;font-size:8.2px;line-height:1.5;color:#a7b0a4}
+    .search-wrap{padding-top:4px;align-items:center}
+    .search{height:40px;border-color:rgba(132,149,119,.26);background:rgba(4,7,5,.62)}
+    .head-note{display:none}
+    .directory-body{grid-template-columns:280px minmax(0,1fr);min-height:520px}
+    .side{padding:15px 16px 22px}
+    .side-nav{gap:5px}
+    .side-link{grid-template-columns:25px 1fr auto;min-height:35px;padding:6px 8px;font-size:8px;border-radius:4px;background:rgba(7,11,8,.28);border-color:rgba(121,137,109,.09)}
+    .side-link:hover{transform:translateX(1px)}
+    .folder{width:19px;height:14px;border-color:#a89468;opacity:.9}.folder:before{width:8px;height:4px;top:-4px;border-color:#a89468}
+    .count{font-size:7.1px;opacity:.72}
+    .side-quote{margin-top:14px;padding:14px 6px 0;font-size:7.3px;opacity:.78}
+    .content{padding:15px 18px 22px}
+    .toolbar{margin-bottom:12px;font-size:7.4px}.toolbar-right{gap:10px}.toolbar select{height:29px}.view-btn{width:29px;height:29px}
+    .resource-grid{gap:12px}
+    .resource-card{min-height:208px;border-color:rgba(123,141,111,.28);background:linear-gradient(180deg,rgba(10,15,11,.975),rgba(5,9,6,.99))}
+    .thumb{height:88px;filter:brightness(.76) saturate(.82) contrast(1.02)}
+    .card-body{padding:10px 11px 9px}.type{font-size:7.1px}.resource-card h3{font-size:14.5px;margin:6px 0 6px}.resource-card p{font-size:8.1px;line-height:1.42;color:#b4bbb1;min-height:34px}.meta{font-size:7.1px;margin-top:9px}
+    .resource-grid.list-view{grid-template-columns:1fr;gap:7px}
+    .resource-grid.list-view .resource-card{display:grid;grid-template-columns:150px minmax(0,1fr);min-height:118px}
+    .resource-grid.list-view .thumb{height:100%;min-height:118px;border-bottom:0;border-right:1px solid rgba(117,132,105,.22)}
+    .resource-grid.list-view .card-body{display:grid;grid-template-columns:90px minmax(0,1fr) auto;column-gap:14px;align-items:center;padding:12px 14px}
+    .resource-grid.list-view .type{grid-column:1;grid-row:1 / span 2}.resource-grid.list-view h3{grid-column:2;grid-row:1;margin:0 0 5px}.resource-grid.list-view p{grid-column:2;grid-row:2;min-height:0}.resource-grid.list-view .meta{grid-column:3;grid-row:1 / span 2;border-top:0;margin:0;padding:0;gap:12px}
+    @media(max-width:1180px){.directory-head{grid-template-columns:235px minmax(0,1fr)}.directory-body{grid-template-columns:235px minmax(0,1fr)}.resource-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:860px){.top-shell{min-height:174px;padding:18px 18px 10px}.top-motto{top:76px}.directory{width:calc(100% - 20px)}.directory:before,.directory:after{width:34%;height:64px;opacity:.22}.directory-head{grid-template-columns:1fr;padding:20px 16px 14px;gap:12px}.directory-body{grid-template-columns:1fr}.side{padding:12px 14px}.side-nav{grid-template-columns:repeat(4,minmax(0,1fr))}.side-link{min-height:38px;grid-template-columns:18px 1fr;padding:6px 7px}.folder{width:16px;height:12px}.content{padding:14px}.resource-grid.list-view .resource-card{grid-template-columns:115px minmax(0,1fr)}.resource-grid.list-view .card-body{grid-template-columns:1fr}.resource-grid.list-view .type,.resource-grid.list-view h3,.resource-grid.list-view p,.resource-grid.list-view .meta{grid-column:1;grid-row:auto}.resource-grid.list-view .meta{border-top:1px solid rgba(111,127,101,.18);padding-top:8px;margin-top:8px}}
+    @media(max-width:560px){.top-shell{min-height:158px}.top-motto{display:none}.directory{width:calc(100% - 12px)}.directory:before,.directory:after{width:42%;height:54px;opacity:.17}.hub-title h1{font-size:26px}.side-nav{grid-template-columns:repeat(2,minmax(0,1fr))}.resource-grid{grid-template-columns:1fr}.resource-grid.list-view .resource-card{display:block}.resource-grid.list-view .thumb{height:96px;border-right:0;border-bottom:1px solid rgba(117,132,105,.22)}}
+'''
+              s=s.replace('  </style>', css+'\n  </style>')
+          # Make the decorative helper copy less noisy without altering layout structure
+          s=s.replace('FIND TOOLS.<br>FUEL IMAGINATION.<br>BUILD BRIGHTER WORLDS.','')
+          # Add functional grid/list switching once
+          js_marker='// HUB-VIEW-TOGGLE'
+          if js_marker not in s:
+              extra=r'''
+  <script>
+    // HUB-VIEW-TOGGLE
+    (()=>{
+      const grid=document.querySelector('.resource-grid');
+      const toggles=[...document.querySelectorAll('.view-btn')];
+      if(!grid||toggles.length<2)return;
+      toggles.forEach((btn,i)=>btn.addEventListener('click',()=>{
+        toggles.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        grid.classList.toggle('list-view',i===1);
+      }));
+    })();
+  </script>
+'''
+              s=s.replace('</body>',extra+'\n</body>')
+          p.write_text(s)
+          PY
+      - name: Commit refinement
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/hub.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Refine TAVO Hub layout and UX"
+          git push

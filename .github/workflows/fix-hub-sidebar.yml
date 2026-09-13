@@ -1,0 +1,53 @@
+name: Fix TAVO Hub sidebar
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-hub-sidebar.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch hub sidebar styles
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('public/hub.html')
+          s = p.read_text(encoding='utf-8')
+          old = ".side-nav{display:grid;gap:7px}.side-link{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;min-height:42px;padding:8px 10px;border:1px solid transparent;border-radius:5px;color:#c9c8be;font:8.7px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;cursor:pointer;transition:.16s}.side-link:hover{background:rgba(144,162,127,.055);border-color:rgba(135,151,120,.16)}.side-link.active{border-color:rgba(169,181,132,.55);background:linear-gradient(90deg,rgba(137,155,110,.15),rgba(69,78,58,.06));color:#eadfbf}"
+          new = ".side-nav{display:grid;gap:6px}.side-link{appearance:none;-webkit-appearance:none;width:100%;display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;min-height:40px;padding:7px 10px;border:1px solid rgba(121,137,109,.12);border-radius:5px;background:rgba(7,11,8,.42);color:#aeb6aa;font:8.4px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;text-align:left;cursor:pointer;box-shadow:inset 0 0 14px rgba(118,146,104,.012);transition:background .16s,border-color .16s,color .16s,transform .16s}.side-link:hover{background:rgba(132,151,116,.075);border-color:rgba(145,160,130,.28);color:#d8d4c6}.side-link:focus-visible{outline:1px solid rgba(205,220,181,.82);outline-offset:2px}.side-link.active{border-color:rgba(169,181,132,.52);background:linear-gradient(90deg,rgba(137,155,110,.14),rgba(69,78,58,.045));color:#eadfbf}.side-link.active .folder{border-color:#d2c28f}.side-link.active .folder:before{border-color:#d2c28f}.side-link.active .count{color:#b9bd9a}"
+          if old not in s:
+              raise SystemExit('Target sidebar CSS not found')
+          s = s.replace(old, new, 1)
+          old_mobile = ".side-nav{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.side-link{grid-template-columns:1fr;gap:4px;justify-items:center;text-align:center;min-height:58px;font-size:7px}.folder{width:20px;height:15px}.count{display:none}"
+          new_mobile = ".side-nav{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.side-link{grid-template-columns:20px 1fr;gap:7px;justify-items:start;text-align:left;min-height:42px;padding:7px 8px;font-size:7px}.folder{width:18px;height:14px}.count{display:none}"
+          if old_mobile not in s:
+              raise SystemExit('Target tablet sidebar CSS not found')
+          s = s.replace(old_mobile, new_mobile, 1)
+          old_phone = ".side-nav{grid-template-columns:repeat(2,minmax(0,1fr))}.resource-grid{grid-template-columns:1fr}"
+          new_phone = ".side-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.side-link{min-height:40px;padding:7px 8px}.resource-grid{grid-template-columns:1fr}"
+          if old_phone not in s:
+              raise SystemExit('Target phone sidebar CSS not found')
+          s = s.replace(old_phone, new_phone, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit fix
+        run: |
+          git config user.name "archive-exe-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/hub.html
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git commit -m "Fix TAVO Hub sidebar styles"
+          git push

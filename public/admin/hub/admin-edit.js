@@ -30,6 +30,11 @@
   const full=$('#fullDesc');
   if(full&&!$('#additionalInfo')){const wrap=document.createElement('div');wrap.className='field';wrap.innerHTML='<label>ADDITIONAL INFO / AUTHOR NOTES</label><textarea id="additionalInfo" placeholder="Дополнительные настройки, пояснения автора, заметки, ссылки и другая информация для вкладки EXTRAS."></textarea>';full.closest('.field').insertAdjacentElement('afterend',wrap)}
   const fileField=$('#fileDrop')?.closest('.field');
+  if(fileField){
+    const label=fileField.querySelector('label');if(label)label.textContent='FILES / EXTRA IMAGES';
+    const dropHint=$('#fileDrop span');if(dropHint)dropHint.textContent='Files + JPG / PNG / WEBP · image uploads are shown automatically in the public EXTRAS tab';
+    if(!fileField.querySelector('[data-extra-image-note]')){const note=document.createElement('div');note.className='file-summary';note.dataset.extraImageNote='1';note.textContent='IMAGE FILES → EXTRAS GALLERY · the main card cover still comes from the selected source media.';$('#fileDrop')?.insertAdjacentElement('afterend',note)}
+  }
   if(fileField&&!$('#existingFiles')){const box=document.createElement('div');box.id='existingFiles';box.style.marginTop='10px';fileField.appendChild(box)}
 
   function choose(boxSelector,values,multi=true){const box=$(boxSelector);if(!box)return;const normalized=boxSelector==='#settingChoices'?normalizeSettings(values):(Array.isArray(values)?values:[values]);const wanted=new Set(normalized);box.querySelectorAll('.choice').forEach(b=>{const should=wanted.has(b.dataset.v),active=b.classList.contains('active');if(should!==active)b.click()})}

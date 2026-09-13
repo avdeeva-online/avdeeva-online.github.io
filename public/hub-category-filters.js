@@ -62,7 +62,6 @@
   function themeColorsPresent(){
     const set=new Set();
     cards().filter(c=>c.dataset.type==='themes').forEach(c=>detectColors(c).forEach(v=>set.add(v)));
-    // Keep a useful stable palette even before all existing themes are tagged.
     return COLORS.map(([id])=>id).filter(id=>set.has(id)||['dark','light','green','blue','pink','purple','brown','beige'].includes(id));
   }
 
@@ -109,7 +108,9 @@
   }
 
   function bind(){
+    if(document.documentElement.dataset.hubCategoryBound==='1')return;
     const panel=ensurePanel();if(!panel)return;
+    document.documentElement.dataset.hubCategoryBound='1';
     panel.addEventListener('click',e=>{
       const b=e.target.closest('.hub-category-filter');if(!b)return;
       selected=b.dataset.value||'all';
@@ -133,8 +134,6 @@
       .hub-category-filter.active{border-color:rgba(194,181,109,.50);background:rgba(135,126,71,.12);color:#eadfbd;box-shadow:0 0 12px rgba(184,164,86,.045)}
       .hub-category-empty{font:6.6px/1 var(--mono);letter-spacing:.06em;color:#69746b}
       .resource-card.category-filter-hidden{display:none!important}
-
-      /* Themes are image-led resources: give portrait artwork room instead of cropping it into the standard strip. */
       .resource-grid.hub-theme-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
       .resource-grid.hub-theme-grid .resource-card{min-height:0}
       .resource-grid.hub-theme-grid .thumb{height:auto!important;flex:0 0 auto!important;aspect-ratio:4/5;background-size:cover!important;background-position:center top!important;border-radius:10px 10px 5px 5px}
@@ -146,6 +145,11 @@
     `;document.head.appendChild(s);
   }
 
+  function waitForHub(tries=0){
+    if(document.querySelector('.hub-control-line')&&document.querySelector('.resource-grid')&&(cards().length||tries>50)){bind();return}
+    if(tries<80)setTimeout(()=>waitForHub(tries+1),50);
+  }
+
   addStyles();
-  Promise.resolve(window.__hubResourcesReady).catch(()=>{}).then(()=>setTimeout(bind,0));
+  waitForHub();
 })();

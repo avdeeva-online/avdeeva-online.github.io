@@ -38,7 +38,7 @@ async function injectAdminBack(response){
   const type=String(response.headers.get('content-type')||'').toLowerCase();
   if(!type.includes('text/html'))return response;
   let html=await response.text();
-  if(!html.includes('data-admin-back-script'))html=html.replace(/<\/body>/i,'<script data-admin-back-script src="/admin/admin-back.js?v=20260913"></script></body>');
+  if(!html.includes('data-admin-back-script'))html=html.replace(/<\/body>/i,'<script data-admin-back-script src="/admin/admin-back.js?v=20260913"></script><script data-hub-cover-script src="/admin/hub/cover-upload.js?v=20260913-1"></script></body>');
   const headers=new Headers(response.headers);
   headers.set('cache-control','no-store');
   headers.delete('content-length');

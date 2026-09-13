@@ -6,10 +6,14 @@
   const style=document.createElement('style');
   style.dataset.hubExtraFix='1';
   style.textContent=`
-    .hub-extra-image{position:relative;display:flex!important;align-items:center;justify-content:center;overflow:hidden;background:#070b08!important}
-    .hub-extra-image>img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;border:0}
+    .hub-extra-images{grid-template-columns:repeat(2,minmax(0,1fr))!important;align-items:start;max-width:none!important}
+    .hub-extra-image{position:relative;display:block!important;aspect-ratio:auto!important;height:auto!important;min-height:0!important;overflow:hidden;background:#070b08!important}
+    .hub-extra-image>img{display:block;width:100%;height:auto!important;max-height:none!important;object-fit:contain!important;object-position:center;border:0}
+    .hub-extra-image[data-extra-state="loading"]{min-height:150px;display:grid!important;place-items:center}
     .hub-extra-image[data-extra-state="loading"]:after{content:'LOADING IMAGE…';font:7px/1.3 var(--mono);letter-spacing:.07em;color:#6f796f}
+    .hub-extra-image[data-extra-state="error"]{min-height:150px;display:grid!important;place-items:center}
     .hub-extra-image[data-extra-state="error"]:after{content:'IMAGE FAILED TO LOAD';font:7px/1.3 var(--mono);letter-spacing:.07em;color:#9d786d}
+    @media(max-width:700px){.hub-extra-images{grid-template-columns:1fr!important}}
   `;
   document.head.appendChild(style);
 

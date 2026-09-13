@@ -1,16 +1,16 @@
 (()=>{
   localStorage.setItem('archiveHubAdmin','1');
   const $=s=>document.querySelector(s);
-  const allowedSettings=new Set(['modern','fantasy','medieval','post-apocalypse','sci-fi','omegaverse','rusreal','magic']);
-  const normalizeSettings=arr=>[...new Set((Array.isArray(arr)?arr:[]).map(x=>String(x).toLowerCase()==='historical'?'medieval':String(x).toLowerCase()).filter(x=>allowedSettings.has(x)))];
+  const allowedSettings=new Set(['modern','fantasy','medieval','post-apocalypse','sci-fi','omegaverse','rusreal']);
+  const normalizeSettings=arr=>[...new Set((Array.isArray(arr)?arr:[]).map(x=>{x=String(x).toLowerCase();if(x==='historical')return'medieval';if(x==='magic')return'fantasy';return x}).filter(x=>allowedSettings.has(x)))];
   let editResource=null;
   const oldFetch=window.fetch.bind(window);
 
   function setStatus(text,kind=''){const e=$('#analyzeStatus');if(!e)return;e.textContent=text;e.className='status '+kind}
   function syncSettingChoices(){
     const box=$('#settingChoices');if(!box)return;
-    ['historical','school-university'].forEach(v=>{const b=box.querySelector(`.choice[data-v="${v}"]`);if(b){if(b.classList.contains('active'))b.click();b.remove()}});
-    for(const [v,label] of [['rusreal','RUSREAL'],['magic','MAGIC']])if(!box.querySelector(`.choice[data-v="${v}"]`)){const b=document.createElement('button');b.type='button';b.className='choice';b.dataset.v=v;b.textContent=label;box.appendChild(b)}
+    ['historical','school-university','magic'].forEach(v=>{const b=box.querySelector(`.choice[data-v="${v}"]`);if(b){if(b.classList.contains('active'))b.click();b.remove()}});
+    if(!box.querySelector('.choice[data-v="rusreal"]')){const b=document.createElement('button');b.type='button';b.className='choice';b.dataset.v='rusreal';b.textContent='RUSREAL';box.appendChild(b)}
   }
   syncSettingChoices();
   new MutationObserver(syncSettingChoices).observe(document.body,{subtree:true,childList:true});

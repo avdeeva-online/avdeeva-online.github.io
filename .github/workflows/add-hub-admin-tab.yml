@@ -1,0 +1,32 @@
+name: Add TAVO Hub admin tab
+on:
+  push:
+    paths:
+      - '.github/workflows/add-hub-admin-tab.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch admin navigation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('public/admin/import/index.html')
+          s=p.read_text()
+          old='<div class="tabs"><button class="active" data-mode="author">BY AUTHOR</button><button data-mode="links">PASTE LINKS</button><button data-mode="universes">UNIVERSE REVIEW</button></div>'
+          new='<div class="tabs"><button class="active" data-mode="author">BY AUTHOR</button><button data-mode="links">PASTE LINKS</button><button data-mode="universes">UNIVERSE REVIEW</button><a class="btn" href="../hub/">TAVO HUB / TELEGRAM</a></div>'
+          if old not in s:
+              raise SystemExit('tabs block not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "archive-exe-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/admin/import/index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Link TAVO Hub Telegram admin"
+          git push

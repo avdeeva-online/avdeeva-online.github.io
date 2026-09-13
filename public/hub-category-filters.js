@@ -59,32 +59,36 @@
       .resource-grid.hub-theme-grid .resource-card p{min-height:0;max-height:2.7em;font-size:8px}
       .resource-grid.hub-theme-grid .card-tags{margin-top:4px}
 
-      /* Opened THEME card: one clean information column, controls on their own row. */
-      #hubResourceModal .hub-modal-panel.hub-theme-modal{width:min(620px,calc(100vw - 28px));height:min(700px,88vh)}
-      #hubResourceModal .hub-theme-modal .hub-modal-cover{height:215px;flex-basis:215px;background-size:cover;background-repeat:no-repeat;background-position:center;background-color:#050805;filter:saturate(.96) brightness(.96)}
-      #hubResourceModal .hub-theme-modal .hub-modal-cover:after{background:linear-gradient(180deg,transparent 62%,rgba(4,7,5,.52))}
-      #hubResourceModal .hub-theme-modal .hub-modal-body{padding:14px 18px 16px}
-      #hubResourceModal .hub-theme-modal .hub-modal-head{display:grid;grid-template-columns:1fr;gap:11px;align-items:start}
+      /* Opened THEME card: image first, clean metadata, separate actions and downloads. */
+      #hubResourceModal .hub-modal-panel.hub-theme-modal{width:min(620px,calc(100vw - 28px));height:min(640px,88vh)}
+      #hubResourceModal .hub-theme-modal .hub-modal-cover{height:205px;flex-basis:205px;background-size:cover;background-repeat:no-repeat;background-position:center;background-color:#050805;filter:saturate(.96) brightness(.96)}
+      #hubResourceModal .hub-theme-modal .hub-modal-cover:after{background:linear-gradient(180deg,transparent 64%,rgba(4,7,5,.50))}
+      #hubResourceModal .hub-theme-modal .hub-modal-body{padding:14px 18px 14px}
+      #hubResourceModal .hub-theme-modal .hub-modal-head{display:grid;grid-template-columns:1fr;gap:10px;align-items:start}
       #hubResourceModal .hub-theme-modal .hub-modal-primary{min-width:0;padding-right:0}
       #hubResourceModal .hub-theme-modal .hub-modal-type{white-space:nowrap;word-break:keep-all;overflow-wrap:normal}
       #hubResourceModal .hub-theme-modal .hub-modal-title{font-size:22px;line-height:1.05;margin:5px 0 5px;max-width:none}
       #hubResourceModal .hub-theme-modal .hub-modal-author{display:flex;align-items:center;gap:6px;white-space:nowrap;line-height:1.2}
       #hubResourceModal .hub-theme-modal .hub-modal-author b{display:inline-block;white-space:nowrap}
-      #hubResourceModal .hub-theme-modal .hub-modal-actions{width:100%;max-width:none;display:flex;flex-direction:row;align-items:flex-start;justify-content:space-between;gap:8px;padding-top:0}
-      #hubResourceModal .hub-theme-modal .hub-modal-links,#hubResourceModal .hub-theme-modal .hub-file-list{width:auto;display:flex;justify-content:flex-start;gap:7px;flex-wrap:wrap}
-      #hubResourceModal .hub-theme-modal .hub-file-list{margin-left:auto;justify-content:flex-end}
-      #hubResourceModal .hub-theme-modal .hub-modal-link,#hubResourceModal .hub-theme-modal .hub-file-btn{min-height:32px}
-      #hubResourceModal .hub-theme-modal .hub-file-btn{max-width:300px}
       #hubResourceModal .hub-theme-modal .hub-modal-tags{margin-top:8px}
-      #hubResourceModal .hub-theme-modal .hub-modal-tabs{margin-top:10px;padding-top:9px}
+
+      #hubResourceModal .hub-theme-modal .hub-modal-actions{width:100%;max-width:none;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:8px 10px;align-items:start;padding-top:1px}
+      #hubResourceModal .hub-theme-modal .hub-modal-links{grid-column:2;display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap;width:auto}
+      #hubResourceModal .hub-theme-modal .hub-file-list{grid-column:1/-1;display:flex;justify-content:flex-start;gap:7px;flex-wrap:wrap;width:100%;padding-top:2px}
+      #hubResourceModal .hub-theme-modal .hub-modal-link,#hubResourceModal .hub-theme-modal .hub-file-btn{min-height:31px;padding-left:11px;padding-right:11px}
+      #hubResourceModal .hub-theme-modal .hub-file-btn{max-width:240px;white-space:normal;text-align:left;line-height:1.25}
+
+      #hubResourceModal .hub-theme-modal .hub-modal-tabs{margin-top:8px;padding-top:9px}
       #hubResourceModal .hub-theme-modal .hub-modal-tabs:before{top:10px}
-      #hubResourceModal .hub-theme-modal .hub-modal-desc{margin-top:10px;font-size:9.4px;line-height:1.45;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;max-width:none}
+      #hubResourceModal .hub-theme-modal .hub-tab[data-tab="extras"]{color:#8d977f}
+      #hubResourceModal .hub-theme-modal .hub-tab[data-tab="extras"].active{color:#eadfbd}
+      #hubResourceModal .hub-theme-modal .hub-modal-desc{margin-top:9px;font-size:9.4px;line-height:1.45;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;max-width:none}
       #hubResourceModal .hub-theme-modal .hub-extra-images{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px;max-width:none!important}
       #hubResourceModal .hub-theme-modal .hub-extra-image>img{width:100%;height:auto!important;object-fit:contain!important}
 
       @media(max-width:900px){.resource-grid.hub-theme-grid{grid-template-columns:repeat(2,minmax(0,1fr));justify-content:stretch}.resource-grid.hub-theme-grid .resource-card{max-width:none}.resource-grid.hub-theme-grid .thumb{height:220px!important;flex-basis:220px!important;background-position:center 38%!important}}
-      @media(max-width:700px){.hub-category-filters{flex:1 1 100%;order:2;overflow-x:auto;scrollbar-width:none}.hub-category-filters::-webkit-scrollbar{display:none}.hub-category-tags{flex-wrap:nowrap}.hub-category-filter{flex:0 0 auto}.resource-grid.hub-theme-grid .thumb{height:205px!important;flex-basis:205px!important;background-position:center 40%!important}#hubResourceModal .hub-modal-panel.hub-theme-modal{width:min(440px,calc(100vw - 14px));height:92vh;max-height:92vh}#hubResourceModal .hub-theme-modal .hub-modal-cover{height:190px;flex-basis:190px}#hubResourceModal .hub-theme-modal .hub-modal-actions{flex-direction:column;align-items:stretch}#hubResourceModal .hub-theme-modal .hub-file-list{margin-left:0;justify-content:flex-start}}
-      @media(max-width:500px){.resource-grid.hub-theme-grid{grid-template-columns:1fr}.resource-grid.hub-theme-grid .thumb{height:220px!important;flex-basis:220px!important;background-position:center 40%!important}#hubResourceModal .hub-theme-modal .hub-modal-cover{height:170px;flex-basis:170px}}
+      @media(max-width:700px){.hub-category-filters{flex:1 1 100%;order:2;overflow-x:auto;scrollbar-width:none}.hub-category-filters::-webkit-scrollbar{display:none}.hub-category-tags{flex-wrap:nowrap}.hub-category-filter{flex:0 0 auto}.resource-grid.hub-theme-grid .thumb{height:205px!important;flex-basis:205px!important;background-position:center 40%!important}#hubResourceModal .hub-modal-panel.hub-theme-modal{width:min(440px,calc(100vw - 14px));height:90vh;max-height:90vh}#hubResourceModal .hub-theme-modal .hub-modal-cover{height:185px;flex-basis:185px}#hubResourceModal .hub-theme-modal .hub-modal-actions{grid-template-columns:1fr}#hubResourceModal .hub-theme-modal .hub-modal-links,#hubResourceModal .hub-theme-modal .hub-file-list{grid-column:1;justify-content:flex-start}#hubResourceModal .hub-theme-modal .hub-file-btn{max-width:100%}}
+      @media(max-width:500px){.resource-grid.hub-theme-grid{grid-template-columns:1fr}.resource-grid.hub-theme-grid .thumb{height:220px!important;flex-basis:220px!important;background-position:center 40%!important}#hubResourceModal .hub-theme-modal .hub-modal-cover{height:165px;flex-basis:165px}}
     `;document.head.appendChild(s);
   }
 

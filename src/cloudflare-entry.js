@@ -32,6 +32,16 @@ async function adminHealth(env){
   ]);
   return json({ok:true,db:true,adminTokenConfigured:Boolean(String(env.ADMIN_ACCESS_TOKEN||'').trim()),counts:{characters,resources,files,chunks,lorebooks,lorebookBlobs,orphanLorebooks,orphanBlobs},checkedAt:new Date().toISOString()});
 }
+async function injectAdminBack(response){
+  const type=String(response.headers.get('content-type')||'').toLowerCase();
+  if(!type.includes('text/html'))return response;
+  let html=await response.text();
+  if(!html.includes('data-admin-back-script'))html=html.replace(/<\/body>/i,'<script data-admin-back-script src="/admin/admin-back.js?v=20260913"></script></body>');
+  const headers=new Headers(response.headers);
+  headers.set('cache-control','no-store');
+  headers.delete('content-length');
+  return new Response(html,{status:response.status,statusText:response.statusText,headers});
+}
 
 export default{
   async fetch(request,env,ctx){
@@ -89,6 +99,8 @@ export default{
       const response=await app.fetch(request,env,ctx);
       return injectHubResources(response,env);
     }
-    return app.fetch(request,env,ctx);
+    const response=await app.fetch(request,env,ctx);
+    if(request.method==='GET'&&url.pathname.startsWith('/admin/')&&url.pathname!=='/admin/')return injectAdminBack(response);
+    return response;
   }
 };

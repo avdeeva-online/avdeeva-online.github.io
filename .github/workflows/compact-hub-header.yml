@@ -46,3 +46,4 @@ CSS
           git add public/hub.html public/hub-polish.css
           git commit -m "Compact TAVO Hub header" || exit 0
           git push
+# triggered manually by repository update

@@ -74,7 +74,7 @@
       #hubResourceModal .hub-theme-modal .hub-modal-tags{margin-top:8px}
 
       #hubResourceModal .hub-theme-modal .hub-modal-actions{width:100%;max-width:none;display:flex;flex-direction:column;align-items:stretch;gap:7px;padding-top:1px}
-      #hubResourceModal .hub-theme-modal .hub-modal-links{display:flex;justify-content:flex-start;gap:7px;flex-wrap:wrap;width:100%}
+      #hubResourceModal .hub-theme-modal .hub-modal-links{display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap;width:100%;margin-left:auto}
       #hubResourceModal .hub-theme-modal .hub-file-list{display:flex;justify-content:flex-start;gap:7px;flex-wrap:wrap;width:100%;padding-top:1px}
       #hubResourceModal .hub-theme-modal .hub-modal-link,#hubResourceModal .hub-theme-modal .hub-file-btn{min-height:31px;padding-left:11px;padding-right:11px}
       #hubResourceModal .hub-theme-modal .hub-file-btn{max-width:270px;white-space:normal;text-align:left;line-height:1.25}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>ARCHIVE.EXE / EDIT HUB RESOURCES</title>
+<style>
+:root{--bg:#0b0e0b;--panel:#11150f;--panel2:#0d110c;--line:#2f382b;--text:#cbd4c2;--muted:#6f7a69;--bad:#b58a78;--ok:#90a884;--sand:#d1bd87;--mono:Consolas,ui-monospace,monospace}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 30% 0,#161d14 0,#0b0e0b 42%);color:var(--text);font-family:var(--mono)}a{color:inherit;text-decoration:none}.shell{width:min(1180px,calc(100% - 28px));margin:28px auto 70px}.head{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;padding-bottom:18px;border-bottom:1px solid var(--line)}.eyebrow{font-size:9px;letter-spacing:.12em;color:var(--muted)}h1{margin:7px 0 0;font-size:26px;letter-spacing:.05em}.badge{font-size:9px;color:var(--muted)}.tabs{display:flex;gap:4px;margin:18px 0;flex-wrap:wrap}.tabs a,.btn{border:1px solid var(--line);background:#10140e;color:#aeb9a5;padding:10px 14px;font:10px var(--mono);cursor:pointer}.tabs a.active,.btn.primary{background:#20281c;color:#e0e6d7;border-color:#59684f}.panel{border:1px solid var(--line);background:rgba(17,21,15,.9);padding:16px;margin-bottom:12px}.search{display:grid;grid-template-columns:1fr auto;gap:8px}.search input{width:100%;background:#0c100b;border:1px solid #333d2f;color:#d5dccd;padding:11px 12px;font:11px var(--mono);outline:none}.search input:focus{border-color:#69775f}.hint{margin-top:8px;font-size:8px;line-height:1.5;color:var(--muted)}.status{margin-top:10px;padding:10px;border-left:2px solid #475141;background:#0c100b;color:#899583;font-size:9px}.status.bad{border-color:#7b5147;color:#b99184}.list{display:grid;gap:8px}.item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;border:1px solid #303a2c;background:#0c100b;padding:12px}.title{font-size:12px;color:#e1e6da}.meta{margin-top:6px;font-size:8px;color:#788373;display:flex;flex-wrap:wrap;gap:9px}.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.tag{border:1px solid #33402f;background:#10150f;color:#899583;padding:4px 6px;font-size:7px}.actions{display:flex;gap:7px;align-items:center}.empty{padding:28px;text-align:center;color:#687364;font-size:9px;border:1px dashed #303a2c}.footer{margin-top:18px;color:#4f594b;font-size:8px;letter-spacing:.09em}@media(max-width:720px){.head{align-items:flex-start;flex-direction:column}.item{grid-template-columns:1fr}.actions{justify-content:flex-start}.search{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="shell">
+<header class="head"><div><div class="eyebrow">PRIVATE TOOL / TAVO HUB</div><h1>EDIT HUB RESOURCES</h1></div><div class="badge">SELECT EXISTING RESOURCE · UPDATE IN PLACE</div></header>
+<div class="tabs"><a href="../import/">CHARACTERS ADMIN</a><a href="./">TAVO HUB / TELEGRAM</a><a class="active" href="edit.html">EDIT HUB RESOURCES</a></div>
+<section class="panel"><div class="search"><input id="q" placeholder="Search by title, creator, type, setting or ID"><button id="reload" class="btn">RELOAD</button></div><div class="hint">Открывай ресурс отсюда, если нужно изменить существующую запись. Сохранение происходит через UPDATE RESOURCE, без создания новой карточки.</div><div id="status" class="status">LOADING RESOURCES...</div></section>
+<section class="panel"><div id="list" class="list"></div></section>
+<div class="footer">ARCHIVE.EXE / ADMIN · TAVO HUB RESOURCE EDITOR</div>
+</main>
+<script>
+(()=>{
+localStorage.setItem('archiveHubAdmin','1');
+const $=s=>document.querySelector(s),list=$('#list'),status=$('#status'),q=$('#q');let resources=[];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function hay(r){return [r.id,r.title,r.type,r.creator?.name,r.creator?.link,...(r.models||[]),...(r.settings||[]),...(r.tags||[])].join(' ').toLowerCase()}
+function render(){const query=q.value.trim().toLowerCase(),rows=resources.filter(r=>!query||hay(r).includes(query));if(!rows.length){list.innerHTML='<div class="empty">NO MATCHING RESOURCES</div>';return}list.innerHTML=rows.map(r=>`<article class="item"><div><div class="title">${esc(r.title||'UNTITLED')}</div><div class="meta"><span>${esc((r.type||'resource').toUpperCase())}</span><span>BY: ${esc(r.creator?.name||'UNKNOWN')}</span><span>${Number(r.file_count||0)} FILES</span><span>${esc(r.id)}</span></div><div class="tags">${[...(r.models||[]),...(r.settings||[])].map(x=>`<span class="tag">${esc(String(x).toUpperCase())}</span>`).join('')}</div></div><div class="actions"><a class="btn primary" href="./?edit=${encodeURIComponent(r.id)}">EDIT RESOURCE</a></div></article>`).join('')}
+async function load(){status.textContent='LOADING RESOURCES...';try{const r=await fetch('/api/hub-resources',{cache:'no-store'}),d=await r.json();if(!r.ok||!d?.ok)throw new Error(d?.error||`HTTP_${r.status}`);resources=d.resources||[];status.textContent=`READY · ${resources.length} RESOURCE${resources.length===1?'':'S'}`;render()}catch(e){status.textContent='LOAD FAILED: '+e.message;status.classList.add('bad');list.innerHTML='<div class="empty">RESOURCE LIST UNAVAILABLE</div>'}}
+q.addEventListener('input',render);$('#reload').onclick=load;load();
+})();
+</script>
+</body></html>

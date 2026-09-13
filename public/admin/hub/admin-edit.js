@@ -11,200 +11,51 @@
   let extraPendingImages=[];
   const oldFetch=window.fetch.bind(window);
 
-  function ensureEditorNav(){
-    const tabs=document.querySelector('.tabs');
-    if(!tabs||tabs.querySelector('[data-hub-resource-editor]'))return;
-    const a=document.createElement('a');
-    a.href='edit.html';
-    a.dataset.hubResourceEditor='1';
-    a.textContent='EDIT HUB RESOURCES';
-    tabs.appendChild(a);
-  }
+  function ensureEditorNav(){const tabs=document.querySelector('.tabs');if(!tabs||tabs.querySelector('[data-hub-resource-editor]'))return;const a=document.createElement('a');a.href='edit.html';a.dataset.hubResourceEditor='1';a.textContent='EDIT HUB RESOURCES';tabs.appendChild(a)}
   ensureEditorNav();
-
   function setStatus(text,kind=''){const e=$('#analyzeStatus');if(!e)return;e.textContent=text;e.className='status '+kind}
-  function syncSettingChoices(){
-    const box=$('#settingChoices');if(!box)return;
-    ['historical','magic'].forEach(v=>{const b=box.querySelector(`.choice[data-v="${v}"]`);if(b){if(b.classList.contains('active'))b.click();b.remove()}});
-    if(!box.querySelector('.choice[data-v="rusreal"]')){const b=document.createElement('button');b.type='button';b.className='choice';b.dataset.v='rusreal';b.textContent='RUSREAL';box.appendChild(b)}
-  }
-  syncSettingChoices();
-  new MutationObserver(syncSettingChoices).observe(document.body,{subtree:true,childList:true});
-
-  const full=$('#fullDesc');
-  if(full&&!$('#additionalInfo')){const wrap=document.createElement('div');wrap.className='field';wrap.innerHTML='<label>ADDITIONAL INFO / AUTHOR NOTES</label><textarea id="additionalInfo" placeholder="Дополнительные настройки, пояснения автора, заметки, ссылки и другая информация для вкладки EXTRAS."></textarea>';full.closest('.field').insertAdjacentElement('afterend',wrap)}
+  function syncSettingChoices(){const box=$('#settingChoices');if(!box)return;['historical','magic'].forEach(v=>{const b=box.querySelector(`.choice[data-v="${v}"]`);if(b){if(b.classList.contains('active'))b.click();b.remove()}});if(!box.querySelector('.choice[data-v="rusreal"]')){const b=document.createElement('button');b.type='button';b.className='choice';b.dataset.v='rusreal';b.textContent='RUSREAL';box.appendChild(b)}}
+  syncSettingChoices();new MutationObserver(syncSettingChoices).observe(document.body,{subtree:true,childList:true});
+  const full=$('#fullDesc');if(full&&!$('#additionalInfo')){const wrap=document.createElement('div');wrap.className='field';wrap.innerHTML='<label>ADDITIONAL INFO / AUTHOR NOTES</label><textarea id="additionalInfo" placeholder="Дополнительные настройки, пояснения автора, заметки, ссылки и другая информация для вкладки EXTRAS."></textarea>';full.closest('.field').insertAdjacentElement('afterend',wrap)}
   const fileField=$('#fileDrop')?.closest('.field');
-  if(fileField){
-    const label=fileField.querySelector('label');if(label)label.textContent='DOWNLOAD FILES';
-    const dropTitle=$('#fileDrop b');if(dropTitle)dropTitle.textContent='ADD DOWNLOAD FILES';
-    const dropHint=$('#fileDrop span');if(dropHint)dropHint.textContent='JSON, ZIP, TXT, CSS, YAML and other files visitors should be able to download.';
-    if(!$('#extraImageInput')){
-      const extra=document.createElement('div');extra.className='field';extra.dataset.extraGallery='1';extra.innerHTML='<label>EXTRAS / GALLERY IMAGES</label><input id="extraImageInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden><div id="extraImageDrop" class="file-drop" tabindex="0"><b>ADD EXTRA IMAGES</b><span>JPG, PNG, WEBP, GIF · shown only inside EXTRAS · no download button</span></div><div id="extraImageList" class="file-list"></div><div id="extraImageSummary" class="file-summary">NO EXTRA IMAGES ATTACHED</div>';
-      fileField.insertAdjacentElement('afterend',extra);
-    }
-  }
+  if(fileField){const label=fileField.querySelector('label');if(label)label.textContent='DOWNLOAD FILES';const dropTitle=$('#fileDrop b');if(dropTitle)dropTitle.textContent='ADD DOWNLOAD FILES';const dropHint=$('#fileDrop span');if(dropHint)dropHint.textContent='JSON, ZIP, TXT, CSS, YAML and other files visitors should be able to download.';if(!$('#extraImageInput')){const extra=document.createElement('div');extra.className='field';extra.dataset.extraGallery='1';extra.innerHTML='<label>EXTRAS / GALLERY IMAGES</label><input id="extraImageInput" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden><div id="extraImageDrop" class="file-drop" tabindex="0"><b>ADD EXTRA IMAGES</b><span>JPG, PNG, WEBP · automatically optimized · shown only inside EXTRAS</span></div><div id="extraImageList" class="file-list"></div><div id="extraImageSummary" class="file-summary">NO EXTRA IMAGES ATTACHED</div>';fileField.insertAdjacentElement('afterend',extra)}}
   if(fileField&&!$('#existingFiles')){const box=document.createElement('div');box.id='existingFiles';box.style.marginTop='10px';fileField.appendChild(box)}
-
   function choose(boxSelector,values,multi=true){const box=$(boxSelector);if(!box)return;const normalized=boxSelector==='#settingChoices'?normalizeSettings(values):(Array.isArray(values)?values:[values]);const wanted=new Set(normalized);box.querySelectorAll('.choice').forEach(b=>{const should=wanted.has(b.dataset.v),active=b.classList.contains('active');if(should!==active)b.click()})}
   function selected(boxSelector){return[...document.querySelectorAll(`${boxSelector} .choice.active`)].map(b=>b.dataset.v)}
   function snapshotManual(){return{title:$('#title')?.value||'',creator:$('#creator')?.value||'',creatorLink:$('#creatorLink')?.value||'',short:$('#shortDesc')?.value||'',full:$('#fullDesc')?.value||'',extra:$('#extraTags')?.value||'',additional:$('#additionalInfo')?.value||'',type:selected('#typeChoices')[0]||'other',models:selected('#modelChoices'),settings:normalizeSettings(selected('#settingChoices'))}}
   function restoreManual(s){if(!s)return;$('#title').value=s.title;$('#creator').value=s.creator;$('#creatorLink').value=s.creatorLink;$('#shortDesc').value=s.short;$('#fullDesc').value=s.full;$('#extraTags').value=s.extra;if($('#additionalInfo'))$('#additionalInfo').value=s.additional;choose('#typeChoices',s.type,false);choose('#modelChoices',s.models);choose('#settingChoices',s.settings);['#title','#creator','#creatorLink','#shortDesc','#fullDesc','#additionalInfo','#extraTags'].forEach(sel=>$(sel)?.dispatchEvent(new Event('input',{bubbles:true})))}
-
-  function rememberPendingFiles(list){
-    if(!editResource)return;
-    for(const f of Array.from(list||[])){
-      if(!(f instanceof File))continue;
-      const i=editPendingFiles.findIndex(x=>x.name===f.name);
-      if(i>=0)editPendingFiles[i]=f;else editPendingFiles.push(f);
-    }
-  }
-  function renderExtraPending(){
-    const box=$('#extraImageList'),summary=$('#extraImageSummary');if(!box||!summary)return;
-    if(!extraPendingImages.length){box.innerHTML='';summary.textContent='NO EXTRA IMAGES ATTACHED';return}
-    box.innerHTML=extraPendingImages.map((f,i)=>`<div class="file-row"><div><div class="file-name">${String(f.name).replace(/[<>&]/g,'')}</div><div class="file-meta">EXTRAS IMAGE · ${(Math.max(0,Number(f.size)||0)/1024).toFixed(0)} KB</div></div><button class="file-action remove" type="button" data-remove-extra="${i}">REMOVE</button></div>`).join('');
-    summary.textContent=`${extraPendingImages.length} EXTRA IMAGE${extraPendingImages.length===1?'':'S'} READY`;
-    box.querySelectorAll('[data-remove-extra]').forEach(b=>b.onclick=()=>{extraPendingImages.splice(Number(b.dataset.removeExtra),1);renderExtraPending()});
-  }
+  function rememberPendingFiles(list){if(!editResource)return;for(const f of Array.from(list||[])){if(!(f instanceof File))continue;const i=editPendingFiles.findIndex(x=>x.name===f.name);if(i>=0)editPendingFiles[i]=f;else editPendingFiles.push(f)}}
+  function renderExtraPending(){const box=$('#extraImageList'),summary=$('#extraImageSummary');if(!box||!summary)return;if(!extraPendingImages.length){box.innerHTML='';summary.textContent='NO EXTRA IMAGES ATTACHED';return}box.innerHTML=extraPendingImages.map((f,i)=>`<div class="file-row"><div><div class="file-name">${String(f.name).replace(/[<>&]/g,'')}</div><div class="file-meta">EXTRAS IMAGE · ${(Math.max(0,Number(f.size)||0)/1024).toFixed(0)} KB</div></div><button class="file-action remove" type="button" data-remove-extra="${i}">REMOVE</button></div>`).join('');summary.textContent=`${extraPendingImages.length} EXTRA IMAGE${extraPendingImages.length===1?'':'S'} READY`;box.querySelectorAll('[data-remove-extra]').forEach(b=>b.onclick=()=>{extraPendingImages.splice(Number(b.dataset.removeExtra),1);renderExtraPending()})}
   async function canvasBlob(canvas,type,quality){return await new Promise(resolve=>canvas.toBlob(resolve,type,quality))}
   async function optimizeExtraImage(file){
     if(!(file instanceof File)||!isImageFile(file))return null;
-    if(file.type==='image/gif'&&file.size<=1700*1024)return file;
-    if(file.type==='image/gif')throw new Error(`${file.name}: GIF is larger than 1.7 MB`);
-    if(file.size<=1350*1024&&(file.type==='image/jpeg'||file.type==='image/webp'))return file;
-    let bitmap;try{bitmap=await createImageBitmap(file)}catch{return file.size<=1700*1024?file:Promise.reject(new Error(`${file.name}: image is too large and could not be optimized`))}
+    if(file.type==='image/gif')throw new Error(`${file.name}: GIF is not supported for EXTRAS; use JPG, PNG or WEBP`);
+    let bitmap;try{bitmap=await createImageBitmap(file)}catch{throw new Error(`${file.name}: image could not be decoded`)}
     const base=file.name.replace(/\.[^.]+$/,'')||'extra-image';
-    let maxSide=1600,quality=.84,blob=null;
-    for(let attempt=0;attempt<5;attempt++){
+    let maxSide=1200,quality=.78,blob=null;
+    for(let attempt=0;attempt<8;attempt++){
       const scale=Math.min(1,maxSide/Math.max(bitmap.width,bitmap.height));
       const w=Math.max(1,Math.round(bitmap.width*scale)),h=Math.max(1,Math.round(bitmap.height*scale));
       const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
       canvas.getContext('2d',{alpha:false}).drawImage(bitmap,0,0,w,h);
       blob=await canvasBlob(canvas,'image/webp',quality);
-      if(blob&&blob.size<=1500*1024)break;
-      maxSide=Math.round(maxSide*.84);quality=Math.max(.64,quality-.06);
+      if(blob&&blob.size<=420*1024)break;
+      maxSide=Math.max(640,Math.round(maxSide*.84));quality=Math.max(.52,quality-.05);
     }
     bitmap.close?.();
-    if(!blob||blob.size>1750*1024)throw new Error(`${file.name}: image is still too large after optimization`);
+    if(!blob||blob.size>450*1024)throw new Error(`${file.name}: image is still too large after optimization`);
     return new File([blob],`${base}.webp`,{type:'image/webp',lastModified:Date.now()});
   }
-  async function rememberExtraImages(list){
-    const incoming=Array.from(list||[]).filter(f=>f instanceof File&&isImageFile(f));
-    if(!incoming.length)return;
-    setStatus('PREPARING EXTRA IMAGES...');
-    try{
-      for(const original of incoming){
-        const f=await optimizeExtraImage(original);if(!f)continue;
-        const i=extraPendingImages.findIndex(x=>x.name===f.name);
-        if(i>=0)extraPendingImages[i]=f;else extraPendingImages.push(f);
-      }
-      renderExtraPending();setStatus('EXTRA IMAGES READY.','ok');
-    }catch(e){setStatus('EXTRA IMAGE ERROR: '+e.message,'bad')}
-  }
-
-  $('#fileInput')?.addEventListener('change',e=>rememberPendingFiles(e.target.files),true);
-  $('#fileDrop')?.addEventListener('drop',e=>rememberPendingFiles(e.dataTransfer?.files),true);
-  $('#extraImageDrop')?.addEventListener('click',()=>$('#extraImageInput')?.click());
-  $('#extraImageDrop')?.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#extraImageInput')?.click()}});
-  $('#extraImageInput')?.addEventListener('change',async e=>{await rememberExtraImages(e.target.files);e.target.value=''});
-  $('#extraImageDrop')?.addEventListener('dragover',e=>{e.preventDefault();e.currentTarget.classList.add('drag')});
-  $('#extraImageDrop')?.addEventListener('dragleave',e=>e.currentTarget.classList.remove('drag'));
-  $('#extraImageDrop')?.addEventListener('drop',async e=>{e.preventDefault();e.currentTarget.classList.remove('drag');await rememberExtraImages(e.dataTransfer?.files)});
-
-  window.fetch=async(input,init={})=>{
-    const url=typeof input==='string'?input:input?.url||'';
-    if(url.includes('/api/admin/hub-resource')&&init.method==='POST'){
-      try{
-        const patchDraft=d=>{d=d&&typeof d==='object'?d:{};d.settings=normalizeSettings(d.settings);d.additional_info=$('#additionalInfo')?.value?.trim()||'';if(editResource){d.editing_id=editResource.id;d.source=d.source||{};d.source.url=editResource.source_url;if(!Array.isArray(d.media)||!d.media.length)d.media=Array.isArray(editResource.media)?editResource.media:[]}return d};
-        if(init.body instanceof FormData){const fd=init.body,part=fd.get('resource');let raw='{}';if(part instanceof File||part instanceof Blob)raw=await part.text();else if(part!=null)raw=String(part);const d=patchDraft(JSON.parse(raw||'{}'));fd.set('resource',new Blob([JSON.stringify(d)],{type:'application/json'}),'resource.json');extraPendingImages.forEach(f=>fd.append('extraImages',f,f.name))}
-        else if(typeof init.body==='string'){
-          const d=patchDraft(JSON.parse(init.body||'{}'));
-          if(extraPendingImages.length){const fd=new FormData();fd.append('resource',new Blob([JSON.stringify(d)],{type:'application/json'}),'resource.json');extraPendingImages.forEach(f=>fd.append('extraImages',f,f.name));init={...init,headers:undefined,body:fd}}
-          else init={...init,body:JSON.stringify(d)};
-        }
-      }catch(e){console.warn('Admin publish patch failed',e)}
-    }
-    const response=await oldFetch(input,init);
-    if(url.includes('/api/admin/hub-resource')&&init.method==='POST'&&response.ok){extraPendingImages=[];renderExtraPending()}
-    return response;
-  };
-
-  function renderExistingFiles(){
-    const box=$('#existingFiles');if(!box)return;
-    const files=Array.isArray(editResource?.files)?editResource.files:[];
-    if(!files.length){box.innerHTML=editResource?'<div class="file-summary">NO EXISTING FILES OR EXTRA IMAGES</div>':'';return}
-    const downloads=files.filter(f=>!isExtraStored(f)),extras=files.filter(isExtraStored);
-    const rows=(items,extra=false)=>items.map(f=>`<div class="file-row" data-existing-id="${String(f.id)}"><div><div class="file-name">${cleanExtraName(String(f.name||'FILE')).replace(/[<>&]/g,'')}</div><div class="file-meta">${extra?'EXTRAS IMAGE':'DOWNLOAD FILE'} · ${String(f.mime||'FILE')} · ${Math.max(0,Number(f.size)||0)} B${!extra&&f.primary?' · PRIMARY':''}</div></div><a class="file-action" href="${f.download_url}" target="_blank">OPEN</a><button class="file-action remove" type="button" data-delete-file="${String(f.id)}">REMOVE</button></div>`).join('');
-    box.innerHTML=`<div class="file-summary" style="margin-bottom:6px">EXISTING DOWNLOAD FILES</div>${downloads.length?rows(downloads):'<div class="file-summary">NONE</div>'}<div class="file-summary" style="margin:12px 0 6px">EXISTING EXTRAS IMAGES · displayed in EXTRAS only</div>${extras.length?rows(extras,true):'<div class="file-summary">NONE</div>'}`;
-    box.querySelectorAll('[data-delete-file]').forEach(btn=>btn.onclick=async()=>{if(!confirm('Remove this item from the resource?'))return;btn.disabled=true;const id=btn.dataset.deleteFile;try{const r=await oldFetch(`/api/admin/hub-resource/${encodeURIComponent(editResource.id)}/files/${encodeURIComponent(id)}`,{method:'DELETE'}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);editResource.files=editResource.files.filter(f=>String(f.id)!==String(id));renderExistingFiles();setStatus('ITEM REMOVED.','ok')}catch(e){setStatus('REMOVE FAILED: '+e.message,'bad');btn.disabled=false}})
-  }
-
-  function editDraft(){
-    return {
-      editing_id:editResource?.id||'',
-      source:{type:'telegram',url:editResource?.source_url||$('#postUrl')?.value?.trim()||''},
-      type:selected('#typeChoices')[0]||editResource?.type||'other',
-      title:$('#title')?.value?.trim()||'',
-      creator:{name:$('#creator')?.value?.trim()||'',link:$('#creatorLink')?.value?.trim()||''},
-      description_short:$('#shortDesc')?.value?.trim()||'',
-      description_full:$('#fullDesc')?.value?.trim()||'',
-      additional_info:$('#additionalInfo')?.value?.trim()||'',
-      models:selected('#modelChoices'),
-      settings:normalizeSettings(selected('#settingChoices')),
-      tags:($('#extraTags')?.value||'').split(',').map(x=>x.trim()).filter(Boolean),
-      media:Array.isArray(editResource?.media)?editResource.media:[],
-      files:editPendingFiles.map(f=>({name:f.name,size:f.size,type:f.type||'',primary:false,source:'manual'})),
-      confidence:editResource?.confidence||{},
-      status:'published'
-    };
-  }
-
-  async function reloadEditedResource(id){
-    const r=await oldFetch('/api/hub-resources',{cache:'no-store'}),d=await r.json().catch(()=>({}));
-    if(!r.ok||!d?.ok)throw new Error(d?.error||`HTTP_${r.status}`);
-    const item=(d.resources||[]).find(x=>String(x.id)===String(id));
-    if(!item)throw new Error('RESOURCE_NOT_FOUND_AFTER_UPDATE');
-    return item;
-  }
-
-  async function updateExistingResource(){
-    if(!editResource)return;
-    const d=editDraft();
-    if(!d.source.url||!d.title||!d.type){setStatus('SOURCE URL, TITLE AND TYPE ARE REQUIRED.','bad');return}
-    const b=$('#publish');if(b)b.disabled=true;
-    setStatus('UPDATING RESOURCE...');
-    try{
-      let r;
-      if(editPendingFiles.length||extraPendingImages.length){
-        const fd=new FormData();
-        fd.append('resource',new Blob([JSON.stringify(d)],{type:'application/json'}),'resource.json');
-        editPendingFiles.forEach(f=>fd.append('files',f,f.name));
-        extraPendingImages.forEach(f=>fd.append('extraImages',f,f.name));
-        r=await oldFetch('/api/admin/hub-resource',{method:'POST',body:fd});
-      }else{
-        r=await oldFetch('/api/admin/hub-resource',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(d)});
-      }
-      const raw=await r.text();let x={};try{x=JSON.parse(raw||'{}')}catch{}
-      if(!r.ok||!x.ok)throw new Error([x.error||`HTTP_${r.status}`,x.detail].filter(Boolean).join(': '));
-      editPendingFiles=[];extraPendingImages=[];renderExtraPending();
-      const fresh=await reloadEditedResource(x.id||editResource.id);
-      fillResource(fresh);
-      const localList=$('#fileList');if(localList)localList.innerHTML='';
-      const summary=$('#fileSummary');if(summary)summary.textContent='NO NEW DOWNLOAD FILES ATTACHED';
-      setStatus('RESOURCE UPDATED SUCCESSFULLY.\nDownload files and EXTRAS images are stored separately.','ok');
-    }catch(e){setStatus('UPDATE FAILED: '+e.message,'bad')}
-    finally{if(b)b.disabled=false}
-  }
-
+  async function rememberExtraImages(list){const incoming=Array.from(list||[]).filter(f=>f instanceof File&&isImageFile(f));if(!incoming.length)return;setStatus('PREPARING EXTRA IMAGES...');try{for(const original of incoming){const f=await optimizeExtraImage(original);if(!f)continue;const i=extraPendingImages.findIndex(x=>x.name===f.name);if(i>=0)extraPendingImages[i]=f;else extraPendingImages.push(f)}renderExtraPending();setStatus('EXTRA IMAGES READY.','ok')}catch(e){setStatus('EXTRA IMAGE ERROR: '+e.message,'bad')}}
+  $('#fileInput')?.addEventListener('change',e=>rememberPendingFiles(e.target.files),true);$('#fileDrop')?.addEventListener('drop',e=>rememberPendingFiles(e.dataTransfer?.files),true);$('#extraImageDrop')?.addEventListener('click',()=>$('#extraImageInput')?.click());$('#extraImageDrop')?.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#extraImageInput')?.click()}});$('#extraImageInput')?.addEventListener('change',async e=>{await rememberExtraImages(e.target.files);e.target.value=''});$('#extraImageDrop')?.addEventListener('dragover',e=>{e.preventDefault();e.currentTarget.classList.add('drag')});$('#extraImageDrop')?.addEventListener('dragleave',e=>e.currentTarget.classList.remove('drag'));$('#extraImageDrop')?.addEventListener('drop',async e=>{e.preventDefault();e.currentTarget.classList.remove('drag');await rememberExtraImages(e.dataTransfer?.files)});
+  window.fetch=async(input,init={})=>{const url=typeof input==='string'?input:input?.url||'';if(url.includes('/api/admin/hub-resource')&&init.method==='POST'){try{const patchDraft=d=>{d=d&&typeof d==='object'?d:{};d.settings=normalizeSettings(d.settings);d.additional_info=$('#additionalInfo')?.value?.trim()||'';if(editResource){d.editing_id=editResource.id;d.source=d.source||{};d.source.url=editResource.source_url;if(!Array.isArray(d.media)||!d.media.length)d.media=Array.isArray(editResource.media)?editResource.media:[]}return d};if(init.body instanceof FormData){const fd=init.body,part=fd.get('resource');let raw='{}';if(part instanceof File||part instanceof Blob)raw=await part.text();else if(part!=null)raw=String(part);const d=patchDraft(JSON.parse(raw||'{}'));fd.set('resource',new Blob([JSON.stringify(d)],{type:'application/json'}),'resource.json');extraPendingImages.forEach(f=>fd.append('extraImages',f,f.name))}else if(typeof init.body==='string'){const d=patchDraft(JSON.parse(init.body||'{}'));if(extraPendingImages.length){const fd=new FormData();fd.append('resource',new Blob([JSON.stringify(d)],{type:'application/json'}),'resource.json');extraPendingImages.forEach(f=>fd.append('extraImages',f,f.name));init={...init,headers:undefined,body:fd}}else init={...init,body:JSON.stringify(d)}}}catch(e){console.warn('Admin publish patch failed',e)}}const response=await oldFetch(input,init);if(url.includes('/api/admin/hub-resource')&&init.method==='POST'&&response.ok){extraPendingImages=[];renderExtraPending()}return response};
+  function renderExistingFiles(){const box=$('#existingFiles');if(!box)return;const files=Array.isArray(editResource?.files)?editResource.files:[];if(!files.length){box.innerHTML=editResource?'<div class="file-summary">NO EXISTING FILES OR EXTRA IMAGES</div>':'';return}const downloads=files.filter(f=>!isExtraStored(f)),extras=files.filter(isExtraStored);const rows=(items,extra=false)=>items.map(f=>`<div class="file-row" data-existing-id="${String(f.id)}"><div><div class="file-name">${cleanExtraName(String(f.name||'FILE')).replace(/[<>&]/g,'')}</div><div class="file-meta">${extra?'EXTRAS IMAGE':'DOWNLOAD FILE'} · ${String(f.mime||'FILE')} · ${Math.max(0,Number(f.size)||0)} B${!extra&&f.primary?' · PRIMARY':''}</div></div><a class="file-action" href="${f.download_url}" target="_blank">OPEN</a><button class="file-action remove" type="button" data-delete-file="${String(f.id)}">REMOVE</button></div>`).join('');box.innerHTML=`<div class="file-summary" style="margin-bottom:6px">EXISTING DOWNLOAD FILES</div>${downloads.length?rows(downloads):'<div class="file-summary">NONE</div>'}<div class="file-summary" style="margin:12px 0 6px">EXISTING EXTRAS IMAGES · displayed in EXTRAS only</div>${extras.length?rows(extras,true):'<div class="file-summary">NONE</div>'}`;box.querySelectorAll('[data-delete-file]').forEach(btn=>btn.onclick=async()=>{if(!confirm('Remove this item from the resource?'))return;btn.disabled=true;const id=btn.dataset.deleteFile;try{const r=await oldFetch(`/api/admin/hub-resource/${encodeURIComponent(editResource.id)}/files/${encodeURIComponent(id)}`,{method:'DELETE'}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);editResource.files=editResource.files.filter(f=>String(f.id)!==String(id));renderExistingFiles();setStatus('ITEM REMOVED.','ok')}catch(e){setStatus('REMOVE FAILED: '+e.message,'bad');btn.disabled=false}})}
+  function editDraft(){return{editing_id:editResource?.id||'',source:{type:'telegram',url:editResource?.source_url||$('#postUrl')?.value?.trim()||''},type:selected('#typeChoices')[0]||editResource?.type||'other',title:$('#title')?.value?.trim()||'',creator:{name:$('#creator')?.value?.trim()||'',link:$('#creatorLink')?.value?.trim()||''},description_short:$('#shortDesc')?.value?.trim()||'',description_full:$('#fullDesc')?.value?.trim()||'',additional_info:$('#additionalInfo')?.value?.trim()||'',models:selected('#modelChoices'),settings:normalizeSettings(selected('#settingChoices')),tags:($('#extraTags')?.value||'').split(',').map(x=>x.trim()).filter(Boolean),media:Array.isArray(editResource?.media)?editResource.media:[],files:editPendingFiles.map(f=>({name:f.name,size:f.size,type:f.type||'',primary:false,source:'manual'})),confidence:editResource?.confidence||{},status:'published'}}
+  async function reloadEditedResource(id){const r=await oldFetch('/api/hub-resources',{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok||!d?.ok)throw new Error(d?.error||`HTTP_${r.status}`);const item=(d.resources||[]).find(x=>String(x.id)===String(id));if(!item)throw new Error('RESOURCE_NOT_FOUND_AFTER_UPDATE');return item}
+  async function updateExistingResource(){if(!editResource)return;const d=editDraft();if(!d.source.url||!d.title||!d.type){setStatus('SOURCE URL, TITLE AND TYPE ARE REQUIRED.','bad');return}const b=$('#publish');if(b)b.disabled=true;setStatus('UPDATING RESOURCE...');try{let r;if(editPendingFiles.length||extraPendingImages.length){const fd=new FormData();fd.append('resource',new Blob([JSON.stringify(d)],{type:'application/json'}),'resource.json');editPendingFiles.forEach(f=>fd.append('files',f,f.name));extraPendingImages.forEach(f=>fd.append('extraImages',f,f.name));r=await oldFetch('/api/admin/hub-resource',{method:'POST',body:fd})}else{r=await oldFetch('/api/admin/hub-resource',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(d)})}const raw=await r.text();let x={};try{x=JSON.parse(raw||'{}')}catch{}if(!r.ok||!x.ok)throw new Error([x.error||`HTTP_${r.status}`,x.detail].filter(Boolean).join(': '));editPendingFiles=[];extraPendingImages=[];renderExtraPending();const fresh=await reloadEditedResource(x.id||editResource.id);fillResource(fresh);const localList=$('#fileList');if(localList)localList.innerHTML='';const summary=$('#fileSummary');if(summary)summary.textContent='NO NEW DOWNLOAD FILES ATTACHED';setStatus('RESOURCE UPDATED SUCCESSFULLY.\nDownload files and EXTRAS images are stored separately.','ok')}catch(e){setStatus('UPDATE FAILED: '+e.message,'bad')}finally{if(b)b.disabled=false}}
   function fillResource(r){editResource=r;$('#postUrl').value=r.source_url||'';$('#rawText').value=r.description_full||'';$('#sourceLink').textContent=r.source_url||'';$('#title').value=r.title||'';$('#creator').value=r.creator?.name||'';$('#creatorLink').value=r.creator?.link||'';$('#shortDesc').value=r.description_short||'';$('#fullDesc').value=r.description_full||'';$('#additionalInfo').value=r.additional_info||'';$('#extraTags').value=(r.tags||[]).join(', ');choose('#typeChoices',r.type,false);choose('#modelChoices',r.models||[]);choose('#settingChoices',normalizeSettings(r.settings||[]));const pub=$('#publish');if(pub){pub.textContent='UPDATE RESOURCE';pub.onclick=updateExistingResource}renderExistingFiles();renderExtraPending();document.querySelector('h1').textContent='EDIT TAVO HUB RESOURCE';setStatus('EDIT MODE · '+(r.title||r.id)+'\nDownload files and EXTRAS images can be managed independently.','ok');['#title','#creator','#creatorLink','#shortDesc','#fullDesc','#additionalInfo','#extraTags','#postUrl'].forEach(sel=>$(sel)?.dispatchEvent(new Event('input',{bubbles:true})))}
-
   async function initEdit(){const id=new URLSearchParams(location.search).get('edit');if(!id)return;setStatus('LOADING RESOURCE...');try{const r=await oldFetch('/api/hub-resources',{cache:'no-store'}),d=await r.json();if(!r.ok||!d?.ok)throw new Error(d?.error||`HTTP_${r.status}`);const item=(d.resources||[]).find(x=>String(x.id)===String(id));if(!item)throw new Error('RESOURCE_NOT_FOUND');fillResource(item)}catch(e){setStatus('EDIT LOAD FAILED: '+e.message,'bad')}}
-
-  const originalReanalyze=$('#reanalyze')?.onclick;
-  if(originalReanalyze)$('#reanalyze').onclick=async e=>{const s=snapshotManual();await originalReanalyze.call($('#reanalyze'),e);restoreManual(s);setStatus('RE-ANALYZED · MANUAL EDITS PRESERVED.','ok')};
-
-  const urlInput=$('#postUrl');
-  urlInput?.addEventListener('change',()=>{const key='archiveHubDraft:'+urlInput.value.trim();const raw=localStorage.getItem(key);if(!raw||new URLSearchParams(location.search).get('edit'))return;try{const d=JSON.parse(raw);if(confirm('Saved draft found for this Telegram post. Restore it?')){restoreManual({title:d.title||'',creator:d.creator?.name||'',creatorLink:d.creator?.link||'',short:d.description_short||'',full:d.description_full||'',extra:(d.tags||[]).join(', '),additional:d.additional_info||'',type:d.type||'other',models:d.models||[],settings:normalizeSettings(d.settings||[])});setStatus('SAVED DRAFT RESTORED.','ok')}}catch{}});
-
-  renderExtraPending();
-  initEdit();
+  const originalReanalyze=$('#reanalyze')?.onclick;if(originalReanalyze)$('#reanalyze').onclick=async e=>{const s=snapshotManual();await originalReanalyze.call($('#reanalyze'),e);restoreManual(s);setStatus('RE-ANALYZED · MANUAL EDITS PRESERVED.','ok')};
+  const urlInput=$('#postUrl');urlInput?.addEventListener('change',()=>{const key='archiveHubDraft:'+urlInput.value.trim();const raw=localStorage.getItem(key);if(!raw||new URLSearchParams(location.search).get('edit'))return;try{const d=JSON.parse(raw);if(confirm('Saved draft found for this Telegram post. Restore it?')){restoreManual({title:d.title||'',creator:d.creator?.name||'',creatorLink:d.creator?.link||'',short:d.description_short||'',full:d.description_full||'',extra:(d.tags||[]).join(', '),additional:d.additional_info||'',type:d.type||'other',models:d.models||[],settings:normalizeSettings(d.settings||[])});setStatus('SAVED DRAFT RESTORED.','ok')}}catch{}});
+  renderExtraPending();initEdit();
 })();

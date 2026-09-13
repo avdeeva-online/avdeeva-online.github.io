@@ -1,0 +1,56 @@
+name: Replace TAVO Hub nav icons
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/replace-hub-nav-icons.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace unicode nav symbols with inline SVG set
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('public/hub.html')
+          s=p.read_text(encoding='utf-8')
+          icons={
+            'ALL RESOURCES':'<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="12" y="3" width="5" height="5" rx="1"/><rect x="3" y="12" width="5" height="5" rx="1"/><rect x="12" y="12" width="5" height="5" rx="1"/></svg>',
+            'PRESETS':'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 5h12M4 10h12M4 15h12"/><circle cx="8" cy="5" r="1.6"/><circle cx="13" cy="10" r="1.6"/><circle cx="6" cy="15" r="1.6"/></svg>',
+            'CREATORS':'<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="7" r="3"/><path d="M4.5 16c.8-3 2.8-4.5 5.5-4.5s4.7 1.5 5.5 4.5"/><path d="M3 3h14v14H3z" opacity=".35"/></svg>',
+            'PLUGINS':'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3v4H3v6h4v4h6v-4h4V7h-4V3z"/><path d="M9 7h2M9 13h2"/></svg>',
+            'THEMES':'<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M10 3a7 7 0 0 0 0 14z" fill="currentColor" stroke="none" opacity=".22"/><path d="M10 3v14"/></svg>',
+            'GUIDES':'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 4.5h5.2c1 0 1.3.4 1.3 1.3v10c-.6-.7-1.4-1-2.4-1H3.5z"/><path d="M16.5 4.5h-5.2c-1 0-1.3.4-1.3 1.3v10c.6-.7 1.4-1 2.4-1h4.1z"/></svg>',
+            'LINKS':'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8.2 12.8 6.4 14.6a3 3 0 0 1-4.2-4.2L5 7.6a3 3 0 0 1 4.2 0"/><path d="m11.8 7.2 1.8-1.8a3 3 0 0 1 4.2 4.2L15 12.4a3 3 0 0 1-4.2 0"/><path d="m7 13 6-6"/></svg>',
+            'TOOLS':'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.6 4.1a4 4 0 0 0-4.7 5.1L3.5 13.6a1.8 1.8 0 0 0 2.5 2.5l4.4-4.4a4 4 0 0 0 5.1-4.7l-2.6 2.6-2.5-.6-.6-2.5z"/></svg>'
+          }
+          for label,svg in icons.items():
+              pattern=rf'<button class="side-link([^>]*)"><span class="nav-icon">.*?</span><span>{re.escape(label)}</span>'
+              repl=rf'<button class="side-link\1"><span class="nav-icon">{svg}</span><span>{label}</span>'
+              s,n=re.subn(pattern,repl,s,count=1,flags=re.S)
+              if n!=1:
+                  raise SystemExit(f'Could not replace icon for {label}: {n}')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Add icon styling
+        run: |
+          cat >> public/hub-polish.css <<'CSS'
+
+/* NAV ICON SET — unified archive line icons */
+.nav-icon{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:#a89568;opacity:.78;transition:color .16s ease,opacity .16s ease,transform .16s ease}
+.nav-icon svg{width:17px;height:17px;display:block;fill:none;stroke:currentColor;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.side-link:hover .nav-icon{color:#c0ae7b;opacity:.95}.side-link.active .nav-icon{color:#d0bd82;opacity:1;transform:translateX(1px)}
+.side-link{grid-template-columns:20px 1fr auto}
+@media(max-width:860px){.side-link{grid-template-columns:20px 1fr auto}.nav-icon{width:17px;height:17px}.nav-icon svg{width:16px;height:16px}}
+CSS
+      - name: Commit changes
+        run: |
+          git config user.name "archive-exe-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/hub.html public/hub-polish.css
+          git diff --cached --quiet && exit 0
+          git commit -m "Replace TAVO Hub navigation icons with SVG set"
+          git push

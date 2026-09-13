@@ -17,68 +17,22 @@ jobs:
           fetch-depth: 0
 
       - name: Refine hub layout and interactions
+        env:
+          HUB_CSS_B64: "CiAgICAvKiBIVUItUkVGSU5FLTIwMjYtMDktMTMgKi8KICAgIC50b3Atc2hlbGx7bWluLWhlaWdodDoxODhweDtwYWRkaW5nOjIycHggMzJweCAxMnB4fQogICAgLnRvcC1tb3R0b3t0b3A6MzhweDtmb250LXNpemU6OC4ycHg7b3BhY2l0eTouODZ9CiAgICAuZGlyZWN0b3J5e3dpZHRoOm1pbigxNDYwcHgsY2FsYygxMDAlIC0gNDRweCkpO2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDE4MGRlZyxyZ2JhKDYsMTAsNywuOTY1KSxyZ2JhKDUsOCw2LC45ODUpKTtib3gtc2hhZG93OjAgMThweCA1OHB4IHJnYmEoMCwwLDAsLjQyKSxpbnNldCAwIDAgMzRweCByZ2JhKDExNSwxNDgsMTA1LC4wMjIpfQogICAgLmRpcmVjdG9yeTpiZWZvcmUsLmRpcmVjdG9yeTphZnRlcntvcGFjaXR5Oi4zNDtmaWx0ZXI6YnJpZ2h0bmVzcyguNTApIHNhdHVyYXRlKC42MCkgZHJvcC1zaGFkb3coMCA0cHggN3B4IHJnYmEoMCwwLDAsLjM1KSk7aGVpZ2h0OjgycHg7dG9wOi0xNXB4fQogICAgLmRpcmVjdG9yeTpiZWZvcmV7d2lkdGg6MjUlO2xlZnQ6LTVweDtiYWNrZ3JvdW5kLXNpemU6MTAwJSAxMDAlfQogICAgLmRpcmVjdG9yeTphZnRlcnt3aWR0aDoyMyU7cmlnaHQ6LTNweDtiYWNrZ3JvdW5kLXNpemU6MTAwJSAxMDAlfQogICAgLmRpcmVjdG9yeS1oZWFke2dyaWQtdGVtcGxhdGUtY29sdW1uczoyODBweCBtaW5tYXgoMCwxZnIpO2dhcDoyNHB4O3BhZGRpbmc6MjJweCAyNnB4IDE2cHg7YWxpZ24taXRlbXM6c3RhcnR9CiAgICAuaHViLXRpdGxlIGgxe2ZvbnQtc2l6ZTozMHB4fQogICAgLmh1Yi10aXRsZSAuZGVzY3ttYXJnaW4tdG9wOjE1cHg7bWF4LXdpZHRoOjI1NXB4O2ZvbnQtc2l6ZTo4LjJweDtsaW5lLWhlaWdodDoxLjU7Y29sb3I6I2E3YjBhNH0KICAgIC5zZWFyY2gtd3JhcHtwYWRkaW5nLXRvcDo0cHg7YWxpZ24taXRlbXM6Y2VudGVyfQogICAgLnNlYXJjaHt oZWlnaHQ6NDBweDtib3JkZXItY29sb3I6cmdiYSgxMzIsMTQ5LDExOSwuMjYpO2JhY2tncm91bmQ6cmdiYSg0LDcsNSwuNjIpfQogICAgLmhlYWQtbm90ZXtkaXNwbGF5Om5vbmV9CiAgICAuZGlyZWN0b3J5LWJvZHl7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjI4MHB4IG1pbm1heCgwLDFmcik7bWluLWhlaWdodDo1MjBweH0KICAgIC5zaWRle3BhZGRpbmc6MTVweCAxNnB4IDIycHh9CiAgICAuc2lkZS1uYXZ7Z2FwOjVweH0KICAgIC5zaWRlLWxpbmt7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjI1cHggMWZyIGF1dG87bWluLWhlaWdodDozNXB4O3BhZGRpbmc6NnB4IDhweDtmb250LXNpemU6OHB4O2JvcmRlci1yYWRpdXM6NHB4O2JhY2tncm91bmQ6cmdiYSg3LDExLDgsLjI4KTtib3JkZXItY29sb3I6cmdiYSgxMjEsMTM3LDEwOSwuMDkpfQogICAgLnNpZGUtbGluazpob3Zlcnt0cmFuc2Zvcm06dHJhbnNsYXRlWCgxcHgp fQogICAgLmZvbGRlcnt3aWR0aDoxOXB4O2hlaWdodDoxNHB4O2JvcmRlci1jb2xvcjojYTg5NDY4O29wYWNpdHk6Ljl9LmZvbGRlcjpiZWZvcmV7d2lkdGg6OHB4O2hlaWdodDo0cHg7dG9wOi00cHg7Ym9yZGVyLWNvbG9yOiNhODk0Njh9CiAgICAuY291bnR7Zm9udC1zaXplOjcuMXB4O29wYWNpdHk6LjcyfQogICAgLnNpZGUtcXVvdGV7bWFyZ2luLXRvcDoxNHB4O3BhZGRpbmc6MTRweCA2cHggMDtmb250LXNpemU6Ny4zcHg7b3BhY2l0eTouNzh9CiAgICAuY29udGVudHtwYWRkaW5nOjE1cHggMThweCAyMnB4fQogICAgLnRvb2xiYXJ7bWFyZ2luLWJvdHRvbToxMnB4O2ZvbnQtc2l6ZTo3LjRweH0udG9vbGJhci1yaWdodHtnYXA6MTBweH0udG9vbGJhciBzZWxlY3R7aGVpZ2h0OjI5cHh9LnZpZXctYnRue3dpZHRoOjI5cHg7aGVpZ2h0OjI5cHh9CiAgICAucmVzb3VyY2UtZ3JpZHtnYXA6MTJweH0KICAgIC5yZXNvdXJjZS1jYXJke21pbi1oZWlnaHQ6MjA4cHg7Ym9yZGVyLWNvbG9yOnJnYmEoMTIzLDE0MSwxMTEsLjI4KTtiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxODBkZWcscmdiYSgxMCwxNSwxMSwuOTc1KSxyZ2JhKDUsOSw2LC45OSkpfQogICAgLnRodW1ie2hlaWdodDo4OHB4O2ZpbHRlcjpicmlnaHRuZXNzKC43Nikgc2F0dXJhdGUoLjgyKSBjb250cmFzdCgxLjAyKX0KICAgIC5jYXJkLWJvZHl7cGFkZGluZzoxMHB4IDExcHggOXB4fS50eXBle2ZvbnQtc2l6ZTo3LjFweH0ucmVzb3VyY2UtY2FyZCBoM3tmb250LXNpemU6MTQuNXB4O21hcmdpbjo2cHggMCA2cHh9LnJlc291cmNlLWNhcmQgcHtmb250LXNpemU6OC4xcHg7bGluZS1oZWlnaHQ6MS40Mjtjb2xvcjojYjRiYmIxO21pbi1oZWlnaHQ6MzRweH0ubWV0YXtmb250LXNpemU6Ny4xcHg7bWFyZ2luLXRvcDo5cHh9CiAgICAucmVzb3VyY2UtZ3JpZC5saXN0LXZpZXd7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjFmcjtnYXA6N3B4fQogICAgLnJlc291cmNlLWdyaWQubGlzdC12aWV3IC5yZXNvdXJjZS1jYXJke2Rpc3BsYXk6Z3JpZDtncmlkLXRlbXBsYXRlLWNvbHVtbnM6MTUwcHggbWlubWF4KDAsMWZyKTttaW4taGVpZ2h0OjExOHB4fQogICAgLnJlc291cmNlLWdyaWQubGlzdC12aWV3IC50aHVtYntoZWlnaHQ6MTAwJTttaW4taGVpZ2h0OjExOHB4O2JvcmRlci1ib3R0b206MDtib3JkZXItcmlnaHQ6MXB4IHNvbGlkIHJnYmEoMTE3LDEzMiwxMDUsLjIyKX0KICAgIC5yZXNvdXJjZS1ncmlkLmxpc3QtdmlldyAuY2FyZC1ib2R5e2Rpc3BsYXk6Z3JpZDtncmlkLXRlbXBsYXRlLWNvbHVtbnM6OTBweCBtaW5tYXgoMCwxZnIpIGF1dG87Y29sdW1uLWdhcDoxNHB4O2FsaWduLWl0ZW1zOmNlbnRlcjtwYWRkaW5nOjEycHggMTRweH0KICAgIC5yZXNvdXJjZS1ncmlkLmxpc3QtdmlldyAudHlwZXtncmlkLWNvbHVtbjoxO2dyaWQtcm93OjEgLyBzcGFuIDJ9LnJlc291cmNlLWdyaWQubGlzdC12aWV3IGgze2dyaWQtY29sdW1uOjI7Z3JpZC1yb3c6MTttYXJnaW46MCAwIDVweH0ucmVzb3VyY2UtZ3JpZC5saXN0LXZpZXcgcHtncmlkLWNvbHVtbjoyO2dyaWQtcm93OjI7bWluLWhlaWdodDowfS5yZXNvdXJjZS1ncmlkLmxpc3QtdmlldyAubWV0YXtncmlkLWNvbHVtbjozO2dyaWQtcm93OjEgLyBzcGFuIDI7Ym9yZGVyLXRvcDowO21hcmdpbjowO3BhZGRpbmc6MDtnYXA6MTJweH0KICAgIEBtZWRpYShtYXgtd2lkdGg6MTE4MHB4KXsuZGlyZWN0b3J5LWhlYWR7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjIzNXB4IG1pbm1heCgwLDFmcik fS5kaXJlY3RvcnktYm9keXtncmlkLXRlbXBsYXRlLWNvbHVtbnM6MjM1cHggbWlubWF4KDAsMWZyKX0ucmVzb3VyY2UtZ3JpZHtncmlkLXRlbXBsYXRlLWNvbHVtbnM6cmVwZWF0KDMsbWlubWF4KDAsMWZyKSl9fQogICAgQG1lZGlhKG1heC13aWR0aDo4NjBweCl7LnRvcC1zaGVsbHttaW4taGVpZ2h0OjE3NHB4O3BhZGRpbmc6MThweCAxOHB4IDEwcHh9LnRvcC1tb3R0b3t0b3A6NzZweH0uZGlyZWN0b3J5e3dpZHRoOmNhbGMoMTAwJSAtIDIwcHgp fS5kaXJlY3Rvcnk6YmVmb3JlLC5kaXJlY3Rvcnk6YWZ0ZXJ7d2lkdGg6MzQlO2hlaWdodDo2NHB4O29wYWNpdHk6LjIyfS5kaXJlY3RvcnktaGVhZHtncmlkLXRlbXBsYXRlLWNvbHVtbnM6MWZyO3BhZGRpbmc6MjBweCAxNnB4IDE0cHg7Z2FwOjEycHh9LmRpcmVjdG9yeS1ib2R5e2dyaWQtdGVtcGxhdGUtY29sdW1uczoxZnJ9LnNpZGV7cGFkZGluZzoxMnB4IDE0cHh9LnNpZGUtbmF2e2dyaWQtdGVtcGxhdGUtY29sdW1zOnJlcGVhdCg0LG1pbm1heCgwLDFmcikpfS5zaWRlLWxpbmt7bWluLWhlaWdodDozOHB4O2dyaWQtdGVtcGxhdGUtY29sdW1uczoxOHB4IDFmcjtwYWRkaW5nOjZweCA3cHh9LmZvbGRlcnt3aWR0aDoxNnB4O2hlaWdodDoxMnB4fS5jb250ZW50e3BhZGRpbmc6MTRweH0ucmVzb3VyY2UtZ3JpZC5saXN0LXZpZXcgLnJlc291cmNlLWNhcmR7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjExNXB4IG1pbm1heCgwLDFmcik fS5yZXNvdXJjZS1ncmlkLmxpc3QtdmlldyAuY2FyZC1ib2R5e2dyaWQtdGVtcGxhdGUtY29sdW1uczoxZnJ9LnJlc291cmNlLWdyaWQubGlzdC12aWV3IC50eXBlLC5yZXNvdXJjZS1ncmlkLmxpc3QtdmlldyBoMywucmVzb3VyY2UtZ3JpZC5saXN0LXZpZXcgcCwucmVzb3VyY2UtZ3JpZC5saXN0LXZpZXcgLm1ldGF7Z3JpZC1jb2x1bW46MTtncmlkLXJvdzphdXRvfS5yZXNvdXJjZS1ncmlkLmxpc3QtdmlldyAubWV0YXtib3JkZXItdG9wOjFweCBzb2xpZCByZ2JhKDExMSwxMjcsMTAxLC4xOCk7cGFkZGluZy10b3A6OHB4O21hcmdpbi10b3A6OHB4fX0KICAgIEBtZWRpYShtYXgtd2lkdGg6NTYwcHhpey50b3Atc2hlbGx7bWluLWhlaWdodDoxNThweH0udG9wLW1vdHRve2Rpc3BsYXk6bm9uZX0uZGlyZWN0b3J5e3dpZHRoOmNhbGMoMTAwJSAtIDEycHgp fS5kaXJlY3Rvcnk6YmVmb3JlLC5kaXJlY3Rvcnk6YWZ0ZXJ7d2lkdGg6NDIlO2hlaWdodDo1NHB4O29wYWNpdHk6LjE3fS5odWItdGl0bGUgaDF7Zm9udC1zaXplOjI2cHh9LnNpZGUtbmF2e2dyaWQtdGVtcGxhdGUtY29sdW1zOnJlcGVhdCgyLG1pbm1heCgwLDFmcikpfS5yZXNvdXJjZS1ncmlke2dyaWQtdGVtcGxhdGUtY29sdW1zOjFmcj t9LnJlc291cmNlLWdyaWQubGlzdC12aWV3IC5yZXNvdXJjZS1jYXJke2Rpc3BsYXk6YmxvY2t9LnJlc291cmNlLWdyaWQubGlzdC12aWV3IC50aHVtYntoZWlnaHQ6OTZweDtib3JkZXItcmlnaHQ6MDtib3JkZXItYm90dG9tOjFweCBzb2xpZCByZ2JhKDExNywxMzIsMTA1LC4yMil9fQo="
+          HUB_JS_B64: "CiAgPHNjcmlwdD4KICAgIC8vIEhVQi1WSUVXLVRPR0dMRQogICAgKCgpPT57CiAgICAgIGNvbnN0IGdyaWQ9ZG9jdW1lbnQucXVlcnlTZWxlY3RvcignLnJlc291cmNlLWdyaWQnKTsKICAgICAgY29uc3QgdG9nZ2xlcz1bLi4uZG9jdW1lbnQucXVlcnlTZWxlY3RvckFsbCgnLnZpZXctYnRuJyldOwogICAgICBpZighZ3JpZHx8dG9nZ2xlcy5sZW5ndGg8Mil yZXR1cm47CiAgICAgIHRvZ2dsZXMuZm9yRWFjaCgoYnRuLGkpPT5idG4uYWRkRXZlbnRMaXN0ZW5lcignY2xpY2snLCgpPT57CiAgICAgICAgdG9nZ2xlcy5mb3JFYWNoKGI9PmIuY2xhc3NMaXN0LnJlbW92ZSgnYWN0aXZlJykpOwogICAgICAgIGJ0bi5jbGFzc0xpc3QuYWRkKCdhY3RpdmUnKTsKICAgICAgICBncmlkLmNsYXNzTGlzdC50b2dnbGUoJ2xpc3Qtdmlldycs aT09PTEpOwogICAgICB9KSk7CiAgICB9KSgpOwogIDwvc2NyaXB0Pgo="
         run: |
           python - <<'PY'
           from pathlib import Path
+          import os, base64
           p = Path('public/hub.html')
           s = p.read_text(encoding='utf-8')
           marker = '/* HUB-REFINE-2026-09-13 */'
           if marker not in s:
-              css = r'''
-    /* HUB-REFINE-2026-09-13 */
-    .top-shell{min-height:188px;padding:22px 32px 12px}
-    .top-motto{top:38px;font-size:8.2px;opacity:.86}
-    .directory{width:min(1460px,calc(100% - 44px));background:linear-gradient(180deg,rgba(6,10,7,.965),rgba(5,8,6,.985));box-shadow:0 18px 58px rgba(0,0,0,.42),inset 0 0 34px rgba(115,148,105,.022)}
-    .directory:before,.directory:after{opacity:.34;filter:brightness(.50) saturate(.60) drop-shadow(0 4px 7px rgba(0,0,0,.35));height:82px;top:-15px}
-    .directory:before{width:25%;left:-5px;background-size:100% 100%}
-    .directory:after{width:23%;right:-3px;background-size:100% 100%}
-    .directory-head{grid-template-columns:280px minmax(0,1fr);gap:24px;padding:22px 26px 16px;align-items:start}
-    .hub-title h1{font-size:30px}
-    .hub-title .desc{margin-top:15px;max-width:255px;font-size:8.2px;line-height:1.5;color:#a7b0a4}
-    .search-wrap{padding-top:4px;align-items:center}
-    .search{height:40px;border-color:rgba(132,149,119,.26);background:rgba(4,7,5,.62)}
-    .head-note{display:none}
-    .directory-body{grid-template-columns:280px minmax(0,1fr);min-height:520px}
-    .side{padding:15px 16px 22px}
-    .side-nav{gap:5px}
-    .side-link{grid-template-columns:25px 1fr auto;min-height:35px;padding:6px 8px;font-size:8px;border-radius:4px;background:rgba(7,11,8,.28);border-color:rgba(121,137,109,.09)}
-    .side-link:hover{transform:translateX(1px)}
-    .folder{width:19px;height:14px;border-color:#a89468;opacity:.9}.folder:before{width:8px;height:4px;top:-4px;border-color:#a89468}
-    .count{font-size:7.1px;opacity:.72}
-    .side-quote{margin-top:14px;padding:14px 6px 0;font-size:7.3px;opacity:.78}
-    .content{padding:15px 18px 22px}
-    .toolbar{margin-bottom:12px;font-size:7.4px}.toolbar-right{gap:10px}.toolbar select{height:29px}.view-btn{width:29px;height:29px}
-    .resource-grid{gap:12px}
-    .resource-card{min-height:208px;border-color:rgba(123,141,111,.28);background:linear-gradient(180deg,rgba(10,15,11,.975),rgba(5,9,6,.99))}
-    .thumb{height:88px;filter:brightness(.76) saturate(.82) contrast(1.02)}
-    .card-body{padding:10px 11px 9px}.type{font-size:7.1px}.resource-card h3{font-size:14.5px;margin:6px 0 6px}.resource-card p{font-size:8.1px;line-height:1.42;color:#b4bbb1;min-height:34px}.meta{font-size:7.1px;margin-top:9px}
-    .resource-grid.list-view{grid-template-columns:1fr;gap:7px}
-    .resource-grid.list-view .resource-card{display:grid;grid-template-columns:150px minmax(0,1fr);min-height:118px}
-    .resource-grid.list-view .thumb{height:100%;min-height:118px;border-bottom:0;border-right:1px solid rgba(117,132,105,.22)}
-    .resource-grid.list-view .card-body{display:grid;grid-template-columns:90px minmax(0,1fr) auto;column-gap:14px;align-items:center;padding:12px 14px}
-    .resource-grid.list-view .type{grid-column:1;grid-row:1 / span 2}.resource-grid.list-view h3{grid-column:2;grid-row:1;margin:0 0 5px}.resource-grid.list-view p{grid-column:2;grid-row:2;min-height:0}.resource-grid.list-view .meta{grid-column:3;grid-row:1 / span 2;border-top:0;margin:0;padding:0;gap:12px}
-    @media(max-width:1180px){.directory-head{grid-template-columns:235px minmax(0,1fr)}.directory-body{grid-template-columns:235px minmax(0,1fr)}.resource-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-    @media(max-width:860px){.top-shell{min-height:174px;padding:18px 18px 10px}.top-motto{top:76px}.directory{width:calc(100% - 20px)}.directory:before,.directory:after{width:34%;height:64px;opacity:.22}.directory-head{grid-template-columns:1fr;padding:20px 16px 14px;gap:12px}.directory-body{grid-template-columns:1fr}.side{padding:12px 14px}.side-nav{grid-template-columns:repeat(4,minmax(0,1fr))}.side-link{min-height:38px;grid-template-columns:18px 1fr;padding:6px 7px}.folder{width:16px;height:12px}.content{padding:14px}.resource-grid.list-view .resource-card{grid-template-columns:115px minmax(0,1fr)}.resource-grid.list-view .card-body{grid-template-columns:1fr}.resource-grid.list-view .type,.resource-grid.list-view h3,.resource-grid.list-view p,.resource-grid.list-view .meta{grid-column:1;grid-row:auto}.resource-grid.list-view .meta{border-top:1px solid rgba(111,127,101,.18);padding-top:8px;margin-top:8px}}
-    @media(max-width:560px){.top-shell{min-height:158px}.top-motto{display:none}.directory{width:calc(100% - 12px)}.directory:before,.directory:after{width:42%;height:54px;opacity:.17}.hub-title h1{font-size:26px}.side-nav{grid-template-columns:repeat(2,minmax(0,1fr))}.resource-grid{grid-template-columns:1fr}.resource-grid.list-view .resource-card{display:block}.resource-grid.list-view .thumb{height:96px;border-right:0;border-bottom:1px solid rgba(117,132,105,.22)}}
-'''
+              css = base64.b64decode(os.environ['HUB_CSS_B64']).decode('utf-8')
               s = s.replace('  </style>', css + '\n  </style>', 1)
           s = s.replace('FIND TOOLS.<br>FUEL IMAGINATION.<br>BUILD BRIGHTER WORLDS.', '')
           if '// HUB-VIEW-TOGGLE' not in s:
-              extra = r'''
-  <script>
-    // HUB-VIEW-TOGGLE
-    (()=>{
-      const grid=document.querySelector('.resource-grid');
-      const toggles=[...document.querySelectorAll('.view-btn')];
-      if(!grid||toggles.length<2)return;
-      toggles.forEach((btn,i)=>btn.addEventListener('click',()=>{
-        toggles.forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        grid.classList.toggle('list-view',i===1);
-      }));
-    })();
-  </script>
-'''
+              extra = base64.b64decode(os.environ['HUB_JS_B64']).decode('utf-8')
               s = s.replace('</body>', extra + '\n</body>', 1)
           p.write_text(s, encoding='utf-8')
           PY

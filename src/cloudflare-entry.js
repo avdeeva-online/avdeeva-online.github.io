@@ -9,12 +9,7 @@ export default{
     const url=new URL(request.url);
     if(url.pathname==='/api/admin/hub-telegram-analyze'){
       if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
-      const response=await analyzeTelegramPost(request);
-      try{
-        const data=await response.json();
-        if(Array.isArray(data?.draft?.settings))data.draft.settings=data.draft.settings.filter(x=>x!=='school-university');
-        return json(data,response.status);
-      }catch{return response}
+      return analyzeTelegramPost(request);
     }
     if(url.pathname==='/api/admin/hub-resource'){
       if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);

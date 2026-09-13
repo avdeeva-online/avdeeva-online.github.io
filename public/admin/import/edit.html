@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>ARCHIVE.EXE / BOT CARD EDITOR</title>
+<style>
+:root{--bg:#0b0e0b;--panel:#11150f;--panel2:#0d110c;--line:#2f382b;--text:#cbd4c2;--muted:#6f7a69;--bad:#b58a78;--ok:#90a884;--warn:#c6ad73;--mono:Consolas,ui-monospace,monospace}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 30% 0,#161d14 0,#0b0e0b 42%);color:var(--text);font-family:var(--mono);min-height:100vh}.shell{width:min(1380px,calc(100% - 28px));margin:24px auto 60px}.head{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;padding-bottom:16px;border-bottom:1px solid var(--line)}.eyebrow{font-size:9px;letter-spacing:.12em;color:var(--muted)}h1{margin:7px 0 0;font-size:25px}.tabs{display:flex;gap:5px;margin:16px 0;flex-wrap:wrap}.btn,.tabs a{border:1px solid var(--line);background:#10140e;color:#aeb9a5;padding:9px 12px;font:9px var(--mono);cursor:pointer;text-decoration:none}.btn.primary,.tabs a.active{background:#20281c;color:#e0e6d7;border-color:#59684f}.btn.danger{border-color:#68463e;color:#d2a091}.workspace{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:12px}.panel{border:1px solid var(--line);background:rgba(17,21,15,.92);padding:13px}.search{width:100%;background:#0c100b;border:1px solid #333d2f;color:#d5dccd;padding:10px 11px;font:10px var(--mono);outline:none}.list{margin-top:9px;max-height:calc(100vh - 190px);overflow:auto;border-top:1px solid rgba(75,87,68,.5)}.item{width:100%;display:block;text-align:left;border:0;border-bottom:1px solid rgba(75,87,68,.38);background:transparent;color:#b9c2b1;padding:10px 7px;cursor:pointer}.item:hover,.item.active{background:#151b13}.item b{display:block;font:10px var(--mono);color:#d5dccd}.item small{display:block;margin-top:3px;color:var(--muted);font:7.5px var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status{margin-top:9px;padding:9px;border-left:2px solid #475141;background:#0c100b;color:#899583;font-size:8px;white-space:pre-wrap}.status.ok{border-color:#546a4b;color:#a7bd9a}.status.bad{border-color:#7b5147;color:#b99184}.editor-empty{padding:50px 10px;text-align:center;color:#687364;font-size:9px}.fields{display:grid;gap:10px}.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;margin-bottom:5px;font-size:8px;letter-spacing:.08em;color:#7f8a79}.field input,.field textarea,.field select{width:100%;background:#0c100b;border:1px solid #333d2f;color:#d5dccd;padding:10px 11px;font:10px var(--mono);outline:none}.field textarea{min-height:110px;resize:vertical}.field textarea.big{min-height:180px}.toolbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid rgba(72,85,66,.45)}.uuid{margin-left:auto;color:#657060;font-size:7.5px}.hint{font-size:7.5px;color:#687364;margin-top:4px;line-height:1.45}@media(max-width:820px){.workspace{grid-template-columns:1fr}.list{max-height:280px}.field-grid{grid-template-columns:1fr}.uuid{width:100%;margin-left:0;word-break:break-all}.head{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<main class="shell">
+<header class="head"><div><div class="eyebrow">PRIVATE TOOL / NODE_00</div><h1>BOT CARD EDITOR</h1></div><div class="eyebrow">EDIT / HIDE / DELETE ARCHIVE RECORDS</div></header>
+<div class="tabs"><a href="./">IMPORT ADMIN</a><a class="active" href="edit.html">BOT CARDS</a><a href="../hub/">TAVO HUB / TELEGRAM</a></div>
+<div class="workspace">
+  <aside class="panel"><input class="search" id="search" placeholder="SEARCH BOT / AUTHOR / TAG..."><div id="list" class="list"><div class="editor-empty">LOADING CHARACTERS...</div></div><div id="listStatus" class="status">LOADING...</div></aside>
+  <section class="panel"><div id="empty" class="editor-empty">SELECT A BOT CARD TO EDIT</div><form id="form" class="fields" hidden>
+    <div class="field-grid"><div class="field"><label>NAME</label><input id="name"></div><div class="field"><label>AUTHOR</label><input id="author"></div></div>
+    <div class="field-grid"><div class="field"><label>AUTHOR URL</label><input id="authorUrl"></div><div class="field"><label>STATUS</label><select id="status"><option value="published">PUBLISHED</option><option value="hidden">HIDDEN</option></select></div></div>
+    <div class="field"><label>SHORT DESCRIPTION</label><textarea id="shortDesc"></textarea></div>
+    <div class="field"><label>FULL DESCRIPTION</label><textarea id="fullDesc" class="big"></textarea></div>
+    <div class="field"><label>SCENARIO</label><textarea id="scenario"></textarea></div>
+    <div class="field-grid"><div class="field"><label>TAGS</label><input id="tags" placeholder="tag 1, tag 2"><div class="hint">Comma separated. POV tag can stay here too.</div></div><div class="field"><label>HASHTAGS</label><input id="hashtags" placeholder="tag 1, tag 2"></div></div>
+    <div class="field-grid"><div class="field"><label>UNIVERSES</label><input id="universes" placeholder="Universe A, Universe B"><div class="hint">Manual values override inferred Universe.</div></div><div class="field"><label>SETTINGS</label><input id="settings" placeholder="modern, fantasy, medieval..."></div></div>
+    <div class="field-grid"><div class="field"><label>POV</label><select id="pov"><option>AnyPOV</option><option>FemPOV</option><option>MalePOV</option></select></div><div class="field"><label>IMAGE URL</label><input id="imageUrl"></div></div>
+    <div class="field-grid"><div class="field"><label>JANITOR URL</label><input id="janitorUrl"></div><div class="field"><label>DATACAT URL</label><input id="datacatUrl"></div></div>
+    <div class="toolbar"><button class="btn primary" id="save" type="submit">SAVE CHANGES</button><button class="btn danger" id="delete" type="button">DELETE BOT CARD</button><span class="uuid" id="uuid"></span></div>
+    <div id="editStatus" class="status">READY.</div>
+  </form></section>
+</div>
+</main>
+<script src="character-editor.js"></script>
+</body></html>

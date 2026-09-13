@@ -1,0 +1,43 @@
+name: Move hub card author into footer
+
+on:
+  push:
+    paths:
+      - '.github/workflows/move-hub-card-author.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch HUB resource card author placement
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('public/hub-dynamic.js')
+          s = p.read_text()
+          old_css = ".resource-card[data-dynamic=\"1\"]{cursor:pointer}.card-title-row{display:flex;align-items:baseline;gap:7px;min-width:0;margin:5px 0}.card-title-row h3{margin:0;min-width:0}.card-by{flex:0 1 auto;min-width:0;font:7px/1 var(--mono);letter-spacing:.07em;color:#8e998e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}.card-by b{color:#b7aa82;font-weight:400}"
+          new_css = ".resource-card[data-dynamic=\"1\"]{cursor:pointer}.card-title-row{display:block;min-width:0;margin:5px 0}.card-title-row h3{margin:0;min-width:0}.meta{justify-content:space-between;gap:10px}.card-by{margin-left:auto;max-width:46%;min-width:0;font:7px/1 var(--mono);letter-spacing:.07em;color:#8e998e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;text-align:right}.card-by b{color:#b7aa82;font-weight:400}"
+          if old_css not in s:
+              raise SystemExit('Expected card CSS block not found')
+          s = s.replace(old_css, new_css, 1)
+
+          old = '<div class="card-title-row"><h3>${esc(r.title||\'UNTITLED RESOURCE\')}</h3><span class="card-by">BY: <b>${esc(creator)}</b></span></div><p>${esc(r.description_short||r.description_full||\'\')}</p>${tagHtml}<div class="meta"><span>${Number(r.file_count||0)?`${Number(r.file_count)} FILE${Number(r.file_count)===1?\'\':\'S\'} | `:\'\'}<span class="free">● FREE</span></span></div>'
+          new = '<div class="card-title-row"><h3>${esc(r.title||\'UNTITLED RESOURCE\')}</h3></div><p>${esc(r.description_short||r.description_full||\'\')}</p>${tagHtml}<div class="meta"><span>${Number(r.file_count||0)?`${Number(r.file_count)} FILE${Number(r.file_count)===1?\'\':\'S\'} | `:\'\'}<span class="free">● FREE</span></span><span class="card-by">BY: <b>${esc(creator)}</b></span></div>'
+          if old not in s:
+              raise SystemExit('Expected card markup not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/hub-dynamic.js
+          git commit -m "Move HUB resource author into card footer"
+          git push

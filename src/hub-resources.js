@@ -59,7 +59,12 @@ async function parsePublishRequest(request){
   const ct=request.headers.get('content-type')||'';
   if(ct.includes('multipart/form-data')){
     const form=await request.formData();
-    let draft={};try{draft=JSON.parse(String(form.get('resource')||'{}'))}catch{throw new Error('INVALID_RESOURCE_JSON')}
+    const resourcePart=form.get('resource');
+    let raw='{}';
+    if(resourcePart instanceof File) raw=await resourcePart.text();
+    else if(resourcePart!=null) raw=String(resourcePart);
+    let draft={};
+    try{draft=JSON.parse(raw||'{}')}catch{throw new Error('INVALID_RESOURCE_JSON')}
     const files=[];
     for(const [key,value] of form.entries()){
       if(key!=='files'||!(value instanceof File))continue;

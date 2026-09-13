@@ -49,10 +49,10 @@
     .edge-value.good{color:#b8c79f}
     .edge-value.warn{color:#b98d69;animation:edgeFault 9.6s infinite steps(1,end)}
 
-    .boot-terminal{position:absolute;left:20px;top:55%;z-index:10;width:238px;min-height:104px;padding:10px 11px 9px;border-left:1px solid rgba(118,139,106,.28);background:linear-gradient(90deg,rgba(5,9,6,.34),rgba(5,9,6,.12) 70%,transparent);font:7.4px/1.52 var(--mono);letter-spacing:.055em;color:#9aaa94;text-shadow:0 2px 9px rgba(0,0,0,.92);pointer-events:none}
-    .boot-terminal:before{content:'// LIVE TERMINAL';display:block;margin-bottom:7px;color:#bac7af;letter-spacing:.14em;font-size:7px}
-    .terminal-feed{display:grid;gap:2px;min-height:70px}
-    .terminal-line{min-height:11px;white-space:nowrap;overflow:hidden;text-overflow:clip;color:#99a790}
+    .boot-terminal{position:absolute;left:20px;top:57%;z-index:10;width:205px;min-height:78px;padding:8px 9px 7px;border-left:1px solid rgba(118,139,106,.28);background:linear-gradient(90deg,rgba(5,9,6,.32),rgba(5,9,6,.10) 72%,transparent);font:7px/1.48 var(--mono);letter-spacing:.05em;color:#9aaa94;text-shadow:0 2px 9px rgba(0,0,0,.92);pointer-events:none}
+    .boot-terminal:before{content:'// LIVE TERMINAL';display:block;margin-bottom:6px;color:#bac7af;letter-spacing:.14em;font-size:6.6px}
+    .terminal-feed{display:grid;gap:2px;min-height:42px}
+    .terminal-line{min-height:10px;white-space:nowrap;overflow:hidden;text-overflow:clip;color:#99a790}
     .terminal-line.dim{color:#6f7a70}.terminal-line.ok{color:#b1c39e}.terminal-line.error{color:#d06f67;text-shadow:-1px 0 rgba(255,72,72,.26),1px 0 rgba(111,177,143,.14)}.terminal-line.secret{color:#b99d73;font-style:italic;opacity:.9}
     .terminal-cursor{display:inline-block;width:6px;color:#b8ca9e;animation:terminalCursor .78s steps(1,end) infinite}
     .boot-terminal.fault{animation:terminalFault .28s steps(2,end) 1}
@@ -191,7 +191,7 @@
     }
     @keyframes runtimeBlink{0%,100%{opacity:1}50%{opacity:.42}}
 
-    @media(max-width:1100px){.access-deck{width:min(650px,68vw);gap:18px}.terminal-card,.terminal-card.characters,.terminal-card.hub{height:189px;min-height:189px}.terminal-card>a{padding:16px 18px 14px}.terminal-copy h2{font-size:24px}.terminal-copy p{font-size:7.6px}.node-row{font-size:6.1px}.enter{font-size:6.3px}.characters .vine-top,.hub .vine-top{height:109px;top:-15px}.characters .vine-side{width:140px;height:140px;left:-18px;top:-17px}.characters .vine-bottom{height:105px;left:-18px;bottom:-37px}.hub .vine-side{width:70px;height:193px;right:-7px;top:-7px}.activity-layer{top:68.8%;width:min(610px,66vw)}.boot-terminal{width:218px;font-size:7px}}
+    @media(max-width:1100px){.access-deck{width:min(650px,68vw);gap:18px}.terminal-card,.terminal-card.characters,.terminal-card.hub{height:189px;min-height:189px}.terminal-card>a{padding:16px 18px 14px}.terminal-copy h2{font-size:24px}.terminal-copy p{font-size:7.6px}.node-row{font-size:6.1px}.enter{font-size:6.3px}.characters .vine-top,.hub .vine-top{height:109px;top:-15px}.characters .vine-side{width:140px;height:140px;left:-18px;top:-17px}.characters .vine-bottom{height:105px;left:-18px;bottom:-37px}.hub .vine-side{width:70px;height:193px;right:-7px;top:-7px}.activity-layer{top:68.8%;width:min(610px,66vw)}.boot-terminal{width:192px;font-size:6.7px}}
 
     @media(max-width:760px){
       body{overflow:auto}.gateway{min-height:100dvh;overflow:visible;padding-bottom:64px}.scene{background-position:50% 58%;filter:brightness(.57) saturate(.78)}
@@ -199,8 +199,8 @@
       .brand-block{position:relative;left:auto;top:auto;padding:18px 18px 0}.brand{font-size:22px}.brand-sub{font-size:7.2px}.boot{margin-top:15px;font-size:7.1px;gap:4px}
       .top-index,.edge-note{display:none}.motto{position:relative;left:auto;top:auto;transform:none;margin:17vh auto 0;font-size:7.8px;width:max-content}
       .connection-status{position:relative;left:auto;top:auto;transform:none;width:max-content;margin:11px auto 0;font-size:7.5px;padding:6px 9px}
-      .boot-terminal{position:relative;left:auto;top:auto;width:calc(100% - 36px);min-height:83px;margin:15px 18px 0;padding:9px 10px;background:linear-gradient(90deg,rgba(5,9,6,.48),rgba(5,9,6,.16));font-size:6.8px}
-      .access-deck{position:relative;left:auto;top:auto;transform:none;width:calc(100% - 34px);margin:20px auto 0;grid-template-columns:1fr;gap:18px}
+      .boot-terminal{position:relative;left:auto;top:auto;width:calc(100% - 52px);min-height:70px;margin:14px 26px 0;padding:8px 9px;background:linear-gradient(90deg,rgba(5,9,6,.46),rgba(5,9,6,.14));font-size:6.5px}.terminal-feed{min-height:36px}
+      .access-deck{position:relative;left:auto;top:auto;transform:none;width:calc(100% - 34px);margin:18px auto 0;grid-template-columns:1fr;gap:18px}
       .terminal-card,.terminal-card.characters,.terminal-card.hub{height:158px;min-height:158px;margin:0;border-radius:15px}
       .terminal-card>a{padding:14px 16px 12px;border-radius:15px}.node-row{font-size:6px}.terminal-main{grid-template-columns:44px 1fr;gap:12px;margin-top:8px}.glyph{width:42px;height:42px;border-radius:9px}.glyph svg{width:26px;height:26px}.terminal-copy h2{font-size:21px}.terminal-copy p{font-size:7.2px;line-height:1.42;margin-top:5px}.enter{padding-top:8px;font-size:6px}.enter-arrow{font-size:15px}
       .vine{opacity:.62}.characters .vine-top,.hub .vine-top{height:calc((100vw - 34px)/3);top:-12px}.characters .vine-side{width:122px;height:122px;left:-16px;top:-14px}.characters .vine-bottom{height:94px;left:-15px;bottom:-33px}.hub .vine-side{width:58px;height:162px;right:-6px;top:-6px}
@@ -372,10 +372,10 @@
         const row=document.createElement('div');
         row.className=`terminal-line ${kind}`.trim();
         feed.appendChild(row);
-        while(feed.children.length>5)feed.removeChild(feed.firstElementChild);
+        while(feed.children.length>3)feed.removeChild(feed.firstElementChild);
         for(let i=0;i<text.length;i++){
           row.textContent+=text[i];
-          await sleep(18+Math.random()*28);
+          await sleep(42+Math.random()*48);
         }
         if(kind==='error'){
           terminal.classList.remove('fault');void terminal.offsetWidth;terminal.classList.add('fault');
@@ -384,7 +384,7 @@
         lineCount++;
       }
       async function terminalLoop(){
-        await sleep(700);
+        await sleep(900);
         while(true){
           const roll=Math.random();
           let text,kind='';
@@ -392,7 +392,7 @@
           else if(roll<.22){text=pick(errors);kind='error'}
           else{text=pick(normal);kind=lineCount%4===0?'ok':''}
           await typeLine(text,kind);
-          await sleep(kind==='error'?780:kind==='secret'?1050:520+Math.random()*620);
+          await sleep(kind==='error'?1100:kind==='secret'?1500:900+Math.random()*850);
         }
       }
       terminalLoop();

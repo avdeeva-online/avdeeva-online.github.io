@@ -1,0 +1,66 @@
+name: Add creators directory
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/add-creators-directory.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch creators directory
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('public/hub.html')
+          s=p.read_text(encoding='utf-8')
+          css='''.creator-panel{display:none;margin:0 0 14px;padding:11px 12px 10px;border:1px solid rgba(120,137,108,.18);border-radius:5px;background:rgba(8,12,9,.5)}.creator-panel.show{display:block}.creator-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px;color:#8e988e;font:7px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase}.creator-tags{display:flex;flex-wrap:wrap;gap:6px}.creator-filter{appearance:none;border:1px solid rgba(126,143,114,.18);border-radius:3px;background:rgba(11,16,12,.7);color:#939d92;padding:6px 9px;font:7.2px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;cursor:pointer}.creator-filter:hover{border-color:rgba(166,180,145,.38);color:#c9cec3}.creator-filter.active{border-color:rgba(179,173,116,.58);color:#eadfbf;background:rgba(146,139,82,.11)}@media(max-width:860px){.creator-tags{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.creator-tags::-webkit-scrollbar{display:none}.creator-filter{flex:0 0 auto}}'''
+          if '.creator-panel{' not in s:
+              s=s.replace('</style>',css+'</style>',1)
+          old='<button class="side-link"><span class="folder"></span><span>PRESETS</span><span class="count">(8)</span></button><button class="side-link"><span class="folder"></span><span>PLUGINS</span>'
+          new='<button class="side-link"><span class="folder"></span><span>PRESETS</span><span class="count">(8)</span></button><button class="side-link"><span class="folder"></span><span>CREATORS</span><span class="count">(3)</span></button><button class="side-link"><span class="folder"></span><span>PLUGINS</span>'
+          if '<span>CREATORS</span>' not in s:
+              if old not in s: raise SystemExit('sidebar target not found')
+              s=s.replace(old,new,1)
+          panel='<div class="creator-panel" aria-label="Creators"><div class="creator-head"><span>ALL CREATORS</span><span>FILTER RESOURCES BY AUTHOR</span></div><div class="creator-tags"></div></div>'
+          if 'class="creator-panel"' not in s:
+              s=s.replace('<div class="resource-grid">',panel+'<div class="resource-grid">',1)
+          creators=['neavdeeva','tavo-lab','neavdeeva','community','tavo-lab','community','neavdeeva','community']
+          names=['NEAVDEEVA','TAVO LAB','NEAVDEEVA','COMMUNITY','TAVO LAB','COMMUNITY','NEAVDEEVA','COMMUNITY']
+          import re
+          cards=list(re.finditer(r'<article class="resource-card"',s))
+          offset=0
+          for i,m in enumerate(cards[:8]):
+              pos=m.start()+offset
+              if 'data-creator=' in s[pos:pos+180]:
+                  continue
+              insert=f' data-creator="{creators[i]}" data-creator-name="{names[i]}"'
+              end=pos+len('<article class="resource-card"')
+              s=s[:end]+insert+s[end:]
+              offset+=len(insert)
+          oldcats="const categories=['all','presets','plugins','themes','guides','links','tools'];let active='all';const selected={model:new Set(),setting:new Set()};"
+          newcats="const categories=['all','presets','creators','plugins','themes','guides','links','tools'];let active='all',creator='all';const selected={model:new Set(),setting:new Set()};const creatorPanel=document.querySelector('.creator-panel'),creatorTags=document.querySelector('.creator-tags');"
+          if oldcats in s:
+              s=s.replace(oldcats,newcats,1)
+          oldapply="const show=(active==='all'||c.dataset.type===active)&&(!q||c.innerText.toLowerCase().includes(q))&&matches(c,'model')&&matches(c,'setting');c.style.display=show?'':'none';if(show)n++});found.textContent=`> ${n} RESOURCES FOUND`;presetPanel.classList.toggle('show',active==='presets')}"
+          newapply="const typeOk=active==='all'||active==='creators'||c.dataset.type===active;const creatorOk=active!=='creators'||creator==='all'||c.dataset.creator===creator;const show=typeOk&&creatorOk&&(!q||c.innerText.toLowerCase().includes(q))&&matches(c,'model')&&matches(c,'setting');c.style.display=show?'':'none';if(show)n++});found.textContent=`> ${n} RESOURCES FOUND`;presetPanel.classList.toggle('show',active==='presets');creatorPanel.classList.toggle('show',active==='creators')}"
+          if oldapply in s:
+              s=s.replace(oldapply,newapply,1)
+          oldside="side.forEach((b,i)=>b.addEventListener('click',()=>{side.forEach(x=>x.classList.remove('active'));b.classList.add('active');active=categories[i];apply()}));"
+          newside="side.forEach((b,i)=>b.addEventListener('click',()=>{side.forEach(x=>x.classList.remove('active'));b.classList.add('active');active=categories[i];apply()}));const creatorMap=new Map();cards.forEach(c=>{if(c.dataset.creator)creatorMap.set(c.dataset.creator,c.dataset.creatorName||c.dataset.creator)});creatorTags.innerHTML='<button class=\"creator-filter active\" data-creator=\"all\">ALL</button>'+[...creatorMap].map(([id,name])=>`<button class=\"creator-filter\" data-creator=\"${id}\">${name}</button>`).join('');creatorTags.addEventListener('click',e=>{const b=e.target.closest('.creator-filter');if(!b)return;creator=b.dataset.creator;creatorTags.querySelectorAll('.creator-filter').forEach(x=>x.classList.toggle('active',x===b));apply()});"
+          if oldside in s and 'const creatorMap=new Map()' not in s:
+              s=s.replace(oldside,newside,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "archive-exe-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/hub.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Add creators directory to TAVO Hub"
+          git push

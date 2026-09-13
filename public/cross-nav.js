@@ -1,9 +1,17 @@
 (()=>{
   'use strict';
+  if(!document.querySelector('link[data-archive-cross-nav]')){
+    const link=document.createElement('link');
+    link.rel='stylesheet';
+    link.href='cross-nav.css?v=1';
+    link.dataset.archiveCrossNav='1';
+    document.head.appendChild(link);
+  }
   const path=location.pathname.replace(/\/+$/,'')||'/';
   const isHub=path==='/hub'||path==='/hub.html';
   const isCatalog=path==='/characters'||path==='/characters.html';
   if(!isHub&&!isCatalog)return;
+  if(document.querySelector('.archive-cross-nav'))return;
 
   const iconCatalog='<svg class="cross-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="2.2"/><circle cx="16" cy="8" r="2.2"/><path d="M4.5 17c.8-2.4 2-3.6 3.5-3.6S10.7 14.6 11.5 17M12.5 17c.8-2.4 2-3.6 3.5-3.6s2.7 1.2 3.5 3.6"/></svg>';
   const iconHub='<svg class="cross-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4.5" width="14" height="15" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>';

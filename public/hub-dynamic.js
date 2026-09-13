@@ -6,7 +6,7 @@
   const creatorHref=(v,fallback='')=>{const s=String(v||'').trim();if(s.startsWith('@'))return`https://t.me/${s.slice(1)}`;if(/^https?:\/\//i.test(s))return s;const f=String(fallback||'').trim();if(/^https?:\/\//i.test(f))return f;if(f.startsWith('@'))return`https://t.me/${f.slice(1)}`;return''};
   const cover=media=>{const list=Array.isArray(media)?media:[];const c=list.find(x=>x&&x.cover)||list[0];return c?.url||c?.src||''};
   const label=v=>String(v||'').replaceAll('-',' ').toUpperCase();
-  const fileLabel=(f,type='resource')=>{const n=String(f?.name||'FILE').trim();if(/regex/i.test(n)&&/\.json$/i.test(n))return'REGEX JSON';if(/\.zip$/i.test(n))return`${String(type||'resource').toUpperCase()} ZIP`;return n.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').toUpperCase()||'FILE'};
+  const fileLabel=(f,type='resource')=>{const n=String(f?.name||'FILE').trim();if(/regex|регекс|regexp/i.test(n))return'REGEX';if(/\.zip$/i.test(n)||/preset|пресет/i.test(n))return'PRESET';return n.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').toUpperCase()||'FILE'};
   const imageFile=f=>/^image\//i.test(String(f?.mime||''))||/\.(png|jpe?g|webp|gif)$/i.test(String(f?.name||''));
   const isAdmin=()=>localStorage.getItem('archiveHubAdmin')==='1';
   const validSettings=v=>(Array.isArray(v)?v:[]).filter(x=>String(x).toLowerCase()!=='school-university');

@@ -1,0 +1,52 @@
+name: Compact TAVO Hub brand blocks
+on:
+  push:
+    paths:
+      - '.github/workflows/compact-hub-brand-blocks.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply compact brand/header styling
+        shell: bash
+        run: |
+          cat >> public/hub-polish.css <<'CSS'
+
+/* TAVO HUB — compact brand blocks */
+.top-shell{min-height:118px;padding:12px 28px 8px;align-items:start}
+.brand{font-size:24px;line-height:.96;letter-spacing:.04em}
+.brand-sub{margin-top:6px;font-size:7.8px;letter-spacing:.08em}
+.boot{margin-top:10px;gap:3px;font-size:7.6px;line-height:1.32}
+.top-motto{top:20px;font-size:7.5px;line-height:1.35;letter-spacing:.09em}
+.top-motto:after{margin-top:7px;width:26px}
+.top-index{font-size:7.4px;line-height:1.35;letter-spacing:.055em}
+
+.directory-head{grid-template-columns:146px minmax(0,1fr);padding:7px 10px;gap:10px;min-height:0}
+.hub-title h1{font-size:21px;line-height:.95;letter-spacing:.008em}
+.hub-title .sub{margin-top:3px;font-size:6px;letter-spacing:.09em}
+.hub-title .desc{margin-top:4px;max-width:146px;line-height:1.18}
+.hub-title .desc:after{font-size:6.5px;line-height:1.18;color:#9aa39a}
+.search{height:31px;padding:0 10px;border-radius:9px}
+.search input{font-size:7.9px}
+.search svg{width:13px;height:13px;flex-basis:13px}
+
+@media(min-width:1450px){.directory-head{grid-template-columns:146px minmax(0,1fr)}}
+@media(max-width:1180px){.directory-head{grid-template-columns:150px minmax(0,1fr)}}
+@media(max-width:860px){
+  .top-shell{min-height:112px;padding:11px 16px 7px}
+  .brand{font-size:22px}.boot{margin-top:8px}
+  .directory-head{grid-template-columns:1fr;padding:8px 10px;gap:7px}
+  .hub-title .desc{max-width:320px}
+  .search{height:32px}
+}
+CSS
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/hub-polish.css
+          git commit -m "Compact TAVO Hub title blocks" || exit 0
+          git push

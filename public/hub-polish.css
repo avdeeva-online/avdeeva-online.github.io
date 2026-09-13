@@ -108,3 +108,28 @@ body{font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothin
 .side-nav{margin-top:5px}
 @media(max-width:860px){.directory-head{padding-top:11px;padding-bottom:14px;min-height:auto}.hub-title .desc{margin-top:8px}.side{padding-top:15px}.side-nav{margin-top:6px}}
 @media(max-width:560px){.directory-head{padding-top:11px;padding-bottom:13px}.side{padding-top:14px}.side-nav{margin-top:5px}}
+
+/* TAVO HUB — modal atmosphere pass */
+.hub-modal{background:rgba(1,4,2,.68)!important;backdrop-filter:blur(7px) saturate(.82)!important}
+.hub-modal-panel{border-color:rgba(145,160,128,.24)!important;background:linear-gradient(180deg,rgba(9,14,10,.90),rgba(4,8,5,.93))!important;box-shadow:0 28px 84px rgba(0,0,0,.48),inset 0 1px rgba(221,226,204,.025)!important;scrollbar-width:thin!important;scrollbar-color:rgba(84,87,62,.54) transparent!important}
+.hub-modal-panel::-webkit-scrollbar{width:4px!important}
+.hub-modal-panel::-webkit-scrollbar-track{background:transparent!important}
+.hub-modal-panel::-webkit-scrollbar-thumb{background:rgba(81,85,59,.50)!important;border-radius:999px!important}
+.hub-modal-panel::-webkit-scrollbar-thumb:hover{background:rgba(105,105,70,.64)!important}
+.hub-modal-body{position:relative!important}
+.hub-modal-body:before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.18;background:repeating-linear-gradient(90deg,transparent 0 54px,rgba(189,198,172,.018) 54px 55px),linear-gradient(180deg,rgba(174,184,153,.015),transparent 34%)}
+.hub-modal-head,.hub-modal-tabs,.hub-tab-pane{position:relative;z-index:1}
+.hub-modal-head{padding-bottom:3px!important}
+.hub-modal-primary{position:relative;padding-left:10px!important}
+.hub-modal-primary:before{content:'';position:absolute;left:0;top:2px;bottom:2px;width:1px;background:linear-gradient(180deg,rgba(194,179,112,.52),rgba(126,143,111,.08))}
+.hub-modal-actions{padding:2px 0 0!important}
+.hub-modal-link,.hub-file-btn{background:rgba(8,13,9,.42)!important;box-shadow:inset 0 0 14px rgba(168,156,96,.018)!important}
+.hub-modal-link:hover,.hub-file-btn:hover{background:rgba(116,108,66,.10)!important}
+.hub-modal-tag{background:rgba(7,12,8,.28)!important;box-shadow:inset 0 0 10px rgba(140,154,119,.018)!important}
+.hub-modal-tabs{margin-top:17px!important;padding-top:12px!important}
+.hub-modal-tabs:before{content:'// RECORD CONTENT';position:absolute;right:0;top:13px;font:6.3px/1 var(--mono);letter-spacing:.12em;color:rgba(126,139,123,.52)}
+.hub-modal-desc{color:#cbd0c7!important}
+.hub-modal-cover:after{background:linear-gradient(180deg,transparent 42%,rgba(5,9,6,.18) 68%,rgba(4,7,5,.68))!important}
+.hub-modal-cover{filter:saturate(.92) brightness(.93)!important}
+.hub-modal-close{background:rgba(4,8,5,.60)!important;backdrop-filter:blur(4px)!important}
+@media(max-width:700px){.hub-modal-tabs:before{display:none}.hub-modal-primary{padding-left:8px!important}}

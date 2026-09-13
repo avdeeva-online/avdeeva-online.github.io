@@ -4,6 +4,7 @@
   const allowedSettings=new Set(['modern','fantasy','medieval','post-apocalypse','sci-fi','omegaverse','rusreal']);
   const normalizeSettings=arr=>[...new Set((Array.isArray(arr)?arr:[]).map(x=>{x=String(x).toLowerCase();if(x==='historical')return'medieval';if(x==='magic')return'fantasy';return x}).filter(x=>allowedSettings.has(x)))];
   let editResource=null;
+  let editPendingFiles=[];
   const oldFetch=window.fetch.bind(window);
 
   function ensureEditorNav(){
@@ -36,6 +37,17 @@
   function snapshotManual(){return{title:$('#title')?.value||'',creator:$('#creator')?.value||'',creatorLink:$('#creatorLink')?.value||'',short:$('#shortDesc')?.value||'',full:$('#fullDesc')?.value||'',extra:$('#extraTags')?.value||'',additional:$('#additionalInfo')?.value||'',type:selected('#typeChoices')[0]||'other',models:selected('#modelChoices'),settings:normalizeSettings(selected('#settingChoices'))}}
   function restoreManual(s){if(!s)return;$('#title').value=s.title;$('#creator').value=s.creator;$('#creatorLink').value=s.creatorLink;$('#shortDesc').value=s.short;$('#fullDesc').value=s.full;$('#extraTags').value=s.extra;if($('#additionalInfo'))$('#additionalInfo').value=s.additional;choose('#typeChoices',s.type,false);choose('#modelChoices',s.models);choose('#settingChoices',s.settings);['#title','#creator','#creatorLink','#shortDesc','#fullDesc','#additionalInfo','#extraTags'].forEach(sel=>$(sel)?.dispatchEvent(new Event('input',{bubbles:true})))}
 
+  function rememberPendingFiles(list){
+    if(!editResource)return;
+    for(const f of Array.from(list||[])){
+      if(!(f instanceof File))continue;
+      const i=editPendingFiles.findIndex(x=>x.name===f.name);
+      if(i>=0)editPendingFiles[i]=f;else editPendingFiles.push(f);
+    }
+  }
+  $('#fileInput')?.addEventListener('change',e=>rememberPendingFiles(e.target.files),true);
+  $('#fileDrop')?.addEventListener('drop',e=>rememberPendingFiles(e.dataTransfer?.files),true);
+
   window.fetch=async(input,init={})=>{
     const url=typeof input==='string'?input:input?.url||'';
     if(url.includes('/api/admin/hub-resource')&&init.method==='POST'){
@@ -50,7 +62,63 @@
 
   function renderExistingFiles(){const box=$('#existingFiles');if(!box)return;const files=Array.isArray(editResource?.files)?editResource.files:[];if(!files.length){box.innerHTML=editResource?'<div class="file-summary">NO EXISTING FILES</div>':'';return}box.innerHTML='<div class="file-summary" style="margin-bottom:6px">EXISTING FILES · new upload with the same filename replaces the old file</div>'+files.map(f=>`<div class="file-row" data-existing-id="${String(f.id)}"><div><div class="file-name">${String(f.name||'FILE').replace(/[<>&]/g,'')}</div><div class="file-meta">${String(f.mime||'FILE')} · ${Math.max(0,Number(f.size)||0)} B${f.primary?' · PRIMARY':''}</div></div><a class="file-action" href="${f.download_url}" target="_blank">OPEN</a><button class="file-action remove" type="button" data-delete-file="${String(f.id)}">REMOVE</button></div>`).join('');box.querySelectorAll('[data-delete-file]').forEach(btn=>btn.onclick=async()=>{if(!confirm('Remove this file from the resource?'))return;btn.disabled=true;const id=btn.dataset.deleteFile;try{const r=await oldFetch(`/api/admin/hub-resource/${encodeURIComponent(editResource.id)}/files/${encodeURIComponent(id)}`,{method:'DELETE'}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);editResource.files=editResource.files.filter(f=>String(f.id)!==String(id));renderExistingFiles();setStatus('FILE REMOVED.','ok')}catch(e){setStatus('FILE REMOVE FAILED: '+e.message,'bad');btn.disabled=false}})}
 
-  function fillResource(r){editResource=r;$('#postUrl').value=r.source_url||'';$('#rawText').value=r.description_full||'';$('#sourceLink').textContent=r.source_url||'';$('#title').value=r.title||'';$('#creator').value=r.creator?.name||'';$('#creatorLink').value=r.creator?.link||'';$('#shortDesc').value=r.description_short||'';$('#fullDesc').value=r.description_full||'';$('#additionalInfo').value=r.additional_info||'';$('#extraTags').value=(r.tags||[]).join(', ');choose('#typeChoices',r.type,false);choose('#modelChoices',r.models||[]);choose('#settingChoices',normalizeSettings(r.settings||[]));const pub=$('#publish');if(pub)pub.textContent='UPDATE RESOURCE';renderExistingFiles();document.querySelector('h1').textContent='EDIT TAVO HUB RESOURCE';setStatus('EDIT MODE · '+(r.title||r.id)+'\nExisting files stay untouched unless you remove them or upload a replacement.','ok');['#title','#creator','#creatorLink','#shortDesc','#fullDesc','#additionalInfo','#extraTags','#postUrl'].forEach(sel=>$(sel)?.dispatchEvent(new Event('input',{bubbles:true})))}
+  function editDraft(){
+    return {
+      editing_id:editResource?.id||'',
+      source:{type:'telegram',url:editResource?.source_url||$('#postUrl')?.value?.trim()||''},
+      type:selected('#typeChoices')[0]||editResource?.type||'other',
+      title:$('#title')?.value?.trim()||'',
+      creator:{name:$('#creator')?.value?.trim()||'',link:$('#creatorLink')?.value?.trim()||''},
+      description_short:$('#shortDesc')?.value?.trim()||'',
+      description_full:$('#fullDesc')?.value?.trim()||'',
+      additional_info:$('#additionalInfo')?.value?.trim()||'',
+      models:selected('#modelChoices'),
+      settings:normalizeSettings(selected('#settingChoices')),
+      tags:($('#extraTags')?.value||'').split(',').map(x=>x.trim()).filter(Boolean),
+      media:Array.isArray(editResource?.media)?editResource.media:[],
+      files:editPendingFiles.map((f,i)=>({name:f.name,size:f.size,type:f.type||'',primary:false,source:'manual'})),
+      confidence:editResource?.confidence||{},
+      status:'published'
+    };
+  }
+
+  async function reloadEditedResource(id){
+    const r=await oldFetch('/api/hub-resources',{cache:'no-store'}),d=await r.json().catch(()=>({}));
+    if(!r.ok||!d?.ok)throw new Error(d?.error||`HTTP_${r.status}`);
+    const item=(d.resources||[]).find(x=>String(x.id)===String(id));
+    if(!item)throw new Error('RESOURCE_NOT_FOUND_AFTER_UPDATE');
+    return item;
+  }
+
+  async function updateExistingResource(){
+    if(!editResource)return;
+    const d=editDraft();
+    if(!d.source.url||!d.title||!d.type){setStatus('SOURCE URL, TITLE AND TYPE ARE REQUIRED.','bad');return}
+    const b=$('#publish');if(b)b.disabled=true;
+    setStatus('UPDATING RESOURCE...');
+    try{
+      let r;
+      if(editPendingFiles.length){
+        const fd=new FormData();
+        fd.append('resource',new Blob([JSON.stringify(d)],{type:'application/json'}),'resource.json');
+        editPendingFiles.forEach(f=>fd.append('files',f,f.name));
+        r=await oldFetch('/api/admin/hub-resource',{method:'POST',body:fd});
+      }else{
+        r=await oldFetch('/api/admin/hub-resource',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(d)});
+      }
+      const x=await r.json().catch(()=>({}));
+      if(!r.ok||!x.ok)throw new Error(x.error||`HTTP_${r.status}`);
+      editPendingFiles=[];
+      const fresh=await reloadEditedResource(x.id||editResource.id);
+      fillResource(fresh);
+      const localList=$('#fileList');if(localList)localList.innerHTML='';
+      const summary=$('#fileSummary');if(summary)summary.textContent='NO NEW FILES ATTACHED';
+      setStatus('RESOURCE UPDATED SUCCESSFULLY.\nExisting files were preserved; same-name uploads replaced their previous version.','ok');
+    }catch(e){setStatus('UPDATE FAILED: '+e.message,'bad')}
+    finally{if(b)b.disabled=false}
+  }
+
+  function fillResource(r){editResource=r;$('#postUrl').value=r.source_url||'';$('#rawText').value=r.description_full||'';$('#sourceLink').textContent=r.source_url||'';$('#title').value=r.title||'';$('#creator').value=r.creator?.name||'';$('#creatorLink').value=r.creator?.link||'';$('#shortDesc').value=r.description_short||'';$('#fullDesc').value=r.description_full||'';$('#additionalInfo').value=r.additional_info||'';$('#extraTags').value=(r.tags||[]).join(', ');choose('#typeChoices',r.type,false);choose('#modelChoices',r.models||[]);choose('#settingChoices',normalizeSettings(r.settings||[]));const pub=$('#publish');if(pub){pub.textContent='UPDATE RESOURCE';pub.onclick=updateExistingResource}renderExistingFiles();document.querySelector('h1').textContent='EDIT TAVO HUB RESOURCE';setStatus('EDIT MODE · '+(r.title||r.id)+'\nExisting files stay untouched unless you remove them or upload a replacement.','ok');['#title','#creator','#creatorLink','#shortDesc','#fullDesc','#additionalInfo','#extraTags','#postUrl'].forEach(sel=>$(sel)?.dispatchEvent(new Event('input',{bubbles:true})))}
 
   async function initEdit(){const id=new URLSearchParams(location.search).get('edit');if(!id)return;setStatus('LOADING RESOURCE...');try{const r=await oldFetch('/api/hub-resources',{cache:'no-store'}),d=await r.json();if(!r.ok||!d?.ok)throw new Error(d?.error||`HTTP_${r.status}`);const item=(d.resources||[]).find(x=>String(x.id)===String(id));if(!item)throw new Error('RESOURCE_NOT_FOUND');fillResource(item)}catch(e){setStatus('EDIT LOAD FAILED: '+e.message,'bad')}}
 

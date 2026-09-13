@@ -20,6 +20,78 @@
   nav.setAttribute('aria-label','Archive sections');
   nav.innerHTML=`<a class="cross-nav-link ${isHub?'active':''}" href="hub.html" ${isHub?'aria-current="page"':''}>${iconHub}<span class="cross-nav-label">TAVO HUB</span></a><span class="cross-nav-swap" aria-hidden="true">↔</span><a class="cross-nav-link ${isCatalog?'active':''}" href="characters.html" ${isCatalog?'aria-current="page"':''}>${iconCatalog}<span class="cross-nav-label">BOT CATALOG</span></a>`;
 
-  if(isHub){document.querySelector('.top-shell')?.appendChild(nav)}
-  else{document.querySelector('.hero')?.appendChild(nav)}
+  if(isHub){
+    document.querySelector('.top-shell')?.appendChild(nav);
+    Promise.resolve(window.__hubResourcesReady).catch(()=>{}).then(()=>setTimeout(setupHubControls,0));
+  }else{
+    document.querySelector('.hero')?.appendChild(nav);
+  }
+
+  function setupHubControls(){
+    if(document.querySelector('.hub-control-line'))return;
+    const content=document.querySelector('.content');
+    const toolbar=document.querySelector('.toolbar');
+    const toolbarRight=document.querySelector('.toolbar-right');
+    const preset=document.querySelector('.preset-filters');
+    const grid=document.querySelector('.resource-grid');
+    if(!content||!toolbar||!toolbarRight||!preset||!grid)return;
+
+    const line=document.createElement('div');
+    line.className='hub-control-line';
+    content.insertBefore(line,toolbar);
+    line.appendChild(preset);
+    line.appendChild(toolbarRight);
+    toolbar.remove();
+
+    const oldSort=toolbarRight.querySelector('label');
+    if(oldSort){
+      const sort=document.createElement('div');
+      sort.className='hub-sort-inline';
+      sort.setAttribute('aria-label','Sort resources');
+      sort.innerHTML='<span class="hub-sort-label">SORT:</span><button type="button" class="hub-sort-btn active" data-sort="recent">RECENT</button><button type="button" class="hub-sort-btn" data-sort="name">NAME</button><button type="button" class="hub-sort-btn" data-sort="type">TYPE</button>';
+      oldSort.replaceWith(sort);
+
+      [...grid.querySelectorAll('.resource-card')].forEach((card,i)=>card.dataset.hubOrder=String(i));
+      sort.addEventListener('click',e=>{
+        const btn=e.target.closest('.hub-sort-btn');
+        if(!btn)return;
+        sort.querySelectorAll('.hub-sort-btn').forEach(b=>b.classList.toggle('active',b===btn));
+        const cards=[...grid.querySelectorAll('.resource-card')];
+        cards.sort((a,b)=>{
+          if(btn.dataset.sort==='name')return (a.querySelector('h3')?.textContent||'').localeCompare(b.querySelector('h3')?.textContent||'',undefined,{sensitivity:'base'});
+          if(btn.dataset.sort==='type'){
+            const type=(a.dataset.type||'').localeCompare(b.dataset.type||'',undefined,{sensitivity:'base'});
+            return type||((a.querySelector('h3')?.textContent||'').localeCompare(b.querySelector('h3')?.textContent||'',undefined,{sensitivity:'base'}));
+          }
+          return Number(a.dataset.hubOrder||0)-Number(b.dataset.hubOrder||0);
+        });
+        cards.forEach(card=>grid.appendChild(card));
+      });
+    }
+
+    const style=document.createElement('style');
+    style.dataset.hubControlLine='1';
+    style.textContent=`
+      .hub-control-line{display:flex;align-items:center;gap:12px;min-height:38px;margin:0 0 10px;padding:0 2px;border:0;background:transparent}
+      .hub-control-line .preset-filters{flex:1 1 auto;min-width:0;margin:0;padding:0;border:0;background:transparent;box-shadow:none;overflow:visible}
+      .hub-control-line .preset-filters:before{display:none!important}
+      .hub-control-line .preset-filters.show{display:flex;align-items:center;gap:15px;flex-wrap:nowrap}
+      .hub-control-line .filter-row,.hub-control-line .filter-row:first-of-type,.hub-control-line .filter-row+ .filter-row{display:flex;align-items:center;gap:6px;margin:0;padding:0;border:0;background:transparent;white-space:nowrap}
+      .hub-control-line .filter-label{flex:0 0 auto;padding:0;margin-right:2px;font-size:6.9px!important;line-height:1;color:#818b81!important;font-weight:400!important;letter-spacing:.07em}
+      .hub-control-line .filter-tags{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;overflow:visible}
+      .hub-control-line .tag-filter,.hub-control-line .filter-row:first-of-type .tag-filter,.hub-control-line .filter-row:nth-of-type(2) .tag-filter{min-height:25px;padding:5px 8px;border-radius:7px;font-size:6.8px;line-height:1;letter-spacing:.025em;background:rgba(8,13,9,.42);border-color:rgba(143,157,128,.16);color:#98a197}
+      .hub-control-line .tag-filter.active,.hub-control-line .filter-row:first-of-type .tag-filter.active,.hub-control-line .filter-row:nth-of-type(2) .tag-filter.active{border-color:rgba(194,181,109,.50);background:rgba(135,126,71,.12);color:#eadfbd}
+      .hub-control-line .toolbar-right{display:flex;align-items:center;gap:7px;flex:0 0 auto;margin-left:auto}
+      .hub-sort-inline{display:flex;align-items:center;gap:2px;height:29px;padding:0 2px 0 7px;border-left:1px solid rgba(137,151,121,.15)}
+      .hub-sort-label{margin-right:4px;color:#7f897f;font:6.8px/1 var(--mono);letter-spacing:.07em}
+      .hub-sort-btn{appearance:none;border:0;background:transparent;color:#828d83;padding:6px 7px;border-radius:6px;font:7px/1 var(--mono);letter-spacing:.045em;cursor:pointer}
+      .hub-sort-btn:hover{color:#c8cec3;background:rgba(126,143,112,.05)}
+      .hub-sort-btn.active{color:#eadfb9;background:rgba(154,143,82,.10);box-shadow:inset 0 -1px rgba(205,187,111,.45)}
+      .hub-control-line .view-toggle{display:flex;gap:5px}
+      .hub-control-line .view-btn{width:28px;height:28px}
+      @media(max-width:1260px){.hub-control-line{align-items:flex-start;flex-wrap:wrap}.hub-control-line .preset-filters.show{flex-wrap:wrap;row-gap:7px}.hub-control-line .toolbar-right{margin-left:auto}}
+      @media(max-width:900px){.hub-control-line{gap:8px}.hub-control-line .preset-filters.show{width:100%;flex-basis:100%;overflow-x:auto;scrollbar-width:none}.hub-control-line .preset-filters.show::-webkit-scrollbar{display:none}.hub-control-line .toolbar-right{width:100%;justify-content:flex-end}.hub-sort-inline{border-left:0}.hub-control-line .filter-tags{overflow:visible}}
+    `;
+    document.head.appendChild(style);
+  }
 })();

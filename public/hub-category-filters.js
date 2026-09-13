@@ -137,17 +137,19 @@
       .hub-category-empty{font:6.6px/1 var(--mono);letter-spacing:.06em;color:#69746b}
       .resource-card.category-filter-hidden{display:none!important}
 
-      /* Themes: keep the current width, height and show more of the middle of portrait screenshots. */
-      .resource-grid.hub-theme-grid{grid-template-columns:repeat(auto-fill,minmax(230px,290px));gap:10px;justify-content:start}
-      .resource-grid.hub-theme-grid .resource-card{min-height:0;width:100%;max-width:290px}
-      .resource-grid.hub-theme-grid .thumb{height:248px!important;flex:0 0 248px!important;aspect-ratio:auto!important;background-size:cover!important;background-position:center 38%!important;border-radius:10px 10px 5px 5px}
-      .resource-grid.hub-theme-grid .card-body{padding:8px 9px 7px}
-      .resource-grid.hub-theme-grid .resource-card h3{font-size:14.2px;line-height:1.06}
-      .resource-grid.hub-theme-grid .resource-card p{min-height:0;max-height:2.7em;font-size:8px}
-      .resource-grid.hub-theme-grid .card-tags{margin-top:4px}
-      @media(max-width:900px){.resource-grid.hub-theme-grid{grid-template-columns:repeat(2,minmax(0,1fr));justify-content:stretch}.resource-grid.hub-theme-grid .resource-card{max-width:none}.resource-grid.hub-theme-grid .thumb{height:220px!important;flex-basis:220px!important;background-position:center 38%!important}}
-      @media(max-width:700px){.hub-category-filters{flex:1 1 100%;order:2;overflow-x:auto;scrollbar-width:none}.hub-category-filters::-webkit-scrollbar{display:none}.hub-category-tags{flex-wrap:nowrap}.hub-category-filter{flex:0 0 auto}.resource-grid.hub-theme-grid .thumb{height:205px!important;flex-basis:205px!important;background-position:center 40%!important}}
-      @media(max-width:500px){.resource-grid.hub-theme-grid{grid-template-columns:1fr}.resource-grid.hub-theme-grid .thumb{height:220px!important;flex-basis:220px!important;background-position:center 40%!important}}
+      /* THEMES use a compact portrait card. Other resource types keep their existing layout. */
+      .resource-grid.hub-theme-grid{grid-template-columns:repeat(auto-fill,minmax(190px,220px));gap:11px;justify-content:start;align-items:start}
+      .resource-grid.hub-theme-grid .resource-card{width:100%;max-width:220px;min-height:0}
+      .resource-grid.hub-theme-grid .thumb{height:auto!important;flex:0 0 auto!important;aspect-ratio:3/4!important;background-size:cover!important;background-position:center 38%!important;border-radius:10px 10px 5px 5px}
+      .resource-grid.hub-theme-grid .card-body{padding:7px 8px 7px}
+      .resource-grid.hub-theme-grid .resource-card h3{font-size:13.8px;line-height:1.04;margin-bottom:3px}
+      .resource-grid.hub-theme-grid .resource-card p{display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden;min-height:0!important;max-height:1.25em!important;margin:3px 0 0;font-size:7.5px;line-height:1.25;color:#8e978b}
+      .resource-grid.hub-theme-grid .card-tags{margin-top:4px;max-height:18px;overflow:hidden}
+      .resource-grid.hub-theme-grid .meta{margin-top:5px}
+      @media(min-width:1500px){.resource-grid.hub-theme-grid{grid-template-columns:repeat(auto-fill,minmax(195px,215px))}}
+      @media(max-width:900px){.resource-grid.hub-theme-grid{grid-template-columns:repeat(3,minmax(0,1fr));justify-content:stretch}.resource-grid.hub-theme-grid .resource-card{max-width:none}.resource-grid.hub-theme-grid .thumb{aspect-ratio:3/4!important;background-position:center 38%!important}}
+      @media(max-width:700px){.hub-category-filters{flex:1 1 100%;order:2;overflow-x:auto;scrollbar-width:none}.hub-category-filters::-webkit-scrollbar{display:none}.hub-category-tags{flex-wrap:nowrap}.hub-category-filter{flex:0 0 auto}.resource-grid.hub-theme-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.resource-grid.hub-theme-grid .thumb{aspect-ratio:3/4!important;background-position:center 40%!important}}
+      @media(max-width:430px){.resource-grid.hub-theme-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.resource-grid.hub-theme-grid .card-body{padding:6px 7px}.resource-grid.hub-theme-grid .resource-card h3{font-size:12.8px}.resource-grid.hub-theme-grid .resource-card p{font-size:7px}}
     `;document.head.appendChild(s);
   }
 

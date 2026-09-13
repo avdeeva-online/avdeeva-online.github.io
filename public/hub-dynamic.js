@@ -4,7 +4,8 @@
   const plural=t=>t.endsWith('s')?t:`${t}s`;
   const humanSize=n=>{n=Number(n)||0;if(!n)return'';if(n<1024)return`${n} B`;if(n<1048576)return`${(n/1024).toFixed(1)} KB`;return`${(n/1048576).toFixed(1)} MB`};
   function cover(media){const list=Array.isArray(media)?media:[];const c=list.find(x=>x&&x.cover)||list[0];return c?.url||c?.src||''}
-  function creatorHref(v){const s=String(v||'').trim();if(!s)return'';if(s.startsWith('@'))return`https://t.me/${s.slice(1)}`;if(/^https?:\/\//i.test(s))return s;return''}
+  function cleanAuthor(v){let s=String(v||'').trim();if(!s)return'UNKNOWN';try{const u=new URL(s);if(/(^|\.)t\.me$/i.test(u.hostname)){let p=u.pathname.replace(/^\/+|\/+$/g,'').split('/').filter(Boolean);if(p[0]==='s')p.shift();if(p.length)return p[0].replace(/^@/,'')}}catch{}return s.replace(/^@/,'')}
+  function creatorHref(v,fallback=''){const s=String(v||'').trim();if(s.startsWith('@'))return`https://t.me/${s.slice(1)}`;if(/^https?:\/\//i.test(s))return s;const f=String(fallback||'').trim();if(/^https?:\/\//i.test(f))return f;if(f.startsWith('@'))return`https://t.me/${f.slice(1)}`;return''}
   function fileLabel(f){const name=String(f?.name||'FILE');if(/\.zip$/i.test(name))return'DOWNLOAD PRESET';if(/regex/i.test(name)&&/\.json$/i.test(name))return'DOWNLOAD REGEX';return`DOWNLOAD ${name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').toUpperCase()}`}
 
   function ensureUi(){
@@ -58,8 +59,9 @@
     ensureUi();
     const modal=document.getElementById('hubResourceModal'),box=document.getElementById('hubModalContent');
     const image=cover(r.media);
-    const creator=String(r.creator?.name||'UNKNOWN');
-    const cLink=creatorHref(r.creator?.link);
+    const rawCreator=String(r.creator?.name||'UNKNOWN');
+    const creator=cleanAuthor(rawCreator);
+    const cLink=creatorHref(r.creator?.link,rawCreator);
     const tags=[...(Array.isArray(r.models)?r.models:[]),...(Array.isArray(r.settings)?r.settings:[]),...(Array.isArray(r.tags)?r.tags:[])];
     const files=Array.isArray(r.files)?r.files:[];
     const coverHtml=image?`<div class="hub-modal-cover" style="background-image:url('${esc(image).replace(/'/g,'%27')}')"></div>`:'';
@@ -72,7 +74,8 @@
 
   function card(r){
     const type=String(r.type||'other').toLowerCase();
-    const creator=String(r.creator?.name||'UNKNOWN');
+    const rawCreator=String(r.creator?.name||'UNKNOWN');
+    const creator=cleanAuthor(rawCreator);
     const models=Array.isArray(r.models)?r.models:[];
     const settings=Array.isArray(r.settings)?r.settings:[];
     const tags=[...models,...settings,...(Array.isArray(r.tags)?r.tags:[])].slice(0,6);

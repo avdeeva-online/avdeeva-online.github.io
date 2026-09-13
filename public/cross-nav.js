@@ -24,7 +24,7 @@
     document.querySelector('.top-shell')?.appendChild(nav);
     if(!document.querySelector('script[data-hub-category-filters]')){
       const categoryScript=document.createElement('script');
-      categoryScript.src='hub-category-filters.js?v=1';
+      categoryScript.src='hub-category-filters.js?v=20260913-4';
       categoryScript.dataset.hubCategoryFilters='1';
       document.head.appendChild(categoryScript);
     }

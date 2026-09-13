@@ -3,19 +3,141 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0d0f0d">
+  <meta name="theme-color" content="#080a08">
+  <meta name="description" content="TAVO HUB — presets, plugins, themes, guides, links, tools and other resources inside ARCHIVE.EXE.">
   <title>TAVO HUB // ARCHIVE.EXE</title>
   <style>
-    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0d0f0d;color:#ded8cc;font-family:Arial,sans-serif}body{min-height:100dvh;display:grid;place-items:center;background:linear-gradient(rgba(7,9,7,.55),rgba(7,9,7,.9)),url('assets/header.png') center/cover fixed}.card{width:min(680px,calc(100% - 28px));padding:34px;border:1px solid #46503f;border-radius:7px;background:rgba(14,17,14,.88);backdrop-filter:blur(10px);box-shadow:0 24px 80px rgba(0,0,0,.45)}.kicker,.meta,.back{font-family:"Courier New",monospace}.kicker{font-size:8px;letter-spacing:.16em;color:#7e8975}.card h1{margin:12px 0 8px;font:700 clamp(34px,6vw,62px)/1 Georgia,serif}.card p{max-width:540px;color:#9ca396;font:10px/1.7 "Courier New",monospace;letter-spacing:.04em}.meta{margin-top:28px;padding-top:18px;border-top:1px solid #30382e;color:#697164;font-size:8px;letter-spacing:.12em}.back{display:inline-flex;margin-top:24px;padding:10px 13px;border:1px solid #59644f;border-radius:5px;color:#c8c0aa;font-size:8px;letter-spacing:.1em;text-decoration:none;background:#171b16}.back:hover{border-color:#879572;color:#ece4d3}@media(max-width:600px){.card{padding:24px 20px}.card p{font-size:8px}}
+    *{box-sizing:border-box}
+    :root{--bg:#080a08;--panel:#090d0a;--panel2:#0d120e;--ink:#e8dfcf;--muted:#8d9788;--olive:#9eab84;--sand:#d7c8a5;--rust:#9a7959;--line:rgba(131,148,117,.32);--mono:"Courier New",monospace}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink)}
+    body{font-family:var(--mono);background:#070907}
+    a{color:inherit;text-decoration:none}
+    button,input,select{font:inherit}
+
+    .hub{min-height:100dvh;position:relative;overflow:hidden;background:#070907}
+    .scene{position:fixed;inset:0;z-index:0;background:url('assets/gateway-bg-2-high.jpg') center 52%/cover no-repeat;filter:brightness(.48) saturate(.78) contrast(1.05)}
+    .shade{position:fixed;inset:0;z-index:1;background:linear-gradient(180deg,rgba(3,5,3,.18),rgba(3,5,3,.36) 32%,rgba(3,5,3,.66) 72%,rgba(3,5,3,.82)),linear-gradient(90deg,rgba(2,4,3,.56),rgba(2,4,3,.12) 28%,rgba(2,4,3,.12) 72%,rgba(2,4,3,.48))}
+    .scan{position:fixed;inset:0;z-index:7;pointer-events:none;opacity:.055;background:repeating-linear-gradient(180deg,rgba(255,255,255,.014) 0 1px,transparent 1px 4px)}
+
+    .page{position:relative;z-index:2;min-height:100dvh;padding-bottom:48px}
+    .top-shell{min-height:250px;position:relative;padding:26px 34px 20px;display:grid;grid-template-columns:1fr auto;align-items:start}
+    .brand{margin:0;font:700 28px/1 var(--mono);letter-spacing:.05em;color:#eee6d8;text-shadow:0 2px 18px rgba(0,0,0,.8)}
+    .brand-sub{margin-top:8px;font:8.7px/1.3 var(--mono);letter-spacing:.12em;color:#b5beb0}
+    .boot{margin-top:22px;display:grid;gap:5px;font:8px/1.25 var(--mono);letter-spacing:.06em;color:#aeb8a9}.boot span:before{content:'> ';color:#b6c797}.boot b{font-weight:400;color:#d0dbc0}
+    .top-index{text-align:right;text-transform:uppercase;font:8px/1.48 var(--mono);letter-spacing:.08em;color:#aab4a6;text-shadow:0 2px 14px rgba(0,0,0,.8)}
+    .top-index b{font-weight:400;color:#d0d9c7}
+    .top-motto{position:absolute;left:50%;top:54px;transform:translateX(-50%);text-align:center;text-transform:uppercase;font:9px/1.45 var(--mono);letter-spacing:.12em;color:#e2d1b3;text-shadow:0 3px 18px rgba(0,0,0,.9)}
+    .top-motto:after{content:'';display:block;width:32px;height:1px;background:#a98e6d;margin:10px auto 0}
+
+    .directory{position:relative;margin:0 auto;width:min(1460px,calc(100% - 38px));border:1px solid rgba(124,141,112,.38);background:linear-gradient(180deg,rgba(6,10,7,.94),rgba(5,8,6,.97));box-shadow:0 24px 80px rgba(0,0,0,.44),inset 0 0 40px rgba(115,148,105,.028)}
+    .directory:before,.directory:after{content:'';position:absolute;pointer-events:none;z-index:4;background-repeat:no-repeat;background-size:100% 100%;filter:brightness(.66) saturate(.72);opacity:.72}
+    .directory:before{background-image:url('assets/ivytop1.webp');left:-12px;top:-24px;width:44%;height:120px}
+    .directory:after{background-image:url('assets/ivytop2.webp');right:-10px;top:-22px;width:42%;height:112px}
+
+    .directory-head{position:relative;z-index:5;display:grid;grid-template-columns:320px 1fr 210px;gap:26px;padding:28px 30px 20px;border-bottom:1px solid rgba(113,130,104,.18)}
+    .hub-title h1{margin:0;font:700 32px/1 Georgia,"Times New Roman",serif;letter-spacing:.02em;color:#f1e8d8}.hub-title .sub{margin-top:8px;font:8px/1 var(--mono);letter-spacing:.15em;color:#cbb891;text-transform:uppercase}.hub-title .desc{margin:20px 0 0;max-width:285px;color:#aeb6aa;font:8.6px/1.55 var(--mono);letter-spacing:.02em}
+    .search-wrap{display:flex;align-items:flex-start;padding-top:8px}.search{width:100%;height:42px;display:flex;align-items:center;gap:10px;border:1px solid rgba(132,149,119,.32);background:rgba(4,7,5,.7);padding:0 14px;border-radius:6px;box-shadow:inset 0 0 16px rgba(126,157,110,.02)}.search svg{width:17px;height:17px;stroke:#ceb98b}.search input{width:100%;border:0;outline:none;background:transparent;color:#d8d9d2;font-size:9px;letter-spacing:.04em}.search input::placeholder{color:#778074}.search kbd{font:7px/1 var(--mono);color:#7f897e;white-space:nowrap}
+    .head-note{padding-top:9px;border-left:1px solid rgba(115,130,105,.18);padding-left:20px;font:7.5px/1.5 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:#9da79c}
+
+    .directory-body{display:grid;grid-template-columns:320px 1fr;min-height:560px}
+    .side{position:relative;z-index:3;padding:18px 22px 28px;border-right:1px solid rgba(113,130,104,.18)}
+    .side-nav{display:grid;gap:7px}.side-link{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;min-height:42px;padding:8px 10px;border:1px solid transparent;border-radius:5px;color:#c9c8be;font:8.7px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;cursor:pointer;transition:.16s}.side-link:hover{background:rgba(144,162,127,.055);border-color:rgba(135,151,120,.16)}.side-link.active{border-color:rgba(169,181,132,.55);background:linear-gradient(90deg,rgba(137,155,110,.15),rgba(69,78,58,.06));color:#eadfbf}.folder{width:23px;height:17px;border:1px solid #bda978;border-radius:2px;position:relative}.folder:before{content:'';position:absolute;left:2px;top:-5px;width:9px;height:5px;border:1px solid #bda978;border-bottom:0;border-radius:2px 2px 0 0}.count{color:#838d82}
+    .side-quote{margin-top:20px;padding:18px 8px 0;border-top:1px solid rgba(113,130,104,.18);font:8px/1.55 var(--mono);letter-spacing:.06em;color:#8f998e}.side-quote b{display:block;margin-top:10px;font-weight:400;color:#b9b19f}
+
+    .content{padding:18px 20px 24px}
+    .toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;font:7.8px/1 var(--mono);letter-spacing:.07em;color:#9ea89c;text-transform:uppercase}.toolbar-left{color:#aeb8aa}.toolbar-right{display:flex;align-items:center;gap:14px}.toolbar select{height:31px;border:1px solid rgba(121,137,109,.26);background:#0b100c;color:#bfc6ba;border-radius:4px;padding:0 28px 0 10px;font-size:7.8px;text-transform:uppercase}.view-toggle{display:flex;gap:6px}.view-btn{width:31px;height:31px;border:1px solid rgba(121,137,109,.24);background:#0b100c;color:#8f998e;border-radius:4px;cursor:pointer}.view-btn.active{border-color:#a69c67;color:#dfd2aa;background:#171a11}
+
+    .resource-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+    .resource-card{position:relative;min-height:218px;border:1px solid rgba(123,141,111,.34);border-radius:6px;background:linear-gradient(180deg,rgba(8,13,9,.96),rgba(5,9,6,.98));overflow:hidden;transition:transform .16s,border-color .16s,box-shadow .16s}.resource-card:hover{transform:translateY(-2px);border-color:rgba(159,176,140,.58);box-shadow:0 12px 30px rgba(0,0,0,.28)}
+    .thumb{height:92px;background-position:center;background-size:cover;filter:brightness(.72) saturate(.78);border-bottom:1px solid rgba(117,132,105,.22)}
+    .thumb.a{background-image:linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.18)),url('assets/gateway-bg-2-high.jpg')}
+    .thumb.b{background-image:radial-gradient(circle at 70% 35%,rgba(160,177,126,.16),transparent 30%),linear-gradient(135deg,#243027,#0d120e 55%,#171d14)}
+    .thumb.c{background-image:linear-gradient(135deg,rgba(139,100,66,.18),transparent 42%),linear-gradient(145deg,#2d2a21,#111510 60%,#1a1e15)}
+    .thumb.d{background-image:linear-gradient(160deg,#191d18,#384237 47%,#101410 48%,#252b22)}
+    .thumb.e{background-image:linear-gradient(135deg,#1d211d,#0c100d 50%,#30352e)}
+    .thumb.f{background-image:linear-gradient(160deg,#31271b,#141712 55%,#5b4930)}
+    .thumb.g{background-image:radial-gradient(circle at 62% 38%,rgba(144,177,105,.2),transparent 26%),linear-gradient(135deg,#1a271d,#0c110d 58%,#293126)}
+    .thumb.h{background-image:linear-gradient(150deg,#211b14,#0e100e 48%,#3c3427)}
+    .card-body{padding:11px 12px 10px}.type{font:7px/1 var(--mono);letter-spacing:.08em;color:#a5afa2;text-transform:uppercase}.resource-card h3{margin:7px 0 6px;font:700 14px/1 Georgia,"Times New Roman",serif;letter-spacing:.02em;color:#eee5d7}.resource-card p{margin:0;min-height:32px;color:#acb3aa;font:7.8px/1.45 var(--mono)}.meta{display:flex;align-items:center;justify-content:space-between;margin-top:11px;padding-top:8px;border-top:1px solid rgba(111,127,101,.18);color:#828c81;font:7px/1 var(--mono);letter-spacing:.04em}.free{color:#bacd94}.action{font-size:15px;color:#cab984}
+
+    .statusbar{position:relative;z-index:5;display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center;padding:12px 28px;border-top:1px solid rgba(94,106,87,.2);background:linear-gradient(180deg,rgba(4,6,4,.04),rgba(4,6,4,.48));text-transform:uppercase;font:7px/1 var(--mono);letter-spacing:.08em;color:#aeb7aa}.statusbar .center{text-align:center}.statusbar .right{text-align:right}.statusbar a:hover{color:#f0dfbd}
+
+    @media(max-width:1180px){.directory-head{grid-template-columns:260px 1fr 170px}.directory-body{grid-template-columns:260px 1fr}.resource-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:860px){.top-shell{min-height:210px;padding:20px 20px 12px}.top-index{display:none}.top-motto{top:88px}.directory{width:calc(100% - 24px)}.directory-head{grid-template-columns:1fr;padding:24px 18px 16px;gap:14px}.hub-title .desc{max-width:none}.head-note{display:none}.directory-body{grid-template-columns:1fr}.side{border-right:0;border-bottom:1px solid rgba(113,130,104,.18);padding:14px 16px}.side-nav{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.side-link{grid-template-columns:1fr;gap:4px;justify-items:center;text-align:center;min-height:58px;font-size:7px}.folder{width:20px;height:15px}.count{display:none}.side-quote{display:none}.content{padding:16px}.resource-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.statusbar{grid-template-columns:1fr auto}.statusbar .center{display:none}}
+    @media(max-width:560px){.brand{font-size:22px}.boot{font-size:7px}.top-motto{font-size:7.6px;top:93px}.directory{width:calc(100% - 16px)}.directory:before,.directory:after{opacity:.45}.hub-title h1{font-size:27px}.hub-title .desc{font-size:8px}.search{height:40px}.side-nav{grid-template-columns:repeat(2,minmax(0,1fr))}.resource-grid{grid-template-columns:1fr}.toolbar{align-items:flex-start}.toolbar-right{gap:8px}.thumb{height:110px}.statusbar{padding:11px 14px;font-size:6.4px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
   </style>
 </head>
 <body>
-  <main class="card">
-    <div class="kicker">RESOURCE DIRECTORY / NODE_02</div>
-    <h1>TAVO HUB</h1>
-    <p>Presets, themes, plugins, authors, guides, links and other TAVO resources will live here. The directory is connected to ARCHIVE.EXE but remains a separate space from the character catalog.</p>
-    <div class="meta">STATUS: DIRECTORY UNDER CONSTRUCTION</div>
-    <a class="back" href="index.html">← BACK TO GATEWAY</a>
+  <main class="hub">
+    <div class="scene" aria-hidden="true"></div><div class="shade" aria-hidden="true"></div><div class="scan" aria-hidden="true"></div>
+    <div class="page">
+      <header class="top-shell">
+        <div>
+          <h2 class="brand">ARCHIVE.EXE</h2>
+          <div class="brand-sub">TAVO RESOURCE DATABASE</div>
+          <div class="boot" aria-hidden="true"><span>NODE 00 // <b>GATEWAY</b></span><span>USER: <b>VISITOR</b></span><span>LOCATION: <b>TAVO HUB</b></span></div>
+        </div>
+        <div class="top-index" aria-hidden="true">// ARCHIVE INDEX<br>// CHARACTERS<br>// RESOURCES<br>// COMMUNITY<br>// FIELD NOTES<br><br><b>NODE_01 / TAVO HUB</b></div>
+        <div class="top-motto">RESOURCES FOR CREATORS,<br>EXPLORERS & STORYTELLERS.</div>
+      </header>
+
+      <section class="directory">
+        <div class="directory-head">
+          <div class="hub-title">
+            <h1>TAVO HUB</h1>
+            <div class="sub">RESOURCE DIRECTORY</div>
+            <p class="desc">Presets, plugins, guides, themes, links, tools and other useful resources for TAVO. Browse. Explore. Create.</p>
+          </div>
+          <div class="search-wrap"><label class="search" aria-label="Search resources"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.2 4.2"/></svg><input type="search" placeholder="Search resources, tools, guides..."><kbd>CTRL+K</kbd></label></div>
+          <div class="head-note">FIND TOOLS.<br>FUEL IMAGINATION.<br>BUILD BRIGHTER WORLDS.</div>
+        </div>
+
+        <div class="directory-body">
+          <aside class="side" aria-label="Resource categories">
+            <nav class="side-nav">
+              <button class="side-link active" type="button"><span class="folder" aria-hidden="true"></span><span>ALL RESOURCES</span><span class="count">(42)</span></button>
+              <button class="side-link" type="button"><span class="folder" aria-hidden="true"></span><span>PRESETS</span><span class="count">(8)</span></button>
+              <button class="side-link" type="button"><span class="folder" aria-hidden="true"></span><span>PLUGINS</span><span class="count">(6)</span></button>
+              <button class="side-link" type="button"><span class="folder" aria-hidden="true"></span><span>THEMES</span><span class="count">(7)</span></button>
+              <button class="side-link" type="button"><span class="folder" aria-hidden="true"></span><span>GUIDES</span><span class="count">(9)</span></button>
+              <button class="side-link" type="button"><span class="folder" aria-hidden="true"></span><span>LINKS</span><span class="count">(6)</span></button>
+              <button class="side-link" type="button"><span class="folder" aria-hidden="true"></span><span>TOOLS</span><span class="count">(6)</span></button>
+            </nav>
+            <div class="side-quote">"GOOD TOOLS LEAD TO GREATER WORLDS."<b>— TAVO</b></div>
+          </aside>
+
+          <div class="content">
+            <div class="toolbar"><div class="toolbar-left">&gt; 42 RESOURCES FOUND</div><div class="toolbar-right"><label>SORT: <select aria-label="Sort resources"><option>RECENT</option><option>NAME</option><option>TYPE</option></select></label><div class="view-toggle" aria-label="View mode"><button class="view-btn active" type="button" aria-label="Grid view">▦</button><button class="view-btn" type="button" aria-label="List view">☷</button></div></div></div>
+
+            <div class="resource-grid">
+              <article class="resource-card" data-type="themes"><div class="thumb a"></div><div class="card-body"><div class="type">// THEME</div><h3>RUINED HORIZONS</h3><p>A cinematic theme for post-apocalyptic storytelling.</p><div class="meta"><span>v1.2 &nbsp;|&nbsp; 324 DL &nbsp;|&nbsp; <span class="free">● FREE</span></span><span class="action">⇩</span></div></div></article>
+              <article class="resource-card" data-type="presets"><div class="thumb b"></div><div class="card-body"><div class="type">// PRESET</div><h3>NATURAL OVERGROWTH</h3><p>Organic, muted styling for darker creative setups.</p><div class="meta"><span>v1.0 &nbsp;|&nbsp; 512 DL &nbsp;|&nbsp; <span class="free">● FREE</span></span><span class="action">⇩</span></div></div></article>
+              <article class="resource-card" data-type="guides"><div class="thumb c"></div><div class="card-body"><div class="type">// GUIDE</div><h3>ATMOSPHERIC SETUP</h3><p>A practical guide to building a cleaner TAVO workflow.</p><div class="meta"><span>v1.0 &nbsp;|&nbsp; 1.2K DL &nbsp;|&nbsp; <span class="free">● FREE</span></span><span class="action">⇩</span></div></div></article>
+              <article class="resource-card" data-type="tools"><div class="thumb d"></div><div class="card-body"><div class="type">// TOOL</div><h3>LORE GENERATOR</h3><p>Generate locations, factions, hooks and story seeds.</p><div class="meta"><span>v0.9 &nbsp;|&nbsp; 876 DL &nbsp;|&nbsp; <span class="free">● FREE</span></span><span class="action">⇩</span></div></div></article>
+              <article class="resource-card" data-type="plugins"><div class="thumb e"></div><div class="card-body"><div class="type">// PLUGIN</div><h3>UTILITY PACK</h3><p>Small extensions and helpers for everyday use.</p><div class="meta"><span>v1.3 &nbsp;|&nbsp; 2.1K DL &nbsp;|&nbsp; <span class="free">● FREE</span></span><span class="action">⇩</span></div></div></article>
+              <article class="resource-card" data-type="links"><div class="thumb f"></div><div class="card-body"><div class="type">// LINK</div><h3>RESOURCE VAULT</h3><p>A curated list of external references and useful sites.</p><div class="meta"><span>12 LINKS &nbsp;|&nbsp; <span class="free">● OPEN</span></span><span class="action">↗</span></div></div></article>
+              <article class="resource-card" data-type="presets"><div class="thumb g"></div><div class="card-body"><div class="type">// PRESET</div><h3>QUIET TERMINAL</h3><p>A low-noise visual preset for long writing sessions.</p><div class="meta"><span>v1.1 &nbsp;|&nbsp; 967 DL &nbsp;|&nbsp; <span class="free">● FREE</span></span><span class="action">⇩</span></div></div></article>
+              <article class="resource-card" data-type="guides"><div class="thumb h"></div><div class="card-body"><div class="type">// GUIDE</div><h3>STORY STRUCTURES</h3><p>Narrative frameworks for cleaner, stronger roleplay setups.</p><div class="meta"><span>v1.0 &nbsp;|&nbsp; 643 DL &nbsp;|&nbsp; <span class="free">● FREE</span></span><span class="action">⇩</span></div></div></article>
+            </div>
+          </div>
+        </div>
+
+        <footer class="statusbar"><div><a href="index.html">ARCHIVE.EXE // GATEWAY_00</a></div><div class="center">// RESOURCES FUEL IMAGINATION. //</div><div class="right"><a href="https://t.me/avdeeva22" target="_blank" rel="noopener noreferrer">BY NEAVDEEVA</a></div></footer>
+      </section>
+    </div>
   </main>
+
+  <script>
+    (()=>{
+      const buttons=[...document.querySelectorAll('.side-link')],cards=[...document.querySelectorAll('.resource-card')],search=document.querySelector('.search input'),found=document.querySelector('.toolbar-left');
+      const categoryNames=['all','presets','plugins','themes','guides','links','tools'];
+      let active='all';
+      function apply(){const q=search.value.trim().toLowerCase();let visible=0;cards.forEach(card=>{const okType=active==='all'||card.dataset.type===active;const okSearch=!q||card.innerText.toLowerCase().includes(q);const show=okType&&okSearch;card.style.display=show?'':'none';if(show)visible++});found.textContent=`> ${visible} RESOURCES FOUND`}
+      buttons.forEach((btn,i)=>btn.addEventListener('click',()=>{buttons.forEach(b=>b.classList.remove('active'));btn.classList.add('active');active=categoryNames[i];apply()}));
+      search.addEventListener('input',apply);
+      window.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();search.focus()}});
+    })();
+  </script>
 </body>
 </html>

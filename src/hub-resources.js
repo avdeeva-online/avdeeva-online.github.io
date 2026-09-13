@@ -3,8 +3,7 @@ const clean=v=>String(v??'').trim();
 const arr=v=>Array.isArray(v)?v:[];
 const safeJson=v=>{try{return JSON.stringify(v??[])}catch{return'[]'}};
 const parseJson=(v,fallback=[])=>{try{const x=JSON.parse(v||'');return x??fallback}catch{return fallback}};
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const slug=v=>clean(v).toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'unknown';
+const ALLOWED_SETTINGS=new Set(['modern','fantasy','medieval','post-apocalypse','sci-fi','historical','omegaverse']);
 
 let ready=null;
 async function ensureSchema(env){
@@ -20,6 +19,7 @@ async function ensureSchema(env){
       creator_link TEXT NOT NULL DEFAULT '',
       description_short TEXT NOT NULL DEFAULT '',
       description_full TEXT NOT NULL DEFAULT '',
+      additional_info TEXT NOT NULL DEFAULT '',
       models TEXT NOT NULL DEFAULT '[]',
       settings TEXT NOT NULL DEFAULT '[]',
       tags TEXT NOT NULL DEFAULT '[]',
@@ -29,6 +29,7 @@ async function ensureSchema(env){
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP
     )`).run();
+    try{await env.DB.prepare(`ALTER TABLE hub_resources ADD COLUMN additional_info TEXT NOT NULL DEFAULT ''`).run()}catch{}
     await env.DB.prepare(`CREATE TABLE IF NOT EXISTS hub_resource_files (
       id TEXT PRIMARY KEY,
       resource_id TEXT NOT NULL,
@@ -51,7 +52,10 @@ function normalizeDraft(d){
   return {
     sourceUrl:clean(source.url),sourceType:clean(source.type)||'telegram',type:clean(d?.type).toLowerCase(),title:clean(d?.title),
     creatorName:clean(d?.creator?.name),creatorLink:clean(d?.creator?.link),
-    short:clean(d?.description_short),full:clean(d?.description_full),models:arr(d?.models).map(clean).filter(Boolean),settings:arr(d?.settings).map(clean).filter(Boolean),tags:arr(d?.tags).map(clean).filter(Boolean),media:arr(d?.media),confidence:d?.confidence&&typeof d.confidence==='object'?d.confidence:{}
+    short:clean(d?.description_short),full:clean(d?.description_full),additionalInfo:clean(d?.additional_info),
+    models:arr(d?.models).map(clean).filter(Boolean),
+    settings:arr(d?.settings).map(clean).filter(x=>ALLOWED_SETTINGS.has(x)),
+    tags:arr(d?.tags).map(clean).filter(Boolean),media:arr(d?.media),confidence:d?.confidence&&typeof d.confidence==='object'?d.confidence:{}
   };
 }
 
@@ -61,15 +65,11 @@ async function parsePublishRequest(request){
     const form=await request.formData();
     const resourcePart=form.get('resource');
     let raw='{}';
-    if(resourcePart instanceof File) raw=await resourcePart.text();
-    else if(resourcePart!=null) raw=String(resourcePart);
-    let draft={};
-    try{draft=JSON.parse(raw||'{}')}catch{throw new Error('INVALID_RESOURCE_JSON')}
+    if(resourcePart instanceof File)raw=await resourcePart.text();
+    else if(resourcePart!=null)raw=String(resourcePart);
+    let draft={};try{draft=JSON.parse(raw||'{}')}catch{throw new Error('INVALID_RESOURCE_JSON')}
     const files=[];
-    for(const [key,value] of form.entries()){
-      if(key!=='files'||!(value instanceof File))continue;
-      files.push(value);
-    }
+    for(const [key,value] of form.entries())if(key==='files'&&value instanceof File)files.push(value);
     return{draft,files};
   }
   let draft;try{draft=await request.json()}catch{throw new Error('INVALID_JSON')}
@@ -86,16 +86,16 @@ export async function publishHubResource(request,env){
 
   const old=await env.DB.prepare('SELECT id FROM hub_resources WHERE source_url=? LIMIT 1').bind(d.sourceUrl).first();
   const id=old?.id||crypto.randomUUID();
-  await env.DB.prepare(`INSERT INTO hub_resources(id,source_url,source_type,type,title,creator_name,creator_link,description_short,description_full,models,settings,tags,media,confidence,status,updated_at)
-    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'published',CURRENT_TIMESTAMP)
-    ON CONFLICT(source_url) DO UPDATE SET source_type=excluded.source_type,type=excluded.type,title=excluded.title,creator_name=excluded.creator_name,creator_link=excluded.creator_link,description_short=excluded.description_short,description_full=excluded.description_full,models=excluded.models,settings=excluded.settings,tags=excluded.tags,media=excluded.media,confidence=excluded.confidence,status='published',updated_at=CURRENT_TIMESTAMP`)
-    .bind(id,d.sourceUrl,d.sourceType,d.type,d.title,d.creatorName,d.creatorLink,d.short,d.full,safeJson(d.models),safeJson(d.settings),safeJson(d.tags),safeJson(d.media),JSON.stringify(d.confidence||{})).run();
+  await env.DB.prepare(`INSERT INTO hub_resources(id,source_url,source_type,type,title,creator_name,creator_link,description_short,description_full,additional_info,models,settings,tags,media,confidence,status,updated_at)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'published',CURRENT_TIMESTAMP)
+    ON CONFLICT(source_url) DO UPDATE SET source_type=excluded.source_type,type=excluded.type,title=excluded.title,creator_name=excluded.creator_name,creator_link=excluded.creator_link,description_short=excluded.description_short,description_full=excluded.description_full,additional_info=excluded.additional_info,models=excluded.models,settings=excluded.settings,tags=excluded.tags,media=excluded.media,confidence=excluded.confidence,status='published',updated_at=CURRENT_TIMESTAMP`)
+    .bind(id,d.sourceUrl,d.sourceType,d.type,d.title,d.creatorName,d.creatorLink,d.short,d.full,d.additionalInfo,safeJson(d.models),safeJson(d.settings),safeJson(d.tags),safeJson(d.media),JSON.stringify(d.confidence||{})).run();
 
   if(parsed.files.length){
-    await env.DB.prepare('DELETE FROM hub_resource_files WHERE resource_id=? AND data IS NOT NULL').bind(id).run();
     const manifest=arr(parsed.draft?.files);
-    const marked=manifest.findIndex(x=>x&&x.primary);
-    const primaryIndex=Math.max(0,marked>=0?marked:Number(parsed.draft?.primary_file_index||0));
+    const markedName=clean(manifest.find(x=>x&&x.primary&&!x.id)?.name);
+    const primaryIndex=markedName?parsed.files.findIndex(f=>clean(f.name)===markedName):Math.max(0,Number(parsed.draft?.primary_file_index||0));
+    if(primaryIndex>=0)await env.DB.prepare('UPDATE hub_resource_files SET is_primary=0 WHERE resource_id=?').bind(id).run();
     for(let i=0;i<parsed.files.length;i++){
       const f=parsed.files[i],buf=await f.arrayBuffer();
       await env.DB.prepare(`INSERT INTO hub_resource_files(id,resource_id,name,mime,size,is_primary,data,external_url) VALUES(?,?,?,?,?,?,?,'')`)
@@ -103,6 +103,18 @@ export async function publishHubResource(request,env){
     }
   }
   return json({ok:true,id,updated:Boolean(old),files:parsed.files.length});
+}
+
+export async function deleteHubResourceFile(env,resourceId,fileId){
+  await ensureSchema(env);
+  const row=await env.DB.prepare('SELECT id,is_primary FROM hub_resource_files WHERE id=? AND resource_id=? LIMIT 1').bind(fileId,resourceId).first();
+  if(!row)return json({ok:false,error:'FILE_NOT_FOUND'},404);
+  await env.DB.prepare('DELETE FROM hub_resource_files WHERE id=? AND resource_id=?').bind(fileId,resourceId).run();
+  if(row.is_primary){
+    const next=await env.DB.prepare('SELECT id FROM hub_resource_files WHERE resource_id=? ORDER BY created_at ASC LIMIT 1').bind(resourceId).first();
+    if(next?.id)await env.DB.prepare('UPDATE hub_resource_files SET is_primary=1 WHERE id=?').bind(next.id).run();
+  }
+  return json({ok:true});
 }
 
 export async function listHubResources(env){
@@ -114,12 +126,14 @@ export async function listHubResources(env){
   const filesByResource=new Map();
   for(const f of fileRes.results||[]){
     if(!filesByResource.has(f.resource_id))filesByResource.set(f.resource_id,[]);
-    filesByResource.get(f.resource_id).push({
-      id:f.id,name:f.name,mime:f.mime,size:Number(f.size||0),primary:Boolean(f.is_primary),external_url:f.external_url||'',
-      download_url:`/api/hub-resources/${encodeURIComponent(f.resource_id)}/files/${encodeURIComponent(f.id)}`
-    });
+    filesByResource.get(f.resource_id).push({id:f.id,name:f.name,mime:f.mime,size:Number(f.size||0),primary:Boolean(f.is_primary),external_url:f.external_url||'',download_url:`/api/hub-resources/${encodeURIComponent(f.resource_id)}/files/${encodeURIComponent(f.id)}`});
   }
-  const items=(res.results||[]).map(r=>({id:r.id,source_url:r.source_url,type:r.type,title:r.title,creator:{name:r.creator_name,link:r.creator_link},description_short:r.description_short,description_full:r.description_full,models:parseJson(r.models),settings:parseJson(r.settings),tags:parseJson(r.tags),media:parseJson(r.media),primary_file_id:r.primary_file_id||null,file_count:Number(r.file_count||0),files:filesByResource.get(r.id)||[],updated_at:r.updated_at}));
+  const items=(res.results||[]).map(r=>({
+    id:r.id,source_url:r.source_url,type:r.type,title:r.title,creator:{name:r.creator_name,link:r.creator_link},
+    description_short:r.description_short,description_full:r.description_full,additional_info:r.additional_info||'',models:parseJson(r.models),
+    settings:parseJson(r.settings).filter(x=>ALLOWED_SETTINGS.has(x)),tags:parseJson(r.tags),media:parseJson(r.media),
+    primary_file_id:r.primary_file_id||null,file_count:Number(r.file_count||0),files:filesByResource.get(r.id)||[],updated_at:r.updated_at
+  }));
   return json({ok:true,resources:items,count:items.length});
 }
 
@@ -134,28 +148,4 @@ export async function downloadHubFile(env,resourceId,fileId){
   return new Response(row.data,{status:200,headers});
 }
 
-function coverUrl(media){
-  const list=arr(media);const c=list.find(x=>x&&x.cover)||list[0];return clean(c?.url||c?.src);
-}
-function dynamicCard(r){
-  const type=clean(r.type)||'other',plural=type.endsWith('s')?type:`${type}s`,creator=clean(r.creator_name)||'UNKNOWN',models=parseJson(r.models),settings=parseJson(r.settings),tags=[...models,...settings,...parseJson(r.tags)].slice(0,6),cover=coverUrl(parseJson(r.media));
-  const thumb=cover?`<div class="thumb" style="background-image:url('${esc(cover).replace(/'/g,'%27')}');background-size:cover;background-position:center"></div>`:`<div class="thumb b"></div>`;
-  const tagHtml=tags.length?`<div class="card-tags">${tags.map(t=>`<span class="card-tag">${esc(String(t).replaceAll('-',' ').toUpperCase())}</span>`).join('')}</div>`:'';
-  const download=r.primary_file_id?`<a class="action" href="/api/hub-resources/${encodeURIComponent(r.id)}/files/${encodeURIComponent(r.primary_file_id)}" title="Download">⇩</a>`:`<a class="action" href="${esc(r.source_url)}" target="_blank" rel="noopener noreferrer" title="Open source">↗</a>`;
-  return `<article class="resource-card" data-dynamic="1" data-creator="${esc(slug(creator))}" data-creator-name="${esc(creator.toUpperCase())}" data-type="${esc(plural)}" data-model="${esc(models.join(' '))}" data-setting="${esc(settings.join(' '))}">${thumb}<div class="card-body"><div class="type">// ${esc(type.toUpperCase())}</div><h3>${esc(r.title)}</h3><p>${esc(r.description_short||r.description_full||'')}</p>${tagHtml}<div class="meta"><span>${Number(r.file_count||0)?`${Number(r.file_count)} FILE${Number(r.file_count)===1?'':'S'} | `:''}<span class="free">● FREE</span></span>${download}</div></div></article>`;
-}
-
-export async function injectHubResources(response,env){
-  if(!response.ok)return response;
-  await ensureSchema(env);
-  const res=await env.DB.prepare(`SELECT r.*, (SELECT id FROM hub_resource_files f WHERE f.resource_id=r.id ORDER BY is_primary DESC,created_at ASC LIMIT 1) primary_file_id,
-    (SELECT COUNT(*) FROM hub_resource_files f WHERE f.resource_id=r.id) file_count FROM hub_resources r WHERE status='published' ORDER BY updated_at DESC`).all();
-  if(!(res.results||[]).length)return response;
-  const html=await response.text();
-  const cards=(res.results||[]).map(dynamicCard).join('\n');
-  const marker='</div></div></div>\n<footer class="statusbar">';
-  if(!html.includes(marker))return new Response(html,{status:response.status,headers:response.headers});
-  const out=html.replace(marker,`${cards}\n</div></div></div>\n<footer class="statusbar">`);
-  const headers=new Headers(response.headers);headers.delete('content-length');headers.set('cache-control','no-store');
-  return new Response(out,{status:response.status,statusText:response.statusText,headers});
-}
+export async function injectHubResources(response){return response;}

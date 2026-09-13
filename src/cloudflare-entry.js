@@ -1,12 +1,24 @@
 import app from './universe-curation.js';
 import { analyzeTelegramPost } from './hub-telegram.js';
 import { publishHubResource, listHubResources, downloadHubFile, deleteHubResourceFile, setHubResourcePrimary, deleteHubResource, injectHubResources } from './hub-resources.js';
+import { listAdminCharacters, updateAdminCharacter, deleteAdminCharacter } from './character-admin.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 
 export default{
   async fetch(request,env,ctx){
     const url=new URL(request.url);
+    if(url.pathname==='/api/admin/characters'){
+      if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
+      return listAdminCharacters(request,env);
+    }
+    const adminCharacterMatch=url.pathname.match(/^\/api\/admin\/characters\/([0-9a-f-]{36})$/i);
+    if(adminCharacterMatch){
+      const uuid=adminCharacterMatch[1].toLowerCase();
+      if(request.method==='PATCH'||request.method==='POST')return updateAdminCharacter(request,env,uuid);
+      if(request.method==='DELETE')return deleteAdminCharacter(request,env,uuid);
+      return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
+    }
     if(url.pathname==='/api/admin/hub-telegram-analyze'){
       if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
       return analyzeTelegramPost(request);

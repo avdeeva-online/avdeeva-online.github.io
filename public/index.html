@@ -22,7 +22,10 @@
     .grain{position:absolute;inset:0;z-index:49;pointer-events:none;opacity:.012;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
 
     .brand-block{position:absolute;left:38px;top:30px;z-index:10;text-transform:uppercase;text-shadow:0 2px 18px rgba(0,0,0,.82)}
-    .brand{font:700 28px/1 var(--mono);letter-spacing:.05em;color:#eee6d8;animation:logoGlitch 8s infinite steps(1,end)}
+    .brand{position:relative;display:inline-block;font:700 28px/1 var(--mono);letter-spacing:.05em;color:#eee6d8;animation:logoGlitch 6.6s infinite steps(1,end)}
+    .brand:before,.brand:after{content:attr(data-text);position:absolute;inset:0;pointer-events:none;opacity:0}
+    .brand:before{color:#9dc4aa;text-shadow:-2px 0 rgba(103,190,146,.55);animation:logoGhostA 6.6s infinite steps(1,end)}
+    .brand:after{color:#d5a18f;text-shadow:2px 0 rgba(213,110,92,.45);animation:logoGhostB 6.6s infinite steps(1,end)}
     .brand-sub{margin-top:8px;font:8.2px/1.35 var(--mono);letter-spacing:.15em;color:#a4ad9e}
     .boot{margin-top:23px;display:grid;gap:6px;font:8px/1.25 var(--mono);letter-spacing:.095em;color:#a4ad9d}
     .boot span:before{content:'> ';color:#a9b98d}.boot b{font-weight:400;color:#c0cca8}
@@ -38,7 +41,6 @@
     .connection-status .online{display:inline-block;width:7px;height:7px;border-radius:50%;background:#a9bb80;box-shadow:0 0 9px rgba(169,187,128,.7);animation:onlineFault 6.1s infinite steps(1,end)}
 
     .edge-note{position:absolute;z-index:9;text-transform:uppercase;font:7.4px/1.48 var(--mono);letter-spacing:.08em;text-shadow:0 2px 10px rgba(0,0,0,.94);color:#9aa697}
-    .edge-note.left{left:20px;bottom:17%;width:154px}
     .edge-note.right{right:22px;top:56%;width:146px;text-align:left}
     .edge-label{display:block;margin-bottom:8px;color:#bec7b4;letter-spacing:.15em;opacity:.88}
     .edge-row{display:flex;justify-content:space-between;gap:14px;margin:3px 0;white-space:nowrap}
@@ -46,6 +48,14 @@
     .edge-value{color:#aeb9a8}
     .edge-value.good{color:#b8c79f}
     .edge-value.warn{color:#b98d69;animation:edgeFault 9.6s infinite steps(1,end)}
+
+    .boot-terminal{position:absolute;left:20px;top:55%;z-index:10;width:238px;min-height:104px;padding:10px 11px 9px;border-left:1px solid rgba(118,139,106,.28);background:linear-gradient(90deg,rgba(5,9,6,.34),rgba(5,9,6,.12) 70%,transparent);font:7.4px/1.52 var(--mono);letter-spacing:.055em;color:#9aaa94;text-shadow:0 2px 9px rgba(0,0,0,.92);pointer-events:none}
+    .boot-terminal:before{content:'// LIVE TERMINAL';display:block;margin-bottom:7px;color:#bac7af;letter-spacing:.14em;font-size:7px}
+    .terminal-feed{display:grid;gap:2px;min-height:70px}
+    .terminal-line{min-height:11px;white-space:nowrap;overflow:hidden;text-overflow:clip;color:#99a790}
+    .terminal-line.dim{color:#6f7a70}.terminal-line.ok{color:#b1c39e}.terminal-line.error{color:#d06f67;text-shadow:-1px 0 rgba(255,72,72,.26),1px 0 rgba(111,177,143,.14)}.terminal-line.secret{color:#b99d73;font-style:italic;opacity:.9}
+    .terminal-cursor{display:inline-block;width:6px;color:#b8ca9e;animation:terminalCursor .78s steps(1,end) infinite}
+    .boot-terminal.fault{animation:terminalFault .28s steps(2,end) 1}
 
     .access-deck{position:absolute;left:50%;top:50%;z-index:12;transform:translate(-50%,-50%);width:min(697px,62vw);display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:center}
     .terminal-card{position:relative;height:201px;min-height:201px;border-radius:16px;background:
@@ -97,20 +107,24 @@
     .metric{display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:baseline;font:6.5px/1 var(--mono);letter-spacing:.1em;color:#798479}
     .metric b{justify-self:end;color:#aebba4;font-weight:400}
     .metric.sync b{color:#c0a77f}
-    .quick-action{pointer-events:auto;display:inline-flex;align-items:center;gap:9px;padding:7px 11px;border:1px solid rgba(125,143,111,.26);border-radius:7px;background:rgba(5,9,6,.52);color:#c3ccb8;font:7px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;box-shadow:0 7px 18px rgba(0,0,0,.19);transition:border-color .18s,background .18s,transform .18s,color .18s}
-    .quick-action:hover{transform:translateY(-1px);border-color:rgba(164,185,143,.46);background:rgba(7,12,8,.72);color:#e2e7dc}
-    .quick-action .dice{font-size:11px;color:#b6c99b;line-height:1}
 
     .statusbar{position:absolute;left:0;right:0;bottom:0;z-index:14;display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center;padding:13px 26px 14px;border-top:1px solid rgba(94,106,87,.20);background:linear-gradient(180deg,rgba(4,6,4,.02),rgba(4,6,4,.44));text-transform:uppercase;font:6.8px/1 var(--mono);letter-spacing:.105em;color:#9aa49a;text-shadow:0 2px 10px rgba(0,0,0,.88)}
     .statusbar .center{text-align:center;color:#a2aca1}.statusbar .right{text-align:right}.statusbar b{font-weight:400;color:#b0b9a9}.runtime-state{display:inline-block;color:#b8c79f;min-width:42px}.runtime-state.syncing{color:#c8a276;animation:runtimeBlink .7s steps(1,end) infinite}
 
     @keyframes logoGlitch{
-      0%,88%,100%{transform:none;text-shadow:none;opacity:1}
-      89%{transform:translateX(1px);text-shadow:-2px 0 rgba(113,154,128,.45),2px 0 rgba(151,105,86,.35)}
-      90%{transform:translateX(-1px);text-shadow:2px 0 rgba(113,154,128,.35),-2px 0 rgba(151,105,86,.35)}
-      91%{transform:none;text-shadow:none;opacity:.84}
-      92%{opacity:1}
+      0%,72%,79%,86%,100%{transform:none;filter:none;text-shadow:none;opacity:1}
+      73%{transform:translateX(1px) skewX(-4deg);text-shadow:-2px 0 rgba(108,181,143,.42),2px 0 rgba(210,111,92,.34)}
+      74%{transform:translateX(-2px);text-shadow:2px 0 rgba(108,181,143,.34),-2px 0 rgba(210,111,92,.3)}
+      75%{transform:translateX(1px);opacity:.72}
+      76%{transform:none;opacity:1}
+      80%{transform:translateY(-1px);text-shadow:-1px 0 rgba(108,181,143,.4),1px 0 rgba(210,111,92,.32)}
+      81%{transform:translateY(1px);opacity:.82}
+      82%{transform:none;opacity:1}
+      87%{filter:brightness(1.22);opacity:.92}
+      88%{filter:none;opacity:1}
     }
+    @keyframes logoGhostA{0%,72%,76%,79%,83%,100%{opacity:0;clip-path:inset(0 0 0 0)}73%{opacity:.64;transform:translateX(-2px);clip-path:inset(12% 0 54% 0)}74%{opacity:.4;transform:translateX(2px);clip-path:inset(58% 0 16% 0)}80%{opacity:.34;transform:translateX(-1px);clip-path:inset(35% 0 38% 0)}81%{opacity:0}}
+    @keyframes logoGhostB{0%,73%,77%,80%,84%,100%{opacity:0;clip-path:inset(0 0 0 0)}74%{opacity:.56;transform:translateX(2px);clip-path:inset(43% 0 24% 0)}75%{opacity:.32;transform:translateX(-1px);clip-path:inset(4% 0 68% 0)}81%{opacity:.35;transform:translateX(2px);clip-path:inset(66% 0 7% 0)}82%{opacity:0}}
     @keyframes signalFlicker{0%,94%,100%{opacity:1}95%{opacity:.66}96%{opacity:1}97%{opacity:.82}98%{opacity:1}}
     @keyframes onlineFault{
       0%,7%,12%,27%,43%,58%,76%,100%{opacity:1;background:#a9bb80;box-shadow:0 0 9px rgba(169,187,128,.72)}
@@ -145,6 +159,8 @@
       87%{color:#dc7468;opacity:.9}
       89%{color:#b98d69;opacity:1;text-shadow:none}
     }
+    @keyframes terminalCursor{0%,46%{opacity:1}47%,100%{opacity:.16}}
+    @keyframes terminalFault{0%,100%{transform:none;filter:none}25%{transform:translateX(-1px);filter:brightness(1.25)}50%{transform:translateX(2px)}75%{transform:translateX(-1px)}}
     @keyframes hoverInterference{
       0%,100%{transform:translateX(0);opacity:.52}
       18%{transform:translateX(-2px);opacity:.8}
@@ -175,7 +191,7 @@
     }
     @keyframes runtimeBlink{0%,100%{opacity:1}50%{opacity:.42}}
 
-    @media(max-width:1100px){.access-deck{width:min(650px,68vw);gap:18px}.terminal-card,.terminal-card.characters,.terminal-card.hub{height:189px;min-height:189px}.terminal-card>a{padding:16px 18px 14px}.terminal-copy h2{font-size:24px}.terminal-copy p{font-size:7.6px}.node-row{font-size:6.1px}.enter{font-size:6.3px}.characters .vine-top,.hub .vine-top{height:109px;top:-15px}.characters .vine-side{width:140px;height:140px;left:-18px;top:-17px}.characters .vine-bottom{height:105px;left:-18px;bottom:-37px}.hub .vine-side{width:70px;height:193px;right:-7px;top:-7px}.activity-layer{top:68.8%;width:min(610px,66vw)}}
+    @media(max-width:1100px){.access-deck{width:min(650px,68vw);gap:18px}.terminal-card,.terminal-card.characters,.terminal-card.hub{height:189px;min-height:189px}.terminal-card>a{padding:16px 18px 14px}.terminal-copy h2{font-size:24px}.terminal-copy p{font-size:7.6px}.node-row{font-size:6.1px}.enter{font-size:6.3px}.characters .vine-top,.hub .vine-top{height:109px;top:-15px}.characters .vine-side{width:140px;height:140px;left:-18px;top:-17px}.characters .vine-bottom{height:105px;left:-18px;bottom:-37px}.hub .vine-side{width:70px;height:193px;right:-7px;top:-7px}.activity-layer{top:68.8%;width:min(610px,66vw)}.boot-terminal{width:218px;font-size:7px}}
 
     @media(max-width:760px){
       body{overflow:auto}.gateway{min-height:100dvh;overflow:visible;padding-bottom:64px}.scene{background-position:50% 58%;filter:brightness(.57) saturate(.78)}
@@ -183,15 +199,16 @@
       .brand-block{position:relative;left:auto;top:auto;padding:18px 18px 0}.brand{font-size:22px}.brand-sub{font-size:7.2px}.boot{margin-top:15px;font-size:7.1px;gap:4px}
       .top-index,.edge-note{display:none}.motto{position:relative;left:auto;top:auto;transform:none;margin:17vh auto 0;font-size:7.8px;width:max-content}
       .connection-status{position:relative;left:auto;top:auto;transform:none;width:max-content;margin:11px auto 0;font-size:7.5px;padding:6px 9px}
-      .access-deck{position:relative;left:auto;top:auto;transform:none;width:calc(100% - 34px);margin:26px auto 0;grid-template-columns:1fr;gap:18px}
+      .boot-terminal{position:relative;left:auto;top:auto;width:calc(100% - 36px);min-height:83px;margin:15px 18px 0;padding:9px 10px;background:linear-gradient(90deg,rgba(5,9,6,.48),rgba(5,9,6,.16));font-size:6.8px}
+      .access-deck{position:relative;left:auto;top:auto;transform:none;width:calc(100% - 34px);margin:20px auto 0;grid-template-columns:1fr;gap:18px}
       .terminal-card,.terminal-card.characters,.terminal-card.hub{height:158px;min-height:158px;margin:0;border-radius:15px}
       .terminal-card>a{padding:14px 16px 12px;border-radius:15px}.node-row{font-size:6px}.terminal-main{grid-template-columns:44px 1fr;gap:12px;margin-top:8px}.glyph{width:42px;height:42px;border-radius:9px}.glyph svg{width:26px;height:26px}.terminal-copy h2{font-size:21px}.terminal-copy p{font-size:7.2px;line-height:1.42;margin-top:5px}.enter{padding-top:8px;font-size:6px}.enter-arrow{font-size:15px}
       .vine{opacity:.62}.characters .vine-top,.hub .vine-top{height:calc((100vw - 34px)/3);top:-12px}.characters .vine-side{width:122px;height:122px;left:-16px;top:-14px}.characters .vine-bottom{height:94px;left:-15px;bottom:-33px}.hub .vine-side{width:58px;height:162px;right:-6px;top:-6px}
-      .activity-layer{position:relative;left:auto;top:auto;transform:none;width:calc(100% - 34px);margin:18px auto 0;gap:8px}.archive-metrics{grid-template-columns:1fr 1fr;padding:8px 10px;row-gap:7px}.metric{font-size:6px}.quick-action{font-size:6.3px;padding:7px 10px}
+      .activity-layer{position:relative;left:auto;top:auto;transform:none;width:calc(100% - 34px);margin:18px auto 0;gap:8px}.archive-metrics{grid-template-columns:1fr 1fr;padding:8px 10px;row-gap:7px}.metric{font-size:6px}
       .ground-shadow{display:none}.statusbar{position:relative;margin-top:20px;padding:11px 15px;grid-template-columns:1fr auto;font-size:6px}.statusbar .center{display:none}
     }
 
-    @media (prefers-reduced-motion:reduce){.brand,.top-index,.online,.online-text,.edge-value.warn,.terminal-card>a:before,.terminal-card>a:after,.terminal-copy h2,.node-row,.enter,.runtime-state{animation:none!important;transition:none!important}}
+    @media (prefers-reduced-motion:reduce){.brand,.brand:before,.brand:after,.top-index,.online,.online-text,.edge-value.warn,.terminal-cursor,.boot-terminal,.terminal-card>a:before,.terminal-card>a:after,.terminal-copy h2,.node-row,.enter,.runtime-state{animation:none!important;transition:none!important}}
   </style>
 </head>
 <body>
@@ -202,7 +219,7 @@
     <div class="grain" aria-hidden="true"></div>
 
     <header class="brand-block">
-      <div class="brand">ARCHIVE.EXE</div>
+      <div class="brand" data-text="ARCHIVE.EXE">ARCHIVE.EXE</div>
       <div class="brand-sub">TAVO RESOURCE DATABASE</div>
       <div class="boot" aria-hidden="true">
         <span>SYSTEM BOOT: <b>OK</b></span>
@@ -218,12 +235,12 @@
 
     <div class="motto">EVERY STORY<br>LEADS SOMEWHERE.</div>
     <div class="connection-status" aria-hidden="true"><span class="signal-label">NODE_00 // LINK:</span><span class="online-text">ONLINE</span><span class="online"></span></div>
-    <div class="edge-note left" aria-hidden="true">
-      <span class="edge-label">// RECOVERY LOG</span>
-      <span class="edge-row"><span class="edge-key">SIGNAL</span><span class="edge-value">WEAK</span></span>
-      <span class="edge-row"><span class="edge-key">CACHE</span><span class="edge-value">PARTIAL</span></span>
-      <span class="edge-row"><span class="edge-key">INDEX</span><span class="edge-value good">RESTORED</span></span>
+
+    <div class="boot-terminal" id="liveTerminal" aria-hidden="true">
+      <div class="terminal-feed" id="terminalFeed"></div>
+      <div>&gt; <span class="terminal-cursor">_</span></div>
     </div>
+
     <div class="edge-note right" aria-hidden="true">
       <span class="edge-label">// NODE TRACE</span>
       <span class="edge-row"><span class="edge-key">NODE</span><span class="edge-value">00</span></span>
@@ -317,6 +334,68 @@
         setTimeout(()=>{status.textContent='STABLE';status.classList.remove('syncing');setSync()},1350);
       };
       setInterval(cycle,11000);
+
+      const terminal=document.getElementById('liveTerminal');
+      const feed=document.getElementById('terminalFeed');
+      const normal=[
+        '> mounting archive index',
+        '> loading character database',
+        '> indexing active worlds',
+        '> restoring resource directory',
+        '> checking lorebook cache',
+        '> mapping story routes',
+        '> node handshake accepted',
+        '> visitor session verified',
+        '> archive integrity stable',
+        '> scanning recovered records'
+      ];
+      const errors=[
+        '[ERR] sector 07 unreadable',
+        '[WARN] signal timeout / retrying',
+        '[ERR] corrupted entry detected',
+        '[WARN] node packet loss 18%',
+        '[ERR] index fragment not found',
+        '[WARN] route unstable / rerouting'
+      ];
+      const secrets=[
+        '> some stories remember you',
+        '> you have been here before',
+        '> not every file wants to be opened',
+        '> still growing',
+        '> forgotten thread detected',
+        '> nothing stays buried forever'
+      ];
+      let lineCount=0;
+      const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+      const pick=a=>a[Math.floor(Math.random()*a.length)];
+      async function typeLine(text,kind=''){
+        const row=document.createElement('div');
+        row.className=`terminal-line ${kind}`.trim();
+        feed.appendChild(row);
+        while(feed.children.length>5)feed.removeChild(feed.firstElementChild);
+        for(let i=0;i<text.length;i++){
+          row.textContent+=text[i];
+          await sleep(18+Math.random()*28);
+        }
+        if(kind==='error'){
+          terminal.classList.remove('fault');void terminal.offsetWidth;terminal.classList.add('fault');
+          setTimeout(()=>terminal.classList.remove('fault'),320);
+        }
+        lineCount++;
+      }
+      async function terminalLoop(){
+        await sleep(700);
+        while(true){
+          const roll=Math.random();
+          let text,kind='';
+          if(roll<.055){text=pick(secrets);kind='secret'}
+          else if(roll<.22){text=pick(errors);kind='error'}
+          else{text=pick(normal);kind=lineCount%4===0?'ok':''}
+          await typeLine(text,kind);
+          await sleep(kind==='error'?780:kind==='secret'?1050:520+Math.random()*620);
+        }
+      }
+      terminalLoop();
     })();
   </script>
 </body>

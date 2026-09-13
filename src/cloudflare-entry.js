@@ -1,6 +1,6 @@
 import app from './universe-curation.js';
 import { analyzeTelegramPost } from './hub-telegram.js';
-import { publishHubResource, listHubResources, downloadHubFile, deleteHubResourceFile, injectHubResources } from './hub-resources.js';
+import { publishHubResource, listHubResources, downloadHubFile, deleteHubResourceFile, setHubResourcePrimary, deleteHubResource, injectHubResources } from './hub-resources.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 
@@ -19,6 +19,17 @@ export default{
     if(url.pathname==='/api/admin/hub-resource'){
       if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
       return publishHubResource(request,env);
+    }
+    const adminResourceMatch=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)$/);
+    if(adminResourceMatch){
+      const resourceId=decodeURIComponent(adminResourceMatch[1]);
+      if(request.method==='DELETE')return deleteHubResource(env,resourceId);
+      return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
+    }
+    const primaryMatch=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)\/files\/([^/]+)\/primary$/);
+    if(primaryMatch){
+      if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
+      return setHubResourcePrimary(env,decodeURIComponent(primaryMatch[1]),decodeURIComponent(primaryMatch[2]));
     }
     const adminFileMatch=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)\/files\/([^/]+)$/);
     if(adminFileMatch){

@@ -1,8 +1,8 @@
 (()=>{
   'use strict';
   const $=s=>document.querySelector(s);
-  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let data={rules:[],canonicalUniverses:[]},loading=false;
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+  let data={rules:[],canonicalUniverses:[]},loading=false,loaded=false;
 
   function ensureEditorLink(){const tabs=document.querySelector('.tabs');if(!tabs||tabs.querySelector('[data-bot-editor-link]'))return;const a=document.createElement('a');a.className='btn';a.href='edit.html';a.dataset.botEditorLink='1';a.textContent='BOT CARDS';tabs.insertBefore(a,tabs.querySelector('a[href="../hub/"]')||null)}
 
@@ -14,7 +14,7 @@
     block.innerHTML=`
       <div class="section-title" style="margin-top:22px"><b>CURATION REGISTRY</b><span>SOURCE → PUBLIC UNIVERSE</span></div>
       <div class="hint">Исходное значение импорта не меняется. Здесь задаётся только то, что увидит публичный каталог. Ручные значения персонажа (admin:manual) имеют приоритет.</div>
-      <div id="curationStatus" class="status">READY.</div>
+      <div id="curationStatus" class="status">NOT LOADED YET. OPEN UNIVERSE REVIEW TO LOAD.</div>
       <div class="panel" style="margin-top:10px;padding:10px">
         <div style="display:grid;grid-template-columns:minmax(180px,1.4fr) minmax(180px,1fr);gap:7px">
           <input id="curationSource" placeholder="Imported/source Universe exactly">
@@ -25,7 +25,7 @@
         <div class="toolbar" style="margin:8px 0 0"><button class="btn primary" id="curationSave" type="button">SAVE RULE</button><button class="btn" id="curationClear" type="button">CLEAR FORM</button><span class="count" id="curationCount">000 RULES</span></div>
       </div>
       <datalist id="curationCanonicalNames"></datalist>
-      <div id="curationList" class="universe-list"><div class="empty">LOADING CURATION REGISTRY...</div></div>`;
+      <div id="curationList" class="universe-list"><div class="empty">CURATION REGISTRY NOT LOADED</div></div>`;
     panel.appendChild(block);
     $('#curationSave').addEventListener('click',saveRule);
     $('#curationClear').addEventListener('click',clearForm);
@@ -51,10 +51,10 @@
     }).join(''):'<div class="empty">NO CURATION RULES</div>';
   }
 
-  async function load(){
-    ensureUi();if(loading)return;loading=true;
+  async function load(force=false){
+    ensureUi();if(loading||(!force&&loaded))return;loading=true;
     const status=$('#curationStatus');if(status)status.textContent='LOADING CURATION REGISTRY...';
-    try{const r=await fetch('/api/admin/universe-curation',{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||d.message||`HTTP_${r.status}`);data=d;render();if(status)status.textContent=`READY. ${d.count||0} CURATION RULES. IMPORT SOURCE VALUES ARE UNCHANGED.`}catch(e){if(status)status.textContent=`CURATION LOAD FAILED: ${e.message}`}finally{loading=false}
+    try{const r=await fetch('/api/admin/universe-curation',{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||d.message||`HTTP_${r.status}`);data=d;loaded=true;render();if(status)status.textContent=`READY. ${d.count||0} CURATION RULES. IMPORT SOURCE VALUES ARE UNCHANGED.`}catch(e){if(status)status.textContent=`CURATION LOAD FAILED: ${e.message}`}finally{loading=false}
   }
 
   async function post(payload){const r=await fetch('/api/admin/universe-curation',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||d.message||`HTTP_${r.status}`);return d}
@@ -62,7 +62,7 @@
   async function saveRule(){
     const source=$('#curationSource')?.value.trim()||'',publicUniverses=($('#curationPublic')?.value||'').split(',').map(x=>x.trim()).filter(Boolean),parentUniverse=$('#curationParent')?.value.trim()||'',subuniverse=$('#curationSub')?.value.trim()||'',status=$('#curationStatus'),btn=$('#curationSave');
     if(!source||!publicUniverses.length){status.textContent='SOURCE AND AT LEAST ONE PUBLIC UNIVERSE ARE REQUIRED.';return}
-    btn.disabled=true;try{await post({action:'set',source,publicUniverses,parentUniverse,subuniverse});status.textContent=`SAVED: ${source} → ${publicUniverses.join(' + ')}`;clearForm();await load()}catch(e){status.textContent=`SAVE FAILED: ${e.message}`}finally{btn.disabled=false}
+    btn.disabled=true;try{await post({action:'set',source,publicUniverses,parentUniverse,subuniverse});status.textContent=`SAVED: ${source} → ${publicUniverses.join(' + ')}`;clearForm();await load(true)}catch(e){status.textContent=`SAVE FAILED: ${e.message}`}finally{btn.disabled=false}
   }
 
   async function listAction(event){
@@ -70,9 +70,9 @@
     if(button.matches('[data-curation-edit]')){if(rule)fillForm(rule);return}
     if(!button.matches('[data-curation-toggle]'))return;
     button.disabled=true;
-    try{await post({action:'toggle',source});await load()}catch(e){status.textContent=`CURATION ACTION FAILED: ${e.message}`}finally{if(button.isConnected)button.disabled=false}
+    try{await post({action:'toggle',source});await load(true)}catch(e){status.textContent=`CURATION ACTION FAILED: ${e.message}`}finally{if(button.isConnected)button.disabled=false}
   }
 
-  function init(){ensureEditorLink();ensureUi();load();document.querySelector('[data-mode="universes"]')?.addEventListener('click',load)}
+  function init(){ensureEditorLink();ensureUi();document.querySelector('[data-mode="universes"]')?.addEventListener('click',()=>load())}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

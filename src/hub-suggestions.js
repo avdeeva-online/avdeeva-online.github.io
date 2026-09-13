@@ -1,0 +1,66 @@
+const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
+
+async function ensureTable(env){
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS hub_suggestions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    url TEXT NOT NULL,
+    note TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'new',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`).run();
+  await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_hub_suggestions_status_created ON hub_suggestions(status, created_at DESC)').run();
+}
+
+function normalizeUrl(raw){
+  try{
+    const u=new URL(String(raw||'').trim());
+    if(!/^https?:$/.test(u.protocol))return '';
+    u.hash='';
+    return u.toString().slice(0,1800);
+  }catch{return ''}
+}
+
+export async function submitHubSuggestion(request,env){
+  if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
+  const len=Number(request.headers.get('content-length')||0);
+  if(len>12000)return json({ok:false,error:'PAYLOAD_TOO_LARGE'},413);
+  let body={};
+  try{body=await request.json()}catch{return json({ok:false,error:'INVALID_JSON'},400)}
+  if(body.website)return json({ok:true}); // honeypot
+  const url=normalizeUrl(body.url);
+  const note=String(body.note||'').trim().slice(0,1200);
+  if(!url)return json({ok:false,error:'VALID_URL_REQUIRED'},400);
+  await ensureTable(env);
+  const recent=await env.DB.prepare("SELECT id FROM hub_suggestions WHERE url=? AND status IN ('new','reviewing') AND created_at >= datetime('now','-30 days') LIMIT 1").bind(url).first();
+  if(recent)return json({ok:true,duplicate:true});
+  const out=await env.DB.prepare("INSERT INTO hub_suggestions(url,note,status,created_at,updated_at) VALUES(?,?,'new',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind(url,note).run();
+  return json({ok:true,id:out.meta?.last_row_id||null},201);
+}
+
+export async function listHubSuggestions(request,env){
+  if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
+  await ensureTable(env);
+  const url=new URL(request.url),status=String(url.searchParams.get('status')||'').trim();
+  let q='SELECT id,url,note,status,created_at,updated_at FROM hub_suggestions';
+  const args=[];
+  if(status&&status!=='all'){q+=' WHERE status=?';args.push(status)}
+  q+=' ORDER BY CASE status WHEN \'new\' THEN 0 WHEN \'reviewing\' THEN 1 ELSE 2 END, created_at DESC LIMIT 500';
+  const rows=(await env.DB.prepare(q).bind(...args).all()).results||[];
+  return json({ok:true,suggestions:rows});
+}
+
+export async function updateHubSuggestion(request,env,id){
+  await ensureTable(env);
+  if(request.method==='DELETE'){
+    await env.DB.prepare('DELETE FROM hub_suggestions WHERE id=?').bind(Number(id)).run();
+    return json({ok:true});
+  }
+  if(request.method!=='PATCH'&&request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
+  let body={};try{body=await request.json()}catch{return json({ok:false,error:'INVALID_JSON'},400)}
+  const allowed=new Set(['new','reviewing','added','ignored']);
+  const status=String(body.status||'').trim();
+  if(!allowed.has(status))return json({ok:false,error:'INVALID_STATUS'},400);
+  await env.DB.prepare('UPDATE hub_suggestions SET status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(status,Number(id)).run();
+  return json({ok:true});
+}

@@ -9,7 +9,7 @@
   function setStatus(text,kind=''){const e=$('#analyzeStatus');if(!e)return;e.textContent=text;e.className='status '+kind}
   function syncSettingChoices(){
     const box=$('#settingChoices');if(!box)return;
-    ['historical','school-university','magic'].forEach(v=>{const b=box.querySelector(`.choice[data-v="${v}"]`);if(b){if(b.classList.contains('active'))b.click();b.remove()}});
+    ['historical','magic'].forEach(v=>{const b=box.querySelector(`.choice[data-v="${v}"]`);if(b){if(b.classList.contains('active'))b.click();b.remove()}});
     if(!box.querySelector('.choice[data-v="rusreal"]')){const b=document.createElement('button');b.type='button';b.className='choice';b.dataset.v='rusreal';b.textContent='RUSREAL';box.appendChild(b)}
   }
   syncSettingChoices();

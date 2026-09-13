@@ -95,3 +95,16 @@ body{font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothin
 .top-shell:after{content:'';grid-column:2;grid-row:1 / span 2;align-self:center;height:1px;background:linear-gradient(90deg,rgba(166,152,103,.26),rgba(126,142,113,.08) 58%,rgba(166,152,103,.22));opacity:.8}
 @media(max-width:860px){.top-shell{min-height:76px;padding:12px 16px 9px;grid-template-columns:auto 1fr auto;column-gap:12px}.brand{font-size:22px}.brand-sub:after,.top-index:after{font-size:6.9px}}
 @media(max-width:560px){.top-shell{min-height:70px;padding:11px 13px 8px;grid-template-columns:auto 1fr}.top-shell:after{grid-column:2}.top-index{display:none!important}.brand{font-size:20px}.brand-sub:after{font-size:6.7px}}
+
+/* TAVO HUB — breathing room pass */
+.directory-head{padding-top:9px;padding-bottom:12px;min-height:66px;align-items:start}
+.hub-title{padding-top:1px}
+.hub-title h1{margin-bottom:4px}
+.hub-title .sub{margin-top:4px}
+.hub-title .desc{margin-top:7px}
+.hub-title .desc:after{line-height:1.36}
+.search-wrap{align-self:center;padding-top:1px}
+.side{padding-top:14px}
+.side-nav{margin-top:5px}
+@media(max-width:860px){.directory-head{padding-top:11px;padding-bottom:14px;min-height:auto}.hub-title .desc{margin-top:8px}.side{padding-top:15px}.side-nav{margin-top:6px}}
+@media(max-width:560px){.directory-head{padding-top:11px;padding-bottom:13px}.side{padding-top:14px}.side-nav{margin-top:5px}}

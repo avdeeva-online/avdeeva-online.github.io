@@ -22,6 +22,12 @@
 
   if(isHub){
     document.querySelector('.top-shell')?.appendChild(nav);
+    if(!document.querySelector('script[data-hub-category-filters]')){
+      const categoryScript=document.createElement('script');
+      categoryScript.src='hub-category-filters.js?v=1';
+      categoryScript.dataset.hubCategoryFilters='1';
+      document.head.appendChild(categoryScript);
+    }
     Promise.resolve(window.__hubResourcesReady).catch(()=>{}).then(()=>setTimeout(setupHubControls,0));
   }else{
     document.querySelector('.hero')?.appendChild(nav);
@@ -101,7 +107,7 @@
       content._hubSwitchTimer=setTimeout(()=>content.classList.remove('hub-switching'),180);
     };
     content.addEventListener('click',e=>{
-      if(e.target.closest('.tag-filter,.creator-filter,.hub-sort-btn,.view-btn'))animateSwitch();
+      if(e.target.closest('.tag-filter,.creator-filter,.hub-sort-btn,.view-btn,.hub-category-filter'))animateSwitch();
     },true);
     document.querySelector('.side-nav')?.addEventListener('click',e=>{
       if(e.target.closest('.side-link'))animateSwitch();

@@ -2,6 +2,7 @@ import app from './universe-curation.js';
 import { analyzeTelegramPost } from './hub-telegram.js';
 import { publishHubResource, listHubResources, downloadHubFile, deleteHubResourceFile, setHubResourcePrimary, deleteHubResource, injectHubResources } from './hub-resources.js';
 import { listAdminCharacters, updateAdminCharacter, deleteAdminCharacter } from './character-admin.js';
+import { submitHubSuggestion, listHubSuggestions, updateHubSuggestion } from './hub-suggestions.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 function adminGuard(request,env,url){
@@ -20,7 +21,7 @@ function adminGuard(request,env,url){
 }
 async function adminHealth(env){
   const one=async sql=>{try{return Number((await env.DB.prepare(sql).first())?.n||0)}catch{return null}};
-  const [characters,resources,files,chunks,lorebooks,lorebookBlobs,orphanLorebooks,orphanBlobs]=await Promise.all([
+  const [characters,resources,files,chunks,lorebooks,lorebookBlobs,orphanLorebooks,orphanBlobs,suggestions]=await Promise.all([
     one('SELECT COUNT(*) AS n FROM characters'),
     one('SELECT COUNT(*) AS n FROM hub_resources'),
     one('SELECT COUNT(*) AS n FROM hub_resource_files'),
@@ -28,9 +29,10 @@ async function adminHealth(env){
     one('SELECT COUNT(*) AS n FROM lorebooks'),
     one('SELECT COUNT(*) AS n FROM lorebook_blobs'),
     one('SELECT COUNT(*) AS n FROM lorebooks WHERE id NOT IN (SELECT DISTINCT lorebook_id FROM character_lorebooks)'),
-    one("SELECT COUNT(*) AS n FROM lorebook_blobs WHERE content_hash NOT IN (SELECT DISTINCT content_hash FROM lorebooks WHERE content_hash IS NOT NULL AND content_hash != '')")
+    one("SELECT COUNT(*) AS n FROM lorebook_blobs WHERE content_hash NOT IN (SELECT DISTINCT content_hash FROM lorebooks WHERE content_hash IS NOT NULL AND content_hash != '')"),
+    one("SELECT COUNT(*) AS n FROM hub_suggestions WHERE status='new'")
   ]);
-  return json({ok:true,db:true,adminTokenConfigured:Boolean(String(env.ADMIN_ACCESS_TOKEN||'').trim()),counts:{characters,resources,files,chunks,lorebooks,lorebookBlobs,orphanLorebooks,orphanBlobs},checkedAt:new Date().toISOString()});
+  return json({ok:true,db:true,adminTokenConfigured:Boolean(String(env.ADMIN_ACCESS_TOKEN||'').trim()),counts:{characters,resources,files,chunks,lorebooks,lorebookBlobs,orphanLorebooks,orphanBlobs,suggestions},checkedAt:new Date().toISOString()});
 }
 async function injectAdminBack(response){
   const type=String(response.headers.get('content-type')||'').toLowerCase();
@@ -47,6 +49,10 @@ export default{
   async fetch(request,env,ctx){
     const url=new URL(request.url);
     const blocked=adminGuard(request,env,url);if(blocked)return blocked;
+    if(url.pathname==='/api/hub-suggestions')return submitHubSuggestion(request,env);
+    if(url.pathname==='/api/admin/hub-suggestions')return listHubSuggestions(request,env);
+    const suggestionMatch=url.pathname.match(/^\/api\/admin\/hub-suggestions\/(\d+)$/);
+    if(suggestionMatch)return updateHubSuggestion(request,env,suggestionMatch[1]);
     if(url.pathname==='/api/admin/health'){
       if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
       return adminHealth(env);

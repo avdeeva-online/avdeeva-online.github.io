@@ -3,7 +3,8 @@ import { analyzeTelegramPost } from './hub-telegram.js';
 import { publishHubResource, listHubResources, downloadHubFile, deleteHubResourceFile, setHubResourcePrimary, deleteHubResource, injectHubResources } from './hub-resources.js';
 import { listAdminCharacters, updateAdminCharacter, deleteAdminCharacter } from './character-admin.js';
 import { submitHubSuggestion, listHubSuggestions, updateHubSuggestion } from './hub-suggestions.js';
-import { handleAdminTelegram, handlePublicTelegram, setupTelegramWebhooks, telegramWebhookStatus } from './telegram-bots.js';
+import { handlePublicTelegram, setupTelegramWebhooks, telegramWebhookStatus } from './telegram-bots.js';
+import { handleAdminTelegramSmart } from './telegram-admin-smart.js';
 import { telegramDraftsAdmin } from './telegram-drafts-admin.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
@@ -60,7 +61,7 @@ export default{
   async fetch(request,env,ctx){
     const url=new URL(request.url);
     const blocked=adminGuard(request,env,url);if(blocked)return blocked;
-    if(url.pathname==='/telegram/admin')return handleAdminTelegram(request,env);
+    if(url.pathname==='/telegram/admin')return handleAdminTelegramSmart(request,env);
     if(url.pathname==='/telegram/public')return handlePublicTelegram(request,env);
     if(url.pathname==='/api/admin/telegram/setup')return setupTelegramWebhooks(request,env);
     if(url.pathname==='/api/admin/telegram/status')return telegramWebhookStatus(request,env);

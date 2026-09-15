@@ -53,7 +53,10 @@ async function injectHubSuggest(response){
   if(!type.includes('text/html'))return response;
   let html=await response.text();
   if(!html.includes('data-hub-suggest-script'))html=html.replace(/<\/body>/i,'<script data-hub-suggest-script src="/hub-suggest.js?v=20260913-1"></script></body>');
-  const headers=new Headers(response.headers);headers.delete('content-length');
+  if(!html.includes('data-hub-media-recovery'))html=html.replace(/<\/body>/i,'<script data-hub-media-recovery src="/hub-media-recovery.js?v=20260916-1"></script></body>');
+  const headers=new Headers(response.headers);
+  headers.set('cache-control','no-store');
+  headers.delete('content-length');
   return new Response(html,{status:response.status,statusText:response.statusText,headers});
 }
 

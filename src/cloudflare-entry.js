@@ -4,6 +4,7 @@ import { publishHubResource, listHubResources, downloadHubFile, deleteHubResourc
 import { listAdminCharacters, updateAdminCharacter, deleteAdminCharacter } from './character-admin.js';
 import { submitHubSuggestion, listHubSuggestions, updateHubSuggestion } from './hub-suggestions.js';
 import { handleAdminTelegram, handlePublicTelegram, setupTelegramWebhooks, telegramWebhookStatus } from './telegram-bots.js';
+import { telegramDraftsAdmin } from './telegram-drafts-admin.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 function adminGuard(request,env,url){
@@ -63,6 +64,9 @@ export default{
     if(url.pathname==='/telegram/public')return handlePublicTelegram(request,env);
     if(url.pathname==='/api/admin/telegram/setup')return setupTelegramWebhooks(request,env);
     if(url.pathname==='/api/admin/telegram/status')return telegramWebhookStatus(request,env);
+    if(url.pathname==='/api/admin/telegram-drafts')return telegramDraftsAdmin(request,env);
+    const telegramDraftMatch=url.pathname.match(/^\/api\/admin\/telegram-drafts\/([^/]+)(?:\/(publish))?$/);
+    if(telegramDraftMatch)return telegramDraftsAdmin(request,env,decodeURIComponent(telegramDraftMatch[1]),telegramDraftMatch[2]||'');
     if(url.pathname==='/api/hub-suggestions')return submitHubSuggestion(request,env);
     if(url.pathname==='/api/admin/hub-suggestions')return listHubSuggestions(request,env);
     const suggestionMatch=url.pathname.match(/^\/api\/admin\/hub-suggestions\/(\d+)$/);

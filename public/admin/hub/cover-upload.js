@@ -1,4 +1,6 @@
 (()=>{
+  const p=location.pathname.replace(/\/+$/,'');
+  if((p==='/admin/hub'||p==='/admin/hub/index.html')&&!document.querySelector('script[data-telegram-draft-bridge-loader]')){const s=document.createElement('script');s.src='/admin/hub/draft-bridge.js?v=20260916-1';s.dataset.telegramDraftBridgeLoader='1';document.head.appendChild(s)}
   const mediaGrid=document.querySelector('#mediaGrid');
   if(!mediaGrid||document.querySelector('[data-cover-upload]'))return;
   let manualCover='';

@@ -9,22 +9,39 @@
 <style>
 :root{--bg:#0b0e0b;--panel:#11150f;--line:#2f382b;--text:#cbd4c2;--muted:#6f7a69;--accent:#d1bd87;--mono:Consolas,ui-monospace,monospace}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 30% 0,#161d14 0,#0b0e0b 42%);color:var(--text);font-family:var(--mono)}
-.shell{width:min(760px,calc(100% - 28px));border:1px solid var(--line);background:rgba(17,21,15,.92);padding:22px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.back{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#0d110c;color:#aeb9a5;text-decoration:none;padding:8px 10px;font-size:8px;letter-spacing:.06em;transition:.15s}.back:hover{border-color:#6c6f4c;color:#e7dfc7;background:#15190f}.eyebrow{font-size:9px;letter-spacing:.12em;color:var(--muted)}h1{margin:8px 0 6px;font-size:26px;letter-spacing:.05em}.sub{font-size:9px;color:var(--muted);line-height:1.6;margin-bottom:18px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.card{display:block;border:1px solid var(--line);background:#0d110c;color:#cbd4c2;text-decoration:none;padding:14px;transition:.15s}.card:hover{border-color:#6c6f4c;background:#15190f}.card b{display:block;font-size:11px;color:#e7dfc7}.card span{display:block;margin-top:5px;font-size:8px;line-height:1.45;color:var(--muted)}.footer{margin-top:16px;padding-top:12px;border-top:1px solid rgba(75,87,68,.35);font-size:8px;color:#596154}.ok{color:var(--accent)}@media(max-width:620px){.grid{grid-template-columns:1fr}.shell{padding:16px}.topbar{align-items:flex-start}}
+.shell{width:min(860px,calc(100% - 28px));border:1px solid var(--line);background:rgba(17,21,15,.92);padding:22px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.back{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#0d110c;color:#aeb9a5;text-decoration:none;padding:8px 10px;font-size:8px;letter-spacing:.06em;transition:.15s}.back:hover{border-color:#6c6f4c;color:#e7dfc7;background:#15190f}.eyebrow{font-size:9px;letter-spacing:.12em;color:var(--muted)}h1{margin:8px 0 6px;font-size:26px;letter-spacing:.05em}.sub{font-size:9px;color:var(--muted);line-height:1.6;margin-bottom:20px}.section{margin-top:18px}.section:first-of-type{margin-top:0}.section-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}.section-head b{font-size:9px;color:#c8d1c0;letter-spacing:.12em}.section-head span{height:1px;flex:1;background:rgba(75,87,68,.35)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.card{display:block;border:1px solid var(--line);background:#0d110c;color:#cbd4c2;text-decoration:none;padding:14px;transition:.15s}.card:hover{border-color:#6c6f4c;background:#15190f}.card b{display:block;font-size:11px;color:#e7dfc7}.card span{display:block;margin-top:5px;font-size:8px;line-height:1.45;color:var(--muted)}.card.primary{border-color:#625b3f;background:#15170f}.card.primary b{color:#eadfbd}.card.wide{grid-column:1/-1}.footer{margin-top:18px;padding-top:12px;border-top:1px solid rgba(75,87,68,.35);font-size:8px;color:#596154}.ok{color:var(--accent)}@media(max-width:620px){.grid{grid-template-columns:1fr}.card.wide{grid-column:auto}.shell{padding:16px}.topbar{align-items:flex-start}}
 </style>
 </head>
 <body>
 <main class="shell">
   <div class="topbar"><div class="eyebrow">PRIVATE TOOL / CLOUDFLARE ACCESS</div><a class="back" href="/">← BACK TO SITE</a></div>
   <h1>ARCHIVE ADMIN</h1>
-  <div class="sub"><span class="ok">● AUTHENTICATED AREA</span><br>Choose an admin workspace.</div>
-  <div class="grid">
-    <a class="card" href="import/"><b>CHARACTERS ADMIN</b><span>Import bots, source audit, Universe Review.</span></a>
-    <a class="card" href="import/edit.html"><b>BOT CARD EDITOR</b><span>Edit, hide or delete existing bot cards.</span></a>
-    <a class="card" href="hub/"><b>TAVO HUB IMPORT</b><span>Import Telegram resources, open bot drafts and publish them from the same resource editor.</span></a>
-    <a class="card" href="hub/edit.html"><b>HUB RESOURCE EDITOR</b><span>Edit existing TAVO HUB resources and files.</span></a>
-    <a class="card" href="hub/suggestions.html"><b>COMMUNITY SUGGESTIONS</b><span>Review resource links submitted from the public HUB.</span></a>
-    <a class="card" href="telegram.html"><b>TELEGRAM BOTS</b><span>Connect webhooks, check status and manage public/admin bot integration.</span></a>
-  </div>
+  <div class="sub"><span class="ok">● AUTHENTICATED AREA</span><br>Choose what you want to manage.</div>
+
+  <section class="section">
+    <div class="section-head"><b>BOT CATALOG</b><span></span></div>
+    <div class="grid">
+      <a class="card" href="import/"><b>IMPORT / AUDIT BOTS</b><span>Import character cards, audit sources and review universes.</span></a>
+      <a class="card" href="import/edit.html"><b>EDIT BOT CARDS</b><span>Edit, hide or delete existing bot cards.</span></a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><b>TAVO HUB</b><span></span></div>
+    <div class="grid">
+      <a class="card primary wide" href="hub/"><b>RESOURCE WORKSPACE</b><span>Telegram drafts, new resource import, review and publishing — all in one place.</span></a>
+      <a class="card" href="hub/edit.html"><b>PUBLISHED RESOURCES</b><span>Edit existing TAVO HUB resources and their files.</span></a>
+      <a class="card" href="hub/suggestions.html"><b>COMMUNITY SUGGESTIONS</b><span>Review links submitted from the public HUB.</span></a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><b>SYSTEM</b><span></span></div>
+    <div class="grid">
+      <a class="card wide" href="telegram.html"><b>TELEGRAM BOTS</b><span>Webhook connection, status and public/admin bot integration.</span></a>
+    </div>
+  </section>
+
   <div class="footer">ARCHIVE.EXE / ADMIN GATEWAY</div>
 </main>
 </body>

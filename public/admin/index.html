@@ -9,20 +9,21 @@
 <style>
 :root{--bg:#0b0e0b;--panel:#11150f;--line:#2f382b;--text:#cbd4c2;--muted:#6f7a69;--accent:#d1bd87;--mono:Consolas,ui-monospace,monospace}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 30% 0,#161d14 0,#0b0e0b 42%);color:var(--text);font-family:var(--mono)}
-.shell{width:min(820px,calc(100% - 28px));border:1px solid var(--line);background:rgba(17,21,15,.92);padding:24px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.back{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#0d110c;color:#aeb9a5;text-decoration:none;padding:8px 10px;font-size:8px;letter-spacing:.06em}.eyebrow{font-size:9px;letter-spacing:.12em;color:var(--muted)}h1{margin:8px 0 6px;font-size:28px;letter-spacing:.05em}.sub{font-size:9px;color:var(--muted);line-height:1.6;margin-bottom:20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.card{display:block;border:1px solid var(--line);background:#0d110c;color:#cbd4c2;text-decoration:none;padding:18px;transition:.15s;min-height:118px}.card:hover{border-color:#6c6f4c;background:#15190f}.card b{display:block;font-size:13px;color:#e7dfc7}.card span{display:block;margin-top:8px;font-size:8px;line-height:1.55;color:var(--muted)}.card strong{color:var(--accent);font-weight:400}.footer{margin-top:18px;padding-top:12px;border-top:1px solid rgba(75,87,68,.35);font-size:8px;color:#596154}.ok{color:var(--accent)}@media(max-width:620px){.grid{grid-template-columns:1fr}.shell{padding:16px}.topbar{align-items:flex-start}}
+.shell{position:relative;width:min(900px,calc(100% - 28px));border:1px solid var(--line);background:rgba(17,21,15,.92);padding:24px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.back,.system-link{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#0d110c;color:#aeb9a5;text-decoration:none;padding:8px 10px;font-size:8px;letter-spacing:.06em}.system-link{position:absolute;right:24px;bottom:18px;color:#707b6b;border-color:#293026;padding:6px 8px;font-size:7px}.eyebrow{font-size:9px;letter-spacing:.12em;color:var(--muted)}h1{margin:8px 0 6px;font-size:28px;letter-spacing:.05em}.sub{font-size:9px;color:var(--muted);line-height:1.6;margin-bottom:20px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding-bottom:30px}.card{display:block;border:1px solid var(--line);background:#0d110c;color:#cbd4c2;text-decoration:none;padding:18px;transition:.15s;min-height:128px}.card:hover{border-color:#6c6f4c;background:#15190f}.card b{display:block;font-size:13px;color:#e7dfc7}.card span{display:block;margin-top:8px;font-size:8px;line-height:1.55;color:var(--muted)}.card strong{color:var(--accent);font-weight:400}.footer{margin-top:18px;padding-top:12px;border-top:1px solid rgba(75,87,68,.35);font-size:8px;color:#596154}.ok{color:var(--accent)}@media(max-width:820px){.grid{grid-template-columns:1fr 1fr}}@media(max-width:620px){.grid{grid-template-columns:1fr}.shell{padding:16px}.topbar{align-items:flex-start}.system-link{right:16px;bottom:14px}}
 </style>
 </head>
 <body>
 <main class="shell">
   <div class="topbar"><div class="eyebrow">PRIVATE TOOL / CLOUDFLARE ACCESS</div><a class="back" href="/">← BACK TO SITE</a></div>
   <h1>ARCHIVE ADMIN</h1>
-  <div class="sub"><span class="ok">● AUTHENTICATED AREA</span><br>Four workspaces. Everything else lives inside them.</div>
+  <div class="sub"><span class="ok">● AUTHENTICATED AREA</span><br>Main workspaces only. Technical controls are kept out of the way.</div>
   <div class="grid">
     <a class="card" href="imports.html"><b>IMPORT</b><span><strong>Bots + resources.</strong><br>Manual import, Telegram links/files, author scan and new records.</span></a>
-    <a class="card" href="editors.html"><b>EDITOR</b><span><strong>Bots + resources + drafts.</strong><br>Edit published records, open drafts, Universe tools and archive audit.</span></a>
-    <a class="card" href="hub/suggestions.html"><b>SUGGESTIONS</b><span>Community submissions in one queue. Send useful links directly into resource import.</span></a>
-    <a class="card" href="telegram.html"><b>SYSTEM</b><span>Telegram bots, webhooks and integration status. Technical controls only.</span></a>
+    <a class="card" href="editors.html"><b>EDIT</b><span><strong>Bots + resources.</strong><br>Edit published records, Universe tools and archive audit.</span></a>
+    <a class="card" href="drafts.html"><b>DRAFTS</b><span><strong>Unfinished work.</strong><br>Resource drafts now, bot drafts later. Open any draft directly in its normal import form.</span></a>
+    <a class="card" href="hub/suggestions.html"><b>SUGGESTIONS</b><span>Community submissions in one queue. Send useful links into the normal resource workflow.</span></a>
   </div>
+  <a class="system-link" href="telegram.html">SYSTEM</a>
   <div class="footer">ARCHIVE.EXE / ADMIN GATEWAY</div>
 </main>
 </body>

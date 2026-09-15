@@ -1,5 +1,5 @@
 name = "archive-exe"
-main = "src/cloudflare-entry.js"
+main = "src/cloudflare-entry-v2.js"
 compatibility_date = "2026-08-30"
 keep_vars = true
 

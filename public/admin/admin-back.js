@@ -20,7 +20,7 @@
     if(oldTabs)oldTabs.style.display='none';const head=document.querySelector('.head'),local=document.createElement('div');local.className='admin-local-nav';local.innerHTML=`<button class="active" type="button" data-bot-pane="published">PUBLISHED</button><a href="/admin/drafts.html">DRAFTS</a><a href="./?tool=universes">UNIVERSES</a><a href="./?tool=audit">AUDIT</a>`;head?.insertAdjacentElement('afterend',local)
   }else if(path==='/admin/hub/'||path==='/admin/hub/index.html'){
     if(oldTabs)oldTabs.style.display='none';document.querySelector('h1')&&(document.querySelector('h1').textContent='RESOURCE IMPORT');
-    if(!document.querySelector('script[data-draft-bridge-loader]')){const s=document.createElement('script');s.src='/admin/hub/draft-bridge.js?v=20260916-2';s.dataset.draftBridgeLoader='1';document.body.appendChild(s)}
+    if(!document.querySelector('script[data-draft-bridge-loader]')){const s=document.createElement('script');s.src='/admin/hub/draft-bridge.js?v=20260916-3';s.dataset.draftBridgeLoader='1';document.body.appendChild(s)}
   }else if(path.endsWith('/admin/hub/edit.html')){
     if(oldTabs)oldTabs.style.display='none';
   }else if(path.endsWith('/admin/hub/suggestions.html')){

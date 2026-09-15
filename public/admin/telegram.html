@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta http-equiv="Cache-Control" content="no-store">
+<title>ARCHIVE.EXE / TELEGRAM</title>
+<style>
+:root{--bg:#0b0e0b;--panel:#11150f;--line:#2f382b;--text:#cbd4c2;--muted:#6f7a69;--accent:#d1bd87;--ok:#9eb58f;--bad:#c08d7c;--mono:Consolas,ui-monospace,monospace}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 30% 0,#161d14 0,#0b0e0b 42%);color:var(--text);font-family:var(--mono)}.shell{width:min(860px,calc(100% - 28px));margin:32px auto 70px}.head{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;border-bottom:1px solid var(--line);padding-bottom:16px}.eyebrow{font-size:8px;letter-spacing:.14em;color:var(--muted)}h1{margin:7px 0 0;font-size:26px}.back{border:1px solid var(--line);color:#abb5a4;text-decoration:none;padding:8px 10px;font-size:8px}.panel{margin-top:14px;border:1px solid var(--line);background:rgba(17,21,15,.9);padding:16px}.row{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid #4a5644;background:#10140e;color:#c6cfbe;padding:10px 13px;font:9px var(--mono);cursor:pointer}.btn.primary{border-color:#756d4a;color:#eadfbd;background:#1b1d13}.status{margin-top:12px;border:1px solid #303a2c;background:#0b0f0a;padding:12px;min-height:88px;white-space:pre-wrap;font-size:8.5px;line-height:1.55;color:#929e8f}.ok{color:var(--ok)}.bad{color:var(--bad)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.card{border:1px solid #2e382a;background:#0d110c;padding:12px}.card b{display:block;font-size:10px}.card span{display:block;margin-top:6px;color:var(--muted);font-size:8px;line-height:1.45}@media(max-width:650px){.grid{grid-template-columns:1fr}.head{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<main class="shell">
+<header class="head"><div><div class="eyebrow">PRIVATE TOOL / TELEGRAM CONTROL</div><h1>TELEGRAM BOTS</h1></div><a class="back" href="/admin/">← ADMIN</a></header>
+<section class="panel">
+  <div class="row"><button class="btn primary" id="setup">CONNECT / REFRESH WEBHOOKS</button><button class="btn" id="status">CHECK STATUS</button></div>
+  <div id="out" class="status">READY. Webhooks are not changed until CONNECT / REFRESH WEBHOOKS is pressed.</div>
+</section>
+<section class="grid">
+  <div class="card"><b>ADMIN BOT</b><span>Uses Node00admin + TELEGRAM_ADMIN_USER_ID. Private menu, drafts, suggestions, import, publish, stats and issue checks.</span></div>
+  <div class="card"><b>PUBLIC BOT</b><span>Uses PUBLICnode00bot. Public catalog search, latest resources, categories, random resource and links to TAVO HUB.</span></div>
+</section>
+</main>
+<script>
+(()=>{const out=document.querySelector('#out'),setup=document.querySelector('#setup'),status=document.querySelector('#status');
+const show=(data,ok=true)=>{out.className='status '+(ok?'ok':'bad');out.textContent=typeof data==='string'?data:JSON.stringify(data,null,2)};
+setup.onclick=async()=>{setup.disabled=true;show('CONNECTING TELEGRAM WEBHOOKS…');try{const r=await fetch('/api/admin/telegram/setup',{method:'POST'}),d=await r.json();show(d,r.ok&&d.ok)}catch(e){show('FAILED: '+e.message,false)}finally{setup.disabled=false}};
+status.onclick=async()=>{status.disabled=true;show('CHECKING…');try{const r=await fetch('/api/admin/telegram/status',{cache:'no-store'}),d=await r.json();show(d,r.ok&&d.ok)}catch(e){show('FAILED: '+e.message,false)}finally{status.disabled=false}};
+})();
+</script>
+</body>
+</html>

@@ -3,6 +3,7 @@ import { publishHubResource } from './hub-resources.js';
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
 const arr=v=>Array.isArray(v)?v:[];
+const uniq=(items,key)=>{const seen=new Set();return arr(items).filter(x=>{const k=key(x);if(!k||seen.has(k))return false;seen.add(k);return true})};
 
 async function ensureSchema(env){
   await env.DB.prepare(`CREATE TABLE IF NOT EXISTS telegram_admin_drafts(
@@ -49,17 +50,55 @@ function applyEdits(a,b){
   if('tags'in b)a.draft.tags=arr(b.tags).map(clean).filter(Boolean);
   return a;
 }
+function weakDraft(a){
+  const d=a?.draft||{};
+  const title=clean(d.title).toUpperCase(),desc=clean(d.descriptionFull||d.descriptionShort||a?.source?.rawText);
+  return !desc||desc.length<80||['ATTACHMENTS','UNTITLED RESOURCE'].includes(title)||clean(d.type)==='other';
+}
+function sourcePosts(a,fallback){
+  const list=arr(a?.sourcePosts).map(x=>typeof x==='string'?{url:x}:x).filter(x=>clean(x?.url));
+  const url=clean(a?.source?.url||fallback);
+  if(url)list.unshift({url});
+  return list;
+}
+function mergeAnalysis(target,targetUrl,source,sourceUrl){
+  const a=target&&typeof target==='object'?target:{};
+  const b=source&&typeof source==='object'?source:{};
+  a.source=a.source||{};a.draft=a.draft||{};
+  const shouldAdopt=weakDraft(a)&&!weakDraft(b);
+  if(shouldAdopt){
+    const keepSourceUrl=clean(a.source.url||targetUrl);
+    a.source={...(b.source||{}),url:keepSourceUrl||clean(b.source?.url||sourceUrl)};
+    a.draft={...(b.draft||{}),creator:clean(a.draft.creator)||clean(b.draft?.creator),creatorLink:clean(a.draft.creatorLink)||clean(b.draft?.creatorLink)};
+    a.confidence=b.confidence||a.confidence||{};
+  }
+  const posts=uniq([...sourcePosts(a,targetUrl),...sourcePosts(b,sourceUrl)],x=>clean(x?.url));
+  const media=uniq([...arr(a.media),...arr(b.media)],x=>clean(x?.telegram_file_unique_id||x?.telegram_file_id||x?.url)||`${x?.width||0}:${x?.height||0}:${x?.size||0}`);
+  const files=uniq([...arr(a.files),...arr(b.files)],x=>clean(x?.telegram_file_unique_id||x?.telegram_file_id||x?.url)||`${clean(x?.name)}:${x?.size||0}`);
+  a.sourcePosts=posts;
+  a.media=media;
+  a.files=files;
+  a.diagnostics={...(a.diagnostics||{}),sourcePosts:posts.length,directFiles:files.filter(x=>x?.telegram_file_id).length,manualMerge:true};
+  if(!clean(a.source.url))a.source.url=clean(targetUrl||sourceUrl);
+  return a;
+}
+async function mergeDrafts(env,targetRow,sourceId){
+  sourceId=clean(sourceId);
+  if(!sourceId||sourceId===targetRow.id)throw new Error('INVALID_MERGE_SOURCE');
+  const sourceRow=await env.DB.prepare("SELECT * FROM telegram_admin_drafts WHERE id=? AND status='review' LIMIT 1").bind(sourceId).first();
+  if(!sourceRow)throw new Error('MERGE_SOURCE_NOT_FOUND');
+  const target=parseRow(targetRow),source=parseRow(sourceRow);
+  const analysis=mergeAnalysis(target.analysis,target.source_url,source.analysis,source.source_url);
+  await env.DB.prepare("UPDATE telegram_admin_drafts SET payload=?,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(JSON.stringify(analysis),targetRow.id).run();
+  await env.DB.prepare('DELETE FROM telegram_admin_drafts WHERE id=?').bind(sourceId).run();
+  try{await env.DB.prepare('UPDATE telegram_admin_import_session SET draft_id=?,updated_at=CURRENT_TIMESTAMP WHERE draft_id=?').bind(targetRow.id,sourceId).run()}catch{}
+  return env.DB.prepare('SELECT * FROM telegram_admin_drafts WHERE id=? LIMIT 1').bind(targetRow.id).first();
+}
 async function publishDraft(env,row,edits={}){
   const token=clean(env.Node00admin);if(!token)throw new Error('ADMIN_BOT_TOKEN_MISSING');
   const a=applyEdits(parseRow(row).analysis,edits),d=a.draft||{},channel=clean(a.source?.channel);
   const files=arr(a.files),botFiles=files.filter(f=>f.telegram_file_id),remoteFiles=files.filter(f=>f.url&&!f.telegram_file_id);
-  const payload={
-    source:{type:'telegram',url:clean(a.source?.url)||row.source_url},
-    type:clean(d.type)||'other',title:clean(d.title)||'UNTITLED RESOURCE',
-    creator:{name:clean(d.creator)||channel,link:clean(d.creatorLink)||(channel?`https://t.me/${channel}`:'')},
-    description_short:clean(d.descriptionShort),description_full:clean(d.descriptionFull||a.source?.rawText),additional_info:'',
-    models:arr(d.models),settings:arr(d.settings),tags:arr(d.tags),media:arr(a.media).filter(x=>x?.url),confidence:a.confidence||{}
-  };
+  const payload={source:{type:'telegram',url:clean(a.source?.url)||row.source_url},type:clean(d.type)||'other',title:clean(d.title)||'UNTITLED RESOURCE',creator:{name:clean(d.creator)||channel,link:clean(d.creatorLink)||(channel?`https://t.me/${channel}`:'')},description_short:clean(d.descriptionShort),description_full:clean(d.descriptionFull||a.source?.rawText),additional_info:'',models:arr(d.models),settings:arr(d.settings),tags:arr(d.tags),media:arr(a.media).filter(x=>x?.url),confidence:a.confidence||{}};
   let request;
   if(botFiles.length){
     const form=new FormData();form.append('resource',new Blob([JSON.stringify(payload)],{type:'application/json'}),'resource.json');
@@ -98,6 +137,10 @@ export async function telegramDraftsAdmin(request,env,id='',action=''){
   }
   if(request.method==='PATCH'||request.method==='POST'){
     let body={};try{body=await request.json()}catch{return json({ok:false,error:'INVALID_JSON'},400)}
+    if(clean(body.mergeDraftId)){
+      try{const merged=await mergeDrafts(env,row,body.mergeDraftId);return json({ok:true,merged:true,draft:parseRow(merged)})}
+      catch(e){return json({ok:false,error:'MERGE_FAILED',detail:String(e?.message||e)},400)}
+    }
     const parsed=parseRow(row),analysis=applyEdits(parsed.analysis,body);
     await env.DB.prepare("UPDATE telegram_admin_drafts SET payload=?,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(JSON.stringify(analysis),id).run();
     const fresh=await env.DB.prepare('SELECT * FROM telegram_admin_drafts WHERE id=? LIMIT 1').bind(id).first();

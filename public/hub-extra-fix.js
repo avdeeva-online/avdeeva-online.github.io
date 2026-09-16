@@ -1,3 +1,1 @@
-(()=>{
-  // Retired. EXTRAS classification belongs to the primary HUB renderer.
-})();
+(()=>{/* legacy shim intentionally empty; kept temporarily for stale cached HTML */})();

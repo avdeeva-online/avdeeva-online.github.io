@@ -12,6 +12,3 @@ run_worker_first = ["/admin/*", "/api/*", "/telegram/*", "/hub", "/hub.html"]
 binding = "DB"
 database_name = "archive-characters"
 database_id = "acc550d1-66d7-416e-b1af-73ca22f7c230"
-
-[secrets]
-required = ["DATACAT_DEVICE_TOKEN", "DATACAT_SESSION_TOKEN"]

@@ -1,1 +1,1 @@
-(()=>{/* legacy shim intentionally empty; kept for one deployment cycle to avoid stale HTML 404s */})();
+(()=>{/* legacy shim intentionally empty; kept temporarily for stale cached HTML */})();

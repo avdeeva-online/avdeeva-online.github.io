@@ -1,3 +1,1 @@
-(()=>{
-  // Retired. Media rendering is owned by hub-dynamic.js and durable resource files.
-})();
+(()=>{/* legacy shim intentionally empty; kept for one deployment cycle to avoid stale HTML 404s */})();

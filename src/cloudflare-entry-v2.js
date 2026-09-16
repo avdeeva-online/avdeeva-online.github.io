@@ -1,5 +1,6 @@
 import app from './cloudflare-entry.js';
 import { handleAdminTelegramFixed } from './telegram-admin-fixed.js';
+import { handlePublicTelegramFull } from './telegram-public-bot.js';
 import { serveTelegramDraftMedia } from './telegram-media.js';
 import { listHubResourcesClean, downloadHubFilePublic, hubMediaAuditClean } from './hub-public-media-clean.js';
 import { deleteLegacyMediaExtra } from './hub-admin-media.js';
@@ -17,6 +18,7 @@ function adminRequestBlocked(request,env,url){
 export default {async fetch(request,env,ctx){
   const url=new URL(request.url);
   if(url.pathname==='/telegram/admin')return handleAdminTelegramFixed(request,env);
+  if(url.pathname==='/telegram/public')return handlePublicTelegramFull(request,env);
   const mediaMatch=url.pathname.match(/^\/api\/admin\/hub-telegram-media\/([^/]+)\/(\d+)$/);
   if(mediaMatch){const blocked=adminRequestBlocked(request,env,url);if(blocked)return blocked;return serveTelegramDraftMedia(request,env,decodeURIComponent(mediaMatch[1]),mediaMatch[2])}
   if(url.pathname==='/api/hub-resources'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return listHubResourcesClean(env)}

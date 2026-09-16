@@ -18,7 +18,18 @@ function adminGuard(request,env,url){
   return null;
 }
 async function adminHealth(env){const one=async sql=>{try{return Number((await env.DB.prepare(sql).first())?.n||0)}catch{return null}};const [characters,resources,files,chunks,lorebooks,lorebookBlobs,orphanLorebooks,orphanBlobs,suggestions,drafts]=await Promise.all([one('SELECT COUNT(*) AS n FROM characters'),one('SELECT COUNT(*) AS n FROM hub_resources'),one('SELECT COUNT(*) AS n FROM hub_resource_files'),one('SELECT COUNT(*) AS n FROM hub_resource_file_chunks'),one('SELECT COUNT(*) AS n FROM lorebooks'),one('SELECT COUNT(*) AS n FROM lorebook_blobs'),one('SELECT COUNT(*) AS n FROM lorebooks WHERE id NOT IN (SELECT DISTINCT lorebook_id FROM character_lorebooks)'),one("SELECT COUNT(*) AS n FROM lorebook_blobs WHERE content_hash NOT IN (SELECT DISTINCT content_hash FROM lorebooks WHERE content_hash IS NOT NULL AND content_hash != '')"),one("SELECT COUNT(*) AS n FROM hub_suggestions WHERE status='new'"),one("SELECT COUNT(*) AS n FROM telegram_admin_drafts WHERE status='review'")]);return json({ok:true,db:true,adminTokenConfigured:Boolean(String(env.ADMIN_ACCESS_TOKEN||'').trim()),counts:{characters,resources,files,chunks,lorebooks,lorebookBlobs,orphanLorebooks,orphanBlobs,suggestions,drafts},checkedAt:new Date().toISOString()})}
-async function injectAdminBack(response,pathname=''){const type=String(response.headers.get('content-type')||'').toLowerCase();if(!type.includes('text/html'))return response;let html=await response.text();if(!html.includes('data-admin-back-script'))html=html.replace(/<\/body>/i,'<script data-admin-back-script src="/admin/admin-back.js?v=20260916-nav6"></script></body>');if((pathname==='/admin/hub/'||pathname==='/admin/hub/index.html')&&!html.includes('data-source-media-remove'))html=html.replace(/<\/body>/i,'<script data-source-media-remove src="/admin/hub/source-media-remove.js?v=20260916-1"></script></body>');const headers=new Headers(response.headers);headers.set('cache-control','no-store');headers.delete('content-length');return new Response(html,{status:response.status,statusText:response.statusText,headers})}
+async function injectAdminBack(response,pathname=''){
+  const type=String(response.headers.get('content-type')||'').toLowerCase();
+  if(!type.includes('text/html'))return response;
+  let html=await response.text();
+  if(!html.includes('data-admin-back-script'))html=html.replace(/<\/body>/i,'<script data-admin-back-script src="/admin/admin-back.js?v=20260916-nav6"></script></body>');
+  if(pathname==='/admin/hub/'||pathname==='/admin/hub/index.html'){
+    html=html.replace(/admin-edit\.js\?v=[^"']+/g,'admin-edit.js?v=20260916-4');
+    if(!html.includes('data-source-media-remove'))html=html.replace(/<\/body>/i,'<script data-source-media-remove src="/admin/hub/source-media-remove.js?v=20260916-2"></script></body>');
+    else html=html.replace(/source-media-remove\.js\?v=[^"']+/g,'source-media-remove.js?v=20260916-2');
+  }
+  const headers=new Headers(response.headers);headers.set('cache-control','no-store');headers.delete('content-length');return new Response(html,{status:response.status,statusText:response.statusText,headers})
+}
 function noStoreHtml(response){const type=String(response.headers.get('content-type')||'').toLowerCase();if(!type.includes('text/html'))return response;const headers=new Headers(response.headers);headers.set('cache-control','no-store');headers.delete('content-length');return new Response(response.body,{status:response.status,statusText:response.statusText,headers})}
 
 export default{async fetch(request,env,ctx){

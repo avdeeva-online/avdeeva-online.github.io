@@ -10,40 +10,51 @@
   `;
   document.head.appendChild(style);
 
+  let decorating=false;
+
   function syncCover(){
-    const items=[...grid.querySelectorAll('.media')];
-    if(!items.length){grid.innerHTML='<div class="empty">NO MEDIA LOADED · use MANUAL COVER if needed</div>';return}
+    const items=[...grid.querySelectorAll(':scope > .media')];
+    if(!items.length)return;
     let cover=items.find(x=>x.classList.contains('cover'));
     if(!cover){cover=items[0];cover.classList.add('cover')}
     items.forEach(item=>{
-      const b=item.querySelector('[data-admin-cover]');
+      const b=item.querySelector('[data-admin-cover],[data-cover]');
       if(b)b.textContent=item===cover?'COVER':'SET COVER';
     });
   }
 
   function decorate(){
-    [...grid.querySelectorAll('.media')].forEach(item=>{
-      if(item.querySelector('[data-remove-source-media]'))return;
-      const btn=document.createElement('button');
-      btn.type='button';
-      btn.dataset.removeSourceMedia='1';
-      btn.textContent='REMOVE';
-      btn.title='Remove this source image from the resource';
-      btn.addEventListener('click',e=>{
-        e.preventDefault();e.stopPropagation();
-        const wasCover=item.classList.contains('cover');
-        item.remove();
-        if(wasCover)grid.querySelector('.media')?.classList.add('cover');
-        syncCover();
-        document.querySelector('#rawText')?.dispatchEvent(new Event('input',{bubbles:true}));
-        const status=document.querySelector('#analyzeStatus');
-        if(status){status.textContent='SOURCE IMAGE REMOVED · publish/update to save changes.';status.className='status ok'}
+    if(decorating)return;
+    decorating=true;
+    try{
+      const items=[...grid.querySelectorAll(':scope > .media')];
+      if(!items.length)return;
+      items.forEach(item=>{
+        if(item.querySelector('[data-remove-source-media]'))return;
+        const btn=document.createElement('button');
+        btn.type='button';
+        btn.dataset.removeSourceMedia='1';
+        btn.textContent='REMOVE';
+        btn.title='Remove this source image from the resource';
+        btn.addEventListener('click',e=>{
+          e.preventDefault();e.stopPropagation();
+          const wasCover=item.classList.contains('cover');
+          item.remove();
+          if(wasCover)grid.querySelector(':scope > .media')?.classList.add('cover');
+          syncCover();
+          const status=document.querySelector('#analyzeStatus');
+          if(status){status.textContent='SOURCE IMAGE REMOVED · publish/update to save changes.';status.className='status ok'}
+          window.dispatchEvent(new CustomEvent('archive:hub-source-media-change'));
+        });
+        item.appendChild(btn);
       });
-      item.appendChild(btn);
-    });
-    syncCover();
+      syncCover();
+    } finally {
+      decorating=false;
+    }
   }
 
   decorate();
-  new MutationObserver(decorate).observe(grid,{childList:true,subtree:false});
+  const observer=new MutationObserver(()=>queueMicrotask(decorate));
+  observer.observe(grid,{childList:true,subtree:false});
 })();

@@ -2,6 +2,7 @@ import app from './cloudflare-entry.js';
 import { handleAdminTelegramFixed } from './telegram-admin-fixed.js';
 import { serveTelegramDraftMedia } from './telegram-media.js';
 import { listHubResourcesPublic, downloadHubFilePublic, hubMediaAudit } from './hub-public-media.js';
+import { deleteLegacyMediaExtra } from './hub-admin-media.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 function adminRequestBlocked(request,env,url){
@@ -21,6 +22,12 @@ export default {async fetch(request,env,ctx){
   if(url.pathname==='/api/hub-resources'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return listHubResourcesPublic(env)}
   const hubFileMatch=url.pathname.match(/^\/api\/hub-resources\/([^/]+)\/files\/([^/]+)$/);
   if(hubFileMatch){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return downloadHubFilePublic(request,env,decodeURIComponent(hubFileMatch[1]),decodeURIComponent(hubFileMatch[2]))}
+  const legacyExtraDelete=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)\/files\/(media-\d+)$/);
+  if(legacyExtraDelete&&request.method==='DELETE'){
+    const blocked=adminRequestBlocked(request,env,url);if(blocked)return blocked;
+    const response=await deleteLegacyMediaExtra(env,decodeURIComponent(legacyExtraDelete[1]),decodeURIComponent(legacyExtraDelete[2]));
+    if(response)return response;
+  }
   if(url.pathname==='/api/admin/hub-media-audit'){const blocked=adminRequestBlocked(request,env,url);if(blocked)return blocked;if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return hubMediaAudit(env)}
   if(url.pathname==='/api/debug/datacat')return json({ok:false,error:'NOT_FOUND'},404);
   if(url.pathname==='/api/import'||url.pathname==='/api/import/status')return json({ok:false,error:'ADMIN_IMPORT_ONLY'},403);

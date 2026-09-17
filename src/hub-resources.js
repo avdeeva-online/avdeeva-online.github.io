@@ -29,6 +29,8 @@ const ensureSchema=env=>requireD1Schema(env,'hub-resources',`SELECT
   (SELECT COUNT(*) FROM hub_resource_publish_files) AS session_files`);
 
 function normalizeDraft(d){const source=d?.source||{};return{editingId:clean(d?.editing_id),sourceUrl:clean(source.url),sourceType:clean(source.type)||'telegram',type:clean(d?.type).toLowerCase(),title:clean(d?.title),creatorName:clean(d?.creator?.name),creatorLink:clean(d?.creator?.link),short:clean(d?.description_short),full:clean(d?.description_full),additionalInfo:clean(d?.additional_info),models:arr(d?.models).map(clean).filter(Boolean),settings:normalizeSettings(d?.settings),tags:arr(d?.tags).map(clean).filter(Boolean),media:arr(d?.media),confidence:d?.confidence&&typeof d.confidence==='object'?d.confidence:{}}}
+function parseSessionState(session){let raw=null;try{raw=JSON.parse(session?.backup||'null')}catch{}if(raw&&raw.version===2&&raw.draft)return{version:2,old:raw.old||null,draft:normalizeDraft(raw.draft)};return{version:1,old:raw&&typeof raw==='object'?raw:null,draft:null}}
+async function saveSessionState(env,session,state){await env.DB.prepare('UPDATE hub_resource_publish_sessions SET backup=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(JSON.stringify({version:2,old:state.old||null,draft:state.draft}),session.id).run()}
 
 async function parsePublishRequest(request){
   const ct=request.headers.get('content-type')||'';
@@ -108,8 +110,8 @@ async function restoreRow(env,row){if(!row?.id)return;await env.DB.prepare(`UPDA
 
 async function ensurePrimary(env,resourceId,preferredId=''){
   if(preferredId){await env.DB.prepare("UPDATE hub_resource_files SET is_primary=0 WHERE resource_id=? AND name NOT LIKE '__extra__%'").bind(resourceId).run();await env.DB.prepare('UPDATE hub_resource_files SET is_primary=1 WHERE id=? AND resource_id=?').bind(preferredId,resourceId).run();return}
-  const has=await env.DB.prepare("SELECT id FROM hub_resource_files WHERE resource_id=? AND is_primary=1 AND name NOT LIKE '__extra__%' LIMIT 1").bind(resourceId).first();if(has?.id)return;
-  const first=await env.DB.prepare(`SELECT id FROM hub_resource_files WHERE resource_id=? AND name NOT LIKE '__extra__%' ORDER BY CASE WHEN lower(name) LIKE '%.zip' THEN 0 WHEN lower(name) LIKE '%.json' THEN 1 WHEN lower(name) LIKE '%.txt' THEN 2 ELSE 9 END,created_at ASC LIMIT 1`).bind(resourceId).first();
+  const has=await env.DB.prepare("SELECT id FROM hub_resource_files WHERE resource_id=? AND is_primary=1 AND name NOT LIKE '__extra__%' AND NOT EXISTS(SELECT 1 FROM hub_resource_publish_files sf WHERE sf.file_id=hub_resource_files.id) LIMIT 1").bind(resourceId).first();if(has?.id)return;
+  const first=await env.DB.prepare(`SELECT f.id FROM hub_resource_files f WHERE f.resource_id=? AND f.name NOT LIKE '__extra__%' AND NOT EXISTS(SELECT 1 FROM hub_resource_publish_files sf WHERE sf.file_id=f.id) ORDER BY CASE WHEN lower(f.name) LIKE '%.zip' THEN 0 WHEN lower(f.name) LIKE '%.json' THEN 1 WHEN lower(f.name) LIKE '%.txt' THEN 2 ELSE 9 END,f.created_at ASC LIMIT 1`).bind(resourceId).first();
   if(first?.id)await env.DB.prepare('UPDATE hub_resource_files SET is_primary=1 WHERE id=?').bind(first.id).run();
 }
 
@@ -119,16 +121,16 @@ async function beginSession(env,draft){
   const d=normalizeDraft(draft);if(!d.sourceUrl||!d.type||!d.title)throw new Error('SOURCE_URL_TYPE_TITLE_REQUIRED');
   let old=null;if(d.editingId)old=await env.DB.prepare('SELECT * FROM hub_resources WHERE id=? LIMIT 1').bind(d.editingId).first();if(!old)old=await env.DB.prepare('SELECT * FROM hub_resources WHERE source_url=? LIMIT 1').bind(d.sourceUrl).first();
   if(old?.id){const active=await env.DB.prepare('SELECT id FROM hub_resource_publish_sessions WHERE resource_id=? LIMIT 1').bind(old.id).first();if(active?.id)await cancelSession(env,active.id)}
-  const id=old?.id||crypto.randomUUID(),sessionId=crypto.randomUUID();
-  await env.DB.prepare('INSERT INTO hub_resource_publish_sessions(id,resource_id,was_existing,backup) VALUES(?,?,?,?)').bind(sessionId,id,old?1:0,old?JSON.stringify(old):'').run();
-  try{await writeResourceRow(env,id,old,d,'staging')}catch(e){await env.DB.prepare('DELETE FROM hub_resource_publish_sessions WHERE id=?').bind(sessionId).run();throw e}
+  const id=old?.id||crypto.randomUUID(),sessionId=crypto.randomUUID(),state={version:2,old:old||null,draft:d};
+  await env.DB.prepare('INSERT INTO hub_resource_publish_sessions(id,resource_id,was_existing,backup) VALUES(?,?,?,?)').bind(sessionId,id,old?1:0,JSON.stringify(state)).run();
   return{sessionId,id,updated:Boolean(old)};
 }
 
 async function updateSessionMetadata(env,session,draft){
   const d=normalizeDraft(draft);if(!d.sourceUrl||!d.type||!d.title)throw new Error('SOURCE_URL_TYPE_TITLE_REQUIRED');
-  await writeResourceRow(env,session.resource_id,{id:session.resource_id},d,'staging');
-  await env.DB.prepare('UPDATE hub_resource_publish_sessions SET updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(session.id).run();
+  const state=parseSessionState(session);
+  if(state.version===2){state.draft=d;await saveSessionState(env,session,state)}
+  else await writeResourceRow(env,session.resource_id,{id:session.resource_id},d,'staging');
   return{id:session.resource_id};
 }
 
@@ -181,10 +183,11 @@ async function cleanupUnreferencedSourceMedia(env,resourceId){
 async function finalizeSession(env,sessionId){
   const session=await sessionRow(env,sessionId);if(!session)throw new Error('PUBLISH_SESSION_NOT_FOUND');
   const totals=await projectedTotals(env,session);if(totals.normal>NORMAL_TOTAL_LIMIT)throw new Error('FILES_TOTAL_TOO_LARGE');if(totals.extra>EXTRA_TOTAL_LIMIT)throw new Error('EXTRAS_TOTAL_TOO_LARGE');
-  const staged=(await env.DB.prepare('SELECT file_id,replace_old_id,is_primary FROM hub_resource_publish_files WHERE session_id=?').bind(session.id).all()).results||[];
+  const staged=(await env.DB.prepare('SELECT file_id,replace_old_id,is_primary FROM hub_resource_publish_files WHERE session_id=?').bind(session.id).all()).results||[],state=parseSessionState(session);
   const preferred=staged.find(x=>Number(x.is_primary)===1)?.file_id||'';
-  await ensurePrimary(env,session.resource_id,preferred);
-  await env.DB.prepare("UPDATE hub_resources SET status='published',updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(session.resource_id).run();
+  if(state.version===2){await writeResourceRow(env,session.resource_id,state.old,state.draft,'published')}
+  else await env.DB.prepare("UPDATE hub_resources SET status='published',updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(session.resource_id).run();
+  if(preferred){await env.DB.prepare("UPDATE hub_resource_files SET is_primary=0 WHERE resource_id=? AND name NOT LIKE '__extra__%'").bind(session.resource_id).run();await env.DB.prepare('UPDATE hub_resource_files SET is_primary=1 WHERE id=? AND resource_id=?').bind(preferred,session.resource_id).run()}else await ensurePrimary(env,session.resource_id);
   for(const s of staged){if(s.replace_old_id&&s.replace_old_id!==s.file_id){try{await deleteStoredFile(env,s.replace_old_id,session.resource_id)}catch(e){console.error('published resource old-file cleanup failed',s.replace_old_id,e)}}}
   await cleanupUnreferencedSourceMedia(env,session.resource_id);
   try{await env.DB.prepare('DELETE FROM hub_resource_publish_files WHERE session_id=?').bind(session.id).run()}catch(e){console.error('publish session file cleanup failed',session.id,e)}
@@ -194,12 +197,13 @@ async function finalizeSession(env,sessionId){
 
 async function cancelSession(env,sessionId){
   const session=await sessionRow(env,sessionId);if(!session)return{cancelled:false};
-  const current=await env.DB.prepare('SELECT status FROM hub_resources WHERE id=? LIMIT 1').bind(session.resource_id).first();
-  if(current?.status==='published'){try{await env.DB.prepare('DELETE FROM hub_resource_publish_files WHERE session_id=?').bind(session.id).run()}catch{}try{await env.DB.prepare('DELETE FROM hub_resource_publish_sessions WHERE id=?').bind(session.id).run()}catch{}return{cancelled:false,alreadyPublished:true,id:session.resource_id}}
-  const staged=(await env.DB.prepare('SELECT file_id FROM hub_resource_publish_files WHERE session_id=?').bind(session.id).all()).results||[];
+  const state=parseSessionState(session),staged=(await env.DB.prepare('SELECT file_id FROM hub_resource_publish_files WHERE session_id=?').bind(session.id).all()).results||[];
   for(const s of staged){try{await deleteStoredFile(env,s.file_id,session.resource_id)}catch(e){console.error('staged file cleanup failed',s.file_id,e)}}
-  if(Number(session.was_existing)){let backup=null;try{backup=JSON.parse(session.backup||'null')}catch{}if(backup)await restoreRow(env,backup);else await env.DB.prepare("UPDATE hub_resources SET status='published' WHERE id=?").bind(session.resource_id).run()}
-  else await env.DB.prepare('DELETE FROM hub_resources WHERE id=?').bind(session.resource_id).run();
+  if(state.version===1){
+    const current=await env.DB.prepare('SELECT status FROM hub_resources WHERE id=? LIMIT 1').bind(session.resource_id).first();
+    if(current?.status==='published'){try{await env.DB.prepare('DELETE FROM hub_resource_publish_files WHERE session_id=?').bind(session.id).run()}catch{}try{await env.DB.prepare('DELETE FROM hub_resource_publish_sessions WHERE id=?').bind(session.id).run()}catch{}return{cancelled:false,alreadyPublished:true,id:session.resource_id}}
+    if(Number(session.was_existing)&&state.old)await restoreRow(env,state.old);else if(!Number(session.was_existing))await env.DB.prepare('DELETE FROM hub_resources WHERE id=?').bind(session.resource_id).run();
+  }
   await env.DB.prepare('DELETE FROM hub_resource_publish_files WHERE session_id=?').bind(session.id).run();
   await env.DB.prepare('DELETE FROM hub_resource_publish_sessions WHERE id=?').bind(session.id).run();
   return{cancelled:true,id:session.resource_id};
@@ -231,13 +235,13 @@ export async function publishHubResource(request,env){
 }
 
 export async function deleteHubResourceFile(env,resourceId,fileId){
-  await ensureSchema(env);const row=await env.DB.prepare('SELECT id,is_primary,name FROM hub_resource_files WHERE id=? AND resource_id=? LIMIT 1').bind(fileId,resourceId).first();
+  await ensureSchema(env);const row=await env.DB.prepare('SELECT id,is_primary,name FROM hub_resource_files WHERE id=? AND resource_id=? AND NOT EXISTS(SELECT 1 FROM hub_resource_publish_files sf WHERE sf.file_id=hub_resource_files.id) LIMIT 1').bind(fileId,resourceId).first();
   if(!row)return json({ok:false,error:'FILE_NOT_FOUND'},404);
   try{await deleteStoredFile(env,fileId,resourceId)}catch(e){return json({ok:false,error:String(e?.message||e)},503)}
   if(row.is_primary&&!isExtraMeta(row.name))await ensurePrimary(env,resourceId);return json({ok:true});
 }
 
-export async function setHubResourcePrimary(env,resourceId,fileId){await ensureSchema(env);const row=await env.DB.prepare('SELECT id,name FROM hub_resource_files WHERE id=? AND resource_id=? LIMIT 1').bind(fileId,resourceId).first();if(!row)return json({ok:false,error:'FILE_NOT_FOUND'},404);if(isExtraMeta(row.name))return json({ok:false,error:'EXTRA_IMAGE_CANNOT_BE_PRIMARY'},400);await ensurePrimary(env,resourceId,fileId);return json({ok:true})}
+export async function setHubResourcePrimary(env,resourceId,fileId){await ensureSchema(env);const row=await env.DB.prepare('SELECT id,name FROM hub_resource_files WHERE id=? AND resource_id=? AND NOT EXISTS(SELECT 1 FROM hub_resource_publish_files sf WHERE sf.file_id=hub_resource_files.id) LIMIT 1').bind(fileId,resourceId).first();if(!row)return json({ok:false,error:'FILE_NOT_FOUND'},404);if(isExtraMeta(row.name))return json({ok:false,error:'EXTRA_IMAGE_CANNOT_BE_PRIMARY'},400);await ensurePrimary(env,resourceId,fileId);return json({ok:true})}
 
 export async function deleteHubResource(env,resourceId){
   await ensureSchema(env);const active=await env.DB.prepare('SELECT id FROM hub_resource_publish_sessions WHERE resource_id=? LIMIT 1').bind(resourceId).first();if(active?.id)await cancelSession(env,active.id);
@@ -249,8 +253,8 @@ export async function deleteHubResource(env,resourceId){
 
 export async function listHubResources(env){
   await ensureSchema(env);await cleanupStaleSessions(env);
-  const res=await env.DB.prepare(`SELECT r.*, (SELECT id FROM hub_resource_files f WHERE f.resource_id=r.id AND f.name NOT LIKE '__extra__%' ORDER BY is_primary DESC,created_at ASC LIMIT 1) primary_file_id,(SELECT COUNT(*) FROM hub_resource_files f WHERE f.resource_id=r.id AND f.name NOT LIKE '__extra__%') file_count FROM hub_resources r WHERE status='published' ORDER BY updated_at DESC`).all();
-  const fileRes=await env.DB.prepare(`SELECT f.id,f.resource_id,f.name,f.mime,f.size,f.is_primary,f.external_url,f.storage,f.r2_key FROM hub_resource_files f INNER JOIN hub_resources r ON r.id=f.resource_id WHERE r.status='published' ORDER BY f.is_primary DESC,f.created_at ASC`).all(),filesByResource=new Map();
+  const res=await env.DB.prepare(`SELECT r.*, (SELECT f.id FROM hub_resource_files f WHERE f.resource_id=r.id AND f.name NOT LIKE '__extra__%' AND NOT EXISTS(SELECT 1 FROM hub_resource_publish_files sf WHERE sf.file_id=f.id) ORDER BY f.is_primary DESC,f.created_at ASC LIMIT 1) primary_file_id,(SELECT COUNT(*) FROM hub_resource_files f WHERE f.resource_id=r.id AND f.name NOT LIKE '__extra__%' AND NOT EXISTS(SELECT 1 FROM hub_resource_publish_files sf WHERE sf.file_id=f.id)) file_count FROM hub_resources r WHERE r.status='published' ORDER BY r.updated_at DESC`).all();
+  const fileRes=await env.DB.prepare(`SELECT f.id,f.resource_id,f.name,f.mime,f.size,f.is_primary,f.external_url,f.storage,f.r2_key FROM hub_resource_files f INNER JOIN hub_resources r ON r.id=f.resource_id WHERE r.status='published' AND NOT EXISTS(SELECT 1 FROM hub_resource_publish_files sf WHERE sf.file_id=f.id) ORDER BY f.is_primary DESC,f.created_at ASC`).all(),filesByResource=new Map();
   for(const f of fileRes.results||[]){if(!filesByResource.has(f.resource_id))filesByResource.set(f.resource_id,[]);filesByResource.get(f.resource_id).push({id:f.id,name:f.name,mime:inferMime(f.name,f.mime),size:Number(f.size||0),primary:Boolean(f.is_primary),extra:isExtraMeta(f.name)&&!isSourceMeta(f.name),source:isSourceMeta(f.name),external_url:f.external_url||'',storage:clean(f.storage)||'d1',download_url:`/api/hub-resources/${encodeURIComponent(f.resource_id)}/files/${encodeURIComponent(f.id)}`})}
   const items=(res.results||[]).map(r=>({id:r.id,source_url:r.source_url,type:r.type,title:r.title,creator:{name:r.creator_name,link:r.creator_link},description_short:r.description_short,description_full:r.description_full,additional_info:r.additional_info||'',models:parseJson(r.models),settings:normalizeSettings(parseJson(r.settings)),tags:parseJson(r.tags).filter(x=>clean(x).toLowerCase()!=='magic'),media:parseJson(r.media),primary_file_id:r.primary_file_id||null,file_count:Number(r.file_count||0),files:(filesByResource.get(r.id)||[]).filter(f=>!f.source),source_files:(filesByResource.get(r.id)||[]).filter(f=>f.source),updated_at:r.updated_at}));
   return json({ok:true,resources:items,count:items.length,storage:{r2_available:hasR2(env)}});
@@ -258,7 +262,7 @@ export async function listHubResources(env){
 
 export async function downloadHubFile(env,resourceId,fileId){
   await ensureSchema(env);const published=await env.DB.prepare("SELECT id FROM hub_resources WHERE id=? AND status='published' LIMIT 1").bind(resourceId).first();if(!published)return json({ok:false,error:'RESOURCE_NOT_FOUND'},404);
-  const row=await env.DB.prepare('SELECT id,name,mime,size,data,external_url,storage,r2_key FROM hub_resource_files WHERE id=? AND resource_id=? LIMIT 1').bind(fileId,resourceId).first();if(!row)return json({ok:false,error:'FILE_NOT_FOUND'},404);
+  const row=await env.DB.prepare('SELECT id,name,mime,size,data,external_url,storage,r2_key FROM hub_resource_files WHERE id=? AND resource_id=? AND NOT EXISTS(SELECT 1 FROM hub_resource_publish_files sf WHERE sf.file_id=hub_resource_files.id) LIMIT 1').bind(fileId,resourceId).first();if(!row)return json({ok:false,error:'FILE_NOT_FOUND'},404);
   if(row.external_url)return Response.redirect(row.external_url,302);
   const mime=inferMime(row.name,row.mime),extra=isExtraMeta(row.name),headers=new Headers({'content-type':mime,'cache-control':'public, max-age=86400','x-content-type-options':'nosniff'});
   if(!extra)headers.set('content-disposition',`attachment; filename*=UTF-8''${encodeURIComponent(row.name||'download')}`);

@@ -1,5 +1,6 @@
 import { requireD1Schema } from './d1-schema.js';
 import { adminMenu, answerCb, button, clean, edit, esc, okResponse, send, webhookSecret } from './telegram-admin-shared.js';
+import { showAdminSuggestions } from './telegram-admin-suggestions-view.js';
 
 const short=(s,n=420)=>{s=clean(s).replace(/\s+/g,' ');return s.length>n?s.slice(0,n-1)+'…':s};
 const urlButton=(text,url)=>({text,url});
@@ -50,16 +51,6 @@ async function showDrafts(token,chatId,messageId,env){
   return edit(token,chatId,messageId,`<b>DRAFTS</b>\n\n${rows.length} most recent drafts waiting for review.`,{inline_keyboard:keys});
 }
 
-async function showSuggestions(token,chatId,messageId,env){
-  await ensureDraftSchema(env);
-  const rows=(await env.DB.prepare("SELECT id,url,note,created_at FROM hub_suggestions WHERE status='new' ORDER BY created_at DESC LIMIT 6").all()).results||[];
-  if(!rows.length)return edit(token,chatId,messageId,'<b>COMMUNITY SUGGESTIONS</b>\n\nInbox is empty.',{inline_keyboard:[[button('HOME','adm:home')]]});
-  const keys=rows.map(r=>[button('IMPORT #'+r.id,'sug:import:'+r.id),button('IGNORE','sug:ignore:'+r.id)]);
-  keys.push([button('HOME','adm:home')]);
-  const lines=rows.map(r=>`#${r.id} · ${esc(short(r.url,70))}${r.note?`\n${esc(short(r.note,80))}`:''}`).join('\n\n');
-  return edit(token,chatId,messageId,`<b>COMMUNITY SUGGESTIONS</b>\n\n${lines}`,{inline_keyboard:keys});
-}
-
 export async function tryHandleAdminReadonlyRequest(request,env){
   if(request.method!=='POST')return null;
   const token=clean(env.Node00admin);if(!token)return null;
@@ -74,7 +65,7 @@ export async function tryHandleAdminReadonlyRequest(request,env){
     else if(data==='adm:authors')await showAuthors(token,q.message?.chat?.id,q.message?.message_id,env);
     else if(data==='adm:issues')await showIssues(token,q.message?.chat?.id,q.message?.message_id,env);
     else if(data==='adm:drafts')await showDrafts(token,q.message?.chat?.id,q.message?.message_id,env);
-    else await showSuggestions(token,q.message?.chat?.id,q.message?.message_id,env);
+    else await showAdminSuggestions(token,q.message?.chat?.id,q.message?.message_id,env);
   }catch(e){
     console.error('admin telegram error',e);
     try{const chatId=q.message?.chat?.id;if(chatId)await send(token,chatId,`<b>ADMIN BOT ERROR</b>\n${esc(e.message||e)}`,adminMenu())}catch{}

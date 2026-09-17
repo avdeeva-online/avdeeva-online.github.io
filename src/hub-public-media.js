@@ -10,10 +10,13 @@ const isExtra=name=>clean(name).startsWith('__extra__');
 const mediaUrl=m=>clean(m?.url||m?.src);
 const toBytes=v=>{if(v instanceof Uint8Array)return v;if(v instanceof ArrayBuffer)return new Uint8Array(v);if(ArrayBuffer.isView(v))return new Uint8Array(v.buffer,v.byteOffset,v.byteLength);if(Array.isArray(v))return Uint8Array.from(v);return new Uint8Array(0)};
 const hasR2=env=>Boolean(env?.HUB_FILES&&typeof env.HUB_FILES.get==='function');
+let storageReady=null;
+async function ensureStorageColumns(env){if(storageReady)return storageReady;storageReady=(async()=>{try{await env.DB.prepare(`ALTER TABLE hub_resource_files ADD COLUMN storage TEXT NOT NULL DEFAULT 'd1'`).run()}catch{}try{await env.DB.prepare(`ALTER TABLE hub_resource_files ADD COLUMN r2_key TEXT NOT NULL DEFAULT ''`).run()}catch{}await env.DB.prepare(`UPDATE hub_resource_files SET storage='remote' WHERE external_url!='' AND (storage='' OR storage='d1')`).run()})();try{await storageReady}catch(e){storageReady=null;throw e}return storageReady}
 function fileUrls(resourceId,fileId){const base=`/api/hub-resources/${encodeURIComponent(resourceId)}/files/${encodeURIComponent(fileId)}`;return{attachment_url:base,view_url:`${base}?view=1`}}
 
 export async function listHubResourcesPublic(env){
   try{
+    await ensureStorageColumns(env);
     const res=await env.DB.prepare(`SELECT r.* FROM hub_resources r WHERE r.status='published' ORDER BY r.updated_at DESC`).all();
     const fileRes=await env.DB.prepare(`SELECT f.id,f.resource_id,f.name,f.mime,f.size,f.is_primary,f.external_url,f.storage,f.r2_key,f.created_at FROM hub_resource_files f INNER JOIN hub_resources r ON r.id=f.resource_id WHERE r.status='published' ORDER BY f.is_primary DESC,f.created_at ASC`).all();
     const byResource=new Map();
@@ -36,6 +39,7 @@ export async function listHubResourcesPublic(env){
 
 export async function downloadHubFilePublic(request,env,resourceId,fileId){
   try{
+    await ensureStorageColumns(env);
     const row=await env.DB.prepare(`SELECT f.id,f.name,f.mime,f.size,f.data,f.external_url,f.storage,f.r2_key FROM hub_resource_files f INNER JOIN hub_resources r ON r.id=f.resource_id WHERE f.id=? AND f.resource_id=? AND r.status='published' LIMIT 1`).bind(fileId,resourceId).first();
     if(!row)return json({ok:false,error:'FILE_NOT_FOUND'},404);
     if(row.external_url)return Response.redirect(row.external_url,302);

@@ -6,7 +6,10 @@
     "check:audit": "node scripts/audit.mjs",
     "check:js": "find src public -type f -name '*.js' -print0 | xargs -0 -n1 node --check",
     "check:worker": "wrangler deploy --dry-run --outdir .wrangler-dist",
-    "check": "npm run check:audit && npm run check:js && npm run check:worker"
+    "check": "npm run check:audit && npm run check:js && npm run check:worker",
+    "db:migrations:list": "wrangler d1 migrations list archive-characters --remote",
+    "db:migrate:local": "wrangler d1 migrations apply archive-characters --local",
+    "db:migrate:remote": "wrangler d1 migrations apply archive-characters --remote"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"

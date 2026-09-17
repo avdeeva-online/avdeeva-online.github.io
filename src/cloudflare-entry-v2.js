@@ -1,5 +1,5 @@
 import app from './cloudflare-entry.js';
-import { handleAdminTelegramFixed } from './telegram-admin-fixed.js';
+import { handleAdminTelegramRoute } from './telegram-admin-router.js';
 import { handlePublicTelegramFull } from './telegram-public-bot.js';
 import { serveTelegramDraftMedia } from './telegram-media.js';
 import { listHubResourcesPublic, listHubResourcesSummaryPublic, getHubResourcePublic, downloadHubFilePublic, hubMediaAudit } from './hub-public-media.js';
@@ -10,7 +10,7 @@ import { guardAdminApi } from './admin-auth.js';
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 export default {async fetch(request,env,ctx){
   const url=new URL(request.url),blocked=guardAdminApi(request,env,url);if(blocked)return blocked;
-  if(url.pathname==='/telegram/admin')return handleAdminTelegramFixed(request,env);
+  if(url.pathname==='/telegram/admin')return handleAdminTelegramRoute(request,env);
   if(url.pathname==='/telegram/public')return handlePublicTelegramFull(request,env);
   const mediaMatch=url.pathname.match(/^\/api\/admin\/hub-telegram-media\/([^/]+)\/(\d+)$/);
   if(mediaMatch)return serveTelegramDraftMedia(request,env,decodeURIComponent(mediaMatch[1]),mediaMatch[2]);

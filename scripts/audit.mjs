@@ -90,5 +90,19 @@ if(exists('src/lorebook-cleanup.js')){const l=read('src/lorebook-cleanup.js');fo
 const characterAdmin=read('src/character-admin.js');
 fail(characterAdmin.includes('cleanupDetachedLorebooks'),'src/character-admin.js: character delete must use targeted lorebook cleanup');
 
+fail(exists('src/lorebook-universe-repair.js'),'src/lorebook-universe-repair.js: targeted universe repair helper missing');
+if(exists('src/lorebook-universe-repair.js')){
+  const repair=read('src/lorebook-universe-repair.js');
+  for(const marker of ['repairAffectedLorebookUniverses','repairAllLorebookUniverses','_archive_previous_source','hub','character_lorebooks','WHERE janitor_uuid=?','targets.has','cleared'])fail(repair.includes(marker),`src/lorebook-universe-repair.js: repair contract missing ${marker}`);
+  fail(!/UPDATE characters SET[^;]+WHERE janitor_uuid=\?/s.test(repair),'src/lorebook-universe-repair.js: character repairs must stay UUID-targeted');
+}
+const sourceTruth=read('src/source-truth.js');
+for(const marker of ["from './lorebook-universe-repair.js'",'affectedLorebookIds','repairAffectedLorebookUniverses(env,uuid','repairAllLorebookUniverses(env)'])fail(sourceTruth.includes(marker),`src/source-truth.js: lorebook universe repair integration missing ${marker}`);
+const refreshStart=sourceTruth.indexOf('async function refreshOne(env,uuid)');
+const auditStart=sourceTruth.indexOf('async function auditStats(env)');
+const refreshBody=refreshStart>=0&&auditStart>refreshStart?sourceTruth.slice(refreshStart,auditStart):'';
+fail(refreshBody.includes('repairAffectedLorebookUniverses'),'src/source-truth.js: refreshOne must use targeted universe repair');
+fail(!refreshBody.includes('repairUniversesFromLorebooks(env)'),'src/source-truth.js: refreshOne still invokes global universe repair');
+
 if(errors.length){console.error('\nARCHIVE.EXE audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
 console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + bounded scans + zero runtime D1 DDL checked`);

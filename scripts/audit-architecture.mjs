@@ -63,7 +63,7 @@ if(exists('src/telegram-admin-stats.js')){
 fail(exists('src/telegram-admin-readonly.js'),'src/telegram-admin-readonly.js: extracted read-only admin views missing');
 if(exists('src/telegram-admin-readonly.js')){
   const readonly=read('src/telegram-admin-readonly.js');
-  for(const marker of ["from './telegram-admin-shared.js'",'tryHandleAdminReadonlyRequest','adm:hub','adm:authors','adm:issues',"SELECT id,title,type,creator_name FROM hub_resources WHERE status='published'","SELECT creator_name,COUNT(*) n FROM hub_resources WHERE status='published' AND creator_name!=''",'hub_resource_publish_files sf','NO DOWNLOAD FILE','OPEN HUB ↗','<b>AUTHORS</b>','<b>HUB ISSUES</b>'])fail(readonly.includes(marker),`src/telegram-admin-readonly.js: read-only view behavior missing ${marker}`);
+  for(const marker of ["from './telegram-admin-shared.js'","from './d1-schema.js'",'tryHandleAdminReadonlyRequest','adm:hub','adm:authors','adm:issues','adm:drafts',"SELECT id,title,type,creator_name FROM hub_resources WHERE status='published'","SELECT creator_name,COUNT(*) n FROM hub_resources WHERE status='published' AND creator_name!=''",'hub_resource_publish_files sf','NO DOWNLOAD FILE',"SELECT id,source_url,payload,status,updated_at FROM telegram_admin_drafts WHERE status='review' ORDER BY updated_at DESC LIMIT 8",'telegram_admin_import_session','hub_suggestions','draft:view:','No drafts waiting for review.','OPEN HUB ↗','<b>AUTHORS</b>','<b>HUB ISSUES</b>'])fail(readonly.includes(marker),`src/telegram-admin-readonly.js: read-only view behavior missing ${marker}`);
   for(const marker of ['INSERT ','UPDATE ','DELETE ','ALTER TABLE','CREATE TABLE'])fail(!readonly.includes(marker),`src/telegram-admin-readonly.js: read-only handler contains write/DDL marker ${marker}`);
 }
 
@@ -74,7 +74,7 @@ if(exists('src/telegram-admin-fixed.js')&&exists('src/telegram-bots.js')){
   const legacy=read('src/telegram-bots.js');
   fail(fixed.includes("import { handleAdminTelegram } from './telegram-bots.js'"),'src/telegram-admin-fixed.js: expected legacy fallback boundary missing');
   for(const marker of ['adm:import','session:new','session:finish','session:resume:','draft:view:','draft:publish:','draft:delete:'])fail(fixed.includes(marker),`src/telegram-admin-fixed.js: fixed session callback missing ${marker}`);
-  for(const marker of ['adm:drafts','adm:suggestions','draft:reanalyze:','sug:ignore:','sug:import:'])fail(legacy.includes(marker),`src/telegram-bots.js: expected legacy fallback callback missing ${marker}`);
+  for(const marker of ['adm:suggestions','draft:reanalyze:','sug:ignore:','sug:import:'])fail(legacy.includes(marker),`src/telegram-bots.js: expected legacy fallback callback missing ${marker}`);
 }
 
 const entry=read('src/entry.js');
@@ -89,4 +89,4 @@ const media=read('src/hub-public-media.js');
 for(const marker of ['listHubResourcesSummaryPublic','getHubResourcePublic'])fail(media.includes(marker),`src/hub-public-media.js: progressive HUB API missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE architecture audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + fixed/legacy callback boundary + progressive HUB + dead-route removal checked');
+console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts listing + fixed/legacy callback boundary + progressive HUB + dead-route removal checked');

@@ -2,21 +2,12 @@ import { handleAdminTelegram } from './telegram-bots.js';
 import { analyzeTelegramPost } from './hub-telegram.js';
 import { telegramDraftsAdmin } from './telegram-drafts-admin.js';
 import { requireD1Schema } from './d1-schema.js';
+import { answerCb, button, clean, edit, esc, okResponse, send, webhookSecret } from './telegram-admin-shared.js';
 
-const clean=v=>String(v??'').trim();
 const short=(s,n=420)=>{s=clean(s).replace(/\s+/g,' ');return s.length>n?s.slice(0,n-1)+'…':s};
-const esc=s=>clean(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const uniqBy=(items,key)=>{const seen=new Set();return(items||[]).filter(x=>{const k=key(x);if(!k||seen.has(k))return false;seen.add(k);return true})};
 
-async function sha256Hex(value){const bytes=new TextEncoder().encode(value),hash=await crypto.subtle.digest('SHA-256',bytes);return[...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-async function webhookSecret(token){return(await sha256Hex(`admin|${token}`)).slice(0,48)}
-async function tg(token,method,payload={}){const r=await fetch(`https://api.telegram.org/bot${token}/${method}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)}),d=await r.json().catch(()=>({ok:false,description:`HTTP_${r.status}`}));if(!r.ok||!d.ok)throw new Error(d.description||`TELEGRAM_${method}_FAILED`);return d.result}
-const button=(text,callback_data)=>({text,callback_data});
 const urlButton=(text,url)=>({text,url});
-async function send(token,chatId,text,reply_markup){return tg(token,'sendMessage',{chat_id:chatId,text,parse_mode:'HTML',disable_web_page_preview:true,...(reply_markup?{reply_markup}:{})})}
-async function edit(token,chatId,messageId,text,reply_markup){try{return await tg(token,'editMessageText',{chat_id:chatId,message_id:messageId,text,parse_mode:'HTML',disable_web_page_preview:true,...(reply_markup?{reply_markup}:{})})}catch{return send(token,chatId,text,reply_markup)}}
-async function answerCb(token,id,text=''){try{await tg(token,'answerCallbackQuery',{callback_query_id:id,...(text?{text}:{})})}catch{}}
-const okResponse=()=>new Response(JSON.stringify({ok:true}),{headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const ensureSchema=env=>requireD1Schema(env,'telegram-admin-session',`SELECT
   (SELECT COUNT(*) FROM telegram_admin_drafts) AS drafts,
   (SELECT COUNT(*) FROM telegram_admin_import_session WHERE last_post_id IS NOT NULL OR 1=1) AS sessions`);

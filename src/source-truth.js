@@ -1,5 +1,6 @@
 import app from './main.js';
 import {cleanUniverse,inferSettingIds,jsonArray,normalizeUniverses,resolveUniverseRows,settingLabels} from './discovery.js';
+import { requireD1Schema } from './d1-schema.js';
 
 function json(data,status=200,headers={}){return new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store',...headers}})}
 function arr(v){try{const x=JSON.parse(v||'[]');return Array.isArray(x)?x:[]}catch{return[]}}
@@ -22,27 +23,12 @@ function lorebooksFrom(c){return lorebookMetaFrom(c).filter(s=>typeof s.script==
 function dcHeaders(env){return{'accept':'application/json','x-device-token':env.DATACAT_DEVICE_TOKEN||'','x-session-token':env.DATACAT_SESSION_TOKEN||'','user-agent':'ARCHIVE.EXE/source-truth-3.2'}}
 async function dcModal(env,uuid){const r=await fetch(`https://datacat.run/api/characters/recent-public/${encodeURIComponent(uuid)}?view=modal&sourceKind=janitor`,{headers:dcHeaders(env),redirect:'follow'});const text=await r.text();let data=null;try{data=JSON.parse(text)}catch{}if(!r.ok)return{ok:false,status:r.status,error:text.slice(0,300)};const c=data?.character;return c&&typeof c==='object'?{ok:true,c}:{ok:false,status:502,error:'NO_CHARACTER_OBJECT'}}
 async function sha256Hex(text){const bytes=new TextEncoder().encode(text),hash=new Uint8Array(await crypto.subtle.digest('SHA-256',bytes));return[...hash].map(b=>b.toString(16).padStart(2,'0')).join('')}
-let schemaReady=null;
-const SCHEMA_VERSION='source-truth-v5';
-async function ensureSchema(env){
-  if(schemaReady)return schemaReady;
-  schemaReady=(async()=>{
-    try{const row=await env.DB.prepare('SELECT version FROM archive_schema WHERE version=? LIMIT 1').bind(SCHEMA_VERSION).first();if(row?.version)return}catch{}
-    await env.DB.prepare('CREATE TABLE IF NOT EXISTS archive_schema (version TEXT PRIMARY KEY,applied_at TEXT DEFAULT CURRENT_TIMESTAMP)').run();
-    for(const sql of[
-      'ALTER TABLE characters ADD COLUMN lorebook_title TEXT','ALTER TABLE characters ADD COLUMN universe_source_field TEXT','ALTER TABLE characters ADD COLUMN universes TEXT','ALTER TABLE characters ADD COLUMN setting_ids TEXT','ALTER TABLE characters ADD COLUMN setting_source TEXT',
-      `CREATE TABLE IF NOT EXISTS lorebooks (id TEXT PRIMARY KEY,title TEXT NOT NULL DEFAULT '',script TEXT NOT NULL DEFAULT '',author TEXT DEFAULT '',source TEXT DEFAULT 'datacat',created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
-      'ALTER TABLE lorebooks ADD COLUMN content_hash TEXT','ALTER TABLE lorebooks ADD COLUMN source_identity TEXT',
-      `CREATE TABLE IF NOT EXISTS lorebook_blobs (content_hash TEXT PRIMARY KEY,script TEXT NOT NULL,created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
-      `CREATE TABLE IF NOT EXISTS lorebook_sources (source_identity TEXT PRIMARY KEY,lorebook_id TEXT NOT NULL,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
-      `CREATE TABLE IF NOT EXISTS character_lorebooks (character_uuid TEXT NOT NULL,lorebook_id TEXT NOT NULL,ordinal INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(character_uuid,lorebook_id))`,
-      'CREATE INDEX IF NOT EXISTS idx_character_lorebooks_character ON character_lorebooks(character_uuid)','CREATE INDEX IF NOT EXISTS idx_character_lorebooks_lorebook ON character_lorebooks(lorebook_id)','CREATE INDEX IF NOT EXISTS idx_lorebooks_content_hash ON lorebooks(content_hash)','CREATE INDEX IF NOT EXISTS idx_lorebook_sources_lorebook ON lorebook_sources(lorebook_id)'
-    ]){try{await env.DB.prepare(sql).run()}catch(e){if(!/duplicate column|already exists/i.test(String(e?.message||e)))throw e}}
-    await env.DB.prepare('INSERT OR REPLACE INTO archive_schema(version,applied_at) VALUES(?,CURRENT_TIMESTAMP)').bind(SCHEMA_VERSION).run();
-  })();
-  try{await schemaReady}catch(e){schemaReady=null;throw e}
-  return schemaReady;
-}
+const ensureSchema=env=>requireD1Schema(env,'source-truth',`SELECT
+  (SELECT COUNT(*) FROM characters WHERE lorebook_title IS NOT NULL OR universe_source_field IS NOT NULL OR universes IS NOT NULL OR setting_ids IS NOT NULL OR setting_source IS NOT NULL OR 1=1) AS characters_ok,
+  (SELECT COUNT(*) FROM lorebooks WHERE content_hash IS NOT NULL OR source_identity IS NOT NULL OR 1=1) AS lorebooks_ok,
+  (SELECT COUNT(*) FROM lorebook_blobs) AS blobs_ok,
+  (SELECT COUNT(*) FROM lorebook_sources) AS sources_ok,
+  (SELECT COUNT(*) FROM character_lorebooks) AS links_ok`);
 async function resolveLorebookEntityId(env,b,contentHash){if(b.sourceIdentity){const mapped=await env.DB.prepare('SELECT lorebook_id FROM lorebook_sources WHERE source_identity=? LIMIT 1').bind(b.sourceIdentity).first();if(mapped?.lorebook_id)return{id:String(mapped.lorebook_id),identityMode:'source-id-existing'};return{id:(await sha256Hex(`datacat:${b.sourceIdentity}`)).slice(0,32),identityMode:'source-id-new'}}const existing=await env.DB.prepare(`SELECT id FROM lorebooks WHERE (source_identity IS NULL OR source_identity='') AND content_hash=? AND title=? LIMIT 1`).bind(contentHash,b.title).first();if(existing?.id)return{id:String(existing.id),identityMode:'content-fallback-existing'};return{id:(await sha256Hex(`fallback:${contentHash}:${b.title}`)).slice(0,32),identityMode:'content-fallback-new'}}
 async function cleanupOrphans(env){await env.DB.prepare('DELETE FROM lorebooks WHERE id NOT IN (SELECT DISTINCT lorebook_id FROM character_lorebooks)').run();await env.DB.prepare('DELETE FROM lorebook_sources WHERE lorebook_id NOT IN (SELECT id FROM lorebooks)').run();await env.DB.prepare("DELETE FROM lorebook_blobs WHERE content_hash NOT IN (SELECT DISTINCT content_hash FROM lorebooks WHERE content_hash IS NOT NULL AND content_hash != '')").run()}
 async function syncLorebooks(env,c,uuid){await ensureSchema(env);const books=lorebooksFrom(c),author=clean(c?.creator_name||c?.creatorName),saved=[];for(const b of books){const contentHash=await sha256Hex(b.script),resolved=await resolveLorebookEntityId(env,b,contentHash),id=resolved.id;await env.DB.prepare(`INSERT INTO lorebook_blobs(content_hash,script,updated_at) VALUES(?,?,CURRENT_TIMESTAMP) ON CONFLICT(content_hash) DO UPDATE SET script=excluded.script,updated_at=CURRENT_TIMESTAMP`).bind(contentHash,b.script).run();await env.DB.prepare(`INSERT INTO lorebooks(id,title,script,author,source,content_hash,source_identity,updated_at) VALUES(?,?, '',?, 'datacat',?,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET title=excluded.title,script='',author=excluded.author,content_hash=excluded.content_hash,source_identity=CASE WHEN excluded.source_identity!='' THEN excluded.source_identity ELSE lorebooks.source_identity END,updated_at=CURRENT_TIMESTAMP`).bind(id,b.title,author,contentHash,b.sourceIdentity).run();if(b.sourceIdentity)await env.DB.prepare(`INSERT INTO lorebook_sources(source_identity,lorebook_id,updated_at) VALUES(?,?,CURRENT_TIMESTAMP) ON CONFLICT(source_identity) DO UPDATE SET lorebook_id=excluded.lorebook_id,updated_at=CURRENT_TIMESTAMP`).bind(b.sourceIdentity,id).run();saved.push({id,title:b.title,ordinal:b.index,contentHash,sourceIdentity:b.sourceIdentity||null,identityMode:resolved.identityMode})}const statements=[env.DB.prepare('DELETE FROM character_lorebooks WHERE character_uuid=?').bind(uuid),...saved.map(b=>env.DB.prepare('INSERT INTO character_lorebooks(character_uuid,lorebook_id,ordinal) VALUES(?,?,?)').bind(uuid,b.id,b.ordinal))];await env.DB.batch(statements);await cleanupOrphans(env);return saved}

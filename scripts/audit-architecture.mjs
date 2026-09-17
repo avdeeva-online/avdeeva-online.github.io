@@ -82,6 +82,8 @@ if(exists('src/telegram-admin-fixed.js')&&exists('src/telegram-bots.js')){
   const fixed=read('src/telegram-admin-fixed.js');
   const legacy=read('src/telegram-bots.js');
   fail(fixed.includes("import { handleAdminTelegram } from './telegram-bots.js'"),'src/telegram-admin-fixed.js: expected legacy fallback boundary missing');
+  fail(fixed.includes("from './telegram-admin-shared.js'"),'src/telegram-admin-fixed.js: shared Telegram transport not imported');
+  for(const marker of ['function webhookSecret','function tg(','function send(','function edit(','function answerCb','const clean=','const esc='])fail(!fixed.includes(marker),`src/telegram-admin-fixed.js: duplicate shared Telegram primitive returned ${marker}`);
   for(const marker of ['adm:import','session:new','session:finish','session:resume:','draft:view:','draft:publish:','draft:delete:'])fail(fixed.includes(marker),`src/telegram-admin-fixed.js: fixed session callback missing ${marker}`);
   for(const marker of ['draft:reanalyze:','sug:ignore:','sug:import:'])fail(legacy.includes(marker),`src/telegram-bots.js: expected legacy mutating callback missing ${marker}`);
 }

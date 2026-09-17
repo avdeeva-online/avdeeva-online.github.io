@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "check:audit": "node scripts/audit.mjs && node scripts/audit-architecture.mjs",
+    "check:audit": "node scripts/audit.mjs && node scripts/audit-architecture.mjs && node scripts/audit-migrations.mjs",
     "check:js": "find src public -type f -name '*.js' -print0 | xargs -0 -n1 node --check",
     "check:worker": "wrangler deploy --dry-run --outdir .wrangler-dist",
     "check": "npm run check:audit && npm run check:js && npm run check:worker",

@@ -1,15 +1,10 @@
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 
+let schemaReady=null;
 async function ensureTable(env){
-  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS hub_suggestions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    url TEXT NOT NULL,
-    note TEXT NOT NULL DEFAULT '',
-    status TEXT NOT NULL DEFAULT 'new',
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  )`).run();
-  await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_hub_suggestions_status_created ON hub_suggestions(status, created_at DESC)').run();
+  if(schemaReady)return schemaReady;
+  schemaReady=env.DB.prepare('SELECT id FROM hub_suggestions LIMIT 1').first().then(()=>true).catch(e=>{schemaReady=null;throw new Error(`D1_MIGRATION_REQUIRED: hub_suggestions: ${String(e?.message||e)}`)});
+  return schemaReady;
 }
 
 function normalizeUrl(raw){

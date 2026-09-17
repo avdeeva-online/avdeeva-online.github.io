@@ -3,7 +3,7 @@ import { analyzeTelegramPost } from './hub-telegram.js';
 import { publishHubResource, deleteHubResourceFile, setHubResourcePrimary, deleteHubResource } from './hub-resources.js';
 import { listAdminCharacters, updateAdminCharacter, deleteAdminCharacter } from './character-admin.js';
 import { submitHubSuggestion, listHubSuggestions, updateHubSuggestion } from './hub-suggestions.js';
-import { setupTelegramWebhooks, telegramWebhookStatus } from './telegram-bots.js';
+import { setupTelegramWebhooks, telegramWebhookStatus } from './telegram-webhooks.js';
 import { telegramDraftsAdmin } from './telegram-drafts-admin.js';
 import { guardAdminApi } from './admin-auth.js';
 

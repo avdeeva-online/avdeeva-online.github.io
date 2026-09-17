@@ -1,24 +1,19 @@
 import app from './source-truth.js';
+import { requireD1Schema } from './d1-schema.js';
 
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
 const key=v=>clean(v).toLocaleLowerCase();
 const uniq=values=>{const out=[],seen=new Set();for(const raw of values||[]){const v=clean(raw),k=key(v);if(!v||seen.has(k))continue;seen.add(k);out.push(v)}return out};
 const parseJsonArray=v=>{try{const x=JSON.parse(v||'[]');return Array.isArray(x)?x:[]}catch{return[]}};
 const json=(data,status=200)=>new Response(JSON.stringify(data,null,2),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
+const ensureSchema=env=>requireD1Schema(env,'universe-curation','SELECT source_key,source_value,public_universes,parent_universe,subuniverse,active,note,updated_at FROM universe_curation LIMIT 1');
+const REGISTRY_CACHE_MS=60000;
+let registryCache=null,registryCachedAt=0;
+const invalidateRegistry=()=>{registryCache=null;registryCachedAt=0};
 
-let schemaReady=null;
-async function ensureSchema(env){
-  if(schemaReady)return schemaReady;
-  schemaReady=(async()=>{
-    try{await env.DB.prepare('SELECT source_key,source_value,public_universes,parent_universe,subuniverse,active,note,updated_at FROM universe_curation LIMIT 1').first()}
-    catch(e){throw new Error(`D1_MIGRATION_REQUIRED:${String(e?.message||e)}`)}
-  })();
-  try{await schemaReady}catch(e){schemaReady=null;throw e}
-  return schemaReady;
-}
-
-async function loadRegistry(env){
+async function loadRegistry(env,{fresh=false}={}){
   await ensureSchema(env);
+  if(!fresh&&registryCache&&Date.now()-registryCachedAt<REGISTRY_CACHE_MS)return registryCache;
   const res=await env.DB.prepare(`SELECT source_key,source_value,public_universes,parent_universe,subuniverse,active,note,updated_at FROM universe_curation ORDER BY source_value COLLATE NOCASE`).all();
   const rows=Array.isArray(res?.results)?res.results:[];
   const rules=new Map(),canonicalCase=new Map();
@@ -30,7 +25,7 @@ async function loadRegistry(env){
     if(parsed.parent)canonicalCase.set(key(parsed.parent),parsed.parent);
     if(parsed.sub)canonicalCase.set(key(parsed.sub),parsed.sub);
   }
-  return{rows,rules,canonicalCase};
+  registryCache={rows,rules,canonicalCase};registryCachedAt=Date.now();return registryCache;
 }
 
 function curateValues(values,registry,{manual=false}={}){
@@ -120,17 +115,17 @@ async function mutateAdminRegistry(request,env){
       VALUES(?,?,?,?,?,1,?,CURRENT_TIMESTAMP)
       ON CONFLICT(source_key) DO UPDATE SET source_value=excluded.source_value,public_universes=excluded.public_universes,parent_universe=excluded.parent_universe,subuniverse=excluded.subuniverse,active=1,note=excluded.note,updated_at=CURRENT_TIMESTAMP`)
       .bind(key(source),source,JSON.stringify(publicUniverses),parent,sub,note).run();
-    return json({ok:true,action,source,publicUniverses,parentUniverse:parent,subuniverse:sub});
+    invalidateRegistry();return json({ok:true,action,source,publicUniverses,parentUniverse:parent,subuniverse:sub});
   }
   if(action==='toggle'){
     const source=clean(body?.source);if(!source)return json({ok:false,error:'SOURCE_REQUIRED'},400);
     await env.DB.prepare(`UPDATE universe_curation SET active=CASE WHEN active=1 THEN 0 ELSE 1 END,updated_at=CURRENT_TIMESTAMP WHERE source_key=?`).bind(key(source)).run();
-    return json({ok:true,action,source});
+    invalidateRegistry();return json({ok:true,action,source});
   }
   if(action==='delete'){
     const source=clean(body?.source);if(!source)return json({ok:false,error:'SOURCE_REQUIRED'},400);
     await env.DB.prepare('DELETE FROM universe_curation WHERE source_key=?').bind(key(source)).run();
-    return json({ok:true,action,source});
+    invalidateRegistry();return json({ok:true,action,source});
   }
   return json({ok:false,error:'UNKNOWN_ACTION'},400);
 }

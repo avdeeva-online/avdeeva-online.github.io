@@ -72,8 +72,15 @@ if(exists('src/telegram-admin-stats.js')){
 fail(exists('src/telegram-admin-readonly.js'),'src/telegram-admin-readonly.js: extracted read-only admin views missing');
 if(exists('src/telegram-admin-readonly.js')){
   const readonly=read('src/telegram-admin-readonly.js');
-  for(const marker of ["from './telegram-admin-shared.js'","from './d1-schema.js'",'tryHandleAdminReadonlyRequest','adm:hub','adm:authors','adm:issues','adm:drafts','adm:suggestions',"SELECT id,title,type,creator_name FROM hub_resources WHERE status='published'","SELECT creator_name,COUNT(*) n FROM hub_resources WHERE status='published' AND creator_name!=''",'hub_resource_publish_files sf','NO DOWNLOAD FILE',"SELECT id,source_url,payload,status,updated_at FROM telegram_admin_drafts WHERE status='review' ORDER BY updated_at DESC LIMIT 8", "SELECT id,url,note,created_at FROM hub_suggestions WHERE status='new' ORDER BY created_at DESC LIMIT 6",'telegram_admin_import_session','hub_suggestions','draft:view:','sug:import:','sug:ignore:','No drafts waiting for review.','Inbox is empty.','OPEN HUB ↗','<b>AUTHORS</b>','<b>HUB ISSUES</b>','<b>COMMUNITY SUGGESTIONS</b>'])fail(readonly.includes(marker),`src/telegram-admin-readonly.js: read-only view behavior missing ${marker}`);
+  for(const marker of ["from './telegram-admin-shared.js'","from './d1-schema.js'","from './telegram-admin-suggestions-view.js'",'tryHandleAdminReadonlyRequest','adm:hub','adm:authors','adm:issues','adm:drafts','adm:suggestions',"SELECT id,title,type,creator_name FROM hub_resources WHERE status='published'","SELECT creator_name,COUNT(*) n FROM hub_resources WHERE status='published' AND creator_name!=''",'hub_resource_publish_files sf','NO DOWNLOAD FILE',"SELECT id,source_url,payload,status,updated_at FROM telegram_admin_drafts WHERE status='review' ORDER BY updated_at DESC LIMIT 8",'telegram_admin_import_session','draft:view:','showAdminSuggestions','No drafts waiting for review.','OPEN HUB ↗','<b>AUTHORS</b>','<b>HUB ISSUES</b>'])fail(readonly.includes(marker),`src/telegram-admin-readonly.js: read-only view behavior missing ${marker}`);
   for(const marker of ['INSERT ','UPDATE ','DELETE ','ALTER TABLE','CREATE TABLE'])fail(!readonly.includes(marker),`src/telegram-admin-readonly.js: read-only handler contains write/DDL marker ${marker}`);
+}
+
+fail(exists('src/telegram-admin-suggestions-view.js'),'src/telegram-admin-suggestions-view.js: shared suggestions view missing');
+if(exists('src/telegram-admin-suggestions-view.js')){
+  const suggestionsView=read('src/telegram-admin-suggestions-view.js');
+  for(const marker of ["from './d1-schema.js'","from './telegram-admin-shared.js'",'showAdminSuggestions',"SELECT id,url,note,created_at FROM hub_suggestions WHERE status='new' ORDER BY created_at DESC LIMIT 6",'sug:import:','sug:ignore:','Inbox is empty.','<b>COMMUNITY SUGGESTIONS</b>'])fail(suggestionsView.includes(marker),`src/telegram-admin-suggestions-view.js: suggestions view contract missing ${marker}`);
+  for(const marker of ['INSERT ','UPDATE ','DELETE ','ALTER TABLE','CREATE TABLE'])fail(!suggestionsView.includes(marker),`src/telegram-admin-suggestions-view.js: read-only suggestions view contains write/DDL marker ${marker}`);
 }
 
 fail(exists('src/telegram-admin-fixed.js'),'src/telegram-admin-fixed.js: fixed admin Telegram handler missing');
@@ -84,8 +91,7 @@ if(exists('src/telegram-admin-fixed.js')&&exists('src/telegram-bots.js')){
   fail(fixed.includes("import { handleAdminTelegram } from './telegram-bots.js'"),'src/telegram-admin-fixed.js: expected legacy fallback boundary missing');
   fail(fixed.includes("from './telegram-admin-shared.js'"),'src/telegram-admin-fixed.js: shared Telegram transport not imported');
   for(const marker of ['function webhookSecret','function tg(','function send(','function edit(','function answerCb','const clean=','const esc='])fail(!fixed.includes(marker),`src/telegram-admin-fixed.js: duplicate shared Telegram primitive returned ${marker}`);
-  for(const marker of ['adm:import','session:new','session:finish','session:resume:','draft:view:','draft:reanalyze:','draft:publish:','draft:delete:'])fail(fixed.includes(marker),`src/telegram-admin-fixed.js: fixed session callback missing ${marker}`);
-  for(const marker of ['sug:ignore:','sug:import:'])fail(legacy.includes(marker),`src/telegram-bots.js: expected legacy mutating callback missing ${marker}`);
+  for(const marker of ['adm:import','session:new','session:finish','session:resume:','draft:view:','draft:reanalyze:','draft:publish:','draft:delete:','sug:ignore:','sug:import:',"status='ignored'","status='reviewing'",'showAdminSuggestions'])fail(fixed.includes(marker),`src/telegram-admin-fixed.js: fixed callback/action missing ${marker}`);
 }
 
 const entry=read('src/entry.js');

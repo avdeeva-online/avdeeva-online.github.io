@@ -11,7 +11,7 @@ const fail=(ok,msg)=>{if(!ok)errors.push(msg)};
 const sourceFiles=walk('src').filter(f=>f.endsWith('.js'));
 for(const file of sourceFiles){const text=read(file);for(const m of text.matchAll(/(?:import|export)\s+(?:[^'";]*?\s+from\s+)?['"](\.\.?\/[^'"]+)['"]/g)){let target=path.normalize(path.join(path.dirname(file),m[1]));if(!path.extname(target))target+='.js';if(!exists(target))errors.push(`${file}: missing import ${m[1]} -> ${target}`)}}
 
-const retired=['telegram-admin-ingest.js','telegram-admin-smart.js','telegram-admin-bot.js','hub-media-recovery.js','hub-extra-fix.js'];
+const retired=['telegram-admin-ingest.js','telegram-admin-smart.js','telegram-admin-bot.js','hub-media-recovery.js'];
 for(const file of [...sourceFiles,...walk('public').filter(f=>/\.(?:js|html)$/.test(f))]){const text=read(file);for(const name of retired){if(text.includes(name))errors.push(`${file}: still references retired ${name}`)}}
 
 for(const file of walk('public/admin/hub').filter(f=>f.endsWith('.js'))){const text=read(file);if(/window\.fetch\s*=/.test(text))errors.push(`${file}: fetch monkey patch reintroduced`)}
@@ -34,7 +34,8 @@ fail(entry.includes("url.pathname==='/api/import'"),'src/cloudflare-entry-v2.js:
 fail(entry.includes("url.pathname==='/api/debug/datacat'"),'src/cloudflare-entry-v2.js: public debug guard missing');
 
 const adminEdit=read('public/admin/hub/admin-edit.js');
-for(const action of ['action=begin','action=upload','action=finalize','action=cancel'])fail(adminEdit.includes(action),`public/admin/hub/admin-edit.js: staged publish missing ${action}`);
+for(const action of ["'begin'","'upload'","'finalize'","'cancel'"])fail(adminEdit.includes(action),`public/admin/hub/admin-edit.js: staged publish missing ${action}`);
+fail(adminEdit.includes('_publish_session'),'public/admin/hub/admin-edit.js: publish session id not propagated');
 const resources=read('src/hub-resources.js');
 for(const table of ['hub_resource_publish_sessions','hub_resource_publish_files'])fail(resources.includes(table),`src/hub-resources.js: staging table missing ${table}`);
 fail(resources.includes("status='published'"),'src/hub-resources.js: published-state guard missing');

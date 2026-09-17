@@ -275,35 +275,3 @@ export async function downloadHubFile(env,resourceId,fileId){
   let body;try{body=await readD1Body(env,row)}catch(e){return json({ok:false,error:String(e?.message||e)},500)}
   headers.set('content-length',String(body.byteLength));return new Response(body,{status:200,headers});
 }
-
-export async function hubStorageStatus(env){
-  await ensureSchema(env);
-  const groups=(await env.DB.prepare(`SELECT CASE WHEN external_url!='' THEN 'remote' WHEN storage='r2' AND r2_key!='' THEN 'r2' ELSE 'd1' END AS storage_kind,COUNT(*) AS files,COALESCE(SUM(size),0) AS bytes FROM hub_resource_files GROUP BY storage_kind`).all()).results||[];
-  const pending=Number((await env.DB.prepare(`SELECT COUNT(*) AS n FROM hub_resource_files WHERE external_url='' AND (storage IS NULL OR storage='' OR storage='d1')`).first())?.n||0);
-  return json({ok:true,r2_available:hasR2(env),pending_d1_files:pending,groups:groups.map(x=>({storage:x.storage_kind,files:Number(x.files||0),bytes:Number(x.bytes||0)}))});
-}
-
-export async function migrateHubFilesToR2(request,env){
-  await ensureSchema(env);if(!hasR2(env))return json({ok:false,error:'R2_BINDING_REQUIRED',message:'Bind an R2 bucket as HUB_FILES before migration.'},503);
-  let body={};try{body=await request.json()}catch{}
-  const limit=Math.max(1,Math.min(25,Number(body?.limit)||10)),dryRun=Boolean(body?.dry_run);
-  const rows=(await env.DB.prepare(`SELECT id,resource_id,name,mime,size,data,external_url,storage,r2_key FROM hub_resource_files WHERE external_url='' AND (storage IS NULL OR storage='' OR storage='d1') ORDER BY created_at ASC LIMIT ?`).bind(limit).all()).results||[];
-  const migrated=[],errors=[];
-  for(const row of rows){
-    const key=r2Key(row.resource_id,row.id,row.name);
-    if(dryRun){migrated.push({id:row.id,name:row.name,size:Number(row.size||0),key,dry_run:true});continue}
-    try{
-      const bytes=await readD1Body(env,row);
-      await env.HUB_FILES.put(key,bytes,{httpMetadata:{contentType:inferMime(row.name,row.mime)},customMetadata:{resourceId:row.resource_id,fileId:row.id,name:row.name}});
-      try{
-        await env.DB.prepare(`UPDATE hub_resource_files SET storage='r2',r2_key=?,data=NULL WHERE id=?`).bind(key,row.id).run();
-        await env.DB.prepare('DELETE FROM hub_resource_file_chunks WHERE file_id=?').bind(row.id).run();
-      }catch(e){try{await env.HUB_FILES.delete(key)}catch{}throw e}
-      migrated.push({id:row.id,name:row.name,size:Number(row.size||0),key});
-    }catch(e){errors.push({id:row.id,name:row.name,error:String(e?.message||e)})}
-  }
-  const remaining=Number((await env.DB.prepare(`SELECT COUNT(*) AS n FROM hub_resource_files WHERE external_url='' AND (storage IS NULL OR storage='' OR storage='d1')`).first())?.n||0);
-  return json({ok:errors.length===0,dry_run:dryRun,processed:rows.length,migrated:migrated.length,errors,remaining,r2_available:true},errors.length?207:200);
-}
-
-export async function injectHubResources(response){return response;}

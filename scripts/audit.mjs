@@ -62,7 +62,7 @@ const resources=read('src/hub-resources.js');
 for(const table of ['hub_resource_publish_sessions','hub_resource_publish_files'])fail(resources.includes(table),`src/hub-resources.js: staging table missing ${table}`);
 fail(resources.includes("status='published'"),'src/hub-resources.js: published-state guard missing');
 fail(resources.includes('cleanupStaleSessions'),'src/hub-resources.js: stale publish rollback missing');
-for(const marker of ['HUB_FILES',"storage='r2'",'r2_key','R2_BINDING_REQUIRED'])fail(resources.includes(marker),`src/hub-resources.js: R2 dual-storage marker missing ${marker}`);
+for(const marker of ['HUB_FILES.put','HUB_FILES.get','r2_key','R2_BINDING_REQUIRED'])fail(resources.includes(marker),`src/hub-resources.js: R2 dual-storage marker missing ${marker}`);
 for(const marker of ['SOURCE_PREFIX','added_files','cleanupUnreferencedSourceMedia',"action==='metadata'"])fail(resources.includes(marker),`src/hub-resources.js: SOURCE media staging contract missing ${marker}`);
 
 const migration=read('src/hub-r2-migration.js');

@@ -100,6 +100,10 @@ fail(!/page\s*<=\s*50/.test(entry),'src/entry.js: legacy 50-page scan returned')
 fail(!entry.includes('url.pathname==="/api/characters"')&&!entry.includes("url.pathname==='/api/characters'"),'src/entry.js: shadowed character catalog route returned');
 fail(!entry.includes('url.pathname==="/api/lorebooks"')&&!entry.includes("url.pathname==='/api/lorebooks'"),'src/entry.js: shadowed lorebook catalog route returned');
 
+const hubResources=read('src/hub-resources.js');
+for(const marker of ['export async function hubStorageStatus','export async function migrateHubFilesToR2','export async function injectHubResources'])fail(!hubResources.includes(marker),`src/hub-resources.js: retired R2 compatibility export returned ${marker}`);
+for(const marker of ["from './hub-r2-migration.js'",'hubStorageStatusSafe','migrateHubFilesToR2Safe'])fail(edge.includes(marker),`src/cloudflare-entry-v2.js: safe R2 migration route missing ${marker}`);
+
 const hub=read('public/hub-dynamic.js');
 for(const marker of ["fetch('/api/hub-resources?summary=1'","/api/hub-resources/${encodeURIComponent(id)}",'detailCache'])fail(hub.includes(marker),`public/hub-dynamic.js: progressive HUB loading missing ${marker}`);
 const media=read('src/hub-public-media.js');

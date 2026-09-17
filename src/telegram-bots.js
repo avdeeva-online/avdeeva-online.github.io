@@ -1,5 +1,6 @@
 import { analyzeTelegramPost } from './hub-telegram.js';
 import { publishHubResource } from './hub-resources.js';
+import { requireD1Schema } from './d1-schema.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
@@ -38,24 +39,10 @@ function publicMenu(){return{inline_keyboard:[
   [button('RANDOM','pub:random'),button('TAVO HUB','pub:hub')]
 ]}}
 
-async function ensureDraftSchema(env){
-  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS telegram_admin_drafts(
-    id TEXT PRIMARY KEY,
-    source_url TEXT NOT NULL UNIQUE,
-    payload TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'review',
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  )`).run();
-  await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_telegram_admin_drafts_status_updated ON telegram_admin_drafts(status,updated_at DESC)').run();
-  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS telegram_admin_import_session(
-    admin_user_id TEXT PRIMARY KEY,
-    channel TEXT NOT NULL DEFAULT '',
-    draft_id TEXT NOT NULL DEFAULT '',
-    last_post_id INTEGER NOT NULL DEFAULT 0,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  )`).run();
-}
+const ensureDraftSchema=env=>requireD1Schema(env,'telegram-legacy',`SELECT
+  (SELECT COUNT(*) FROM telegram_admin_drafts) AS drafts,
+  (SELECT COUNT(*) FROM telegram_admin_import_session WHERE last_post_id IS NOT NULL OR 1=1) AS sessions,
+  (SELECT COUNT(*) FROM hub_suggestions) AS suggestions`);
 async function analyzeUrl(url){
   const req=new Request('https://internal/api/admin/hub-telegram-analyze',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url})});
   const r=await analyzeTelegramPost(req),d=await r.json();
@@ -199,7 +186,7 @@ async function showDraftList(token,chatId,messageId,env){
   return edit(token,chatId,messageId,`<b>DRAFTS</b>\n\n${rows.length} most recent drafts waiting for review.`,{inline_keyboard:keys});
 }
 async function showSuggestions(token,chatId,messageId,env){
-  try{await env.DB.prepare(`CREATE TABLE IF NOT EXISTS hub_suggestions (id INTEGER PRIMARY KEY AUTOINCREMENT,url TEXT NOT NULL,note TEXT NOT NULL DEFAULT '',status TEXT NOT NULL DEFAULT 'new',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run()}catch{}
+  await ensureDraftSchema(env);
   const rows=(await env.DB.prepare("SELECT id,url,note,created_at FROM hub_suggestions WHERE status='new' ORDER BY created_at DESC LIMIT 6").all()).results||[];
   if(!rows.length)return edit(token,chatId,messageId,'<b>COMMUNITY SUGGESTIONS</b>\n\nInbox is empty.',{inline_keyboard:[[button('HOME','adm:home')]]});
   const keys=rows.map(r=>[button('IMPORT #'+r.id,'sug:import:'+r.id),button('IGNORE','sug:ignore:'+r.id)]);keys.push([button('HOME','adm:home')]);

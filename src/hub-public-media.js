@@ -11,7 +11,7 @@ const mediaUrl=m=>clean(m?.url||m?.src);
 const toBytes=v=>{if(v instanceof Uint8Array)return v;if(v instanceof ArrayBuffer)return new Uint8Array(v);if(ArrayBuffer.isView(v))return new Uint8Array(v.buffer,v.byteOffset,v.byteLength);if(Array.isArray(v))return Uint8Array.from(v);return new Uint8Array(0)};
 const hasR2=env=>Boolean(env?.HUB_FILES&&typeof env.HUB_FILES.get==='function');
 let storageReady=null;
-async function ensureStorageColumns(env){if(storageReady)return storageReady;storageReady=(async()=>{try{await env.DB.prepare(`ALTER TABLE hub_resource_files ADD COLUMN storage TEXT NOT NULL DEFAULT 'd1'`).run()}catch{}try{await env.DB.prepare(`ALTER TABLE hub_resource_files ADD COLUMN r2_key TEXT NOT NULL DEFAULT ''`).run()}catch{}await env.DB.prepare(`UPDATE hub_resource_files SET storage='remote' WHERE external_url!='' AND (storage='' OR storage='d1')`).run()})();try{await storageReady}catch(e){storageReady=null;throw e}return storageReady}
+async function ensureStorageColumns(env){if(storageReady)return storageReady;storageReady=(async()=>{try{await env.DB.prepare('SELECT storage,r2_key FROM hub_resource_files LIMIT 1').first()}catch(e){throw new Error(`D1_MIGRATION_REQUIRED:${String(e?.message||e)}`)}})();try{await storageReady}catch(e){storageReady=null;throw e}return storageReady}
 function fileUrls(resourceId,fileId){const base=`/api/hub-resources/${encodeURIComponent(resourceId)}/files/${encodeURIComponent(fileId)}`;return{attachment_url:base,view_url:`${base}?view=1`}}
 
 export async function listHubResourcesPublic(env){

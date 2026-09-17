@@ -29,6 +29,16 @@ if(exists('src/telegram-webhooks.js')){
 fail(app.includes("from './telegram-webhooks.js'"),'src/cloudflare-entry.js: Telegram webhook helpers not isolated');
 fail(!app.includes("from './telegram-bots.js'"),'src/cloudflare-entry.js: legacy telegram-bots.js dependency returned');
 
+fail(exists('src/telegram-admin-router.js'),'src/telegram-admin-router.js: stable admin Telegram route seam missing');
+if(exists('src/telegram-admin-router.js')){
+  const telegramAdminRouter=read('src/telegram-admin-router.js');
+  fail(telegramAdminRouter.includes("from './telegram-admin-fixed.js'"),'src/telegram-admin-router.js: current fixed admin handler not delegated');
+  fail(telegramAdminRouter.includes('handleAdminTelegramRoute'),'src/telegram-admin-router.js: route handler export missing');
+}
+fail(edge.includes("from './telegram-admin-router.js'"),'src/cloudflare-entry-v2.js: admin Telegram route bypasses stable router seam');
+fail(edge.includes("url.pathname==='/telegram/admin')return handleAdminTelegramRoute(request,env)"),'src/cloudflare-entry-v2.js: /telegram/admin is not routed through stable seam');
+fail(!edge.includes("from './telegram-admin-fixed.js'"),'src/cloudflare-entry-v2.js: direct telegram-admin-fixed dependency returned');
+
 const entry=read('src/entry.js');
 for(const marker of ['scanDatacatCreator','catalogCharacters','catalogLorebooks'])fail(!entry.includes(marker),`src/entry.js: shadowed legacy ${marker} returned`);
 fail(!/page\s*<=\s*50/.test(entry),'src/entry.js: legacy 50-page scan returned');
@@ -41,4 +51,4 @@ const media=read('src/hub-public-media.js');
 for(const marker of ['listHubResourcesSummaryPublic','getHubResourcePublic'])fail(media.includes(marker),`src/hub-public-media.js: progressive HUB API missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE architecture audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + isolated Telegram webhooks + progressive HUB + dead-route removal checked');
+console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + isolated Telegram webhooks + stable admin Telegram router + progressive HUB + dead-route removal checked');

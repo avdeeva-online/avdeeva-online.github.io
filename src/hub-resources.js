@@ -1,3 +1,5 @@
+import { requireD1Schema } from './d1-schema.js';
+
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
 const arr=v=>Array.isArray(v)?v:[];
@@ -17,23 +19,12 @@ const toBytes=v=>{if(v instanceof Uint8Array)return v;if(v instanceof ArrayBuffe
 const hasR2=env=>Boolean(env?.HUB_FILES&&typeof env.HUB_FILES.put==='function'&&typeof env.HUB_FILES.get==='function');
 const safeKeyName=name=>clean(name).replace(/[^a-z0-9._-]+/gi,'_').replace(/^_+|_+$/g,'').slice(0,120)||'file';
 const r2Key=(resourceId,fileId,name)=>`hub/${resourceId}/${fileId}/${safeKeyName(name)}`;
-
-let ready=null;
-async function ensureSchema(env){if(ready)return ready;ready=(async()=>{
-  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS hub_resources (id TEXT PRIMARY KEY,source_url TEXT NOT NULL UNIQUE,source_type TEXT NOT NULL DEFAULT 'telegram',type TEXT NOT NULL,title TEXT NOT NULL,creator_name TEXT NOT NULL DEFAULT '',creator_link TEXT NOT NULL DEFAULT '',description_short TEXT NOT NULL DEFAULT '',description_full TEXT NOT NULL DEFAULT '',additional_info TEXT NOT NULL DEFAULT '',models TEXT NOT NULL DEFAULT '[]',settings TEXT NOT NULL DEFAULT '[]',tags TEXT NOT NULL DEFAULT '[]',media TEXT NOT NULL DEFAULT '[]',confidence TEXT NOT NULL DEFAULT '{}',status TEXT NOT NULL DEFAULT 'published',created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
-  try{await env.DB.prepare(`ALTER TABLE hub_resources ADD COLUMN additional_info TEXT NOT NULL DEFAULT ''`).run()}catch{}
-  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS hub_resource_files (id TEXT PRIMARY KEY,resource_id TEXT NOT NULL,name TEXT NOT NULL,mime TEXT NOT NULL DEFAULT 'application/octet-stream',size INTEGER NOT NULL DEFAULT 0,is_primary INTEGER NOT NULL DEFAULT 0,data BLOB,external_url TEXT NOT NULL DEFAULT '',created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
-  try{await env.DB.prepare(`ALTER TABLE hub_resource_files ADD COLUMN storage TEXT NOT NULL DEFAULT 'd1'`).run()}catch{}
-  try{await env.DB.prepare(`ALTER TABLE hub_resource_files ADD COLUMN r2_key TEXT NOT NULL DEFAULT ''`).run()}catch{}
-  await env.DB.prepare(`UPDATE hub_resource_files SET storage='remote' WHERE external_url!='' AND (storage='' OR storage='d1')`).run();
-  await env.DB.prepare('CREATE INDEX IF NOT EXISTS hub_resource_files_resource_idx ON hub_resource_files(resource_id)').run();
-  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS hub_resource_file_chunks (file_id TEXT NOT NULL,chunk_index INTEGER NOT NULL,data BLOB NOT NULL,PRIMARY KEY(file_id,chunk_index))`).run();
-  await env.DB.prepare('CREATE INDEX IF NOT EXISTS hub_resource_file_chunks_file_idx ON hub_resource_file_chunks(file_id)').run();
-  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS hub_resource_publish_sessions (id TEXT PRIMARY KEY,resource_id TEXT NOT NULL,was_existing INTEGER NOT NULL DEFAULT 0,backup TEXT NOT NULL DEFAULT '',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run();
-  await env.DB.prepare('CREATE INDEX IF NOT EXISTS hub_resource_publish_sessions_resource_idx ON hub_resource_publish_sessions(resource_id)').run();
-  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS hub_resource_publish_files (session_id TEXT NOT NULL,file_id TEXT NOT NULL,replace_old_id TEXT NOT NULL DEFAULT '',is_primary INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(session_id,file_id))`).run();
-  await env.DB.prepare('CREATE INDEX IF NOT EXISTS hub_resource_publish_files_session_idx ON hub_resource_publish_files(session_id)').run();
-})();try{await ready}catch(e){ready=null;throw e}return ready}
+const ensureSchema=env=>requireD1Schema(env,'hub-resources',`SELECT
+  (SELECT COUNT(*) FROM hub_resources WHERE additional_info IS NOT NULL OR 1=1) AS resources,
+  (SELECT COUNT(*) FROM hub_resource_files WHERE storage IS NOT NULL OR r2_key IS NOT NULL OR 1=1) AS files,
+  (SELECT COUNT(*) FROM hub_resource_file_chunks) AS chunks,
+  (SELECT COUNT(*) FROM hub_resource_publish_sessions) AS sessions,
+  (SELECT COUNT(*) FROM hub_resource_publish_files) AS session_files`);
 
 function normalizeDraft(d){const source=d?.source||{};return{editingId:clean(d?.editing_id),sourceUrl:clean(source.url),sourceType:clean(source.type)||'telegram',type:clean(d?.type).toLowerCase(),title:clean(d?.title),creatorName:clean(d?.creator?.name),creatorLink:clean(d?.creator?.link),short:clean(d?.description_short),full:clean(d?.description_full),additionalInfo:clean(d?.additional_info),models:arr(d?.models).map(clean).filter(Boolean),settings:normalizeSettings(d?.settings),tags:arr(d?.tags).map(clean).filter(Boolean),media:arr(d?.media),confidence:d?.confidence&&typeof d.confidence==='object'?d.confidence:{}}}
 

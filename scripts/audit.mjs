@@ -21,6 +21,7 @@ for(const file of walk('public').filter(f=>f.endsWith('.html'))){const html=read
 const wrangler=read('wrangler.toml');
 for(const route of ['/admin/*','/api/*','/telegram/*','/hub.html'])fail(wrangler.includes(`"${route}"`),`wrangler.toml: run_worker_first missing ${route}`);
 fail(wrangler.includes('main = "src/cloudflare-entry-v2.js"'),'wrangler.toml: unexpected worker entrypoint');
+fail(wrangler.includes('[[r2_buckets]]')&&wrangler.includes('binding = "HUB_FILES"'),'wrangler.toml: HUB_FILES R2 binding missing');
 
 const hub=read('public/hub-dynamic.js');
 fail(hub.includes('extraFile(f)&&imageFile(f)'),'public/hub-dynamic.js: EXTRAS must use explicit extra flag');
@@ -33,6 +34,7 @@ const entry=read('src/cloudflare-entry-v2.js');
 fail(entry.includes("url.pathname==='/api/import'"),'src/cloudflare-entry-v2.js: public import guard missing');
 fail(entry.includes("url.pathname==='/api/debug/datacat'"),'src/cloudflare-entry-v2.js: public debug guard missing');
 fail(entry.includes("url.pathname==='/api/admin/hub-storage'"),'src/cloudflare-entry-v2.js: guarded HUB storage route missing');
+fail(entry.includes("from './hub-r2-migration.js'"),'src/cloudflare-entry-v2.js: safe HUB R2 migration helper not wired');
 
 const adminEdit=read('public/admin/hub/admin-edit.js');
 for(const marker of ["'begin'","?action=upload","'finalize'","'cancel'"])fail(adminEdit.includes(marker),`public/admin/hub/admin-edit.js: staged publish missing ${marker}`);
@@ -42,7 +44,10 @@ const resources=read('src/hub-resources.js');
 for(const table of ['hub_resource_publish_sessions','hub_resource_publish_files'])fail(resources.includes(table),`src/hub-resources.js: staging table missing ${table}`);
 fail(resources.includes("status='published'"),'src/hub-resources.js: published-state guard missing');
 fail(resources.includes('cleanupStaleSessions'),'src/hub-resources.js: stale publish rollback missing');
-for(const marker of ['HUB_FILES',"storage='r2'",'r2_key','migrateHubFilesToR2','R2_BINDING_REQUIRED'])fail(resources.includes(marker),`src/hub-resources.js: R2 dual-storage marker missing ${marker}`);
+for(const marker of ['HUB_FILES',"storage='r2'",'r2_key','R2_BINDING_REQUIRED'])fail(resources.includes(marker),`src/hub-resources.js: R2 dual-storage marker missing ${marker}`);
+
+const migration=read('src/hub-r2-migration.js');
+for(const marker of ['migrateHubFilesToR2Safe','hubStorageStatusSafe','HUB_FILES',"storage='r2'",'post-migration D1 cleanup failed'])fail(migration.includes(marker),`src/hub-r2-migration.js: safe migration marker missing ${marker}`);
 
 const drafts=read('src/telegram-drafts-admin.js');
 fail(!/telegram-extra-/i.test(drafts),'src/telegram-drafts-admin.js: SOURCE media is still converted to EXTRAS');
@@ -53,7 +58,7 @@ fail(bridge.includes('media:mediaPayload()'),'public/admin/hub/draft-bridge.js: 
 const publicMedia=read('src/hub-public-media.js');
 fail(!publicMedia.includes('legacyExtraIds'),'src/hub-public-media.js: legacy EXTRAS synthesis still active');
 fail(!publicMedia.includes("source:'legacy-media'"),'src/hub-public-media.js: virtual media EXTRAS still active');
-for(const marker of ['HUB_FILES','row.storage','row.r2_key'])fail(publicMedia.includes(marker),`src/hub-public-media.js: R2 read fallback missing ${marker}`);
+for(const marker of ['HUB_FILES','row.storage','row.r2_key','ensureStorageColumns'])fail(publicMedia.includes(marker),`src/hub-public-media.js: R2 read fallback missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + dual storage checked`);
+console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + R2 dual storage checked`);

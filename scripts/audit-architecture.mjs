@@ -33,9 +33,11 @@ fail(exists('src/telegram-admin-router.js'),'src/telegram-admin-router.js: stabl
 if(exists('src/telegram-admin-router.js')){
   const telegramAdminRouter=read('src/telegram-admin-router.js');
   fail(telegramAdminRouter.includes("from './telegram-admin-menu.js'"),'src/telegram-admin-router.js: static admin menu handler not delegated');
+  fail(telegramAdminRouter.includes("from './telegram-admin-stats.js'"),'src/telegram-admin-router.js: read-only admin stats handler not delegated');
   fail(telegramAdminRouter.includes("from './telegram-admin-fixed.js'"),'src/telegram-admin-router.js: current fixed admin handler not delegated');
   fail(telegramAdminRouter.includes('handleAdminTelegramRoute'),'src/telegram-admin-router.js: route handler export missing');
   fail(telegramAdminRouter.includes('tryHandleAdminMenuRequest(request,env)'),'src/telegram-admin-router.js: static menu must run before fixed handler');
+  fail(telegramAdminRouter.includes('tryHandleAdminStatsRequest(request,env)'),'src/telegram-admin-router.js: read-only stats must run before fixed handler');
   fail(!telegramAdminRouter.includes("from './telegram-bots.js'"),'src/telegram-admin-router.js: legacy bot must stay behind fixed handler, not the route seam');
 }
 fail(edge.includes("from './telegram-admin-router.js'"),'src/cloudflare-entry-v2.js: admin Telegram route bypasses stable router seam');
@@ -48,6 +50,13 @@ if(exists('src/telegram-admin-menu.js')){
   for(const marker of ['tryHandleAdminMenuRequest','/start','/menu','adm:home','noop','adm:import','adm:drafts','adm:suggestions','adm:hub','adm:authors','adm:issues','adm:stats'])fail(menu.includes(marker),`src/telegram-admin-menu.js: static menu behavior missing ${marker}`);
 }
 
+fail(exists('src/telegram-admin-stats.js'),'src/telegram-admin-stats.js: extracted read-only admin stats handler missing');
+if(exists('src/telegram-admin-stats.js')){
+  const stats=read('src/telegram-admin-stats.js');
+  for(const marker of ['tryHandleAdminStatsRequest','adm:stats',"hub_resources WHERE status='published'","telegram_admin_drafts WHERE status='review'","hub_suggestions WHERE status='new'",'SELECT COUNT(*) n FROM characters','SELECT COUNT(*) n FROM hub_resource_files'])fail(stats.includes(marker),`src/telegram-admin-stats.js: stats behavior missing ${marker}`);
+  for(const marker of ['INSERT ','UPDATE ','DELETE ','ALTER TABLE','CREATE TABLE'])fail(!stats.includes(marker),`src/telegram-admin-stats.js: read-only stats handler contains write/DDL marker ${marker}`);
+}
+
 fail(exists('src/telegram-admin-fixed.js'),'src/telegram-admin-fixed.js: fixed admin Telegram handler missing');
 fail(exists('src/telegram-bots.js'),'src/telegram-bots.js: legacy Telegram fallback missing');
 if(exists('src/telegram-admin-fixed.js')&&exists('src/telegram-bots.js')){
@@ -55,7 +64,7 @@ if(exists('src/telegram-admin-fixed.js')&&exists('src/telegram-bots.js')){
   const legacy=read('src/telegram-bots.js');
   fail(fixed.includes("import { handleAdminTelegram } from './telegram-bots.js'"),'src/telegram-admin-fixed.js: expected legacy fallback boundary missing');
   for(const marker of ['adm:import','session:new','session:finish','session:resume:','draft:view:','draft:publish:','draft:delete:'])fail(fixed.includes(marker),`src/telegram-admin-fixed.js: fixed session callback missing ${marker}`);
-  for(const marker of ['adm:drafts','adm:suggestions','adm:hub','adm:authors','adm:issues','adm:stats','draft:reanalyze:','sug:ignore:','sug:import:'])fail(legacy.includes(marker),`src/telegram-bots.js: expected legacy fallback callback missing ${marker}`);
+  for(const marker of ['adm:drafts','adm:suggestions','adm:hub','adm:authors','adm:issues','draft:reanalyze:','sug:ignore:','sug:import:'])fail(legacy.includes(marker),`src/telegram-bots.js: expected legacy fallback callback missing ${marker}`);
 }
 
 const entry=read('src/entry.js');
@@ -70,4 +79,4 @@ const media=read('src/hub-public-media.js');
 for(const marker of ['listHubResourcesSummaryPublic','getHubResourcePublic'])fail(media.includes(marker),`src/hub-public-media.js: progressive HUB API missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE architecture audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + isolated Telegram webhooks + stable admin Telegram router + extracted static admin menu + fixed/legacy callback boundary + progressive HUB + dead-route removal checked');
+console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + isolated Telegram webhooks + stable admin Telegram router + extracted static admin menu + read-only admin stats + fixed/legacy callback boundary + progressive HUB + dead-route removal checked');

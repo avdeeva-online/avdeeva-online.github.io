@@ -1,4 +1,5 @@
 const clean=v=>String(v??'').trim();
+const esc=s=>clean(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const okResponse=()=>json({ok:true});
 const button=(text,callback_data)=>({text,callback_data});
@@ -50,7 +51,7 @@ export async function tryHandleAdminMenuRequest(request,env){
     return okResponse();
   }catch(e){
     console.error('admin telegram menu error',e);
-    try{const chatId=update.message?.chat?.id||update.callback_query?.message?.chat?.id;if(chatId)await send(token,chatId,`<b>ADMIN BOT ERROR</b>\n${clean(e?.message||e)}`,adminMenu())}catch{}
+    try{const chatId=update.message?.chat?.id||update.callback_query?.message?.chat?.id;if(chatId)await send(token,chatId,`<b>ADMIN BOT ERROR</b>\n${esc(e?.message||e)}`,adminMenu())}catch{}
     return okResponse();
   }
 }

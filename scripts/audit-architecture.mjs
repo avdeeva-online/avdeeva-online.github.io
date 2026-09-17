@@ -29,6 +29,12 @@ if(exists('src/telegram-webhooks.js')){
 fail(app.includes("from './telegram-webhooks.js'"),'src/cloudflare-entry.js: Telegram webhook helpers not isolated');
 fail(!app.includes("from './telegram-bots.js'"),'src/cloudflare-entry.js: legacy telegram-bots.js dependency returned');
 
+fail(exists('src/telegram-admin-shared.js'),'src/telegram-admin-shared.js: shared Telegram admin primitives missing');
+if(exists('src/telegram-admin-shared.js')){
+  const shared=read('src/telegram-admin-shared.js');
+  for(const marker of ['webhookSecret','admin|${token}','tg(','send(','edit(','answerCb','adminMenu','adminMenuText'])fail(shared.includes(marker),`src/telegram-admin-shared.js: shared primitive missing ${marker}`);
+}
+
 fail(exists('src/telegram-admin-router.js'),'src/telegram-admin-router.js: stable admin Telegram route seam missing');
 if(exists('src/telegram-admin-router.js')){
   const telegramAdminRouter=read('src/telegram-admin-router.js');
@@ -47,14 +53,16 @@ fail(!edge.includes("from './telegram-admin-fixed.js'"),'src/cloudflare-entry-v2
 fail(exists('src/telegram-admin-menu.js'),'src/telegram-admin-menu.js: extracted static admin menu handler missing');
 if(exists('src/telegram-admin-menu.js')){
   const menu=read('src/telegram-admin-menu.js');
-  for(const marker of ['tryHandleAdminMenuRequest','/start','/menu','adm:home','noop','adm:import','adm:drafts','adm:suggestions','adm:hub','adm:authors','adm:issues','adm:stats'])fail(menu.includes(marker),`src/telegram-admin-menu.js: static menu behavior missing ${marker}`);
+  for(const marker of ["from './telegram-admin-shared.js'",'tryHandleAdminMenuRequest','/start','/menu','adm:home','noop'])fail(menu.includes(marker),`src/telegram-admin-menu.js: static menu behavior missing ${marker}`);
+  for(const marker of ['function webhookSecret','function tg(','function send(','function edit(','function answerCb'])fail(!menu.includes(marker),`src/telegram-admin-menu.js: duplicate shared Telegram primitive returned ${marker}`);
 }
 
 fail(exists('src/telegram-admin-stats.js'),'src/telegram-admin-stats.js: extracted read-only admin stats handler missing');
 if(exists('src/telegram-admin-stats.js')){
   const stats=read('src/telegram-admin-stats.js');
-  for(const marker of ['tryHandleAdminStatsRequest','adm:stats',"hub_resources WHERE status='published'","telegram_admin_drafts WHERE status='review'","hub_suggestions WHERE status='new'",'SELECT COUNT(*) n FROM characters','SELECT COUNT(*) n FROM hub_resource_files'])fail(stats.includes(marker),`src/telegram-admin-stats.js: stats behavior missing ${marker}`);
+  for(const marker of ["from './telegram-admin-shared.js'",'tryHandleAdminStatsRequest','adm:stats',"hub_resources WHERE status='published'","telegram_admin_drafts WHERE status='review'","hub_suggestions WHERE status='new'",'SELECT COUNT(*) n FROM characters','SELECT COUNT(*) n FROM hub_resource_files'])fail(stats.includes(marker),`src/telegram-admin-stats.js: stats behavior missing ${marker}`);
   for(const marker of ['INSERT ','UPDATE ','DELETE ','ALTER TABLE','CREATE TABLE'])fail(!stats.includes(marker),`src/telegram-admin-stats.js: read-only stats handler contains write/DDL marker ${marker}`);
+  for(const marker of ['function webhookSecret','function tg(','function send(','function edit(','function answerCb'])fail(!stats.includes(marker),`src/telegram-admin-stats.js: duplicate shared Telegram primitive returned ${marker}`);
 }
 
 fail(exists('src/telegram-admin-fixed.js'),'src/telegram-admin-fixed.js: fixed admin Telegram handler missing');
@@ -79,4 +87,4 @@ const media=read('src/hub-public-media.js');
 for(const marker of ['listHubResourcesSummaryPublic','getHubResourcePublic'])fail(media.includes(marker),`src/hub-public-media.js: progressive HUB API missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE architecture audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + isolated Telegram webhooks + stable admin Telegram router + extracted static admin menu + read-only admin stats + fixed/legacy callback boundary + progressive HUB + dead-route removal checked');
+console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted static admin menu + read-only admin stats + fixed/legacy callback boundary + progressive HUB + dead-route removal checked');

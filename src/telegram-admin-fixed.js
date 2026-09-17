@@ -1,6 +1,7 @@
 import { handleAdminTelegram } from './telegram-bots.js';
 import { analyzeTelegramPost } from './hub-telegram.js';
 import { telegramDraftsAdmin } from './telegram-drafts-admin.js';
+import { requireD1Schema } from './d1-schema.js';
 
 const clean=v=>String(v??'').trim();
 const short=(s,n=420)=>{s=clean(s).replace(/\s+/g,' ');return s.length>n?s.slice(0,n-1)+'…':s};
@@ -16,9 +17,9 @@ async function send(token,chatId,text,reply_markup){return tg(token,'sendMessage
 async function edit(token,chatId,messageId,text,reply_markup){try{return await tg(token,'editMessageText',{chat_id:chatId,message_id:messageId,text,parse_mode:'HTML',disable_web_page_preview:true,...(reply_markup?{reply_markup}:{})})}catch{return send(token,chatId,text,reply_markup)}}
 async function answerCb(token,id,text=''){try{await tg(token,'answerCallbackQuery',{callback_query_id:id,...(text?{text}:{})})}catch{}}
 const okResponse=()=>new Response(JSON.stringify({ok:true}),{headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
-
-let schemaReady=null;
-async function ensureSchema(env){if(schemaReady)return schemaReady;schemaReady=(async()=>{await env.DB.prepare(`CREATE TABLE IF NOT EXISTS telegram_admin_drafts(id TEXT PRIMARY KEY,source_url TEXT NOT NULL UNIQUE,payload TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'review',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run();await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_telegram_admin_drafts_status_updated ON telegram_admin_drafts(status,updated_at DESC)').run();await env.DB.prepare(`CREATE TABLE IF NOT EXISTS telegram_admin_import_session(admin_user_id TEXT PRIMARY KEY,channel TEXT NOT NULL DEFAULT '',draft_id TEXT NOT NULL DEFAULT '',last_post_id INTEGER NOT NULL DEFAULT 0,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run()})();try{await schemaReady}catch(e){schemaReady=null;throw e}return schemaReady}
+const ensureSchema=env=>requireD1Schema(env,'telegram-admin-session',`SELECT
+  (SELECT COUNT(*) FROM telegram_admin_drafts) AS drafts,
+  (SELECT COUNT(*) FROM telegram_admin_import_session WHERE last_post_id IS NOT NULL OR 1=1) AS sessions`);
 
 function activeButtons(id,source){return{inline_keyboard:[
   [button('✓ FINISH RESOURCE','session:finish'),button('＋ NEW RESOURCE','session:new')],

@@ -6,6 +6,7 @@ import { listHubResourcesPublic, listHubResourcesSummaryPublic, getHubResourcePu
 import { hubStorageStatusSafe, migrateHubFilesToR2Safe } from './hub-r2-migration.js';
 import { deleteLegacyMediaExtra } from './hub-admin-media.js';
 import { guardAdminApi } from './admin-auth.js';
+import { d1SchemaStatus } from './d1-schema-status.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 export default {async fetch(request,env,ctx){
@@ -24,6 +25,7 @@ export default {async fetch(request,env,ctx){
     const response=await deleteLegacyMediaExtra(env,decodeURIComponent(legacyExtraDelete[1]),decodeURIComponent(legacyExtraDelete[2]));
     if(response)return response;
   }
+  if(url.pathname==='/api/admin/schema-status'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return d1SchemaStatus(env)}
   if(url.pathname==='/api/admin/hub-media-audit'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return hubMediaAudit(env)}
   if(url.pathname==='/api/admin/hub-storage'){
     if(request.method==='GET')return hubStorageStatusSafe(env);

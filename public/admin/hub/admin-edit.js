@@ -44,25 +44,32 @@
   function collectMedia(){const manual=typeof window.archiveHubGetManualCover==='function'?String(window.archiveHubGetManualCover()||''):'';const nodes=[...document.querySelectorAll('#mediaGrid .media img')],coverNode=document.querySelector('#mediaGrid .media.cover img');let media=nodes.map(img=>({url:img.currentSrc||img.src||'',cover:img===coverNode})).filter(x=>x.url);if(editResource&&media.length===0)media=Array.isArray(editResource.media)?editResource.media.map(x=>({...x})):[];if(manual){media=media.filter(x=>!x?.manual_cover&&x?.url!==manual).map(x=>({...x,cover:false}));media.unshift({url:manual,cover:true,manual_cover:true})}else if(media.length&&!media.some(x=>x.cover))media[0].cover=true;return media}
   function draft(){const primary=primaryPendingIndex();return{editing_id:editResource?.id||'',source:{type:'telegram',url:$('#postUrl')?.value?.trim()||editResource?.source_url||''},type:selected('#typeChoices')[0]||editResource?.type||'other',title:$('#title')?.value?.trim()||'',creator:{name:$('#creator')?.value?.trim()||'',link:$('#creatorLink')?.value?.trim()||''},description_short:$('#shortDesc')?.value?.trim()||'',description_full:$('#fullDesc')?.value?.trim()||'',additional_info:$('#additionalInfo')?.value?.trim()||'',models:selected('#modelChoices'),settings:normalizeSettings(selected('#settingChoices')),tags:($('#extraTags')?.value||'').split(',').map(x=>x.trim()).filter(Boolean),media:collectMedia(),files:pendingFiles.map((f,i)=>({name:f.name,size:f.size,type:f.type||'',primary:i===primary,source:'manual'})),confidence:editResource?.confidence||{},status:'published'}}
   async function parseApiResponse(r,label){const raw=await r.text();let x={};try{x=JSON.parse(raw||'{}')}catch{}if(!r.ok||!x.ok)throw new Error(`${label}: ${[x.error||`HTTP_${r.status}`,x.detail].filter(Boolean).join(': ')}`);return x}
-  async function postResourceJson(d,label='RESOURCE METADATA'){let r;try{r=await fetch('/api/admin/hub-resource',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(d)})}catch(e){throw new Error(`${label}: NETWORK ERROR (${e.message||'Failed to fetch'})`)}return parseApiResponse(r,label)}
-  async function postOneFile(d,file,key,label){const fd=new FormData();fd.append('resource',new Blob([JSON.stringify(d)],{type:'application/json'}),'resource.json');fd.append(key,file,file.name);let r;try{r=await fetch('/api/admin/hub-resource',{method:'POST',body:fd})}catch(e){throw new Error(`${label}: NETWORK ERROR (${e.message||'Failed to fetch'})`)}return parseApiResponse(r,label)}
+  async function postResourceJson(d,label='RESOURCE METADATA',action=''){let r;try{r=await fetch('/api/admin/hub-resource'+(action?`?action=${encodeURIComponent(action)}`:''),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(d)})}catch(e){throw new Error(`${label}: NETWORK ERROR (${e.message||'Failed to fetch'})`)}return parseApiResponse(r,label)}
+  async function postOneFile(d,file,key,label,session){const fd=new FormData();fd.append('resource',new Blob([JSON.stringify({...d,_publish_session:session})],{type:'application/json'}),'resource.json');fd.append(key,file,file.name);let r;try{r=await fetch('/api/admin/hub-resource?action=upload',{method:'POST',body:fd})}catch(e){throw new Error(`${label}: NETWORK ERROR (${e.message||'Failed to fetch'})`)}return parseApiResponse(r,label)}
   async function sendResource(d){
-    const primary=primaryPendingIndex(),base={...d,files:[]};
-    setStatus('SAVING RESOURCE METADATA...');
-    const first=await postResourceJson(base,'RESOURCE METADATA');
-    const id=first.id||editResource?.id||'';
-    let last=first,total=pendingFiles.length+extraPendingImages.length,done=0;
-    for(let i=0;i<pendingFiles.length;i++){
-      const f=pendingFiles[i],uploadDraft={...base,editing_id:id,files:[{name:f.name,size:f.size,type:f.type||'',primary:i===primary,source:'manual'}]};
-      setStatus(`UPLOADING FILE ${++done}/${total}: ${f.name}`);
-      last=await postOneFile(uploadDraft,f,'files',`FILE ${f.name}`);
-    }
-    for(const f of extraPendingImages){
-      const uploadDraft={...base,editing_id:id,files:[]};
-      setStatus(`UPLOADING EXTRA ${++done}/${total}: ${f.name}`);
-      last=await postOneFile(uploadDraft,f,'extraImages',`EXTRA ${f.name}`);
-    }
-    return{...last,id:last.id||id,updated:Boolean(first.updated||editResource)};
+    const primary=primaryPendingIndex(),normalBytes=pendingFiles.reduce((n,f)=>n+Number(f.size||0),0),extraBytes=extraPendingImages.reduce((n,f)=>n+Number(f.size||0),0);
+    if(pendingFiles.some(f=>f.size>10*1024*1024)||normalBytes>25*1024*1024)throw new Error('FILES TOO LARGE: 10 MB PER FILE / 25 MB TOTAL');
+    if(extraPendingImages.some(f=>f.size>4*1024*1024)||extraBytes>12*1024*1024)throw new Error('EXTRAS TOO LARGE: 4 MB PER IMAGE / 12 MB TOTAL');
+    const base={...d,files:[]};
+    setStatus('STARTING SAFE PUBLISH...');
+    const first=await postResourceJson(base,'PUBLISH BEGIN','begin'),session=first.session_id,id=first.id||editResource?.id||'';
+    if(!session)throw new Error('PUBLISH BEGIN: SESSION MISSING');
+    let total=pendingFiles.length+extraPendingImages.length,done=0;
+    try{
+      for(let i=0;i<pendingFiles.length;i++){
+        const f=pendingFiles[i],uploadDraft={...base,editing_id:id,files:[{name:f.name,size:f.size,type:f.type||'',primary:i===primary,source:'manual'}]};
+        setStatus(`UPLOADING FILE ${++done}/${total}: ${f.name}`);
+        await postOneFile(uploadDraft,f,'files',`FILE ${f.name}`,session);
+      }
+      for(const f of extraPendingImages){
+        const uploadDraft={...base,editing_id:id,files:[]};
+        setStatus(`UPLOADING EXTRA ${++done}/${total}: ${f.name}`);
+        await postOneFile(uploadDraft,f,'extraImages',`EXTRA ${f.name}`,session);
+      }
+      setStatus('FINALIZING RESOURCE...');
+      const last=await postResourceJson({_publish_session:session},'FINALIZE','finalize');
+      return{...last,id:last.id||id,updated:Boolean(first.updated||editResource)};
+    }catch(e){try{await postResourceJson({_publish_session:session},'ROLLBACK','cancel')}catch{}throw e}
   }
   async function reloadResource(id){const r=await fetch('/api/hub-resources',{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok||!d?.ok)throw new Error(d?.error||`HTTP_${r.status}`);const item=(d.resources||[]).find(x=>String(x.id)===String(id));if(!item)throw new Error('RESOURCE_NOT_FOUND_AFTER_UPDATE');return item}
   async function publishResource(){const d=draft();if(!d.source.url||!d.title||!d.type){setStatus('SOURCE URL, TITLE AND TYPE ARE REQUIRED.','bad');return}const b=$('#publish');if(b)b.disabled=true;setStatus(editResource?'UPDATING RESOURCE...':'PUBLISHING RESOURCE...');try{const x=await sendResource(d);pendingFiles=[];extraPendingImages=[];renderExtraPending();$('#fileList')&&( $('#fileList').innerHTML='');$('#fileSummary')&&( $('#fileSummary').textContent='NO NEW DOWNLOAD FILES ATTACHED');dirty=false;try{localStorage.removeItem('archiveHubDraft:'+d.source.url)}catch{}if(editResource){const fresh=await reloadResource(x.id||editResource.id);fillResource(fresh);setStatus('RESOURCE UPDATED SUCCESSFULLY.','ok')}else{setStatus('PUBLISHED. RESOURCE ID: '+(x.id||'OK'),'ok')}}catch(e){setStatus((editResource?'UPDATE':'PUBLISH')+' FAILED: '+e.message,'bad')}finally{if(b)b.disabled=false}}
@@ -79,6 +86,7 @@
   $('#saveDraft')&&( $('#saveDraft').onclick=saveLocalDraft );
   ['#title','#creator','#creatorLink','#shortDesc','#fullDesc','#additionalInfo','#extraTags','#postUrl'].forEach(sel=>$(sel)?.addEventListener('input',markDirty));
   ['#typeChoices','#modelChoices','#settingChoices'].forEach(sel=>$(sel)?.addEventListener('click',markDirty));
+  window.addEventListener('archive:hub-source-media-change',markDirty);
   window.addEventListener('beforeunload',e=>{if(!dirty)return;e.preventDefault();e.returnValue=''});
   renderExtraPending();initEdit();
 })();

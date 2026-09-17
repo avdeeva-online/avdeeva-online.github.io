@@ -11,7 +11,7 @@ const fail=(ok,msg)=>{if(!ok)errors.push(msg)};
 const sourceFiles=walk('src').filter(f=>f.endsWith('.js'));
 for(const file of sourceFiles){const text=read(file);for(const m of text.matchAll(/(?:import|export)\s+(?:[^'";]*?\s+from\s+)?['"](\.\.?\/[^'"]+)['"]/g)){let target=path.normalize(path.join(path.dirname(file),m[1]));if(!path.extname(target))target+='.js';if(!exists(target))errors.push(`${file}: missing import ${m[1]} -> ${target}`)}}
 
-const retired=['telegram-admin-ingest.js','telegram-admin-smart.js','telegram-admin-bot.js','hub-media-recovery.js'];
+const retired=['telegram-admin-ingest.js','telegram-admin-smart.js','telegram-admin-bot.js','telegram-bots.js','hub-media-recovery.js'];
 for(const file of [...sourceFiles,...walk('public').filter(f=>/\.(?:js|html)$/.test(f))]){const text=read(file);for(const name of retired){if(text.includes(name))errors.push(`${file}: still references retired ${name}`)}}
 
 for(const file of walk('public/admin/hub').filter(f=>f.endsWith('.js'))){const text=read(file);if(/window\.fetch\s*=/.test(text))errors.push(`${file}: fetch monkey patch reintroduced`)}

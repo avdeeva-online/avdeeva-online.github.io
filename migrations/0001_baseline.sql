@@ -3,7 +3,8 @@
 -- New databases receive the complete schema expected by the current Worker.
 
 CREATE TABLE IF NOT EXISTS characters (
-  janitor_uuid TEXT PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  janitor_uuid TEXT NOT NULL UNIQUE,
   slug TEXT NOT NULL DEFAULT '',
   name TEXT NOT NULL DEFAULT '',
   author TEXT NOT NULL DEFAULT '',

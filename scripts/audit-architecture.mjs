@@ -21,6 +21,15 @@ fail(!/adminRequestBlocked\s*\(request,env,url\)/.test(edge),'src/cloudflare-ent
 fail(!/function\s+adminRequestBlocked\b/.test(edge),'src/cloudflare-entry-v2.js: duplicate adminRequestBlocked implementation returned');
 fail(!/function\s+adminGuard\b/.test(app),'src/cloudflare-entry.js: duplicate adminGuard implementation returned');
 
+fail(exists('src/d1-schema-status.js'),'src/d1-schema-status.js: read-only D1 schema status module missing');
+if(exists('src/d1-schema-status.js')){
+  const schemaStatus=read('src/d1-schema-status.js');
+  for(const marker of ['d1SchemaStatus','PRAGMA table_info','PRAGMA index_list','PRAGMA index_info','hub_resource_publish_files','storage','r2_key','archive_schema','characters_identity','read_only:true'])fail(schemaStatus.includes(marker),`src/d1-schema-status.js: schema status contract missing ${marker}`);
+  for(const marker of ['INSERT ','UPDATE ','DELETE ','ALTER TABLE','CREATE TABLE','DROP TABLE'])fail(!schemaStatus.includes(marker),`src/d1-schema-status.js: read-only schema status contains mutation/DDL marker ${marker}`);
+}
+fail(edge.includes("from './d1-schema-status.js'"),'src/cloudflare-entry-v2.js: D1 schema status module not imported');
+fail(edge.includes("url.pathname==='/api/admin/schema-status'"),'src/cloudflare-entry-v2.js: /api/admin/schema-status route missing');
+
 fail(exists('src/telegram-webhooks.js'),'src/telegram-webhooks.js: isolated webhook helper missing');
 if(exists('src/telegram-webhooks.js')){
   const telegramWebhooks=read('src/telegram-webhooks.js');
@@ -89,4 +98,4 @@ const media=read('src/hub-public-media.js');
 for(const marker of ['listHubResourcesSummaryPublic','getHubResourcePublic'])fail(media.includes(marker),`src/hub-public-media.js: progressive HUB API missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE architecture audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + fixed/legacy mutation boundary + progressive HUB + dead-route removal checked');
+console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + fixed/legacy mutation boundary + progressive HUB + dead-route removal checked');

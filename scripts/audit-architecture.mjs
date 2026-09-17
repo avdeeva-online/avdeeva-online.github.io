@@ -84,7 +84,7 @@ if(exists('src/telegram-admin-suggestions-view.js')){
 }
 
 fail(exists('src/telegram-admin-fixed.js'),'src/telegram-admin-fixed.js: fixed admin Telegram handler missing');
-fail(exists('src/telegram-bots.js'),'src/telegram-bots.js: retained legacy Telegram reference file missing');
+fail(!exists('src/telegram-bots.js'),'src/telegram-bots.js: retired legacy Telegram bundle returned');
 if(exists('src/telegram-admin-fixed.js')){
   const fixed=read('src/telegram-admin-fixed.js');
   fail(!fixed.includes("from './telegram-bots.js'"),'src/telegram-admin-fixed.js: legacy Telegram fallback dependency returned');

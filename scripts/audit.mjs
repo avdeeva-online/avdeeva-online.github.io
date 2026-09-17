@@ -32,22 +32,28 @@ if(/id=["']importOpen["']/.test(catalog))errors.push('public/characters.html: pu
 const entry=read('src/cloudflare-entry-v2.js');
 fail(entry.includes("url.pathname==='/api/import'"),'src/cloudflare-entry-v2.js: public import guard missing');
 fail(entry.includes("url.pathname==='/api/debug/datacat'"),'src/cloudflare-entry-v2.js: public debug guard missing');
+fail(entry.includes("url.pathname==='/api/admin/hub-storage'"),'src/cloudflare-entry-v2.js: guarded HUB storage route missing');
 
 const adminEdit=read('public/admin/hub/admin-edit.js');
 for(const marker of ["'begin'","?action=upload","'finalize'","'cancel'"])fail(adminEdit.includes(marker),`public/admin/hub/admin-edit.js: staged publish missing ${marker}`);
 fail(adminEdit.includes('_publish_session'),'public/admin/hub/admin-edit.js: publish session id not propagated');
+
 const resources=read('src/hub-resources.js');
 for(const table of ['hub_resource_publish_sessions','hub_resource_publish_files'])fail(resources.includes(table),`src/hub-resources.js: staging table missing ${table}`);
 fail(resources.includes("status='published'"),'src/hub-resources.js: published-state guard missing');
 fail(resources.includes('cleanupStaleSessions'),'src/hub-resources.js: stale publish rollback missing');
+for(const marker of ['HUB_FILES',"storage='r2'",'r2_key','migrateHubFilesToR2','R2_BINDING_REQUIRED'])fail(resources.includes(marker),`src/hub-resources.js: R2 dual-storage marker missing ${marker}`);
+
 const drafts=read('src/telegram-drafts-admin.js');
 fail(!/telegram-extra-/i.test(drafts),'src/telegram-drafts-admin.js: SOURCE media is still converted to EXTRAS');
 fail(drafts.includes("if('media'in b)"),'src/telegram-drafts-admin.js: media edits are not persisted');
 const bridge=read('public/admin/hub/draft-bridge.js');
 fail(bridge.includes('media:mediaPayload()'),'public/admin/hub/draft-bridge.js: Telegram draft media state not submitted');
+
 const publicMedia=read('src/hub-public-media.js');
 fail(!publicMedia.includes('legacyExtraIds'),'src/hub-public-media.js: legacy EXTRAS synthesis still active');
 fail(!publicMedia.includes("source:'legacy-media'"),'src/hub-public-media.js: virtual media EXTRAS still active');
+for(const marker of ['HUB_FILES','row.storage','row.r2_key'])fail(publicMedia.includes(marker),`src/hub-public-media.js: R2 read fallback missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle checked`);
+console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + dual storage checked`);

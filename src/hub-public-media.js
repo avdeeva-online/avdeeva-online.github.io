@@ -19,7 +19,7 @@ export async function listHubResourcesPublic(env){
   try{
     await ensureStorageColumns(env);
     const res=await env.DB.prepare(`SELECT r.* FROM hub_resources r WHERE r.status='published' ORDER BY r.updated_at DESC`).all();
-    const fileRes=await env.DB.prepare(`SELECT f.id,f.resource_id,f.name,f.mime,f.size,f.is_primary,f.external_url,f.storage,f.r2_key,f.created_at FROM hub_resource_files f INNER JOIN hub_resources r ON r.id=f.resource_id WHERE r.status='published' ORDER BY f.is_primary DESC,f.created_at ASC`).all();
+    const fileRes=await env.DB.prepare(`SELECT f.id,f.resource_id,f.name,f.mime,f.size,f.is_primary,f.external_url,f.storage,f.r2_key,f.created_at FROM hub_resource_files f INNER JOIN hub_resources r ON r.id=f.resource_id WHERE r.status='published' AND NOT EXISTS(SELECT 1 FROM hub_resource_publish_files sf WHERE sf.file_id=f.id) ORDER BY f.is_primary DESC,f.created_at ASC`).all();
     const byResource=new Map();
     for(const f of fileRes.results||[]){
       const mime=inferMime(f.name,f.mime),urls=fileUrls(f.resource_id,f.id),source=isSource(f.name),extra=isExtra(f.name),obj={id:f.id,name:f.name,mime,size:Number(f.size||0),primary:Boolean(f.is_primary),extra,source,explicit_extra:extra,external_url:clean(f.external_url),storage:clean(f.storage)||'d1',attachment_url:urls.attachment_url,view_url:clean(f.external_url)||urls.view_url,download_url:extra&&isImage(f.name,mime)?(clean(f.external_url)||urls.view_url):urls.attachment_url,created_at:f.created_at||''};
@@ -41,7 +41,7 @@ export async function listHubResourcesPublic(env){
 export async function downloadHubFilePublic(request,env,resourceId,fileId){
   try{
     await ensureStorageColumns(env);
-    const row=await env.DB.prepare(`SELECT f.id,f.name,f.mime,f.size,f.data,f.external_url,f.storage,f.r2_key FROM hub_resource_files f INNER JOIN hub_resources r ON r.id=f.resource_id WHERE f.id=? AND f.resource_id=? AND r.status='published' LIMIT 1`).bind(fileId,resourceId).first();
+    const row=await env.DB.prepare(`SELECT f.id,f.name,f.mime,f.size,f.data,f.external_url,f.storage,f.r2_key FROM hub_resource_files f INNER JOIN hub_resources r ON r.id=f.resource_id WHERE f.id=? AND f.resource_id=? AND r.status='published' AND NOT EXISTS(SELECT 1 FROM hub_resource_publish_files sf WHERE sf.file_id=f.id) LIMIT 1`).bind(fileId,resourceId).first();
     if(!row)return json({ok:false,error:'FILE_NOT_FOUND'},404);
     if(row.external_url)return Response.redirect(row.external_url,302);
     const mime=inferMime(row.name,row.mime),url=new URL(request.url),view=url.searchParams.get('view')==='1',inline=view&&isImage(row.name,mime),headers=new Headers({'content-type':mime,'cache-control':'public, max-age=86400','x-content-type-options':'nosniff'});

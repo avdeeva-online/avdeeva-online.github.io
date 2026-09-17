@@ -34,7 +34,7 @@ fail(entry.includes("url.pathname==='/api/import'"),'src/cloudflare-entry-v2.js:
 fail(entry.includes("url.pathname==='/api/debug/datacat'"),'src/cloudflare-entry-v2.js: public debug guard missing');
 
 const adminEdit=read('public/admin/hub/admin-edit.js');
-for(const action of ["'begin'","'upload'","'finalize'","'cancel'"])fail(adminEdit.includes(action),`public/admin/hub/admin-edit.js: staged publish missing ${action}`);
+for(const marker of ["'begin'","?action=upload","'finalize'","'cancel'"])fail(adminEdit.includes(marker),`public/admin/hub/admin-edit.js: staged publish missing ${marker}`);
 fail(adminEdit.includes('_publish_session'),'public/admin/hub/admin-edit.js: publish session id not propagated');
 const resources=read('src/hub-resources.js');
 for(const table of ['hub_resource_publish_sessions','hub_resource_publish_files'])fail(resources.includes(table),`src/hub-resources.js: staging table missing ${table}`);

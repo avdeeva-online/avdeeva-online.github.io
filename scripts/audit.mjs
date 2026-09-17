@@ -63,12 +63,15 @@ for(const table of ['hub_resource_publish_sessions','hub_resource_publish_files'
 fail(resources.includes("status='published'"),'src/hub-resources.js: published-state guard missing');
 fail(resources.includes('cleanupStaleSessions'),'src/hub-resources.js: stale publish rollback missing');
 for(const marker of ['HUB_FILES',"storage='r2'",'r2_key','R2_BINDING_REQUIRED'])fail(resources.includes(marker),`src/hub-resources.js: R2 dual-storage marker missing ${marker}`);
+for(const marker of ['SOURCE_PREFIX','added_files','cleanupUnreferencedSourceMedia',"action==='metadata'"])fail(resources.includes(marker),`src/hub-resources.js: SOURCE media staging contract missing ${marker}`);
 
 const migration=read('src/hub-r2-migration.js');
 for(const marker of ['migrateHubFilesToR2Safe','hubStorageStatusSafe','HUB_FILES',"storage='r2'",'post-migration D1 cleanup failed'])fail(migration.includes(marker),`src/hub-r2-migration.js: safe migration marker missing ${marker}`);
 
 const drafts=read('src/telegram-drafts-admin.js');
-fail(!/telegram-extra-/i.test(drafts),'src/telegram-drafts-admin.js: SOURCE media is still converted to EXTRAS');
+fail(!/telegram-extra-/i.test(drafts),'src/telegram-drafts-admin.js: SOURCE media is still converted to legacy EXTRAS');
+fail(!drafts.includes('bytesToDataUrl'),'src/telegram-drafts-admin.js: SOURCE media is still stored as base64 data URLs');
+for(const marker of ['downloadSourceMedia','source__','action=metadata','telegram-source-r2'])fail(drafts.includes(marker),`src/telegram-drafts-admin.js: SOURCE→R2 flow missing ${marker}`);
 fail(drafts.includes("if('media'in b)"),'src/telegram-drafts-admin.js: media edits are not persisted');
 const bridge=read('public/admin/hub/draft-bridge.js');
 fail(bridge.includes('media:mediaPayload()'),'public/admin/hub/draft-bridge.js: Telegram draft media state not submitted');
@@ -76,7 +79,16 @@ fail(bridge.includes('media:mediaPayload()'),'public/admin/hub/draft-bridge.js: 
 const publicMedia=read('src/hub-public-media.js');
 fail(!publicMedia.includes('legacyExtraIds'),'src/hub-public-media.js: legacy EXTRAS synthesis still active');
 fail(!publicMedia.includes("source:'legacy-media'"),'src/hub-public-media.js: virtual media EXTRAS still active');
-for(const marker of ['HUB_FILES','row.storage','row.r2_key','ensureStorageColumns'])fail(publicMedia.includes(marker),`src/hub-public-media.js: R2 read fallback missing ${marker}`);
+for(const marker of ['HUB_FILES','row.storage','row.r2_key','ensureStorageColumns','isSource','source_files','media_model:6'])fail(publicMedia.includes(marker),`src/hub-public-media.js: public SOURCE/R2 contract missing ${marker}`);
+
+const main=read('src/main.js');
+for(const marker of ['SCAN_DEADLINE_MS','SCAN_FETCH_MS','SCAN_PAGE_LIMIT','AbortController','preferred_variant'])fail(main.includes(marker),`src/main.js: bounded creator scan missing ${marker}`);
+if(/page\s*<=\s*50/.test(main))errors.push('src/main.js: legacy 50-page creator scan returned');
+
+fail(exists('src/lorebook-cleanup.js'),'src/lorebook-cleanup.js: targeted lorebook cleanup helper missing');
+if(exists('src/lorebook-cleanup.js')){const l=read('src/lorebook-cleanup.js');for(const marker of ['linkedLorebooksForCharacter','cleanupDetachedLorebooks','WHERE lorebook_id=?','WHERE content_hash=?'])fail(l.includes(marker),`src/lorebook-cleanup.js: targeted cleanup missing ${marker}`)}
+const characterAdmin=read('src/character-admin.js');
+fail(characterAdmin.includes('cleanupDetachedLorebooks'),'src/character-admin.js: character delete must use targeted lorebook cleanup');
 
 if(errors.length){console.error('\nARCHIVE.EXE audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + R2 dual storage + zero runtime D1 DDL checked`);
+console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + bounded scans + zero runtime D1 DDL checked`);

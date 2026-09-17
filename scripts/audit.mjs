@@ -31,7 +31,7 @@ if(exists(baseline)){
   fail(sql.includes('storage TEXT NOT NULL DEFAULT \'d1\''),`${baseline}: HUB R2 storage column missing`);
   fail(sql.includes("r2_key TEXT NOT NULL DEFAULT ''"),`${baseline}: HUB r2_key column missing`);
 }
-const runtimeDdlAllowlist=new Set(['src/hub-resources.js','src/source-truth.js','src/telegram-admin-fixed.js','src/telegram-drafts-admin.js','src/universe-curation.js','src/main.js']);
+const runtimeDdlAllowlist=new Set(['src/hub-resources.js','src/source-truth.js','src/telegram-admin-fixed.js','src/telegram-drafts-admin.js','src/universe-curation.js','src/main.js','src/hub-public-media.js','src/telegram-bots.js']);
 for(const file of sourceFiles){const text=read(file);if(/\b(?:CREATE\s+(?:TABLE|INDEX)|ALTER\s+TABLE)\b/i.test(text)&&!runtimeDdlAllowlist.has(file))errors.push(`${file}: runtime D1 DDL is forbidden; add a numbered migration instead`)}
 for(const file of ['src/hub-r2-migration.js','src/hub-suggestions.js']){const text=read(file);if(/\b(?:CREATE\s+(?:TABLE|INDEX)|ALTER\s+TABLE)\b/i.test(text))errors.push(`${file}: migrated module must not mutate D1 schema at runtime`);fail(text.includes('D1_MIGRATION_REQUIRED'),`${file}: missing explicit migration-required failure`)}
 

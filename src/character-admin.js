@@ -1,3 +1,5 @@
+import { cleanupDetachedLorebooks, linkedLorebooksForCharacter } from './lorebook-cleanup.js';
+
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
 const arr=v=>Array.isArray(v)?v:[];
@@ -13,12 +15,6 @@ async function clearCatalogCache(request){
   const cache=globalThis.caches?.default;if(!cache)return;
   const u=new URL(request.url);
   await Promise.all([500,1000].map(limit=>{const key=new URL(u.origin);key.pathname='/__archive_cache/catalog-v6';key.search=`?limit=${limit}`;return cache.delete(new Request(key.toString(),{method:'GET'}))}));
-}
-
-async function cleanupLorebookOrphans(env){
-  try{await env.DB.prepare('DELETE FROM lorebooks WHERE id NOT IN (SELECT DISTINCT lorebook_id FROM character_lorebooks)').run()}catch{}
-  try{await env.DB.prepare('DELETE FROM lorebook_sources WHERE lorebook_id NOT IN (SELECT id FROM lorebooks)').run()}catch{}
-  try{await env.DB.prepare("DELETE FROM lorebook_blobs WHERE content_hash NOT IN (SELECT DISTINCT content_hash FROM lorebooks WHERE content_hash IS NOT NULL AND content_hash != '')").run()}catch{}
 }
 
 function normalizeRow(r){
@@ -66,10 +62,11 @@ export async function deleteAdminCharacter(request,env,uuid){
   if(!UUID_RE.test(uuid))return json({ok:false,error:'INVALID_UUID'},400);
   const row=await env.DB.prepare('SELECT janitor_uuid FROM characters WHERE janitor_uuid=? LIMIT 1').bind(uuid).first();
   if(!row)return json({ok:false,error:'CHARACTER_NOT_FOUND'},404);
+  const oldLorebooks=await linkedLorebooksForCharacter(env,uuid).catch(()=>[]);
   try{await env.DB.prepare('DELETE FROM character_lorebooks WHERE character_uuid=?').bind(uuid).run()}catch{}
   try{await env.DB.prepare('DELETE FROM admin_universe_review WHERE review_key=?').bind(`candidate:${uuid}`).run()}catch{}
   await env.DB.prepare('DELETE FROM characters WHERE janitor_uuid=?').bind(uuid).run();
-  await cleanupLorebookOrphans(env);
+  const lorebookCleanup=await cleanupDetachedLorebooks(env,oldLorebooks).catch(()=>({entities:0,sources:0,blobs:0}));
   await clearCatalogCache(request);
-  return json({ok:true,uuid,deleted:true});
+  return json({ok:true,uuid,deleted:true,lorebookCleanup});
 }

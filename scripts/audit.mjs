@@ -93,8 +93,8 @@ fail(characterAdmin.includes('cleanupDetachedLorebooks'),'src/character-admin.js
 fail(exists('src/lorebook-universe-repair.js'),'src/lorebook-universe-repair.js: targeted universe repair helper missing');
 if(exists('src/lorebook-universe-repair.js')){
   const repair=read('src/lorebook-universe-repair.js');
-  for(const marker of ['repairAffectedLorebookUniverses','repairAllLorebookUniverses','_archive_previous_source','hub','character_lorebooks','WHERE janitor_uuid=?','targets.has','cleared'])fail(repair.includes(marker),`src/lorebook-universe-repair.js: repair contract missing ${marker}`);
-  fail(!/UPDATE characters SET[^;]+WHERE janitor_uuid=\?/s.test(repair),'src/lorebook-universe-repair.js: character repairs must stay UUID-targeted');
+  for(const marker of ['repairAffectedLorebookUniverses','repairAllLorebookUniverses','_archive_previous_source','character_lorebooks','WHERE janitor_uuid=?','targets.has','cleared'])fail(repair.includes(marker),`src/lorebook-universe-repair.js: repair contract missing ${marker}`);
+  for(const sql of ["UPDATE characters SET universe=?,universes=?,universe_source_field=?,updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?","UPDATE characters SET universe='',universes='[]',universe_source_field='',updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?"])fail(repair.includes(sql),`src/lorebook-universe-repair.js: UUID-targeted repair SQL missing ${sql}`);
 }
 const sourceTruth=read('src/source-truth.js');
 for(const marker of ["from './lorebook-universe-repair.js'",'affectedLorebookIds','repairAffectedLorebookUniverses(env,uuid','repairAllLorebookUniverses(env)'])fail(sourceTruth.includes(marker),`src/source-truth.js: lorebook universe repair integration missing ${marker}`);

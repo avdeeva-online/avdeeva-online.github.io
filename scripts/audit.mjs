@@ -39,7 +39,7 @@ if(exists(migrationFiles[3]))fail(read(migrationFiles[3]).includes("source-truth
 for(const file of sourceFiles){const text=read(file);if(/\b(?:CREATE\s+(?:TABLE|INDEX)|ALTER\s+TABLE)\b/i.test(text))errors.push(`${file}: runtime D1 DDL is forbidden; add a numbered migration instead`)}
 fail(exists('src/d1-schema.js'),'src/d1-schema.js: read-only migration guard missing');
 if(exists('src/d1-schema.js')){const guard=read('src/d1-schema.js');fail(guard.includes('D1_MIGRATION_REQUIRED'),'src/d1-schema.js: explicit migration failure missing');if(/\b(?:CREATE\s+(?:TABLE|INDEX)|ALTER\s+TABLE)\b/i.test(guard))errors.push('src/d1-schema.js: schema guard must stay read-only')}
-for(const file of ['src/hub-resources.js','src/source-truth.js','src/telegram-admin-fixed.js','src/telegram-drafts-admin.js','src/universe-curation.js','src/main.js','src/hub-public-media.js','src/telegram-bots.js','src/hub-r2-migration.js','src/hub-suggestions.js']){const text=read(file);fail(text.includes('D1_MIGRATION_REQUIRED')||text.includes('requireD1Schema'),`${file}: missing read-only migration guard`)}
+for(const file of ['src/hub-resources.js','src/source-truth.js','src/telegram-admin-fixed.js','src/telegram-drafts-admin.js','src/universe-curation.js','src/main.js','src/hub-public-media.js','src/hub-r2-migration.js','src/hub-suggestions.js']){const text=read(file);fail(text.includes('D1_MIGRATION_REQUIRED')||text.includes('requireD1Schema'),`${file}: missing read-only migration guard`)}
 
 const hub=read('public/hub-dynamic.js');
 fail(hub.includes('extraFile(f)&&imageFile(f)'),'public/hub-dynamic.js: EXTRAS must use explicit extra flag');

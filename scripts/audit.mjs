@@ -23,6 +23,18 @@ for(const route of ['/admin/*','/api/*','/telegram/*','/hub.html'])fail(wrangler
 fail(wrangler.includes('main = "src/cloudflare-entry-v2.js"'),'wrangler.toml: unexpected worker entrypoint');
 fail(wrangler.includes('[[r2_buckets]]')&&wrangler.includes('binding = "HUB_FILES"'),'wrangler.toml: HUB_FILES R2 binding missing');
 
+const baseline='migrations/0001_baseline.sql';
+fail(exists(baseline),'D1 baseline migration missing');
+if(exists(baseline)){
+  const sql=read(baseline);
+  for(const table of ['characters','lorebooks','character_lorebooks','hub_resources','hub_resource_files','hub_resource_publish_sessions','telegram_admin_drafts','telegram_admin_import_session','hub_suggestions','universe_curation','admin_universe_review'])fail(sql.includes(`CREATE TABLE IF NOT EXISTS ${table}`),`${baseline}: missing ${table}`);
+  fail(sql.includes('storage TEXT NOT NULL DEFAULT \'d1\''),`${baseline}: HUB R2 storage column missing`);
+  fail(sql.includes("r2_key TEXT NOT NULL DEFAULT ''"),`${baseline}: HUB r2_key column missing`);
+}
+const runtimeDdlAllowlist=new Set(['src/hub-resources.js','src/source-truth.js','src/telegram-admin-fixed.js','src/telegram-drafts-admin.js','src/universe-curation.js','src/main.js']);
+for(const file of sourceFiles){const text=read(file);if(/\b(?:CREATE\s+(?:TABLE|INDEX)|ALTER\s+TABLE)\b/i.test(text)&&!runtimeDdlAllowlist.has(file))errors.push(`${file}: runtime D1 DDL is forbidden; add a numbered migration instead`)}
+for(const file of ['src/hub-r2-migration.js','src/hub-suggestions.js']){const text=read(file);if(/\b(?:CREATE\s+(?:TABLE|INDEX)|ALTER\s+TABLE)\b/i.test(text))errors.push(`${file}: migrated module must not mutate D1 schema at runtime`);fail(text.includes('D1_MIGRATION_REQUIRED'),`${file}: missing explicit migration-required failure`)}
+
 const hub=read('public/hub-dynamic.js');
 fail(hub.includes('extraFile(f)&&imageFile(f)'),'public/hub-dynamic.js: EXTRAS must use explicit extra flag');
 fail(hub.includes('downloadFiles=files.filter(f=>!extraFile(f))'),'public/hub-dynamic.js: downloads must exclude EXTRAS');
@@ -61,4 +73,4 @@ fail(!publicMedia.includes("source:'legacy-media'"),'src/hub-public-media.js: vi
 for(const marker of ['HUB_FILES','row.storage','row.r2_key','ensureStorageColumns'])fail(publicMedia.includes(marker),`src/hub-public-media.js: R2 read fallback missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + R2 dual storage checked`);
+console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + R2 dual storage + D1 migration ownership checked`);

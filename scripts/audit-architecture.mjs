@@ -38,12 +38,7 @@ if(exists('src/telegram-admin-shared.js')){
 fail(exists('src/telegram-admin-router.js'),'src/telegram-admin-router.js: stable admin Telegram route seam missing');
 if(exists('src/telegram-admin-router.js')){
   const telegramAdminRouter=read('src/telegram-admin-router.js');
-  fail(telegramAdminRouter.includes("from './telegram-admin-menu.js'"),'src/telegram-admin-router.js: static admin menu handler not delegated');
-  fail(telegramAdminRouter.includes("from './telegram-admin-stats.js'"),'src/telegram-admin-router.js: read-only admin stats handler not delegated');
-  fail(telegramAdminRouter.includes("from './telegram-admin-fixed.js'"),'src/telegram-admin-router.js: current fixed admin handler not delegated');
-  fail(telegramAdminRouter.includes('handleAdminTelegramRoute'),'src/telegram-admin-router.js: route handler export missing');
-  fail(telegramAdminRouter.includes('tryHandleAdminMenuRequest(request,env)'),'src/telegram-admin-router.js: static menu must run before fixed handler');
-  fail(telegramAdminRouter.includes('tryHandleAdminStatsRequest(request,env)'),'src/telegram-admin-router.js: read-only stats must run before fixed handler');
+  for(const marker of ["from './telegram-admin-menu.js'","from './telegram-admin-stats.js'","from './telegram-admin-readonly.js'","from './telegram-admin-fixed.js'",'handleAdminTelegramRoute','tryHandleAdminMenuRequest(request,env)','tryHandleAdminStatsRequest(request,env)','tryHandleAdminReadonlyRequest(request,env)'])fail(telegramAdminRouter.includes(marker),`src/telegram-admin-router.js: route chain missing ${marker}`);
   fail(!telegramAdminRouter.includes("from './telegram-bots.js'"),'src/telegram-admin-router.js: legacy bot must stay behind fixed handler, not the route seam');
 }
 fail(edge.includes("from './telegram-admin-router.js'"),'src/cloudflare-entry-v2.js: admin Telegram route bypasses stable router seam');
@@ -65,6 +60,13 @@ if(exists('src/telegram-admin-stats.js')){
   for(const marker of ['function webhookSecret','function tg(','function send(','function edit(','function answerCb'])fail(!stats.includes(marker),`src/telegram-admin-stats.js: duplicate shared Telegram primitive returned ${marker}`);
 }
 
+fail(exists('src/telegram-admin-readonly.js'),'src/telegram-admin-readonly.js: extracted read-only admin views missing');
+if(exists('src/telegram-admin-readonly.js')){
+  const readonly=read('src/telegram-admin-readonly.js');
+  for(const marker of ["from './telegram-admin-shared.js'",'tryHandleAdminReadonlyRequest','adm:hub','adm:authors',"SELECT id,title,type,creator_name FROM hub_resources WHERE status='published'","SELECT creator_name,COUNT(*) n FROM hub_resources WHERE status='published' AND creator_name!=''",'OPEN HUB ↗','<b>AUTHORS</b>'])fail(readonly.includes(marker),`src/telegram-admin-readonly.js: read-only view behavior missing ${marker}`);
+  for(const marker of ['INSERT ','UPDATE ','DELETE ','ALTER TABLE','CREATE TABLE'])fail(!readonly.includes(marker),`src/telegram-admin-readonly.js: read-only handler contains write/DDL marker ${marker}`);
+}
+
 fail(exists('src/telegram-admin-fixed.js'),'src/telegram-admin-fixed.js: fixed admin Telegram handler missing');
 fail(exists('src/telegram-bots.js'),'src/telegram-bots.js: legacy Telegram fallback missing');
 if(exists('src/telegram-admin-fixed.js')&&exists('src/telegram-bots.js')){
@@ -72,7 +74,7 @@ if(exists('src/telegram-admin-fixed.js')&&exists('src/telegram-bots.js')){
   const legacy=read('src/telegram-bots.js');
   fail(fixed.includes("import { handleAdminTelegram } from './telegram-bots.js'"),'src/telegram-admin-fixed.js: expected legacy fallback boundary missing');
   for(const marker of ['adm:import','session:new','session:finish','session:resume:','draft:view:','draft:publish:','draft:delete:'])fail(fixed.includes(marker),`src/telegram-admin-fixed.js: fixed session callback missing ${marker}`);
-  for(const marker of ['adm:drafts','adm:suggestions','adm:hub','adm:authors','adm:issues','draft:reanalyze:','sug:ignore:','sug:import:'])fail(legacy.includes(marker),`src/telegram-bots.js: expected legacy fallback callback missing ${marker}`);
+  for(const marker of ['adm:drafts','adm:suggestions','adm:issues','draft:reanalyze:','sug:ignore:','sug:import:'])fail(legacy.includes(marker),`src/telegram-bots.js: expected legacy fallback callback missing ${marker}`);
 }
 
 const entry=read('src/entry.js');
@@ -87,4 +89,4 @@ const media=read('src/hub-public-media.js');
 for(const marker of ['listHubResourcesSummaryPublic','getHubResourcePublic'])fail(media.includes(marker),`src/hub-public-media.js: progressive HUB API missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE architecture audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted static admin menu + read-only admin stats + fixed/legacy callback boundary + progressive HUB + dead-route removal checked');
+console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + fixed/legacy callback boundary + progressive HUB + dead-route removal checked');

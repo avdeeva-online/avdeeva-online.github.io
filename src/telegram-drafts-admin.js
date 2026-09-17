@@ -1,10 +1,11 @@
 import { publishHubResource } from './hub-resources.js';
+import { requireD1Schema } from './d1-schema.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
 const arr=v=>Array.isArray(v)?v:[];
 const uniq=(items,key)=>{const seen=new Set();return arr(items).filter(x=>{const k=key(x);if(!k||seen.has(k))return false;seen.add(k);return true})};
-async function ensureSchema(env){await env.DB.prepare(`CREATE TABLE IF NOT EXISTS telegram_admin_drafts(id TEXT PRIMARY KEY,source_url TEXT NOT NULL UNIQUE,payload TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'review',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`).run()}
+const ensureSchema=env=>requireD1Schema(env,'telegram-drafts',`SELECT id,source_url,payload,status,created_at,updated_at FROM telegram_admin_drafts LIMIT 1`);
 function sourceUrl(v){if(!v)return'';if(typeof v==='string')return clean(v);if(typeof v.url==='string')return clean(v.url);if(v.url)return sourceUrl(v.url);return''}
 function mediaKey(x){return clean(x?.url)||clean(x?.telegram_file_unique_id)||clean(x?.telegram_file_id)||`${x?.width||0}:${x?.height||0}:${x?.size||0}`}
 function normalizeAnalysis(analysis,rowSource=''){const a=analysis&&typeof analysis==='object'?analysis:{};a.source=a.source||{};a.draft=a.draft||{};const posts=[];for(const v of [...arr(a.sourcePosts),a.source?.url,rowSource]){const u=sourceUrl(v);if(u&&!posts.includes(u))posts.push(u)}a.sourcePosts=posts.map(url=>({url}));if(!a.source.url&&posts[0])a.source.url=posts[0];a.media=uniq(a.media,mediaKey);if(a.media.length&&!a.media.some(x=>x?.cover))a.media[0]={...a.media[0],cover:true};a.files=uniq(a.files,x=>clean(x?.telegram_file_unique_id)||clean(x?.telegram_file_id)||clean(x?.url)||`${clean(x?.name)}:${Number(x?.size||0)}`);return a}

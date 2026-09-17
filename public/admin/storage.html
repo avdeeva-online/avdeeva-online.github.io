@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<title>ARCHIVE.EXE / STORAGE</title>
+<style>
+:root{--bg:#0b0e0b;--panel:#11150f;--line:#2f382b;--text:#cbd4c2;--muted:#6f7a69;--accent:#d1bd87;--bad:#c97f72;--mono:Consolas,ui-monospace,monospace}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 30% 0,#161d14 0,#0b0e0b 42%);color:var(--text);font-family:var(--mono);padding:24px}.shell{width:min(920px,100%);margin:auto;border:1px solid var(--line);background:rgba(17,21,15,.95);padding:22px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px}.back,.btn{border:1px solid var(--line);background:#0d110c;color:#b8c2ae;padding:9px 11px;font:8px var(--mono);letter-spacing:.06em;text-decoration:none;cursor:pointer}.btn:hover{border-color:#6c6f4c}.btn.primary{color:#eadfbf;border-color:#665f3f}.btn:disabled{opacity:.45;cursor:not-allowed}.eyebrow{font-size:8px;color:var(--muted);letter-spacing:.12em}h1{margin:12px 0 6px;font-size:26px}.sub{font-size:8px;color:var(--muted);line-height:1.6}.status{margin:18px 0 12px;padding:13px;border:1px solid var(--line);background:#0d110c;font-size:9px;line-height:1.7}.ok{color:var(--accent)}.bad{color:var(--bad)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.stat{border:1px solid var(--line);background:#0d110c;padding:14px}.stat b{display:block;font-size:20px;color:#e7dfc7}.stat span{display:block;margin-top:6px;font-size:7px;color:var(--muted)}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.log{margin-top:14px;min-height:180px;max-height:360px;overflow:auto;white-space:pre-wrap;border:1px solid var(--line);background:#080b08;padding:12px;font:8px/1.55 var(--mono);color:#8e9989}.note{margin-top:12px;color:#657060;font:7px/1.55 var(--mono)}@media(max-width:640px){body{padding:10px}.shell{padding:15px}.grid{grid-template-columns:1fr}.top{align-items:flex-start}.actions{display:grid}.btn{width:100%}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <div class="top"><div class="eyebrow">ARCHIVE ADMIN / HUB STORAGE</div><a class="back" href="/admin/">← ADMIN</a></div>
+  <h1>HUB STORAGE</h1>
+  <div class="sub">R2 migration console. Existing D1 files stay readable until each file is safely committed to R2.</div>
+  <div id="status" class="status">LOADING STORAGE STATUS…</div>
+  <div class="grid">
+    <div class="stat"><b id="d1">—</b><span>D1 FILES</span></div>
+    <div class="stat"><b id="r2">—</b><span>R2 FILES</span></div>
+    <div class="stat"><b id="remote">—</b><span>REMOTE FILES</span></div>
+  </div>
+  <div class="actions">
+    <button class="btn" id="refresh" type="button">REFRESH</button>
+    <button class="btn" id="dry" type="button">DRY RUN · 10</button>
+    <button class="btn primary" id="batch" type="button">MIGRATE · 10</button>
+    <button class="btn primary" id="all" type="button">MIGRATE ALL</button>
+  </div>
+  <div id="log" class="log">No migration started.</div>
+  <div class="note">Migration order: read D1 → PUT R2 → commit storage metadata → remove old D1 chunks. If the R2 write or metadata commit fails, the D1 copy remains authoritative.</div>
+</main>
+<script>
+(()=>{
+  const $=s=>document.querySelector(s),status=$('#status'),log=$('#log'),buttons=[...document.querySelectorAll('button')];
+  const setBusy=v=>buttons.forEach(b=>b.disabled=v);
+  const write=x=>{log.textContent=(typeof x==='string'?x:JSON.stringify(x,null,2))+'\n\n'+log.textContent.slice(0,12000)};
+  async function api(method='GET',body){const r=await fetch('/api/admin/hub-storage',{method,headers:body?{'content-type':'application/json'}:{},body:body?JSON.stringify(body):undefined,cache:'no-store'}),text=await r.text();let d={};try{d=JSON.parse(text)}catch{d={ok:false,error:text||`HTTP_${r.status}`}}if(!r.ok&&r.status!==207)throw new Error(d.error||d.message||`HTTP_${r.status}`);return d}
+  function count(d,key){return Number((d.groups||[]).find(x=>x.storage===key)?.files||0)}
+  async function refresh(){const d=await api();$('#d1').textContent=count(d,'d1');$('#r2').textContent=count(d,'r2');$('#remote').textContent=count(d,'remote');status.innerHTML=d.r2_available?`<span class="ok">● R2 CONNECTED</span> · ${d.pending_d1_files} D1 file(s) pending migration`:`<span class="bad">● R2 NOT CONNECTED</span> · deploy HUB_FILES binding first`;return d}
+  async function migrate(limit=10,dry_run=false){const d=await api('POST',{limit,dry_run});write(d);await refresh();return d}
+  $('#refresh').onclick=async()=>{setBusy(true);try{await refresh()}catch(e){status.innerHTML=`<span class="bad">STATUS FAILED:</span> ${e.message}`}finally{setBusy(false)}};
+  $('#dry').onclick=async()=>{setBusy(true);try{await migrate(10,true)}catch(e){write('DRY RUN FAILED: '+e.message)}finally{setBusy(false)}};
+  $('#batch').onclick=async()=>{if(!confirm('Migrate the next 10 D1 files to R2?'))return;setBusy(true);try{await migrate(10,false)}catch(e){write('MIGRATION FAILED: '+e.message)}finally{setBusy(false)}};
+  $('#all').onclick=async()=>{if(!confirm('Migrate all remaining HUB files from D1 to R2 in safe batches?'))return;setBusy(true);try{let rounds=0;for(;;){const d=await migrate(10,false);rounds++;if(d.errors?.length)throw new Error(`${d.errors.length} file(s) failed; stopped before continuing.`);if(!d.remaining)break;if(rounds>=200)throw new Error('Safety stop after 200 batches.');await new Promise(r=>setTimeout(r,120))}write('MIGRATION COMPLETE.')}catch(e){write('MIGRATE ALL STOPPED: '+e.message)}finally{setBusy(false)}};
+  refresh().catch(e=>status.innerHTML=`<span class="bad">STATUS FAILED:</span> ${e.message}`);
+})();
+</script>
+</body>
+</html>

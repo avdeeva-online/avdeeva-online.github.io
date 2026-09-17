@@ -1,14 +1,14 @@
-import { handleAdminTelegram } from './telegram-bots.js';
 import { analyzeTelegramPost } from './hub-telegram.js';
 import { telegramDraftsAdmin } from './telegram-drafts-admin.js';
 import { requireD1Schema } from './d1-schema.js';
-import { answerCb, button, clean, edit, esc, okResponse, send, webhookSecret } from './telegram-admin-shared.js';
+import { adminMenu, answerCb, button, clean, edit, esc, okResponse, send, webhookSecret } from './telegram-admin-shared.js';
 import { showAdminSuggestions } from './telegram-admin-suggestions-view.js';
 
 const short=(s,n=420)=>{s=clean(s).replace(/\s+/g,' ');return s.length>n?s.slice(0,n-1)+'…':s};
 const uniqBy=(items,key)=>{const seen=new Set();return(items||[]).filter(x=>{const k=key(x);if(!k||seen.has(k))return false;seen.add(k);return true})};
 
 const urlButton=(text,url)=>({text,url});
+const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const ensureSchema=env=>requireD1Schema(env,'telegram-admin-session',`SELECT
   (SELECT COUNT(*) FROM telegram_admin_drafts) AS drafts,
   (SELECT COUNT(*) FROM telegram_admin_import_session WHERE last_post_id IS NOT NULL OR 1=1) AS sessions`);
@@ -66,20 +66,37 @@ async function handleSessionCallback(token,q,env){const data=clean(q.data),uid=S
 }
 
 export async function handleAdminTelegramFixed(request,env){
-  if(request.method!=='POST')return handleAdminTelegram(request,env);
-  const token=clean(env.Node00admin);if(!token)return handleAdminTelegram(request,env);
-  if(request.headers.get('x-telegram-bot-api-secret-token')!==await webhookSecret(token))return handleAdminTelegram(request,env);
-  let u={};try{u=await request.clone().json()}catch{return handleAdminTelegram(request,env)}
+  if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
+  const token=clean(env.Node00admin);if(!token)return json({ok:false,error:'ADMIN_BOT_TOKEN_MISSING'},503);
+  if(request.headers.get('x-telegram-bot-api-secret-token')!==await webhookSecret(token))return json({ok:false,error:'INVALID_WEBHOOK_SECRET'},403);
+  let u={};try{u=await request.clone().json()}catch{return json({ok:false,error:'INVALID_JSON'},400)}
   await ensureSchema(env);
-  if(u.callback_query){try{if(await handleSessionCallback(token,u.callback_query,env))return okResponse()}catch(e){console.warn('telegram session callback failed',e)}return handleAdminTelegram(request,env)}
-  const message=u.message,uid=String(message?.from?.id||'');if(!message||uid!==String(env.TELEGRAM_ADMIN_USER_ID||''))return handleAdminTelegram(request,env);
-  const text=clean(message.text||message.caption);if(text.startsWith('/'))return handleAdminTelegram(request,env);
+  if(u.callback_query){
+    const q=u.callback_query,uid=String(q.from?.id||'');
+    try{
+      if(await handleSessionCallback(token,q,env))return okResponse();
+      if(uid!==String(env.TELEGRAM_ADMIN_USER_ID||'')){await answerCb(token,q.id,'Access denied');return okResponse()}
+      await answerCb(token,q.id);return okResponse();
+    }catch(e){
+      console.error('telegram fixed callback failed',e);
+      try{const chatId=q.message?.chat?.id;if(chatId)await send(token,chatId,`<b>ADMIN BOT ERROR</b>\n${esc(e.message||e)}`,adminMenu())}catch{}
+      return okResponse();
+    }
+  }
+  const message=u.message,uid=String(message?.from?.id||'');
+  if(!message||uid!==String(env.TELEGRAM_ADMIN_USER_ID||''))return okResponse();
+  const text=clean(message.text||message.caption);
   try{
     const active=await getActive(env,uid);
     if(active){const fileOnly=Boolean(message?.document?.file_id||message?.audio?.file_id||message?.video?.file_id);if(fileOnly){const {row,repeatedGroup}=await attachFileOnly(env,active,message);if(!repeatedGroup)await send(token,message.chat.id,`<b>FILES ADDED TO ACTIVE RESOURCE ✓</b>\n\n${draftText(row,true)}`,activeButtons(row.id,row.source_url));return okResponse()}const meta=forwardedMeta(message),hasPhoto=Boolean(message?.photo?.length);if(text||hasPhoto||meta){const {row,repeatedGroup}=await attachRichMessage(env,active,message);if(!repeatedGroup)await send(token,message.chat.id,`<b>RESOURCE CONTENT UPDATED ✓</b>\n\n${draftText(row,true)}`,activeButtons(row.id,row.source_url));return okResponse()}return okResponse()}
     const meta=forwardedMeta(message)||parseSourceUrl(extractTelegramUrl(text));
     if(meta){await send(token,message.chat.id,'ANALYZING TELEGRAM POST…');const row=await createFromSource(env,message,meta);await setSession(env,uid,row);await send(token,message.chat.id,draftText(row,true),activeButtons(row.id,row.source_url));return okResponse()}
     if(message?.document||message?.audio||message?.video||message?.photo?.length){await send(token,message.chat.id,'<b>NO ACTIVE RESOURCE</b>\n\nPress ＋ IMPORT first or forward the main source post. Files are only attached when a resource session is active.',promptButtons());return okResponse()}
-  }catch(e){console.warn('telegram explicit-session ingest failed',e);try{await send(token,message.chat.id,`<b>IMPORT ERROR</b>\n\n${esc(e.message||e)}`,promptButtons());return okResponse()}catch{}}
-  return handleAdminTelegram(request,env);
+    if(text){await send(token,message.chat.id,'Send or forward a public <b>t.me/channel/post</b> source, or press ＋ IMPORT. Once a resource is active, following posts/files stay attached until you press FINISH RESOURCE.',{inline_keyboard:[[button('＋ IMPORT','adm:import'),button('HOME','adm:home')]]});return okResponse()}
+    return okResponse();
+  }catch(e){
+    console.warn('telegram explicit-session ingest failed',e);
+    try{await send(token,message.chat.id,`<b>IMPORT ERROR</b>\n\n${esc(e.message||e)}`,promptButtons())}catch{}
+    return okResponse();
+  }
 }

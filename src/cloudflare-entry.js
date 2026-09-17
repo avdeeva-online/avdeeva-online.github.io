@@ -1,9 +1,9 @@
 import app from './universe-curation.js';
 import { analyzeTelegramPost } from './hub-telegram.js';
-import { publishHubResource, listHubResources, downloadHubFile, deleteHubResourceFile, setHubResourcePrimary, deleteHubResource, injectHubResources } from './hub-resources.js';
+import { publishHubResource, deleteHubResourceFile, setHubResourcePrimary, deleteHubResource } from './hub-resources.js';
 import { listAdminCharacters, updateAdminCharacter, deleteAdminCharacter } from './character-admin.js';
 import { submitHubSuggestion, listHubSuggestions, updateHubSuggestion } from './hub-suggestions.js';
-import { handlePublicTelegram, setupTelegramWebhooks, telegramWebhookStatus } from './telegram-bots.js';
+import { setupTelegramWebhooks, telegramWebhookStatus } from './telegram-bots.js';
 import { telegramDraftsAdmin } from './telegram-drafts-admin.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
@@ -31,11 +31,9 @@ async function injectAdminBack(response,pathname=''){
   }
   const headers=new Headers(response.headers);headers.set('cache-control','no-store');headers.delete('content-length');return new Response(html,{status:response.status,statusText:response.statusText,headers})
 }
-function noStoreHtml(response){const type=String(response.headers.get('content-type')||'').toLowerCase();if(!type.includes('text/html'))return response;const headers=new Headers(response.headers);headers.set('cache-control','no-store');headers.delete('content-length');return new Response(response.body,{status:response.status,statusText:response.statusText,headers})}
 
 export default{async fetch(request,env,ctx){
   const url=new URL(request.url),blocked=adminGuard(request,env,url);if(blocked)return blocked;
-  if(url.pathname==='/telegram/public')return handlePublicTelegram(request,env);
   if(url.pathname==='/api/admin/telegram/setup')return setupTelegramWebhooks(request,env);
   if(url.pathname==='/api/admin/telegram/status')return telegramWebhookStatus(request,env);
   if(url.pathname==='/api/admin/telegram-drafts')return telegramDraftsAdmin(request,env);
@@ -51,8 +49,5 @@ export default{async fetch(request,env,ctx){
   const adminResourceMatch=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)$/);if(adminResourceMatch){const resourceId=decodeURIComponent(adminResourceMatch[1]);if(request.method==='DELETE')return deleteHubResource(env,resourceId);return json({ok:false,error:'METHOD_NOT_ALLOWED'},405)}
   const primaryMatch=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)\/files\/([^/]+)\/primary$/);if(primaryMatch){if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return setHubResourcePrimary(env,decodeURIComponent(primaryMatch[1]),decodeURIComponent(primaryMatch[2]))}
   const adminFileMatch=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)\/files\/([^/]+)$/);if(adminFileMatch){if(request.method!=='DELETE')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return deleteHubResourceFile(env,decodeURIComponent(adminFileMatch[1]),decodeURIComponent(adminFileMatch[2]))}
-  if(url.pathname==='/api/hub-resources'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return listHubResources(env)}
-  const fileMatch=url.pathname.match(/^\/api\/hub-resources\/([^/]+)\/files\/([^/]+)$/);if(fileMatch){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return downloadHubFile(env,decodeURIComponent(fileMatch[1]),decodeURIComponent(fileMatch[2]))}
-  if(request.method==='GET'&&(url.pathname==='/hub.html'||url.pathname==='/hub'||url.pathname==='/hub/')){let response=await app.fetch(request,env,ctx);response=await injectHubResources(response,env);return noStoreHtml(response)}
   const response=await app.fetch(request,env,ctx);if(request.method==='GET'&&url.pathname.startsWith('/admin/')&&url.pathname!=='/admin/')return injectAdminBack(response,url.pathname);return response;
 }};

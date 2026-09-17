@@ -1,42 +1,5 @@
 import app from './source-truth.js';
 
-const SEEDED_RULES=[
-  {source:'the vault, aka just my private bots made for me that i choose to make public.',public:['The Vault']},
-  {source:'bayou crew',public:['Bayou Crew']},
-  {source:'bayou crew next gen',public:['Bayou Crew','Bayou Crew Next Gen'],parent:'Bayou Crew',sub:'Bayou Crew Next Gen'},
-  {source:'DEMIGODS; GREEK GOD ALT ROCK BAND',public:['Demigods']},
-  {source:'hale university x vdb',public:['Hale University']},
-  {source:'arena',public:['Arena']},
-  {source:'the vault but turned into mini series called hale u titans',public:['The Vault']},
-  {source:'VOODOO BOYS NEXT GEN',public:['Voodoo Boys','Voodoo Boys Next Gen'],parent:'Voodoo Boys',sub:'Voodoo Boys Next Gen'},
-  {source:'VOODOO BOYS',public:['Voodoo Boys']},
-  {source:'HALE UNIVERSITY',public:['Hale University']},
-  {source:'janitorcup2025 (a leidenpotato hockey collab) - search that tag for more bots',public:['Collab']},
-  {source:'the firm',public:['The Firm']},
-  {source:'BAYOU CREW NEXT GEN (AU ALT)',public:['Bayou Crew','Bayou Crew Next Gen'],parent:'Bayou Crew',sub:'Bayou Crew Next Gen'},
-  {source:'bayou crew x voodoo boys',public:['Bayou Crew','Voodoo Boys']},
-  {source:'BRIDGERTON INSPIRED AU',public:['Bridgerton Inspired']},
-  {source:'BRIDGERTON INSPIRED COLLAB',public:['Bridgerton Inspired','Collab']},
-  {source:'cash casino',public:['Cash Casino']},
-  {source:'CROWN RECORDS RAPPER COLLAB',public:['Collab']},
-  {source:'four horseman collab by leidenpotato for her 1 year server anniversary',public:['Collab']},
-  {source:'HALE REAPERS',public:['Hale University']},
-  {source:'HALE U',public:['Hale University']},
-  {source:'HALE UNIVERSITY OUTCASTS',public:['Hale University']},
-  {source:"HALE VALKYRIES WOMEN'S RUGBY COLLAB",public:['Hale University']},
-  {source:'hawthorne university collab by overlord melvin',public:['Collab']},
-  {source:'INTERGALACTIC by devi and sepha',public:['Intergalactic']},
-  {source:'INTERGALACTIC BY Devi and Sepha : a sci-fi series',public:['Intergalactic']},
-  {source:'THE FIRM x THE VALENTINOS',public:['The Firm','The Valentinos']},
-  {source:'THE LEDGER COLLAB',public:['Collab']},
-  {source:'THE VAULT',public:['The Vault']},
-  {source:'the vault, bots made especially for me',public:['The Vault']},
-  {source:'valentinos',public:['The Valentinos']},
-  {source:'valentinos x the firm',public:['The Firm','The Valentinos']},
-  {source:'vault bots made for me',public:['The Vault']},
-  {source:'voodoo boys x bayou crew',public:['Bayou Crew','Voodoo Boys']}
-];
-
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
 const key=v=>clean(v).toLocaleLowerCase();
 const uniq=values=>{const out=[],seen=new Set();for(const raw of values||[]){const v=clean(raw),k=key(v);if(!v||seen.has(k))continue;seen.add(k);out.push(v)}return out};
@@ -47,21 +10,8 @@ let schemaReady=null;
 async function ensureSchema(env){
   if(schemaReady)return schemaReady;
   schemaReady=(async()=>{
-    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS universe_curation (
-      source_key TEXT PRIMARY KEY,
-      source_value TEXT NOT NULL,
-      public_universes TEXT NOT NULL DEFAULT '[]',
-      parent_universe TEXT NOT NULL DEFAULT '',
-      subuniverse TEXT NOT NULL DEFAULT '',
-      active INTEGER NOT NULL DEFAULT 1,
-      note TEXT NOT NULL DEFAULT '',
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )`).run();
-    const statements=SEEDED_RULES.map(rule=>env.DB.prepare(`INSERT OR IGNORE INTO universe_curation
-      (source_key,source_value,public_universes,parent_universe,subuniverse,active,note,updated_at)
-      VALUES(?,?,?,?,?,1,'seeded from approved curation plan',CURRENT_TIMESTAMP)`)
-      .bind(key(rule.source),rule.source,JSON.stringify(rule.public),rule.parent||'',rule.sub||''));
-    if(statements.length)await env.DB.batch(statements);
+    try{await env.DB.prepare('SELECT source_key,source_value,public_universes,parent_universe,subuniverse,active,note,updated_at FROM universe_curation LIMIT 1').first()}
+    catch(e){throw new Error(`D1_MIGRATION_REQUIRED:${String(e?.message||e)}`)}
   })();
   try{await schemaReady}catch(e){schemaReady=null;throw e}
   return schemaReady;

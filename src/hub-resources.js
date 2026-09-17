@@ -7,6 +7,7 @@ const safeJson=v=>{try{return JSON.stringify(v??[])}catch{return'[]'}};
 const parseJson=(v,fallback=[])=>{try{const x=JSON.parse(v||'');return x??fallback}catch{return fallback}};
 const ALLOWED_SETTINGS=new Set(['modern','fantasy','medieval','post-apocalypse','sci-fi','omegaverse','rusreal']);
 const EXTRA_PREFIX='__extra__';
+const SOURCE_PREFIX='__extra__source__';
 const CHUNK_SIZE=768*1024;
 const NORMAL_TOTAL_LIMIT=25*1024*1024;
 const NORMAL_FILE_LIMIT=10*1024*1024;
@@ -14,6 +15,7 @@ const EXTRA_TOTAL_LIMIT=12*1024*1024;
 const EXTRA_FILE_LIMIT=4*1024*1024;
 const normalizeSettings=v=>[...new Set(arr(v).map(x=>{x=clean(x).toLowerCase();if(x==='historical')return'medieval';if(x==='magic')return'fantasy';return x}).filter(x=>ALLOWED_SETTINGS.has(x)))];
 const isExtraMeta=name=>clean(name).startsWith(EXTRA_PREFIX);
+const isSourceMeta=name=>clean(name).startsWith(SOURCE_PREFIX);
 const inferMime=(name,mime='')=>{const m=clean(mime).toLowerCase();if(m&&m!=='application/octet-stream')return m;const n=clean(name).toLowerCase();if(/\.webp$/.test(n))return'image/webp';if(/\.png$/.test(n))return'image/png';if(/\.jpe?g$/.test(n))return'image/jpeg';if(/\.gif$/.test(n))return'image/gif';if(/\.json$/.test(n))return'application/json';if(/\.zip$/.test(n))return'application/zip';if(/\.txt$/.test(n))return'text/plain';if(/\.css$/.test(n))return'text/css';return m||'application/octet-stream'};
 const toBytes=v=>{if(v instanceof Uint8Array)return v;if(v instanceof ArrayBuffer)return new Uint8Array(v);if(ArrayBuffer.isView(v))return new Uint8Array(v.buffer,v.byteOffset,v.byteLength);if(Array.isArray(v))return Uint8Array.from(v);return new Uint8Array(0)};
 const hasR2=env=>Boolean(env?.HUB_FILES&&typeof env.HUB_FILES.put==='function'&&typeof env.HUB_FILES.get==='function');
@@ -123,6 +125,13 @@ async function beginSession(env,draft){
   return{sessionId,id,updated:Boolean(old)};
 }
 
+async function updateSessionMetadata(env,session,draft){
+  const d=normalizeDraft(draft);if(!d.sourceUrl||!d.type||!d.title)throw new Error('SOURCE_URL_TYPE_TITLE_REQUIRED');
+  await writeResourceRow(env,session.resource_id,{id:session.resource_id},d,'staging');
+  await env.DB.prepare('UPDATE hub_resource_publish_sessions SET updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(session.id).run();
+  return{id:session.resource_id};
+}
+
 async function projectedTotals(env,session){
   const files=(await env.DB.prepare('SELECT id,name,size FROM hub_resource_files WHERE resource_id=?').bind(session.resource_id).all()).results||[];
   const staged=(await env.DB.prepare('SELECT file_id,replace_old_id FROM hub_resource_publish_files WHERE session_id=?').bind(session.id).all()).results||[];
@@ -142,7 +151,7 @@ async function uploadToSession(env,session,parsed){
     if(stagedSame?.file_id){await deleteStoredFile(env,stagedSame.file_id,session.resource_id);await env.DB.prepare('DELETE FROM hub_resource_publish_files WHERE session_id=? AND file_id=?').bind(session.id,stagedSame.file_id).run()}
     const same=await env.DB.prepare(`SELECT f.id FROM hub_resource_files f WHERE f.resource_id=? AND lower(f.name)=lower(?) AND f.id NOT IN (SELECT file_id FROM hub_resource_publish_files WHERE session_id=?) ORDER BY f.created_at DESC LIMIT 1`).bind(session.resource_id,name,session.id).first();
     const fileId=await storeBuffer(env,{resourceId:session.resource_id,name,mime:f.type,size:Number(f.size)||0,isPrimary:false,buffer:await f.arrayBuffer()});
-    await recordStagedFile(env,session.id,fileId,same?.id||'',!isExtra&&markedName===clean(f.name));added.push(fileId);
+    await recordStagedFile(env,session.id,fileId,same?.id||'',!isExtra&&markedName===clean(f.name));added.push({id:fileId,name,source:isSourceMeta(name),extra:isExtraMeta(name)&&!isSourceMeta(name)});
   };
   try{
     for(const f of parsed.files)await addLocal(f,false);
@@ -152,15 +161,21 @@ async function uploadToSession(env,session,parsed){
       const same=await env.DB.prepare(`SELECT f.id FROM hub_resource_files f WHERE f.resource_id=? AND lower(f.name)=lower(?) AND f.id NOT IN (SELECT file_id FROM hub_resource_publish_files WHERE session_id=?) ORDER BY f.created_at DESC LIMIT 1`).bind(session.resource_id,rfName,session.id).first();
       const fileId=crypto.randomUUID();
       await env.DB.prepare(`INSERT INTO hub_resource_files(id,resource_id,name,mime,size,is_primary,data,external_url,storage,r2_key) VALUES(?,?,?,?,?,0,NULL,?,'remote','')`).bind(fileId,session.resource_id,rfName,inferMime(rfName,rf.type),Number(rf.size)||0,remoteUrl).run();
-      await recordStagedFile(env,session.id,fileId,same?.id||'',markedName===rfName);added.push(fileId);
+      await recordStagedFile(env,session.id,fileId,same?.id||'',markedName===rfName);added.push({id:fileId,name:rfName,source:false,extra:false});
     }
     const totals=await projectedTotals(env,session);if(totals.normal>NORMAL_TOTAL_LIMIT)throw new Error('FILES_TOTAL_TOO_LARGE');if(totals.extra>EXTRA_TOTAL_LIMIT)throw new Error('EXTRAS_TOTAL_TOO_LARGE');
     await env.DB.prepare('UPDATE hub_resource_publish_sessions SET updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(session.id).run();
-    return{files:parsed.files.length+parsed.remoteFiles.length,extra_images:parsed.extraImages.length,totals,storage:hasR2(env)?'r2':'d1'};
+    return{files:parsed.files.length+parsed.remoteFiles.length,extra_images:parsed.extraImages.length,added_files:added,totals,storage:hasR2(env)?'r2':'d1'};
   }catch(e){
-    for(const id of added){try{await deleteStoredFile(env,id,session.resource_id)}catch{}try{await env.DB.prepare('DELETE FROM hub_resource_publish_files WHERE session_id=? AND file_id=?').bind(session.id,id).run()}catch{}}
+    for(const item of added){const id=item?.id||item;try{await deleteStoredFile(env,id,session.resource_id)}catch{}try{await env.DB.prepare('DELETE FROM hub_resource_publish_files WHERE session_id=? AND file_id=?').bind(session.id,id).run()}catch{}}
     throw e;
   }
+}
+
+async function cleanupUnreferencedSourceMedia(env,resourceId){
+  const resource=await env.DB.prepare('SELECT media FROM hub_resources WHERE id=? LIMIT 1').bind(resourceId).first(),serialized=String(resource?.media||'[]');
+  const rows=(await env.DB.prepare("SELECT id FROM hub_resource_files WHERE resource_id=? AND name LIKE '__extra__source__%'").bind(resourceId).all()).results||[];
+  for(const row of rows){if(serialized.includes(String(row.id)))continue;try{await deleteStoredFile(env,row.id,resourceId)}catch(e){console.error('source media cleanup failed',row.id,e)}}
 }
 
 async function finalizeSession(env,sessionId){
@@ -171,6 +186,7 @@ async function finalizeSession(env,sessionId){
   await ensurePrimary(env,session.resource_id,preferred);
   await env.DB.prepare("UPDATE hub_resources SET status='published',updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(session.resource_id).run();
   for(const s of staged){if(s.replace_old_id&&s.replace_old_id!==s.file_id){try{await deleteStoredFile(env,s.replace_old_id,session.resource_id)}catch(e){console.error('published resource old-file cleanup failed',s.replace_old_id,e)}}}
+  await cleanupUnreferencedSourceMedia(env,session.resource_id);
   try{await env.DB.prepare('DELETE FROM hub_resource_publish_files WHERE session_id=?').bind(session.id).run()}catch(e){console.error('publish session file cleanup failed',session.id,e)}
   try{await env.DB.prepare('DELETE FROM hub_resource_publish_sessions WHERE id=?').bind(session.id).run()}catch(e){console.error('publish session cleanup failed',session.id,e)}
   return{id:session.resource_id,updated:Boolean(session.was_existing),totals};
@@ -197,6 +213,7 @@ export async function publishHubResource(request,env){
   try{
     if(action==='begin'){const x=await beginSession(env,parsed.draft);return json({ok:true,session_id:x.sessionId,id:x.id,updated:x.updated,status:'staging',storage:hasR2(env)?'r2':'d1'})}
     if(action==='upload'){const sid=clean(parsed.draft?._publish_session||url.searchParams.get('session'));const session=await sessionRow(env,sid);if(!session)return json({ok:false,error:'PUBLISH_SESSION_NOT_FOUND'},404);const out=await uploadToSession(env,session,parsed);return json({ok:true,session_id:sid,id:session.resource_id,...out,status:'staging'})}
+    if(action==='metadata'){const sid=clean(parsed.draft?._publish_session||url.searchParams.get('session'));const session=await sessionRow(env,sid);if(!session)return json({ok:false,error:'PUBLISH_SESSION_NOT_FOUND'},404);const out=await updateSessionMetadata(env,session,parsed.draft);return json({ok:true,session_id:sid,...out,status:'staging'})}
     if(action==='finalize'){const sid=clean(parsed.draft?._publish_session||url.searchParams.get('session'));const out=await finalizeSession(env,sid);return json({ok:true,...out,status:'published'})}
     if(action==='cancel'){const sid=clean(parsed.draft?._publish_session||url.searchParams.get('session'));return json({ok:true,...await cancelSession(env,sid)})}
     const started=await beginSession(env,parsed.draft);
@@ -234,8 +251,8 @@ export async function listHubResources(env){
   await ensureSchema(env);await cleanupStaleSessions(env);
   const res=await env.DB.prepare(`SELECT r.*, (SELECT id FROM hub_resource_files f WHERE f.resource_id=r.id AND f.name NOT LIKE '__extra__%' ORDER BY is_primary DESC,created_at ASC LIMIT 1) primary_file_id,(SELECT COUNT(*) FROM hub_resource_files f WHERE f.resource_id=r.id AND f.name NOT LIKE '__extra__%') file_count FROM hub_resources r WHERE status='published' ORDER BY updated_at DESC`).all();
   const fileRes=await env.DB.prepare(`SELECT f.id,f.resource_id,f.name,f.mime,f.size,f.is_primary,f.external_url,f.storage,f.r2_key FROM hub_resource_files f INNER JOIN hub_resources r ON r.id=f.resource_id WHERE r.status='published' ORDER BY f.is_primary DESC,f.created_at ASC`).all(),filesByResource=new Map();
-  for(const f of fileRes.results||[]){if(!filesByResource.has(f.resource_id))filesByResource.set(f.resource_id,[]);filesByResource.get(f.resource_id).push({id:f.id,name:f.name,mime:inferMime(f.name,f.mime),size:Number(f.size||0),primary:Boolean(f.is_primary),extra:isExtraMeta(f.name),external_url:f.external_url||'',storage:clean(f.storage)||'d1',download_url:`/api/hub-resources/${encodeURIComponent(f.resource_id)}/files/${encodeURIComponent(f.id)}`})}
-  const items=(res.results||[]).map(r=>({id:r.id,source_url:r.source_url,type:r.type,title:r.title,creator:{name:r.creator_name,link:r.creator_link},description_short:r.description_short,description_full:r.description_full,additional_info:r.additional_info||'',models:parseJson(r.models),settings:normalizeSettings(parseJson(r.settings)),tags:parseJson(r.tags).filter(x=>clean(x).toLowerCase()!=='magic'),media:parseJson(r.media),primary_file_id:r.primary_file_id||null,file_count:Number(r.file_count||0),files:filesByResource.get(r.id)||[],updated_at:r.updated_at}));
+  for(const f of fileRes.results||[]){if(!filesByResource.has(f.resource_id))filesByResource.set(f.resource_id,[]);filesByResource.get(f.resource_id).push({id:f.id,name:f.name,mime:inferMime(f.name,f.mime),size:Number(f.size||0),primary:Boolean(f.is_primary),extra:isExtraMeta(f.name)&&!isSourceMeta(f.name),source:isSourceMeta(f.name),external_url:f.external_url||'',storage:clean(f.storage)||'d1',download_url:`/api/hub-resources/${encodeURIComponent(f.resource_id)}/files/${encodeURIComponent(f.id)}`})}
+  const items=(res.results||[]).map(r=>({id:r.id,source_url:r.source_url,type:r.type,title:r.title,creator:{name:r.creator_name,link:r.creator_link},description_short:r.description_short,description_full:r.description_full,additional_info:r.additional_info||'',models:parseJson(r.models),settings:normalizeSettings(parseJson(r.settings)),tags:parseJson(r.tags).filter(x=>clean(x).toLowerCase()!=='magic'),media:parseJson(r.media),primary_file_id:r.primary_file_id||null,file_count:Number(r.file_count||0),files:(filesByResource.get(r.id)||[]).filter(f=>!f.source),source_files:(filesByResource.get(r.id)||[]).filter(f=>f.source),updated_at:r.updated_at}));
   return json({ok:true,resources:items,count:items.length,storage:{r2_available:hasR2(env)}});
 }
 

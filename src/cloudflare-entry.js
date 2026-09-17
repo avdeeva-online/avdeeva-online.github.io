@@ -5,18 +5,9 @@ import { listAdminCharacters, updateAdminCharacter, deleteAdminCharacter } from 
 import { submitHubSuggestion, listHubSuggestions, updateHubSuggestion } from './hub-suggestions.js';
 import { setupTelegramWebhooks, telegramWebhookStatus } from './telegram-bots.js';
 import { telegramDraftsAdmin } from './telegram-drafts-admin.js';
+import { guardAdminApi } from './admin-auth.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
-function adminGuard(request,env,url){
-  if(!url.pathname.startsWith('/api/admin/'))return null;
-  const site=String(request.headers.get('sec-fetch-site')||'').toLowerCase();
-  if(site&&site!=='same-origin')return json({ok:false,error:'ADMIN_CROSS_SITE_BLOCKED'},403);
-  const origin=request.headers.get('origin');
-  if(origin){try{if(new URL(origin).origin!==url.origin)return json({ok:false,error:'ADMIN_ORIGIN_BLOCKED'},403)}catch{return json({ok:false,error:'ADMIN_ORIGIN_INVALID'},403)}}
-  const configured=String(env.ADMIN_ACCESS_TOKEN||'').trim();
-  if(configured){const direct=String(request.headers.get('x-archive-admin-token')||'').trim(),auth=String(request.headers.get('authorization')||'').replace(/^Bearer\s+/i,'').trim();if(direct!==configured&&auth!==configured)return json({ok:false,error:'ADMIN_AUTH_REQUIRED'},401)}
-  return null;
-}
 async function adminHealth(env){const one=async sql=>{try{return Number((await env.DB.prepare(sql).first())?.n||0)}catch{return null}};const [characters,resources,files,chunks,lorebooks,lorebookBlobs,orphanLorebooks,orphanBlobs,suggestions,drafts,publishSessions]=await Promise.all([one('SELECT COUNT(*) AS n FROM characters'),one('SELECT COUNT(*) AS n FROM hub_resources'),one('SELECT COUNT(*) AS n FROM hub_resource_files'),one('SELECT COUNT(*) AS n FROM hub_resource_file_chunks'),one('SELECT COUNT(*) AS n FROM lorebooks'),one('SELECT COUNT(*) AS n FROM lorebook_blobs'),one('SELECT COUNT(*) AS n FROM lorebooks WHERE id NOT IN (SELECT DISTINCT lorebook_id FROM character_lorebooks)'),one("SELECT COUNT(*) AS n FROM lorebook_blobs WHERE content_hash NOT IN (SELECT DISTINCT content_hash FROM lorebooks WHERE content_hash IS NOT NULL AND content_hash != '')"),one("SELECT COUNT(*) AS n FROM hub_suggestions WHERE status='new'"),one("SELECT COUNT(*) AS n FROM telegram_admin_drafts WHERE status='review'"),one('SELECT COUNT(*) AS n FROM hub_resource_publish_sessions')]);return json({ok:true,db:true,adminTokenConfigured:Boolean(String(env.ADMIN_ACCESS_TOKEN||'').trim()),counts:{characters,resources,files,chunks,lorebooks,lorebookBlobs,orphanLorebooks,orphanBlobs,suggestions,drafts,publishSessions},checkedAt:new Date().toISOString()})}
 async function injectAdminBack(response,pathname=''){
   const type=String(response.headers.get('content-type')||'').toLowerCase();
@@ -33,7 +24,7 @@ async function injectAdminBack(response,pathname=''){
 }
 
 export default{async fetch(request,env,ctx){
-  const url=new URL(request.url),blocked=adminGuard(request,env,url);if(blocked)return blocked;
+  const url=new URL(request.url),blocked=guardAdminApi(request,env,url);if(blocked)return blocked;
   if(url.pathname==='/api/admin/telegram/setup')return setupTelegramWebhooks(request,env);
   if(url.pathname==='/api/admin/telegram/status')return telegramWebhookStatus(request,env);
   if(url.pathname==='/api/admin/telegram-drafts')return telegramDraftsAdmin(request,env);

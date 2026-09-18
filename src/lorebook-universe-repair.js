@@ -38,8 +38,8 @@ function sanitizeEvidence(rows){
   });
 }
 
-async function persistRepairs(env,resolved,targetUuids){
-  const targets=new Set(targetUuids),updates=[];let inferred=0,cleared=0;
+function collectRepairChanges(resolved,targetUuids){
+  const targets=new Set(targetUuids),changes=[];let inferred=0,cleared=0;
   for(const row of resolved){
     if(!targets.has(clean(row.janitor_uuid))||isManual(row))continue;
     const previousSource=clean(row._archive_previous_source);
@@ -52,36 +52,50 @@ async function persistRepairs(env,resolved,targetUuids){
       const source=clean(row.resolved_universe_source)||'lorebook:1';
       const same=previousUniverses.length===next.length&&previousUniverses.every((v,i)=>v.toLocaleLowerCase()===next[i].toLocaleLowerCase())&&previousSource===source;
       if(same)continue;
-      updates.push(env.DB.prepare(`UPDATE characters SET universe=?,universes=?,universe_source_field=?,updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?`).bind(next[0]||'',JSON.stringify(next),source,row.janitor_uuid));
+      changes.push({uuid:clean(row.janitor_uuid),universe:next[0]||'',universes:next,source,clear:false});
       inferred++;
     }else if(wasLorebook&&(previousUniverses.length||previousSource)){
-      updates.push(env.DB.prepare(`UPDATE characters SET universe='',universes='[]',universe_source_field='',updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?`).bind(row.janitor_uuid));
+      changes.push({uuid:clean(row.janitor_uuid),universe:'',universes:[],source:'',clear:true});
       cleared++;
     }
   }
-  if(updates.length)await env.DB.batch(updates);
-  return{updated:updates.length,inferred,cleared};
+  return{changes,updated:changes.length,inferred,cleared};
 }
 
-async function repairRows(env,evidenceRows,targetUuids){
+function planRepairRows(evidenceRows,targetUuids){
   const sanitized=sanitizeEvidence(evidenceRows);
   const resolved=resolveUniverseRows(sanitized);
-  return persistRepairs(env,resolved,new Set(targetUuids));
+  return collectRepairChanges(resolved,new Set(targetUuids));
 }
 
-export async function repairAffectedLorebookUniverses(env,seedUuid,lorebookIds=[]){
-  const seed=clean(seedUuid),changedBooks=[...new Set((lorebookIds||[]).map(clean).filter(Boolean))];
-  const directlyAffected=new Set(seed?[seed]:[]);
-  for(const uuid of await linkedValues(env,'character_uuid','lorebook_id',changedBooks))directlyAffected.add(uuid);
+export function lorebookUniverseChangeStatements(env,changes){
+  return (changes||[]).map(change=>env.DB.prepare(
+    'UPDATE characters SET universe=?,universes=?,universe_source_field=?,updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?'
+  ).bind(clean(change.universe),JSON.stringify(Array.isArray(change.universes)?change.universes:[]),clean(change.source),clean(change.uuid)));
+}
+
+export async function planAffectedLorebookUniverseChanges(env,seedUuid,lorebookIds=[],excludeUuids=[]){
+  const excluded=new Set((excludeUuids||[]).map(clean).filter(Boolean)),seed=clean(seedUuid),changedBooks=[...new Set((lorebookIds||[]).map(clean).filter(Boolean))];
+  const directlyAffected=new Set();
+  if(seed&&!excluded.has(seed))directlyAffected.add(seed);
+  for(const uuid of await linkedValues(env,'character_uuid','lorebook_id',changedBooks)){if(!excluded.has(uuid))directlyAffected.add(uuid)}
   const targets=[...directlyAffected];
-  if(!targets.length)return{updated:0,inferred:0,cleared:0,targets:0,evidence:0};
+  if(!targets.length)return{changes:[],updated:0,inferred:0,cleared:0,targets:0,evidence:0};
 
   const targetBooks=await linkedValues(env,'lorebook_id','character_uuid',targets);
   const evidenceUuids=new Set(targets);
-  for(const uuid of await linkedValues(env,'character_uuid','lorebook_id',targetBooks))evidenceUuids.add(uuid);
+  for(const uuid of await linkedValues(env,'character_uuid','lorebook_id',targetBooks)){if(!excluded.has(uuid))evidenceUuids.add(uuid)}
   const evidence=await rowsForUuids(env,[...evidenceUuids]);
-  const result=await repairRows(env,evidence,targets);
+  const result=planRepairRows(evidence,targets);
   return{...result,targets:targets.length,evidence:evidence.length};
+}
+
+export async function repairAffectedLorebookUniverses(env,seedUuid,lorebookIds=[]){
+  const plan=await planAffectedLorebookUniverseChanges(env,seedUuid,lorebookIds);
+  const updates=lorebookUniverseChangeStatements(env,plan.changes);
+  if(updates.length)await env.DB.batch(updates);
+  const {changes,...result}=plan;
+  return result;
 }
 
 export async function repairAllLorebookUniverses(env){
@@ -92,6 +106,8 @@ export async function repairAllLorebookUniverses(env){
     GROUP BY c.janitor_uuid`).all();
   const rows=Array.isArray(out?.results)?out.results:[];
   const targets=rows.map(x=>clean(x.janitor_uuid)).filter(Boolean);
-  const result=await repairRows(env,rows,targets);
+  const plan=planRepairRows(rows,targets),updates=lorebookUniverseChangeStatements(env,plan.changes);
+  if(updates.length)await env.DB.batch(updates);
+  const {changes,...result}=plan;
   return{...result,targets:targets.length,evidence:rows.length};
 }

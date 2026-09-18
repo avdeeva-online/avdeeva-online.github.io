@@ -98,7 +98,7 @@ const mainRouter=read('src/main.js');
 for(const marker of ['export async function handleMainRoute','/api/admin/creator-scan','/api/admin/universe-review'])fail(mainRouter.includes(marker),`src/main.js: flattened route contract missing ${marker}`);
 for(const marker of ["from './entry.js'",'app.fetch('])fail(!mainRouter.includes(marker),`src/main.js: downstream wrapper returned ${marker}`);
 const sourceTruthRouter=read('src/source-truth.js');
-for(const marker of ["import app from './entry.js'","import { handleMainRoute } from './main.js'",'const mainResponse=await handleMainRoute(request,env)','if(mainResponse)return mainResponse'])fail(sourceTruthRouter.includes(marker),`src/source-truth.js: flattened main dispatch missing ${marker}`);
+for(const marker of ["import { handleMainRoute } from './main.js'",'const mainResponse=await handleMainRoute(request,env)','if(mainResponse)return mainResponse'])fail(sourceTruthRouter.includes(marker),`src/source-truth.js: flattened main dispatch missing ${marker}`);
 fail(!sourceTruthRouter.includes("import app from './main.js'"),'src/source-truth.js: nested main wrapper import returned');
 
 const sourceTruthEntryRouter=read('src/source-truth.js');

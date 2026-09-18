@@ -140,7 +140,8 @@ fail(!entry.includes('url.pathname==="/api/lorebooks"')&&!entry.includes("url.pa
 const workerBase=read('src/worker.js');
 for(const marker of ['url.pathname==="/api/health"','url.pathname==="/api/import/status"','url.pathname==="/api/import"','/card$/i'])fail(workerBase.includes(marker),`src/worker.js: required base route missing ${marker}`);
 for(const marker of ['/api/debug/datacat','async function lorebookDownload','const lore=url.pathname.match','const ch=url.pathname.match'])fail(!workerBase.includes(marker),`src/worker.js: shadowed route/helper returned ${marker}`);
-for(const marker of ['/api/characters','/lorebook$/i'])fail(sourceTruthEntryRouter.includes(marker),`src/source-truth.js: source-truth ownership missing ${marker}`);
+for(const marker of ['/api/characters','/lorebooks$/i','/lorebooks\\/([0-9a-f]{32})$/i','/api\\/lorebooks\\/([0-9a-f]{32})$/i'])fail(sourceTruthEntryRouter.includes(marker),`src/source-truth.js: canonical lorebook ownership missing ${marker}`);
+for(const marker of ['legacyLorebookDownload','/lorebook$/i'])fail(!sourceTruthEntryRouter.includes(marker),`src/source-truth.js: retired singular lorebook compatibility returned ${marker}`);
 
 const hubResources=read('src/hub-resources.js');
 for(const marker of ['export async function hubStorageStatus','export async function migrateHubFilesToR2','export async function injectHubResources'])fail(!hubResources.includes(marker),`src/hub-resources.js: retired R2 compatibility export returned ${marker}`);
@@ -152,4 +153,4 @@ const media=read('src/hub-public-media.js');
 for(const marker of ['listHubResourcesSummaryPublic','getHubResourcePublic'])fail(media.includes(marker),`src/hub-public-media.js: progressive HUB API missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE architecture audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + single top-level Worker pipeline + guarded admin import + explicit universe curation + flattened main + entry routers + shadowed worker route removal checked');
+console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + single top-level Worker pipeline + guarded admin import + explicit universe curation + flattened main + entry routers + shadowed worker + singular lorebook compatibility removal checked');

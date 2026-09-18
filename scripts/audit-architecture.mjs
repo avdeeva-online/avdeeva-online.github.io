@@ -171,6 +171,14 @@ for(const marker of ['/api/debug/datacat','async function lorebookDownload','con
 for(const marker of ['/api/characters','/lorebooks$/i','/lorebooks\\/([0-9a-f]{32})$/i','/api\\/lorebooks\\/([0-9a-f]{32})$/i'])fail(sourceTruthEntryRouter.includes(marker),`src/source-truth.js: canonical lorebook ownership missing ${marker}`);
 for(const marker of ['legacyLorebookDownload','/lorebook$/i'])fail(!sourceTruthEntryRouter.includes(marker),`src/source-truth.js: retired singular lorebook compatibility returned ${marker}`);
 
+const cardDownloadUi=read('public/png-download.js');
+for(const marker of ['async function fetchReadyCard','res.status===200','res.status!==202','CARD_STILL_PROCESSING','async function downloadJson','async function downloadPng','window.ARCHIVE_DOWNLOAD_JSON','window.ARCHIVE_DOWNLOAD_PNG'])fail(cardDownloadUi.includes(marker),`public/png-download.js: queued download contract missing ${marker}`);
+fail(!cardDownloadUi.includes('if(!cardRes.ok)'),'public/png-download.js: broad 2xx card success check returned');
+fail(!cardDownloadUi.includes('cardRes.ok'),'public/png-download.js: stale Response.ok card readiness check returned');
+fail(cardDownloadUi.includes('a[href*="/api/characters/"]'),'public/png-download.js: JSON/PNG card click interception missing');
+const charactersHtml=read('public/characters.html');
+fail(charactersHtml.includes('png-download.js?v=20260919-download-state1'),'public/characters.html: card download cache-bust missing');
+
 const hubResources=read('src/hub-resources.js');
 for(const marker of ['export async function hubStorageStatus','export async function migrateHubFilesToR2','export async function injectHubResources'])fail(!hubResources.includes(marker),`src/hub-resources.js: retired R2 compatibility export returned ${marker}`);
 for(const marker of ["from './hub-r2-migration.js'",'hubStorageStatusSafe','migrateHubFilesToR2Safe'])fail(edge.includes(marker),`src/cloudflare-entry-v2.js: safe R2 migration route missing ${marker}`);
@@ -181,4 +189,4 @@ const media=read('src/hub-public-media.js');
 for(const marker of ['listHubResourcesSummaryPublic','getHubResourcePublic'])fail(media.includes(marker),`src/hub-public-media.js: progressive HUB API missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE architecture audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + single top-level Worker pipeline + guarded admin import + explicit universe curation + flattened main + entry routers + canonical lorebook URL + PNG contract + card queue safety + shadowed worker + singular lorebook compatibility removal checked');
+console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + single top-level Worker pipeline + guarded admin import + explicit universe curation + flattened main + entry routers + queued JSON/PNG downloads + canonical lorebook URL + PNG contract + card queue safety + shadowed worker + singular lorebook compatibility removal checked');

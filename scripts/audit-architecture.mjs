@@ -94,6 +94,13 @@ if(exists('src/telegram-admin-fixed.js')){
   for(const marker of ['adm:import','session:new','session:finish','session:resume:','draft:view:','draft:reanalyze:','draft:publish:','draft:delete:','sug:ignore:','sug:import:',"status='ignored'","status='reviewing'",'showAdminSuggestions','METHOD_NOT_ALLOWED','ADMIN_BOT_TOKEN_MISSING','INVALID_WEBHOOK_SECRET','INVALID_JSON','ADMIN BOT ERROR','Access denied','Once a resource is active'])fail(fixed.includes(marker),`src/telegram-admin-fixed.js: fixed callback/transport contract missing ${marker}`);
 }
 
+const mainRouter=read('src/main.js');
+for(const marker of ['export async function handleMainRoute','/api/admin/creator-scan','/api/admin/universe-review'])fail(mainRouter.includes(marker),`src/main.js: flattened route contract missing ${marker}`);
+for(const marker of ["from './entry.js'",'app.fetch('])fail(!mainRouter.includes(marker),`src/main.js: downstream wrapper returned ${marker}`);
+const sourceTruthRouter=read('src/source-truth.js');
+for(const marker of ["import app from './entry.js'","import { handleMainRoute } from './main.js'",'const mainResponse=await handleMainRoute(request,env)','if(mainResponse)return mainResponse'])fail(sourceTruthRouter.includes(marker),`src/source-truth.js: flattened main dispatch missing ${marker}`);
+fail(!sourceTruthRouter.includes("import app from './main.js'"),'src/source-truth.js: nested main wrapper import returned');
+
 const entry=read('src/entry.js');
 for(const marker of ['scanDatacatCreator','catalogCharacters','catalogLorebooks'])fail(!entry.includes(marker),`src/entry.js: shadowed legacy ${marker} returned`);
 fail(!/page\s*<=\s*50/.test(entry),'src/entry.js: legacy 50-page scan returned');
@@ -110,4 +117,4 @@ const media=read('src/hub-public-media.js');
 for(const marker of ['listHubResourcesSummaryPublic','getHubResourcePublic'])fail(media.includes(marker),`src/hub-public-media.js: progressive HUB API missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE architecture audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + dead-route removal checked');
+console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + flattened main router + dead-route removal checked');

@@ -232,7 +232,7 @@ async function cancelSession(env,sessionId){
     if(Number(session.was_existing)&&state.old){
       await restoreRow(env,state.old);
       await env.DB.prepare("UPDATE hub_resource_files SET is_primary=0 WHERE resource_id=? AND name NOT LIKE '__extra__%'").bind(session.resource_id).run();
-      if(state.oldPrimaryId)await env.DB.prepare('UPDATE hub_resource_files SET is_primary=1 WHERE id=? AND resource_id=?').bind(state.oldPrimaryId,session.resource_id).run();
+      if(state.oldPrimaryId)await env.DB.prepare('UPDATE hub_resource_files SET is_primary=1 WHERE id=? AND resource_id=?').bind(state.oldPrimaryId,session.resource_id).run();else await ensurePrimary(env,session.resource_id);
     }else if(!Number(session.was_existing))await env.DB.prepare('DELETE FROM hub_resources WHERE id=?').bind(session.resource_id).run();
   }else{
     const current=await env.DB.prepare('SELECT status FROM hub_resources WHERE id=? LIMIT 1').bind(session.resource_id).first();
@@ -256,7 +256,7 @@ export async function publishHubResource(request,env){
     if(action==='upload'){const sid=clean(parsed.draft?._publish_session||url.searchParams.get('session'));const session=await sessionRow(env,sid);if(!session)return json({ok:false,error:'PUBLISH_SESSION_NOT_FOUND'},404);const out=await uploadToSession(env,session,parsed);return json({ok:true,session_id:sid,id:session.resource_id,...out,status:'staging'})}
     if(action==='metadata'){const sid=clean(parsed.draft?._publish_session||url.searchParams.get('session'));const session=await sessionRow(env,sid);if(!session)return json({ok:false,error:'PUBLISH_SESSION_NOT_FOUND'},404);const out=await updateSessionMetadata(env,session,parsed.draft);return json({ok:true,session_id:sid,...out,status:'staging'})}
     if(action==='finalize'){const sid=clean(parsed.draft?._publish_session||url.searchParams.get('session'));const out=await finalizeSession(env,sid);return json({ok:true,...out,status:'published'})}
-    if(action==='cancel'){const sid=clean(parsed.draft?._publish_session||url.searchParams.get('session'));return json({ok:true,...await cancelSession(env,sid)})}
+    if(action==='cancel'){const sid=clean(parsed.draft?._publish_session||url.searchParams.get('session')),out=await cancelSession(env,sid);if(out?.finalizeRequired)return json({ok:false,error:'PUBLISH_SESSION_FINALIZE_REQUIRED',...out},409);return json({ok:true,...out})}
     const started=await beginSession(env,parsed.draft);
     try{const session=await sessionRow(env,started.sessionId);await uploadToSession(env,session,parsed);const out=await finalizeSession(env,started.sessionId);return json({ok:true,...out,files:parsed.files.length+parsed.remoteFiles.length,extra_images:parsed.extraImages.length})}
     catch(e){await cancelSession(env,started.sessionId);throw e}

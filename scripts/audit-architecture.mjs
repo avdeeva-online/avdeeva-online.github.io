@@ -31,6 +31,14 @@ const topCurationTransformPos=edge.indexOf('transformUniversePublicResponse(requ
 const adminHtmlTransformPos=edge.indexOf('transformAdminHtmlResponse(request,response)');
 fail(cloudflareRoutePos>=0&&topCurationRoutePos>cloudflareRoutePos&&topSourceTruthPos>topCurationRoutePos&&topCurationTransformPos>topSourceTruthPos&&adminHtmlTransformPos>topCurationTransformPos,'src/cloudflare-entry-v2.js: top-level route/transform order changed');
 
+const adminImportUi=read('public/admin/import/admin-v2.js');
+for(const marker of ["/api/admin/import","/api/admin/import/status"])fail(adminImportUi.includes(marker),`public/admin/import/admin-v2.js: guarded admin import route missing ${marker}`);
+for(const marker of ["fetch('/api/import'","/api/import/status?"])fail(!adminImportUi.includes(marker),`public/admin/import/admin-v2.js: blocked legacy import route returned ${marker}`);
+for(const marker of ['forwardAdminImport','rewriteRequestPath',"/api/admin/import'","/api/admin/import/status'","'/api/import'","'/api/import/status'","'/api/admin/import/status'"])fail(edge.includes(marker),`src/cloudflare-entry-v2.js: guarded admin import adapter missing ${marker}`);
+const adminImportPos=edge.indexOf("url.pathname==='/api/admin/import'");
+const legacyImportBlockPos=edge.indexOf("url.pathname==='/api/import'||url.pathname==='/api/import/status'");
+fail(adminImportPos>=0&&legacyImportBlockPos>adminImportPos,'src/cloudflare-entry-v2.js: guarded admin import must dispatch before blocked public import routes');
+
 fail(exists('src/d1-schema-status.js'),'src/d1-schema-status.js: read-only D1 schema status module missing');
 if(exists('src/d1-schema-status.js')){
   const schemaStatus=read('src/d1-schema-status.js');
@@ -139,4 +147,4 @@ const media=read('src/hub-public-media.js');
 for(const marker of ['listHubResourcesSummaryPublic','getHubResourcePublic'])fail(media.includes(marker),`src/hub-public-media.js: progressive HUB API missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE architecture audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + single top-level Worker pipeline + explicit universe curation + flattened main + entry routers + dead-route removal checked');
+console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + single top-level Worker pipeline + guarded admin import + explicit universe curation + flattened main + entry routers + dead-route removal checked');

@@ -1,4 +1,3 @@
-import app from './source-truth.js';
 import { requireD1Schema } from './d1-schema.js';
 
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -70,7 +69,7 @@ function curateLorebooks(items,registry){
   return out;
 }
 
-async function transformPublicResponse(request,response,env){
+export async function transformUniversePublicResponse(request,response,env){
   if(!response.ok||!response.headers.get('content-type')?.includes('application/json'))return response;
   const path=new URL(request.url).pathname;
   const isCatalog=path==='/api/catalog'||path==='/api/characters';
@@ -130,15 +129,10 @@ async function mutateAdminRegistry(request,env){
   return json({ok:false,error:'UNKNOWN_ACTION'},400);
 }
 
-export default{
-  async fetch(request,env,ctx){
-    const url=new URL(request.url);
-    if(url.pathname==='/api/admin/universe-curation'){
-      if(request.method==='GET')return getAdminRegistry(env);
-      if(request.method==='POST')return mutateAdminRegistry(request,env);
-      return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
-    }
-    const response=await app.fetch(request,env,ctx);
-    return transformPublicResponse(request,response,env);
-  }
-};
+export async function handleUniverseCurationRoute(request,env){
+  const url=new URL(request.url);
+  if(url.pathname!=='/api/admin/universe-curation')return null;
+  if(request.method==='GET')return getAdminRegistry(env);
+  if(request.method==='POST')return mutateAdminRegistry(request,env);
+  return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
+}

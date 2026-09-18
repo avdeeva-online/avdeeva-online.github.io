@@ -74,6 +74,23 @@ async function deleteStoredFile(env,fileId,resourceId=''){
   else await env.DB.prepare('DELETE FROM hub_resource_files WHERE id=?').bind(fileId).run();
 }
 
+async function retireStoredFile(env,fileId,resourceId='',reason='lifecycle'){
+  const row=resourceId
+    ?await env.DB.prepare('SELECT id,storage,r2_key FROM hub_resource_files WHERE id=? AND resource_id=? LIMIT 1').bind(fileId,resourceId).first()
+    :await env.DB.prepare('SELECT id,storage,r2_key FROM hub_resource_files WHERE id=? LIMIT 1').bind(fileId).first();
+  if(!row)return{retired:false,orphan:false};
+  const removeRow=resourceId
+    ?env.DB.prepare('DELETE FROM hub_resource_files WHERE id=? AND resource_id=?').bind(fileId,resourceId)
+    :env.DB.prepare('DELETE FROM hub_resource_files WHERE id=?').bind(fileId);
+  await env.DB.batch([removeRow,env.DB.prepare('DELETE FROM hub_resource_file_chunks WHERE file_id=?').bind(fileId)]);
+  let orphan=false;
+  if(clean(row.storage)==='r2'&&clean(row.r2_key)){
+    if(!hasR2(env)){orphan=true;console.error('retired R2 file left orphaned',reason,fileId,row.r2_key,'R2_BINDING_REQUIRED')}
+    else try{await env.HUB_FILES.delete(clean(row.r2_key))}catch(e){orphan=true;console.error('retired R2 file cleanup failed',reason,fileId,row.r2_key,e)}
+  }
+  return{retired:true,orphan};
+}
+
 async function storeBuffer(env,{resourceId,name,mime,size,isPrimary,buffer}){
   const fileId=crypto.randomUUID(),resolvedMime=inferMime(name,mime),actualSize=Number(size)||Number(buffer?.byteLength)||0;
   if(hasR2(env)){
@@ -96,7 +113,7 @@ async function storeBuffer(env,{resourceId,name,mime,size,isPrimary,buffer}){
       await env.DB.prepare('INSERT INTO hub_resource_file_chunks(file_id,chunk_index,data) VALUES(?,?,?)').bind(fileId,index,chunk.buffer).run();
     }
     return fileId;
-  }catch(e){try{await deleteStoredFile(env,fileId,resourceId)}catch{}throw e}
+  }catch(e){await retireStoredFile(env,fileId,resourceId,'store-buffer-rollback');throw e}
 }
 
 async function writeResourceRow(env,id,old,d,status='published'){
@@ -150,7 +167,7 @@ async function uploadToSession(env,session,parsed){
     if(Number(f.size||0)>(isExtra?EXTRA_FILE_LIMIT:NORMAL_FILE_LIMIT))throw new Error(isExtra?'EXTRA_IMAGE_TOO_LARGE':'FILE_TOO_LARGE');
     let name=clean(f.name)||`file-${crypto.randomUUID()}`;if(isExtra&&!name.startsWith(EXTRA_PREFIX))name=EXTRA_PREFIX+name;
     const stagedSame=await env.DB.prepare(`SELECT sf.file_id FROM hub_resource_publish_files sf JOIN hub_resource_files f ON f.id=sf.file_id WHERE sf.session_id=? AND lower(f.name)=lower(?) LIMIT 1`).bind(session.id,name).first();
-    if(stagedSame?.file_id){await deleteStoredFile(env,stagedSame.file_id,session.resource_id);await env.DB.prepare('DELETE FROM hub_resource_publish_files WHERE session_id=? AND file_id=?').bind(session.id,stagedSame.file_id).run()}
+    if(stagedSame?.file_id){await retireStoredFile(env,stagedSame.file_id,session.resource_id,'replace-staged-file');await env.DB.prepare('DELETE FROM hub_resource_publish_files WHERE session_id=? AND file_id=?').bind(session.id,stagedSame.file_id).run()}
     const same=await env.DB.prepare(`SELECT f.id FROM hub_resource_files f WHERE f.resource_id=? AND lower(f.name)=lower(?) AND f.id NOT IN (SELECT file_id FROM hub_resource_publish_files WHERE session_id=?) ORDER BY f.created_at DESC LIMIT 1`).bind(session.resource_id,name,session.id).first();
     const fileId=await storeBuffer(env,{resourceId:session.resource_id,name,mime:f.type,size:Number(f.size)||0,isPrimary:false,buffer:await f.arrayBuffer()});
     await recordStagedFile(env,session.id,fileId,same?.id||'',!isExtra&&markedName===clean(f.name));added.push({id:fileId,name,source:isSourceMeta(name),extra:isExtraMeta(name)&&!isSourceMeta(name)});
@@ -169,7 +186,7 @@ async function uploadToSession(env,session,parsed){
     await env.DB.prepare('UPDATE hub_resource_publish_sessions SET updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(session.id).run();
     return{files:parsed.files.length+parsed.remoteFiles.length,extra_images:parsed.extraImages.length,added_files:added,totals,storage:hasR2(env)?'r2':'d1'};
   }catch(e){
-    for(const item of added){const id=item?.id||item;try{await deleteStoredFile(env,id,session.resource_id)}catch{}try{await env.DB.prepare('DELETE FROM hub_resource_publish_files WHERE session_id=? AND file_id=?').bind(session.id,id).run()}catch{}}
+    for(const item of added){const id=item?.id||item;await retireStoredFile(env,id,session.resource_id,'upload-rollback');await env.DB.prepare('DELETE FROM hub_resource_publish_files WHERE session_id=? AND file_id=?').bind(session.id,id).run()}
     throw e;
   }
 }
@@ -177,7 +194,7 @@ async function uploadToSession(env,session,parsed){
 async function cleanupUnreferencedSourceMedia(env,resourceId){
   const resource=await env.DB.prepare('SELECT media FROM hub_resources WHERE id=? LIMIT 1').bind(resourceId).first(),serialized=String(resource?.media||'[]');
   const rows=(await env.DB.prepare("SELECT id FROM hub_resource_files WHERE resource_id=? AND name LIKE '__extra__source__%'").bind(resourceId).all()).results||[];
-  for(const row of rows){if(serialized.includes(String(row.id)))continue;try{await deleteStoredFile(env,row.id,resourceId)}catch(e){console.error('source media cleanup failed',row.id,e)}}
+  for(const row of rows){if(serialized.includes(String(row.id)))continue;await retireStoredFile(env,row.id,resourceId,'source-media-cleanup')}
 }
 
 async function finalizeSession(env,sessionId){
@@ -188,7 +205,7 @@ async function finalizeSession(env,sessionId){
   if(state.version===2){await writeResourceRow(env,session.resource_id,state.old,state.draft,'published')}
   else await env.DB.prepare("UPDATE hub_resources SET status='published',updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(session.resource_id).run();
   if(preferred){await env.DB.prepare("UPDATE hub_resource_files SET is_primary=0 WHERE resource_id=? AND name NOT LIKE '__extra__%'").bind(session.resource_id).run();await env.DB.prepare('UPDATE hub_resource_files SET is_primary=1 WHERE id=? AND resource_id=?').bind(preferred,session.resource_id).run()}else await ensurePrimary(env,session.resource_id);
-  for(const s of staged){if(s.replace_old_id&&s.replace_old_id!==s.file_id){try{await deleteStoredFile(env,s.replace_old_id,session.resource_id)}catch(e){console.error('published resource old-file cleanup failed',s.replace_old_id,e)}}}
+  for(const s of staged){if(s.replace_old_id&&s.replace_old_id!==s.file_id)await retireStoredFile(env,s.replace_old_id,session.resource_id,'finalize-replaced-file')}
   await cleanupUnreferencedSourceMedia(env,session.resource_id);
   try{await env.DB.prepare('DELETE FROM hub_resource_publish_files WHERE session_id=?').bind(session.id).run()}catch(e){console.error('publish session file cleanup failed',session.id,e)}
   try{await env.DB.prepare('DELETE FROM hub_resource_publish_sessions WHERE id=?').bind(session.id).run()}catch(e){console.error('publish session cleanup failed',session.id,e)}
@@ -198,7 +215,7 @@ async function finalizeSession(env,sessionId){
 async function cancelSession(env,sessionId){
   const session=await sessionRow(env,sessionId);if(!session)return{cancelled:false};
   const state=parseSessionState(session),staged=(await env.DB.prepare('SELECT file_id FROM hub_resource_publish_files WHERE session_id=?').bind(session.id).all()).results||[];
-  for(const s of staged){try{await deleteStoredFile(env,s.file_id,session.resource_id)}catch(e){console.error('staged file cleanup failed',s.file_id,e)}}
+  for(const s of staged)await retireStoredFile(env,s.file_id,session.resource_id,'cancel-staged-file')
   if(state.version===1){
     const current=await env.DB.prepare('SELECT status FROM hub_resources WHERE id=? LIMIT 1').bind(session.resource_id).first();
     if(current?.status==='published'){try{await env.DB.prepare('DELETE FROM hub_resource_publish_files WHERE session_id=?').bind(session.id).run()}catch{}try{await env.DB.prepare('DELETE FROM hub_resource_publish_sessions WHERE id=?').bind(session.id).run()}catch{}return{cancelled:false,alreadyPublished:true,id:session.resource_id}}

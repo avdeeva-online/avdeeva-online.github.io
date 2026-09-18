@@ -1,12 +1,9 @@
-import sourceTruth from './source-truth.js';
-import { handleUniverseCurationRoute, transformUniversePublicResponse } from './universe-curation.js';
 import { analyzeTelegramPost } from './hub-telegram.js';
 import { publishHubResource, deleteHubResourceFile, setHubResourcePrimary, deleteHubResource } from './hub-resources.js';
 import { listAdminCharacters, updateAdminCharacter, deleteAdminCharacter } from './character-admin.js';
 import { submitHubSuggestion, listHubSuggestions, updateHubSuggestion } from './hub-suggestions.js';
 import { setupTelegramWebhooks, telegramWebhookStatus } from './telegram-webhooks.js';
 import { telegramDraftsAdmin } from './telegram-drafts-admin.js';
-import { guardAdminApi } from './admin-auth.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 async function adminHealth(env){const one=async sql=>{try{return Number((await env.DB.prepare(sql).first())?.n||0)}catch{return null}};const [characters,resources,files,chunks,lorebooks,lorebookBlobs,orphanLorebooks,orphanBlobs,suggestions,drafts,publishSessions]=await Promise.all([one('SELECT COUNT(*) AS n FROM characters'),one('SELECT COUNT(*) AS n FROM hub_resources'),one('SELECT COUNT(*) AS n FROM hub_resource_files'),one('SELECT COUNT(*) AS n FROM hub_resource_file_chunks'),one('SELECT COUNT(*) AS n FROM lorebooks'),one('SELECT COUNT(*) AS n FROM lorebook_blobs'),one('SELECT COUNT(*) AS n FROM lorebooks WHERE id NOT IN (SELECT DISTINCT lorebook_id FROM character_lorebooks)'),one("SELECT COUNT(*) AS n FROM lorebook_blobs WHERE content_hash NOT IN (SELECT DISTINCT content_hash FROM lorebooks WHERE content_hash IS NOT NULL AND content_hash != '')"),one("SELECT COUNT(*) AS n FROM hub_suggestions WHERE status='new'"),one("SELECT COUNT(*) AS n FROM telegram_admin_drafts WHERE status='review'"),one('SELECT COUNT(*) AS n FROM hub_resource_publish_sessions')]);return json({ok:true,db:true,adminTokenConfigured:Boolean(String(env.ADMIN_ACCESS_TOKEN||'').trim()),counts:{characters,resources,files,chunks,lorebooks,lorebookBlobs,orphanLorebooks,orphanBlobs,suggestions,drafts,publishSessions},checkedAt:new Date().toISOString()})}
@@ -24,8 +21,8 @@ async function injectAdminBack(response,pathname=''){
   const headers=new Headers(response.headers);headers.set('cache-control','no-store');headers.delete('content-length');return new Response(html,{status:response.status,statusText:response.statusText,headers})
 }
 
-export default{async fetch(request,env,ctx){
-  const url=new URL(request.url),blocked=guardAdminApi(request,env,url);if(blocked)return blocked;
+export async function handleCloudflareRoute(request,env){
+  const url=new URL(request.url);
   if(url.pathname==='/api/admin/telegram/setup')return setupTelegramWebhooks(request,env);
   if(url.pathname==='/api/admin/telegram/status')return telegramWebhookStatus(request,env);
   if(url.pathname==='/api/admin/telegram-drafts')return telegramDraftsAdmin(request,env);
@@ -41,6 +38,11 @@ export default{async fetch(request,env,ctx){
   const adminResourceMatch=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)$/);if(adminResourceMatch){const resourceId=decodeURIComponent(adminResourceMatch[1]);if(request.method==='DELETE')return deleteHubResource(env,resourceId);return json({ok:false,error:'METHOD_NOT_ALLOWED'},405)}
   const primaryMatch=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)\/files\/([^/]+)\/primary$/);if(primaryMatch){if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return setHubResourcePrimary(env,decodeURIComponent(primaryMatch[1]),decodeURIComponent(primaryMatch[2]))}
   const adminFileMatch=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)\/files\/([^/]+)$/);if(adminFileMatch){if(request.method!=='DELETE')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return deleteHubResourceFile(env,decodeURIComponent(adminFileMatch[1]),decodeURIComponent(adminFileMatch[2]))}
-  const curationResponse=await handleUniverseCurationRoute(request,env);if(curationResponse)return curationResponse;
-  let response=await sourceTruth.fetch(request,env,ctx);response=await transformUniversePublicResponse(request,response,env);if(request.method==='GET'&&url.pathname.startsWith('/admin/')&&url.pathname!=='/admin/')return injectAdminBack(response,url.pathname);return response;
-}};
+  return null;
+}
+
+export async function transformAdminHtmlResponse(request,response){
+  const url=new URL(request.url);
+  if(request.method==='GET'&&url.pathname.startsWith('/admin/')&&url.pathname!=='/admin/')return injectAdminBack(response,url.pathname);
+  return response;
+}

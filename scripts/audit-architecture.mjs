@@ -157,6 +157,9 @@ for(const marker of ['canvasPngDataUrl','x-archive-png-fallback',"content-type':
 fail(pngDownloadBodyEntry.includes("state:'PNG_SOURCE_NOT_AVAILABLE'"),'src/entry.js: PNG endpoint must fail explicitly when no PNG source is available');
 
 const workerBase=read('src/worker.js');
+fail(workerBase.includes('lorebook_url:lore?\`${origin}/api/characters/${uuid}/lorebooks\`:""'),'src/worker.js: canonical lorebook URL missing from imported character bundle');
+fail(!workerBase.includes('lorebook_url:lore?\`${origin}/api/characters/${uuid}/lorebook\`:""'),'src/worker.js: retired singular lorebook URL returned in imported character bundle');
+
 for(const marker of ['url.pathname==="/api/health"','url.pathname==="/api/import/status"','url.pathname==="/api/import"','/card$/i'])fail(workerBase.includes(marker),`src/worker.js: required base route missing ${marker}`);
 const cardDownloadStart=workerBase.indexOf('async function cardDownload');
 const retrievalStatusStart=workerBase.indexOf('async function retrievalStatus',cardDownloadStart);
@@ -178,4 +181,4 @@ const media=read('src/hub-public-media.js');
 for(const marker of ['listHubResourcesSummaryPublic','getHubResourcePublic'])fail(media.includes(marker),`src/hub-public-media.js: progressive HUB API missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE architecture audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + single top-level Worker pipeline + guarded admin import + explicit universe curation + flattened main + entry routers + PNG contract + card queue safety + shadowed worker + singular lorebook compatibility removal checked');
+console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + single top-level Worker pipeline + guarded admin import + explicit universe curation + flattened main + entry routers + canonical lorebook URL + PNG contract + card queue safety + shadowed worker + singular lorebook compatibility removal checked');

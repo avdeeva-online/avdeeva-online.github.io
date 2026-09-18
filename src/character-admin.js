@@ -1,4 +1,5 @@
-import { cleanupDetachedLorebooks, linkedLorebooksForCharacter } from './lorebook-cleanup.js';
+import { detachedLorebookCleanupStatements, linkedLorebooksForCharacter, planDetachedLorebookCleanup } from './lorebook-cleanup.js';
+import { lorebookUniverseChangeStatements, planAffectedLorebookUniverseChanges } from './lorebook-universe-repair.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
@@ -62,11 +63,17 @@ export async function deleteAdminCharacter(request,env,uuid){
   if(!UUID_RE.test(uuid))return json({ok:false,error:'INVALID_UUID'},400);
   const row=await env.DB.prepare('SELECT janitor_uuid FROM characters WHERE janitor_uuid=? LIMIT 1').bind(uuid).first();
   if(!row)return json({ok:false,error:'CHARACTER_NOT_FOUND'},404);
-  const oldLorebooks=await linkedLorebooksForCharacter(env,uuid).catch(()=>[]);
-  try{await env.DB.prepare('DELETE FROM character_lorebooks WHERE character_uuid=?').bind(uuid).run()}catch{}
-  try{await env.DB.prepare('DELETE FROM admin_universe_review WHERE review_key=?').bind(`candidate:${uuid}`).run()}catch{}
-  await env.DB.prepare('DELETE FROM characters WHERE janitor_uuid=?').bind(uuid).run();
-  const lorebookCleanup=await cleanupDetachedLorebooks(env,oldLorebooks).catch(()=>({entities:0,sources:0,blobs:0}));
+  const oldLorebooks=await linkedLorebooksForCharacter(env,uuid),oldLorebookIds=oldLorebooks.map(x=>x.id);
+  const universePlan=await planAffectedLorebookUniverseChanges(env,uuid,oldLorebookIds,[uuid]);
+  const cleanupPlan=await planDetachedLorebookCleanup(env,oldLorebooks,{excludingCharacterUuid:uuid});
+  const statements=[
+    env.DB.prepare('DELETE FROM character_lorebooks WHERE character_uuid=?').bind(uuid),
+    env.DB.prepare('DELETE FROM admin_universe_review WHERE review_key=?').bind(`candidate:${uuid}`),
+    ...lorebookUniverseChangeStatements(env,universePlan.changes),
+    ...detachedLorebookCleanupStatements(env,cleanupPlan),
+    env.DB.prepare('DELETE FROM characters WHERE janitor_uuid=?').bind(uuid)
+  ];
+  await env.DB.batch(statements);
   await clearCatalogCache(request);
-  return json({ok:true,uuid,deleted:true,lorebookCleanup});
+  return json({ok:true,uuid,deleted:true,lorebookCleanup:{entities:cleanupPlan.entityIds.length,sources:cleanupPlan.entityIds.length,blobs:cleanupPlan.blobHashes.length},universeRepair:{updated:universePlan.updated,inferred:universePlan.inferred,cleared:universePlan.cleared,targets:universePlan.targets}});
 }

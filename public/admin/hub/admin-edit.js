@@ -69,7 +69,20 @@
       setStatus('FINALIZING RESOURCE...');
       const last=await postResourceJson({_publish_session:session},'FINALIZE','finalize');
       return{...last,id:last.id||id,updated:Boolean(first.updated||editResource)};
-    }catch(e){try{await postResourceJson({_publish_session:session},'ROLLBACK','cancel')}catch{}throw e}
+    }catch(e){
+      let rollbackError=null;
+      try{await postResourceJson({_publish_session:session},'ROLLBACK','cancel')}catch(err){rollbackError=err}
+      if(rollbackError&&String(rollbackError.message||rollbackError).includes('PUBLISH_SESSION_FINALIZE_REQUIRED')){
+        try{
+          setStatus('RECOVERING FINALIZE...');
+          const recovered=await postResourceJson({_publish_session:session},'FINALIZE RECOVERY','finalize');
+          return{...recovered,id:recovered.id||id,updated:Boolean(first.updated||editResource),recovered:true};
+        }catch(recoveryError){
+          throw new Error(`${e.message}; FINALIZE RECOVERY FAILED: ${recoveryError.message||recoveryError}`);
+        }
+      }
+      throw e
+    }
   }
   async function reloadResource(id){const r=await fetch('/api/hub-resources',{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok||!d?.ok)throw new Error(d?.error||`HTTP_${r.status}`);const item=(d.resources||[]).find(x=>String(x.id)===String(id));if(!item)throw new Error('RESOURCE_NOT_FOUND_AFTER_UPDATE');return item}
   async function publishResource(){const d=draft();if(!d.source.url||!d.title||!d.type){setStatus('SOURCE URL, TITLE AND TYPE ARE REQUIRED.','bad');return}const b=$('#publish');if(b)b.disabled=true;setStatus(editResource?'UPDATING RESOURCE...':'PUBLISHING RESOURCE...');try{const x=await sendResource(d);pendingFiles=[];extraPendingImages=[];renderExtraPending();$('#fileList')&&( $('#fileList').innerHTML='');$('#fileSummary')&&( $('#fileSummary').textContent='NO NEW DOWNLOAD FILES ATTACHED');dirty=false;try{localStorage.removeItem('archiveHubDraft:'+d.source.url)}catch{}if(editResource){const fresh=await reloadResource(x.id||editResource.id);fillResource(fresh);setStatus('RESOURCE UPDATED SUCCESSFULLY.','ok')}else{setStatus('PUBLISHED. RESOURCE ID: '+(x.id||'OK'),'ok')}}catch(e){setStatus((editResource?'UPDATE':'PUBLISH')+' FAILED: '+e.message,'bad')}finally{if(b)b.disabled=false}}

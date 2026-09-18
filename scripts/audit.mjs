@@ -90,15 +90,18 @@ for(const marker of ['SCAN_DEADLINE_MS','SCAN_FETCH_MS','SCAN_PAGE_LIMIT','Abort
 if(/page\s*<=\s*50/.test(main))errors.push('src/main.js: legacy 50-page creator scan returned');
 
 fail(exists('src/lorebook-cleanup.js'),'src/lorebook-cleanup.js: targeted lorebook cleanup helper missing');
-if(exists('src/lorebook-cleanup.js')){const l=read('src/lorebook-cleanup.js');for(const marker of ['linkedLorebooksForCharacter','cleanupDetachedLorebooks','WHERE lorebook_id=?','WHERE content_hash=?'])fail(l.includes(marker),`src/lorebook-cleanup.js: targeted cleanup missing ${marker}`)}
+if(exists('src/lorebook-cleanup.js')){
+  const l=read('src/lorebook-cleanup.js');
+  for(const marker of ['linkedLorebooksForCharacter','planDetachedLorebookCleanup','detachedLorebookCleanupStatements','cleanupDetachedLorebooks','JOIN characters c ON c.janitor_uuid=cl.character_uuid','DELETE FROM character_lorebooks WHERE lorebook_id=?','DELETE FROM lorebook_sources WHERE lorebook_id=?','DELETE FROM lorebooks WHERE id=?','DELETE FROM lorebook_blobs WHERE content_hash=?','env.DB.batch(statements)'])fail(l.includes(marker),`src/lorebook-cleanup.js: atomic targeted cleanup missing ${marker}`);
+}
 const characterAdmin=read('src/character-admin.js');
-fail(characterAdmin.includes('cleanupDetachedLorebooks'),'src/character-admin.js: character delete must use targeted lorebook cleanup');
+for(const marker of ['planDetachedLorebookCleanup','detachedLorebookCleanupStatements','planAffectedLorebookUniverseChanges','lorebookUniverseChangeStatements','await env.DB.batch(statements)','excludingCharacterUuid:uuid','universeRepair'])fail(characterAdmin.includes(marker),`src/character-admin.js: atomic character/lorebook delete lifecycle missing ${marker}`);
+for(const marker of ['catch(()=>[])','catch(()=>({entities:0,sources:0,blobs:0}))',"try{await env.DB.prepare('DELETE FROM character_lorebooks"])fail(!characterAdmin.includes(marker),`src/character-admin.js: swallowed character-delete cleanup returned ${marker}`);
 
 fail(exists('src/lorebook-universe-repair.js'),'src/lorebook-universe-repair.js: targeted universe repair helper missing');
 if(exists('src/lorebook-universe-repair.js')){
   const repair=read('src/lorebook-universe-repair.js');
-  for(const marker of ['repairAffectedLorebookUniverses','repairAllLorebookUniverses','_archive_previous_source','character_lorebooks','WHERE janitor_uuid=?','targets.has','cleared'])fail(repair.includes(marker),`src/lorebook-universe-repair.js: repair contract missing ${marker}`);
-  for(const sql of ["UPDATE characters SET universe=?,universes=?,universe_source_field=?,updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?","UPDATE characters SET universe='',universes='[]',universe_source_field='',updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?"])fail(repair.includes(sql),`src/lorebook-universe-repair.js: UUID-targeted repair SQL missing ${sql}`);
+  for(const marker of ['repairAffectedLorebookUniverses','repairAllLorebookUniverses','planAffectedLorebookUniverseChanges','lorebookUniverseChangeStatements','collectRepairChanges','_archive_previous_source','character_lorebooks','excludeUuids','cleared','UPDATE characters SET universe=?,universes=?,universe_source_field=?,updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?'])fail(repair.includes(marker),`src/lorebook-universe-repair.js: repair/planner contract missing ${marker}`);
 }
 const sourceTruth=read('src/source-truth.js');
 for(const marker of ["from './lorebook-universe-repair.js'",'affectedLorebookIds','repairAffectedLorebookUniverses(env,uuid','repairAllLorebookUniverses(env)'])fail(sourceTruth.includes(marker),`src/source-truth.js: lorebook universe repair integration missing ${marker}`);
@@ -109,4 +112,4 @@ fail(refreshBody.includes('repairAffectedLorebookUniverses'),'src/source-truth.j
 fail(!refreshBody.includes('repairUniversesFromLorebooks(env)'),'src/source-truth.js: refreshOne still invokes global universe repair');
 
 if(errors.length){console.error('\nARCHIVE.EXE audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + bounded scans + zero runtime D1 DDL checked`);
+console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + atomic lorebook delete lifecycle + bounded scans + zero runtime D1 DDL checked`);

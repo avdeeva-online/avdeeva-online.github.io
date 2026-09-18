@@ -11,6 +11,18 @@ import { guardAdminApi } from './admin-auth.js';
 import { d1SchemaStatus } from './d1-schema-status.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
+function rewriteRequestPath(request,pathname){const url=new URL(request.url);url.pathname=pathname;return new Request(url.toString(),request)}
+async function forwardAdminImport(request,env,ctx,pathname){
+  const response=await sourceTruth.fetch(rewriteRequestPath(request,pathname),env,ctx);
+  if(!response.headers.get('content-type')?.includes('application/json'))return response;
+  try{
+    const data=await response.clone().json();
+    if(typeof data?.statusUrl!=='string'||!data.statusUrl.includes('/api/import/status'))return response;
+    data.statusUrl=data.statusUrl.replace('/api/import/status','/api/admin/import/status');
+    const headers=new Headers(response.headers);headers.delete('content-length');
+    return new Response(JSON.stringify(data),{status:response.status,statusText:response.statusText,headers});
+  }catch{return response}
+}
 export default {async fetch(request,env,ctx){
   const url=new URL(request.url),blocked=guardAdminApi(request,env,url);if(blocked)return blocked;
   if(url.pathname==='/telegram/admin')return handleAdminTelegramRoute(request,env);
@@ -27,6 +39,8 @@ export default {async fetch(request,env,ctx){
     const response=await deleteLegacyMediaExtra(env,decodeURIComponent(legacyExtraDelete[1]),decodeURIComponent(legacyExtraDelete[2]));
     if(response)return response;
   }
+  if(url.pathname==='/api/admin/import'){if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return forwardAdminImport(request,env,ctx,'/api/import')}
+  if(url.pathname==='/api/admin/import/status'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return forwardAdminImport(request,env,ctx,'/api/import/status')}
   if(url.pathname==='/api/admin/schema-status'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return d1SchemaStatus(env)}
   if(url.pathname==='/api/admin/hub-media-audit'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return hubMediaAudit(env)}
   if(url.pathname==='/api/admin/hub-storage'){

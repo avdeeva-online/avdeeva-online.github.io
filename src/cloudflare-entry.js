@@ -1,4 +1,5 @@
-import app from './universe-curation.js';
+import sourceTruth from './source-truth.js';
+import { handleUniverseCurationRoute, transformUniversePublicResponse } from './universe-curation.js';
 import { analyzeTelegramPost } from './hub-telegram.js';
 import { publishHubResource, deleteHubResourceFile, setHubResourcePrimary, deleteHubResource } from './hub-resources.js';
 import { listAdminCharacters, updateAdminCharacter, deleteAdminCharacter } from './character-admin.js';
@@ -40,5 +41,6 @@ export default{async fetch(request,env,ctx){
   const adminResourceMatch=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)$/);if(adminResourceMatch){const resourceId=decodeURIComponent(adminResourceMatch[1]);if(request.method==='DELETE')return deleteHubResource(env,resourceId);return json({ok:false,error:'METHOD_NOT_ALLOWED'},405)}
   const primaryMatch=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)\/files\/([^/]+)\/primary$/);if(primaryMatch){if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return setHubResourcePrimary(env,decodeURIComponent(primaryMatch[1]),decodeURIComponent(primaryMatch[2]))}
   const adminFileMatch=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)\/files\/([^/]+)$/);if(adminFileMatch){if(request.method!=='DELETE')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return deleteHubResourceFile(env,decodeURIComponent(adminFileMatch[1]),decodeURIComponent(adminFileMatch[2]))}
-  const response=await app.fetch(request,env,ctx);if(request.method==='GET'&&url.pathname.startsWith('/admin/')&&url.pathname!=='/admin/')return injectAdminBack(response,url.pathname);return response;
+  const curationResponse=await handleUniverseCurationRoute(request,env);if(curationResponse)return curationResponse;
+  let response=await sourceTruth.fetch(request,env,ctx);response=await transformUniversePublicResponse(request,response,env);if(request.method==='GET'&&url.pathname.startsWith('/admin/')&&url.pathname!=='/admin/')return injectAdminBack(response,url.pathname);return response;
 }};

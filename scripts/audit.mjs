@@ -57,11 +57,15 @@ fail(entry.includes("from './hub-r2-migration.js'"),'src/cloudflare-entry-v2.js:
 const adminEdit=read('public/admin/hub/admin-edit.js');
 for(const marker of ["'begin'","?action=upload","'finalize'","'cancel'"])fail(adminEdit.includes(marker),`public/admin/hub/admin-edit.js: staged publish missing ${marker}`);
 fail(adminEdit.includes('_publish_session'),'public/admin/hub/admin-edit.js: publish session id not propagated');
+for(const marker of ['PUBLISH_SESSION_FINALIZE_REQUIRED','RECOVERING FINALIZE','FINALIZE RECOVERY'])fail(adminEdit.includes(marker),`public/admin/hub/admin-edit.js: finalize recovery missing ${marker}`);
 
 const resources=read('src/hub-resources.js');
 for(const table of ['hub_resource_publish_sessions','hub_resource_publish_files'])fail(resources.includes(table),`src/hub-resources.js: staging table missing ${table}`);
 fail(resources.includes("status='published'"),'src/hub-resources.js: published-state guard missing');
-fail(resources.includes('cleanupStaleSessions'),'src/hub-resources.js: stale publish rollback missing');
+for(const marker of ['cleanupStaleSessions','retireStoredFile',"phase:'editing'","state.phase='committing'",'oldPrimaryId','PUBLISH_SESSION_FINALIZE_REQUIRED',"state.phase==='committing'",'finalizeRequired:true',"await finalizeSession(env,row.id)"])fail(resources.includes(marker),`src/hub-resources.js: recoverable publish lifecycle missing ${marker}`);
+for(const marker of ["env.DB.batch([removeRow","DELETE FROM hub_resource_publish_files WHERE session_id=?","DELETE FROM hub_resource_publish_sessions WHERE id=?"])fail(resources.includes(marker),`src/hub-resources.js: atomic/logical lifecycle cleanup missing ${marker}`);
+for(const marker of ['staged file cleanup failed','published resource old-file cleanup failed'])fail(!resources.includes(marker),`src/hub-resources.js: swallowed lifecycle cleanup returned ${marker}`);
+fail(resources.includes("try{await deleteStoredFile(env,fileId,resourceId)}catch(e){return json"),'src/hub-resources.js: strict live-file delete contract missing');
 for(const marker of ['HUB_FILES.put','HUB_FILES.get','r2_key','R2_BINDING_REQUIRED'])fail(resources.includes(marker),`src/hub-resources.js: R2 dual-storage marker missing ${marker}`);
 for(const marker of ['SOURCE_PREFIX','added_files','cleanupUnreferencedSourceMedia',"action==='metadata'"])fail(resources.includes(marker),`src/hub-resources.js: SOURCE media staging contract missing ${marker}`);
 

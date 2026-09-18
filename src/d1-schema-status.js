@@ -1,4 +1,4 @@
-const EXPECTED={
+export const D1_EXPECTED_SCHEMA={
   characters:['id','janitor_uuid','slug','name','author','author_url','universe','pov','tags','hashtags','short_description','description','scenario','intros','image_url','janitor_url','datacat_url','card_url','lorebook_url','lorebook_title','universe_source_field','universes','setting_ids','setting_source','source','status','created_at','updated_at'],
   lorebooks:['id','title','script','author','source','content_hash','source_identity','created_at','updated_at'],
   lorebook_blobs:['content_hash','script','created_at','updated_at'],
@@ -45,7 +45,7 @@ async function characterIdentity(env,columns){
 export async function d1SchemaStatus(env){
   if(!env.DB)return json({ok:false,error:'D1_BINDING_MISSING'},503);
   const tables={};let missingTotal=0;
-  for(const [table,expected] of Object.entries(EXPECTED)){
+  for(const [table,expected] of Object.entries(D1_EXPECTED_SCHEMA)){
     try{
       const info=await tableInfo(env,table),present=info.map(x=>String(x.name||'')),missing=expected.filter(name=>!present.includes(name));
       missingTotal+=missing.length;

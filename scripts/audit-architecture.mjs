@@ -94,6 +94,15 @@ if(exists('src/telegram-admin-fixed.js')){
   for(const marker of ['adm:import','session:new','session:finish','session:resume:','draft:view:','draft:reanalyze:','draft:publish:','draft:delete:','sug:ignore:','sug:import:',"status='ignored'","status='reviewing'",'showAdminSuggestions','METHOD_NOT_ALLOWED','ADMIN_BOT_TOKEN_MISSING','INVALID_WEBHOOK_SECRET','INVALID_JSON','ADMIN BOT ERROR','Access denied','Once a resource is active'])fail(fixed.includes(marker),`src/telegram-admin-fixed.js: fixed callback/transport contract missing ${marker}`);
 }
 
+const curation=read('src/universe-curation.js');
+for(const marker of ['export async function handleUniverseCurationRoute','export async function transformUniversePublicResponse','/api/admin/universe-curation'])fail(curation.includes(marker),`src/universe-curation.js: explicit curation contract missing ${marker}`);
+for(const marker of ["from './source-truth.js'",'app.fetch('])fail(!curation.includes(marker),`src/universe-curation.js: downstream middleware wrapper returned ${marker}`);
+for(const marker of ["import sourceTruth from './source-truth.js'","from './universe-curation.js'",'handleUniverseCurationRoute(request,env)','sourceTruth.fetch(request,env,ctx)','transformUniversePublicResponse(request,response,env)'])fail(app.includes(marker),`src/cloudflare-entry.js: explicit curation pipeline missing ${marker}`);
+const curationRoutePos=app.indexOf('handleUniverseCurationRoute(request,env)');
+const sourceTruthPos=app.indexOf('sourceTruth.fetch(request,env,ctx)');
+const curationTransformPos=app.indexOf('transformUniversePublicResponse(request,response,env)');
+fail(curationRoutePos>=0&&sourceTruthPos>curationRoutePos&&curationTransformPos>sourceTruthPos,'src/cloudflare-entry.js: universe curation route/source/transform order changed');
+
 const mainRouter=read('src/main.js');
 for(const marker of ['export async function handleMainRoute','/api/admin/creator-scan','/api/admin/universe-review'])fail(mainRouter.includes(marker),`src/main.js: flattened route contract missing ${marker}`);
 for(const marker of ["from './entry.js'",'app.fetch('])fail(!mainRouter.includes(marker),`src/main.js: downstream wrapper returned ${marker}`);
@@ -124,4 +133,4 @@ const media=read('src/hub-public-media.js');
 for(const marker of ['listHubResourcesSummaryPublic','getHubResourcePublic'])fail(media.includes(marker),`src/hub-public-media.js: progressive HUB API missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE architecture audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + flattened main + entry routers + dead-route removal checked');
+console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + explicit universe curation pipeline + flattened main + entry routers + dead-route removal checked');

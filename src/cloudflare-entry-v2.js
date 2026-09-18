@@ -1,4 +1,6 @@
-import app from './cloudflare-entry.js';
+import sourceTruth from './source-truth.js';
+import { handleCloudflareRoute, transformAdminHtmlResponse } from './cloudflare-entry.js';
+import { handleUniverseCurationRoute, transformUniversePublicResponse } from './universe-curation.js';
 import { handleAdminTelegramRoute } from './telegram-admin-router.js';
 import { handlePublicTelegramFull } from './telegram-public-bot.js';
 import { serveTelegramDraftMedia } from './telegram-media.js';
@@ -34,5 +36,7 @@ export default {async fetch(request,env,ctx){
   }
   if(url.pathname==='/api/debug/datacat')return json({ok:false,error:'NOT_FOUND'},404);
   if(url.pathname==='/api/import'||url.pathname==='/api/import/status')return json({ok:false,error:'ADMIN_IMPORT_ONLY'},403);
-  return app.fetch(request,env,ctx);
+  const cloudflareResponse=await handleCloudflareRoute(request,env);if(cloudflareResponse)return cloudflareResponse;
+  const curationResponse=await handleUniverseCurationRoute(request,env);if(curationResponse)return curationResponse;
+  let response=await sourceTruth.fetch(request,env,ctx);response=await transformUniversePublicResponse(request,response,env);return transformAdminHtmlResponse(request,response);
 }};

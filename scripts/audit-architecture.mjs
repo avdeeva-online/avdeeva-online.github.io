@@ -14,12 +14,22 @@ if(exists('src/admin-auth.js')){
 const edge=read('src/cloudflare-entry-v2.js');
 const app=read('src/cloudflare-entry.js');
 fail(edge.includes("from './admin-auth.js'"),'src/cloudflare-entry-v2.js: shared admin auth not imported');
-fail(app.includes("from './admin-auth.js'"),'src/cloudflare-entry.js: shared admin auth not imported');
 fail(edge.includes('guardAdminApi(request,env,url)'),'src/cloudflare-entry-v2.js: top-level admin API guard missing');
-fail(app.includes('guardAdminApi(request,env,url)'),'src/cloudflare-entry.js: top-level admin API guard missing');
+fail(!app.includes("from './admin-auth.js'"),'src/cloudflare-entry.js: nested admin auth dependency returned');
+fail(!app.includes('guardAdminApi('),'src/cloudflare-entry.js: duplicate nested admin guard returned');
 fail(!/adminRequestBlocked\s*\(request,env,url\)/.test(edge),'src/cloudflare-entry-v2.js: per-route admin guard returned; use guardAdminApi once before dispatch');
 fail(!/function\s+adminRequestBlocked\b/.test(edge),'src/cloudflare-entry-v2.js: duplicate adminRequestBlocked implementation returned');
 fail(!/function\s+adminGuard\b/.test(app),'src/cloudflare-entry.js: duplicate adminGuard implementation returned');
+
+for(const marker of ['export async function handleCloudflareRoute','export async function transformAdminHtmlResponse'])fail(app.includes(marker),`src/cloudflare-entry.js: explicit route/HTML transform contract missing ${marker}`);
+for(const marker of ["from './source-truth.js'","from './universe-curation.js'","from './admin-auth.js'",'app.fetch(','.fetch(request,env,ctx)'])fail(!app.includes(marker),`src/cloudflare-entry.js: downstream wrapper/dependency returned ${marker}`);
+for(const marker of ["import sourceTruth from './source-truth.js'","from './cloudflare-entry.js'","from './universe-curation.js'",'handleCloudflareRoute(request,env)','handleUniverseCurationRoute(request,env)','sourceTruth.fetch(request,env,ctx)','transformUniversePublicResponse(request,response,env)','transformAdminHtmlResponse(request,response)'])fail(edge.includes(marker),`src/cloudflare-entry-v2.js: top-level pipeline missing ${marker}`);
+const cloudflareRoutePos=edge.indexOf('handleCloudflareRoute(request,env)');
+const topCurationRoutePos=edge.indexOf('handleUniverseCurationRoute(request,env)');
+const topSourceTruthPos=edge.indexOf('sourceTruth.fetch(request,env,ctx)');
+const topCurationTransformPos=edge.indexOf('transformUniversePublicResponse(request,response,env)');
+const adminHtmlTransformPos=edge.indexOf('transformAdminHtmlResponse(request,response)');
+fail(cloudflareRoutePos>=0&&topCurationRoutePos>cloudflareRoutePos&&topSourceTruthPos>topCurationRoutePos&&topCurationTransformPos>topSourceTruthPos&&adminHtmlTransformPos>topCurationTransformPos,'src/cloudflare-entry-v2.js: top-level route/transform order changed');
 
 fail(exists('src/d1-schema-status.js'),'src/d1-schema-status.js: read-only D1 schema status module missing');
 if(exists('src/d1-schema-status.js')){
@@ -97,11 +107,7 @@ if(exists('src/telegram-admin-fixed.js')){
 const curation=read('src/universe-curation.js');
 for(const marker of ['export async function handleUniverseCurationRoute','export async function transformUniversePublicResponse','/api/admin/universe-curation'])fail(curation.includes(marker),`src/universe-curation.js: explicit curation contract missing ${marker}`);
 for(const marker of ["from './source-truth.js'",'app.fetch('])fail(!curation.includes(marker),`src/universe-curation.js: downstream middleware wrapper returned ${marker}`);
-for(const marker of ["import sourceTruth from './source-truth.js'","from './universe-curation.js'",'handleUniverseCurationRoute(request,env)','sourceTruth.fetch(request,env,ctx)','transformUniversePublicResponse(request,response,env)'])fail(app.includes(marker),`src/cloudflare-entry.js: explicit curation pipeline missing ${marker}`);
-const curationRoutePos=app.indexOf('handleUniverseCurationRoute(request,env)');
-const sourceTruthPos=app.indexOf('sourceTruth.fetch(request,env,ctx)');
-const curationTransformPos=app.indexOf('transformUniversePublicResponse(request,response,env)');
-fail(curationRoutePos>=0&&sourceTruthPos>curationRoutePos&&curationTransformPos>sourceTruthPos,'src/cloudflare-entry.js: universe curation route/source/transform order changed');
+for(const marker of ["import sourceTruth from './source-truth.js'","from './universe-curation.js'",'handleUniverseCurationRoute(request,env)','sourceTruth.fetch(request,env,ctx)','transformUniversePublicResponse(request,response,env)'])fail(edge.includes(marker),`src/cloudflare-entry-v2.js: explicit curation pipeline missing ${marker}`);
 
 const mainRouter=read('src/main.js');
 for(const marker of ['export async function handleMainRoute','/api/admin/creator-scan','/api/admin/universe-review'])fail(mainRouter.includes(marker),`src/main.js: flattened route contract missing ${marker}`);
@@ -133,4 +139,4 @@ const media=read('src/hub-public-media.js');
 for(const marker of ['listHubResourcesSummaryPublic','getHubResourcePublic'])fail(media.includes(marker),`src/hub-public-media.js: progressive HUB API missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE architecture audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + explicit universe curation pipeline + flattened main + entry routers + dead-route removal checked');
+console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + single top-level Worker pipeline + explicit universe curation + flattened main + entry routers + dead-route removal checked');

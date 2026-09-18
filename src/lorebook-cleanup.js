@@ -28,11 +28,11 @@ export async function planDetachedLorebookCleanup(env,candidates,{excludingChara
 export function detachedLorebookCleanupStatements(env,plan){
   const entityIds=uniq(plan?.entityIds),blobHashes=uniq(plan?.blobHashes),statements=[];
   for(const id of entityIds){
-    statements.push(env.DB.prepare('DELETE FROM character_lorebooks WHERE lorebook_id=?').bind(id));
-    statements.push(env.DB.prepare('DELETE FROM lorebook_sources WHERE lorebook_id=?').bind(id));
-    statements.push(env.DB.prepare('DELETE FROM lorebooks WHERE id=?').bind(id));
+    statements.push(env.DB.prepare(`DELETE FROM character_lorebooks WHERE lorebook_id=? AND NOT EXISTS(SELECT 1 FROM characters c WHERE c.janitor_uuid=character_lorebooks.character_uuid)`).bind(id));
+    statements.push(env.DB.prepare(`DELETE FROM lorebook_sources WHERE lorebook_id=? AND NOT EXISTS(SELECT 1 FROM character_lorebooks cl JOIN characters c ON c.janitor_uuid=cl.character_uuid WHERE cl.lorebook_id=lorebook_sources.lorebook_id)`).bind(id));
+    statements.push(env.DB.prepare(`DELETE FROM lorebooks WHERE id=? AND NOT EXISTS(SELECT 1 FROM character_lorebooks cl JOIN characters c ON c.janitor_uuid=cl.character_uuid WHERE cl.lorebook_id=lorebooks.id)`).bind(id));
   }
-  for(const hash of blobHashes)statements.push(env.DB.prepare('DELETE FROM lorebook_blobs WHERE content_hash=?').bind(hash));
+  for(const hash of blobHashes)statements.push(env.DB.prepare(`DELETE FROM lorebook_blobs WHERE content_hash=? AND NOT EXISTS(SELECT 1 FROM lorebooks WHERE content_hash=?)`).bind(hash,hash));
   return statements;
 }
 

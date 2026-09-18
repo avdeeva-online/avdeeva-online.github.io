@@ -98,10 +98,17 @@ const mainRouter=read('src/main.js');
 for(const marker of ['export async function handleMainRoute','/api/admin/creator-scan','/api/admin/universe-review'])fail(mainRouter.includes(marker),`src/main.js: flattened route contract missing ${marker}`);
 for(const marker of ["from './entry.js'",'app.fetch('])fail(!mainRouter.includes(marker),`src/main.js: downstream wrapper returned ${marker}`);
 const sourceTruthRouter=read('src/source-truth.js');
-for(const marker of ["import app from './entry.js'","import { handleMainRoute } from './main.js'",'const mainResponse=await handleMainRoute(request,env)','if(mainResponse)return mainResponse'])fail(sourceTruthRouter.includes(marker),`src/source-truth.js: flattened main dispatch missing ${marker}`);
+for(const marker of ["import { handleMainRoute } from './main.js'",'const mainResponse=await handleMainRoute(request,env)','if(mainResponse)return mainResponse'])fail(sourceTruthRouter.includes(marker),`src/source-truth.js: flattened main dispatch missing ${marker}`);
 fail(!sourceTruthRouter.includes("import app from './main.js'"),'src/source-truth.js: nested main wrapper import returned');
 
+const sourceTruthEntryRouter=read('src/source-truth.js');
+for(const marker of ["import worker from './worker.js'","import { handleEntryRoute } from './entry.js'",'const entryResponse=await handleEntryRoute(request,env,ctx)','if(entryResponse)return entryResponse','const response=await worker.fetch(request,env,ctx)'])fail(sourceTruthEntryRouter.includes(marker),`src/source-truth.js: flattened entry dispatch missing ${marker}`);
+for(const marker of ["import app from './entry.js'",'app.fetch('])fail(!sourceTruthEntryRouter.includes(marker),`src/source-truth.js: nested entry wrapper returned ${marker}`);
+
 const entry=read('src/entry.js');
+fail(entry.includes('export async function handleEntryRoute'),'src/entry.js: flattened route handler missing');
+fail(!entry.includes('return worker.fetch(request,env,ctx)'),'src/entry.js: downstream worker wrapper returned');
+fail(entry.includes('worker.fetch(new Request'),'src/entry.js: internal card lookup must keep direct base-worker access');
 for(const marker of ['scanDatacatCreator','catalogCharacters','catalogLorebooks'])fail(!entry.includes(marker),`src/entry.js: shadowed legacy ${marker} returned`);
 fail(!/page\s*<=\s*50/.test(entry),'src/entry.js: legacy 50-page scan returned');
 fail(!entry.includes('url.pathname==="/api/characters"')&&!entry.includes("url.pathname==='/api/characters'"),'src/entry.js: shadowed character catalog route returned');
@@ -117,4 +124,4 @@ const media=read('src/hub-public-media.js');
 for(const marker of ['listHubResourcesSummaryPublic','getHubResourcePublic'])fail(media.includes(marker),`src/hub-public-media.js: progressive HUB API missing ${marker}`);
 
 if(errors.length){console.error('\nARCHIVE.EXE architecture audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + flattened main router + dead-route removal checked');
+console.log('ARCHIVE.EXE architecture audit OK · shared top-level admin auth + read-only D1 schema status + isolated Telegram webhooks + shared Telegram admin transport/UI + stable admin Telegram router + extracted admin menu/stats/read-only views + staged-file-safe HUB issues + read-only drafts/suggestions listings + self-contained fixed admin flow + progressive HUB + flattened main + entry routers + dead-route removal checked');

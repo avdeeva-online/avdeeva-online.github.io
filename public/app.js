@@ -318,6 +318,7 @@ if(pageSizeBtn && pageSizeMenu){
 
 function cardHtml(b,i){
   const tags = visibleBotTags(b);
+  const hashtags = visibleBotHashtags(b);
   const shown = tags.slice(0,4);
   const more = tags.length - shown.length;
   const pov = botPov(b);
@@ -337,7 +338,7 @@ function cardHtml(b,i){
       </div>
       <p class="card-short">${esc(b.short)}</p>
       <div class="card-tags">${shown.map(tagChip).join("")}${more>0?`<span class="tag-more">+${more}</span>`:''}</div>
-      ${visibleBotHashtags(b).length?`<div class="card-hashtags">${visibleBotHashtags(b).slice(0,3).map(hashtagChip).join("")}${visibleBotHashtags(b).length>3?`<span>+${visibleBotHashtags(b).length-3}</span>`:''}</div>`:''}
+      ${hashtags.length?`<div class="card-hashtags">${hashtags.slice(0,3).map(hashtagChip).join("")}${hashtags.length>3?`<span>+${hashtags.length-3}</span>`:''}</div>`:''}
     </div>
   </article>`;
 }

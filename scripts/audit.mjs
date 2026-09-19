@@ -86,6 +86,7 @@ fail(!publicMedia.includes("source:'legacy-media'"),'src/hub-public-media.js: vi
 for(const marker of ['HUB_FILES','row.storage','row.r2_key','ensureStorageColumns','isSource','source_files','media_model:6'])fail(publicMedia.includes(marker),`src/hub-public-media.js: public SOURCE/R2 contract missing ${marker}`);
 
 const publicApp=read('public/app.js');
+for(const marker of ['enemy to lovers','enemies to lovers'])fail(publicApp.includes(marker),`public/app.js: defensive tag alias parity missing ${marker}`);
 for(const marker of ['const visibleBotHashtags = bot =>','const hashtags = visibleBotHashtags(b)','hashtags.slice(0,3)','const modalHashtags=visibleBotHashtags(b)'])fail(publicApp.includes(marker),`public/app.js: visible hashtag dedupe missing ${marker}`);
 const catalogApi=read('public/catalog-api.js');
 for(const marker of ['function normalizeHashtags(values)','hashtags:normalizeHashtags(b.hashtags)'])fail(catalogApi.includes(marker),`public/catalog-api.js: fallback hashtag normalization missing ${marker}`);
@@ -116,14 +117,14 @@ if(exists('src/lorebook-cleanup.js')){
   for(const marker of ['linkedLorebooksForCharacter','planDetachedLorebookCleanup','detachedLorebookCleanupStatements','cleanupDetachedLorebooks','JOIN characters c ON c.janitor_uuid=cl.character_uuid','DELETE FROM character_lorebooks WHERE lorebook_id=?','DELETE FROM lorebook_sources WHERE lorebook_id=?','DELETE FROM lorebooks WHERE id=?','DELETE FROM lorebook_blobs WHERE content_hash=?','env.DB.batch(statements)'])fail(l.includes(marker),`src/lorebook-cleanup.js: atomic targeted cleanup missing ${marker}`);
 }
 fail(exists('src/filter-normalization.js'),'src/filter-normalization.js: shared filter normalizer missing');
-if(exists('src/filter-normalization.js')){const n=read('src/filter-normalization.js');for(const marker of ['export function normalizeHashtags','replace(/^#+\\s*/','toLocaleLowerCase()','seen.has(key)'])fail(n.includes(marker),`src/filter-normalization.js: hashtag normalization missing ${marker}`)}
+if(exists('src/filter-normalization.js')){const n=read('src/filter-normalization.js');for(const marker of ['export function normalizeHashtags','export function semanticTagKey','export function normalizeTags','enemy to lovers','enemies to lovers','replace(/^#+\\s*/','toLocaleLowerCase()','seen.has(key)'])fail(n.includes(marker),`src/filter-normalization.js: filter normalization missing ${marker}`)}
 const baseWorker=read('src/worker.js');
-for(const marker of ["import { normalizeHashtags } from './filter-normalization.js'","return normalizeHashtags(Array.isArray(c?.custom_tags)?c.custom_tags:[])"])fail(baseWorker.includes(marker),`src/worker.js: imported hashtag normalization missing ${marker}`);
+for(const marker of ["import { normalizeHashtags, normalizeTags } from './filter-normalization.js'","return normalizeHashtags(Array.isArray(c?.custom_tags)?c.custom_tags:[])","return normalizePovTags(normalizeTags((Array.isArray(c?.tags)?c.tags:[])"])fail(baseWorker.includes(marker),`src/worker.js: imported filter normalization missing ${marker}`);
 
 const discovery=read('src/discovery.js');
 for(const marker of ['export function canonicalSettingId','export function normalizeSettingIds',"['high-school','school','university','college'].includes(id)?'college':id"])fail(discovery.includes(marker),`src/discovery.js: canonical setting normalizer missing ${marker}`);
 const characterAdmin=read('src/character-admin.js');
-for(const marker of ["from './filter-normalization.js'","hashtags:normalizeHashtags(parse(r.hashtags))","hashtags=normalizeHashtags(b.hashtags)"])fail(characterAdmin.includes(marker),`src/character-admin.js: normalized hashtag contract missing ${marker}`);
+for(const marker of ["from './filter-normalization.js'","tags:normalizeTags(parse(r.tags))","hashtags:normalizeHashtags(parse(r.hashtags))","hashtags=normalizeHashtags(b.hashtags)","const tags=normalizeTags([...arr(b.tags).filter(x=>!isPovTag(x)),povTag])"])fail(characterAdmin.includes(marker),`src/character-admin.js: normalized filter contract missing ${marker}`);
 const characterEditor=read('public/admin/import/character-editor.js');
 const characterEditorHtml=read('public/admin/import/edit.html');
 for(const marker of ['export function settingDefinitions','SETTING_DEFINITIONS.map(({id,label,aliases})'])fail(discovery.includes(marker),`src/discovery.js: reusable setting taxonomy missing ${marker}`);
@@ -144,7 +145,7 @@ if(exists('src/lorebook-universe-repair.js')){
   for(const marker of ['repairAffectedLorebookUniverses','repairAllLorebookUniverses','planAffectedLorebookUniverseChanges','lorebookUniverseChangeStatements','collectRepairChanges','_archive_previous_source','character_lorebooks','excludeUuids','cleared','UPDATE characters SET universe=?,universes=?,universe_source_field=?,updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?'])fail(repair.includes(marker),`src/lorebook-universe-repair.js: repair/planner contract missing ${marker}`);
 }
 const sourceTruth=read('src/source-truth.js');
-for(const marker of ["from './filter-normalization.js'","hashtags:normalizeHashtags(arr(r.hashtags))"])fail(sourceTruth.includes(marker),`src/source-truth.js: public hashtag normalization missing ${marker}`);
+for(const marker of ["from './filter-normalization.js'","hashtags:normalizeHashtags(arr(r.hashtags))","normalizePovTags(normalizeTags(oldTags))","normalizePovTags(normalizeTags(arr(r.tags)))","normalizePovTags(normalizeTags(arr(row.tags)))"])fail(sourceTruth.includes(marker),`src/source-truth.js: public tag/hashtag normalization missing ${marker}`);
 for(const marker of ['normalizeSettingIds(storedSettings)','normalizeSettingIds(inferSettingIds(null,r))'])fail(sourceTruth.includes(marker),`src/source-truth.js: public setting normalization missing ${marker}`);
 for(const marker of ["from './lorebook-universe-repair.js'",'affectedLorebookIds','repairAffectedLorebookUniverses(env,uuid','repairAllLorebookUniverses(env)'])fail(sourceTruth.includes(marker),`src/source-truth.js: lorebook universe repair integration missing ${marker}`);
 const refreshStart=sourceTruth.indexOf('async function refreshOne(env,uuid)');
@@ -154,4 +155,4 @@ fail(refreshBody.includes('repairAffectedLorebookUniverses'),'src/source-truth.j
 fail(!refreshBody.includes('repairUniversesFromLorebooks(env)'),'src/source-truth.js: refreshOne still invokes global universe repair');
 
 if(errors.length){console.error('\nARCHIVE.EXE audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + public school-setting canonicalization + canonical visible tags + separate POV facet + passive list-card tags + hashtag normalization contract + public setting API canonicalization + admin filter value normalization + admin setting taxonomy contract + atomic lorebook delete lifecycle + bounded scans + zero runtime D1 DDL checked`);
+console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + public school-setting canonicalization + canonical visible tags + separate POV facet + passive list-card tags + semantic tag + hashtag normalization contract + public setting API canonicalization + admin filter value normalization + admin setting taxonomy contract + atomic lorebook delete lifecycle + bounded scans + zero runtime D1 DDL checked`);

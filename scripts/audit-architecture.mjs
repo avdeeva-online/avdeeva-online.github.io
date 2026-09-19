@@ -183,7 +183,6 @@ const appUi=read('public/app.js');
 fail(appUi.includes('if($("#catalogDrawer")?.classList.contains("open")) renderDrawer();'),'public/app.js: hidden drawer render guard missing');
 fail(appUi.includes('function openDrawer(){renderDrawer();'),'public/app.js: drawer must refresh on open');
 fail(!appUi.includes('  renderDrawer();\n})();'),'public/app.js: startup hidden drawer render returned');
-const charactersHtml=read('public/characters.html');
 fail(charactersHtml.includes('app.js?v=20260919-drawer-lazy1'),'public/characters.html: drawer optimization cache-bust missing');
 
 const hubResources=read('src/hub-resources.js');

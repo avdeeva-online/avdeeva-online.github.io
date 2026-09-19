@@ -177,18 +177,22 @@ function count(kind, val){
 function applyFilters(){
   syncBots();
   const q = state.q.trim().toLowerCase();
+  const selectedSettings=[...state.settings],selectedUniverses=[...state.universes],selectedTags=[...state.tags],selectedHashtags=[...state.hashtags];
+  const allAuthorsSelected=state.authors.size>0&&selectionCoversAll(state.authors,uniq("author"));
+  const allUniversesSelected=state.universes.size>0&&selectionCoversAll(state.universes,uniq("universe"));
   let list = B.filter(b => {
-    const hay = [b.nameRu,b.nameEn,b.author,...botUniverses(b),botPov(b),b.short,b.full,b.scenario,...(b.intros||[]),...(b.settingIds||[]).flatMap(id=>[settingLabel(id),settingSearchText(id)]),...(b.tags||[]),...(b.hashtags||[])].join(" ").toLowerCase();
-    if(q && !hay.includes(q)) return false;
-    const allAuthorsSelected = selectionCoversAll(state.authors, uniq("author"));
-    const allUniversesSelected = selectionCoversAll(state.universes, uniq("universe"));
+    const universes=botUniverses(b),pov=botPov(b);
+    if(q){
+      const hay=[b.nameRu,b.nameEn,b.author,...universes,pov,b.short,b.full,b.scenario,...(b.intros||[]),...(b.settingIds||[]).flatMap(id=>[settingLabel(id),settingSearchText(id)]),...(b.tags||[]),...(b.hashtags||[])].join(" ").toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
     if(state.authors.size && !allAuthorsSelected && !state.authors.has(b.author)) return false;
-    if(state.settings.size && [...state.settings].some(setting=>!botHasSetting(b,setting))) return false;
-    if(state.universes.size && !allUniversesSelected && [...state.universes].some(universe=>!botHasUniverse(b,universe))) return false;
-    if(state.povs.size && !state.povs.has(botPov(b))) return false;
+    if(selectedSettings.length && selectedSettings.some(setting=>!botHasSetting(b,setting))) return false;
+    if(selectedUniverses.length && !allUniversesSelected && selectedUniverses.some(value=>!universes.some(universe=>universeKey(universe)===universeKey(value)))) return false;
+    if(state.povs.size && !state.povs.has(pov)) return false;
     if(state.lorebook && !b.lorebook) return false;
-    if([...state.tags].some(t => !botHasTag(b,t))) return false; // AND logic
-    if([...state.hashtags].some(h => !botHasHashtag(b,h))) return false; // hashtag AND logic
+    if(selectedTags.some(t => !botHasTag(b,t))) return false; // AND logic
+    if(selectedHashtags.some(h => !botHasHashtag(b,h))) return false; // hashtag AND logic
     return true;
   });
   const sortName = bot => cleanTag(bot.nameEn).replace(/^[^\p{L}\p{N}]+/u,"");

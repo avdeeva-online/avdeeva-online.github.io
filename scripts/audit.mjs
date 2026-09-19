@@ -87,14 +87,14 @@ for(const marker of ['HUB_FILES','row.storage','row.r2_key','ensureStorageColumn
 
 const publicApp=read('public/app.js');
 const publicCharacters=read('public/characters.html');
-for(const marker of ['const isPovTag = value =>','if(isPovTag(tag))return','const tags = (b.tags || []).filter(tag=>!isPovTag(tag))','const modalTags=(b.tags||[]).filter(tag=>!isPovTag(tag))','$("#modalPov").textContent=povLabel(botPov(b))','card-status-icon card-pov-icon','povSymbol(pov)'])fail(publicApp.includes(marker),`public/app.js: separated POV/tag facet contract missing ${marker}`);
+for(const marker of ['const isPovTag = value =>','if(isPovTag(tag))return','const visibleBotTags = bot =>','const tags = visibleBotTags(b)','const modalTags=visibleBotTags(b)','$("#modalPov").textContent=povLabel(botPov(b))','card-status-icon card-pov-icon','povSymbol(pov)'])fail(publicApp.includes(marker),`public/app.js: separated/canonical POV-tag contract missing ${marker}`);
 fail(!publicApp.includes('$("#modalPov").textContent=""'),'public/app.js: modal POV display is still being cleared');
 const cardHtmlStart=publicApp.indexOf('function cardHtml');
 const quickTagsStart=publicApp.indexOf('function renderQuickTags',cardHtmlStart);
 const cardHtmlBody=cardHtmlStart>=0&&quickTagsStart>cardHtmlStart?publicApp.slice(cardHtmlStart,quickTagsStart):'';
 for(const marker of ['const tagChip = tag => \`<span>','const hashtagChip = hashtag => \`<span>','if(passiveCardTags){e.stopPropagation();return}'])fail(publicApp.includes(marker),`public/app.js: passive list-card tag contract missing ${marker}`);
 for(const marker of ['data-tag=','data-hashtag='])fail(!cardHtmlBody.includes(marker),`public/app.js: list-card tag region may still be interactive via ${marker}`);
-fail(publicCharacters.includes('app.js?v=20260919-pov-facets1'),'public/characters.html: POV/tag facet cache-bust missing');
+fail(publicCharacters.includes('app.js?v=20260919-tag-dedupe1'),'public/characters.html: canonical visible-tag cache-bust missing');
 
 const main=read('src/main.js');
 for(const marker of ['SCAN_DEADLINE_MS','SCAN_FETCH_MS','SCAN_PAGE_LIMIT','AbortController','preferred_variant'])fail(main.includes(marker),`src/main.js: bounded creator scan missing ${marker}`);
@@ -134,4 +134,4 @@ fail(refreshBody.includes('repairAffectedLorebookUniverses'),'src/source-truth.j
 fail(!refreshBody.includes('repairUniversesFromLorebooks(env)'),'src/source-truth.js: refreshOne still invokes global universe repair');
 
 if(errors.length){console.error('\nARCHIVE.EXE audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + separate POV facet + passive list-card tags + admin filter value normalization + admin setting taxonomy contract + atomic lorebook delete lifecycle + bounded scans + zero runtime D1 DDL checked`);
+console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + canonical visible tags + separate POV facet + passive list-card tags + admin filter value normalization + admin setting taxonomy contract + atomic lorebook delete lifecycle + bounded scans + zero runtime D1 DDL checked`);

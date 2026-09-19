@@ -104,6 +104,8 @@ for(const marker of ['settingDefs=[]','d.settingDefinitions','settingDefs.map(x=
 for(const marker of ['const canonicalSettings=',"historical'?'medieval'","magic'?'fantasy'"])fail(!characterEditor.includes(marker),`public/admin/import/character-editor.js: destructive legacy setting normalization returned ${marker}`);
 fail(characterEditorHtml.includes('character-editor.js?v=20260919-setting-contract1'),'public/admin/import/edit.html: character editor cache-bust missing');
 
+for(const marker of ["normalizeUniverses(b.universes)","normalizeUniverses(parse(current.universes).length?parse(current.universes):[current.universe])","normalizeSettingIds(b.setting_ids)","['high-school','school','university','college'].includes(id)?'college':id"])fail(characterAdmin.includes(marker),`src/character-admin.js: filter value normalization missing ${marker}`);
+for(const marker of ['const universes=uniq(b.universes)','settingIds=uniq(b.setting_ids)'])fail(!characterAdmin.includes(marker),`src/character-admin.js: raw slash-combo normalization returned ${marker}`);
 for(const marker of ['planDetachedLorebookCleanup','detachedLorebookCleanupStatements','planAffectedLorebookUniverseChanges','lorebookUniverseChangeStatements','await env.DB.batch(statements)','excludingCharacterUuid:uuid','universeRepair'])fail(characterAdmin.includes(marker),`src/character-admin.js: atomic character/lorebook delete lifecycle missing ${marker}`);
 for(const marker of ['catch(()=>[])','catch(()=>({entities:0,sources:0,blobs:0}))',"try{await env.DB.prepare('DELETE FROM character_lorebooks"])fail(!characterAdmin.includes(marker),`src/character-admin.js: swallowed character-delete cleanup returned ${marker}`);
 
@@ -121,4 +123,4 @@ fail(refreshBody.includes('repairAffectedLorebookUniverses'),'src/source-truth.j
 fail(!refreshBody.includes('repairUniversesFromLorebooks(env)'),'src/source-truth.js: refreshOne still invokes global universe repair');
 
 if(errors.length){console.error('\nARCHIVE.EXE audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + admin setting taxonomy contract + atomic lorebook delete lifecycle + bounded scans + zero runtime D1 DDL checked`);
+console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + admin filter value normalization + admin setting taxonomy contract + atomic lorebook delete lifecycle + bounded scans + zero runtime D1 DDL checked`);

@@ -1,6 +1,16 @@
 let B = [];
 let countCacheSource = null, countCache = new Map();
 let facetCacheSource = null, facetCache = Object.create(null);
+let filterCacheSource = null, filterCacheKey = "", filterCache = [];
+const renderDomCache = {
+  gridSource:null,
+  gridKey:"",
+  paginationKey:"",
+  quickTagsSource:null,
+  quickTagsKey:"",
+  activeFiltersHtml:null,
+  countsKey:""
+};
 let pageSize = 30;
 let currentPage = 1;
 function syncBots(){
@@ -203,6 +213,30 @@ function applyFilters(){
   return list;
 }
 
+function filterStateKey(){
+  return JSON.stringify([
+    state.q.trim().toLowerCase(),
+    [...state.settings],
+    [...state.authors],
+    [...state.universes],
+    [...state.tags],
+    [...state.hashtags],
+    [...state.povs],
+    state.lorebook,
+    state.sort
+  ]);
+}
+
+function filteredBots(){
+  syncBots();
+  const key=filterStateKey();
+  if(filterCacheSource===B && filterCacheKey===key) return filterCache;
+  filterCacheSource=B;
+  filterCacheKey=key;
+  filterCache=applyFilters();
+  return filterCache;
+}
+
 function hasActiveFilters(){
   return !!(
     state.q.trim() ||
@@ -219,7 +253,7 @@ function hasActiveFilters(){
 
 function render(){
   syncBots();
-  const list = applyFilters();
+  const list = filteredBots();
   const filtered = hasActiveFilters();
   const pages = Math.max(1, Math.ceil(list.length / pageSize));
   if(currentPage > pages) currentPage = pages;
@@ -238,7 +272,13 @@ function render(){
   if(reset) reset.hidden = !filtered;
   $("#totalMeta").textContent = filtered && isCompactMobile() ? `${String(list.length).padStart(3,"0")} / ${String(B.length).padStart(3,"0")} RECORDS` : `${String(B.length).padStart(3,"0")} RECORDS`;
   $("#empty").hidden = !!list.length;
-  $("#grid").innerHTML = visible.map((b,i)=>cardHtml(b,i)).join("");
+  const grid=$("#grid");
+  const gridKey=JSON.stringify([pageSize,start,visible.map(bot=>bot.id)]);
+  if(renderDomCache.gridSource!==B || renderDomCache.gridKey!==gridKey){
+    grid.innerHTML=visible.map((b,i)=>cardHtml(b,i)).join("");
+    renderDomCache.gridSource=B;
+    renderDomCache.gridKey=gridKey;
+  }
 
   renderPagination(list.length);
   renderQuickTags();
@@ -252,6 +292,9 @@ function renderPagination(totalItems){
   const nav=$("#pagination");
   if(!nav) return;
   const pages=Math.max(1,Math.ceil(totalItems/pageSize));
+  const paginationKey=JSON.stringify([totalItems<=pageSize,currentPage,pages,pageSize]);
+  if(renderDomCache.paginationKey===paginationKey) return;
+  renderDomCache.paginationKey=paginationKey;
 
   if(totalItems<=pageSize){
     nav.hidden=true;
@@ -281,16 +324,15 @@ function renderPagination(totalItems){
 
   pieces.push(`<button type="button" data-page="${Math.min(pages,currentPage+1)}" ${currentPage===pages?"disabled":""} aria-label="Next page">›</button>`);
   nav.innerHTML=pieces.join("");
-
-  nav.querySelectorAll("button[data-page]").forEach(btn=>{
-    btn.onclick=()=>{
-      if(btn.disabled) return;
-      currentPage=Number(btn.dataset.page)||1;
-      render();
-      $(isCompactMobile()?"#grid":"#catalogMeta")?.scrollIntoView({behavior:"auto",block:"start"});
-    };
-  });
 }
+
+$("#pagination")?.addEventListener("click",e=>{
+  const btn=e.target.closest("button[data-page]");
+  if(!btn || btn.disabled) return;
+  currentPage=Number(btn.dataset.page)||1;
+  render();
+  $(isCompactMobile()?"#grid":"#catalogMeta")?.scrollIntoView({behavior:"auto",block:"start"});
+});
 
 const pageSizeBtn=$("#pageSizeBtn");
 const pageSizeMenu=$("#pageSizeMenu");
@@ -350,6 +392,10 @@ function cardHtml(b,i){
 function renderQuickTags(){
   const el = $("#tagQuick");
   const compactMobile = window.matchMedia && window.matchMedia("(max-width:760px)").matches;
+  const quickTagsKey=JSON.stringify([compactMobile,tagsExpanded,[...state.tags]]);
+  if(renderDomCache.quickTagsSource===B && renderDomCache.quickTagsKey===quickTagsKey) return;
+  renderDomCache.quickTagsSource=B;
+  renderDomCache.quickTagsKey=quickTagsKey;
   const everyTag = allTags();
   // Mobile uses one continuous swipe rail: selected tags stay first, but every
   // tag remains reachable without opening the catalog or expanding the page.
@@ -372,11 +418,17 @@ function renderActiveFilters(){
   state.universes.forEach(v=>chips.push(["universe",v,`UNIVERSE / ${v}`]));
   state.hashtags.forEach(v=>chips.push(["hashtag",v,`#${cleanHashtag(v)}`]));
   const box = $("#activeFilters");
-  box.classList.toggle("has", chips.length>0);
-  box.innerHTML = chips.map(([type,value,label])=>`<button class="filter-chip" data-remove="${type}" data-value="${esc(value)}">${esc(label)} ×</button>`).join("");
+  const html=chips.map(([type,value,label])=>`<button class="filter-chip" data-remove="${type}" data-value="${esc(value)}">${esc(label)} ×</button>`).join("");
+  if(renderDomCache.activeFiltersHtml===html) return;
+  renderDomCache.activeFiltersHtml=html;
+  box.classList.toggle("has",chips.length>0);
+  box.innerHTML=html;
 }
 
 function renderCounts(){
+  const countsKey=JSON.stringify([state.settings.size,state.authors.size,state.hashtags.size,state.universes.size,state.povs.size,[...state.povs][0]||"",state.lorebook,state.sort]);
+  if(renderDomCache.countsKey===countsKey) return;
+  renderDomCache.countsKey=countsKey;
   setCount("#settingCount", state.settings.size);
   setCount("#authorCount", state.authors.size);
   setCount("#hashtagCount", state.hashtags.size);
@@ -688,7 +740,7 @@ const randomWhispers=["RECOVERING LOST RECORD...","UNINDEXED TRACE DETECTED","AR
 function archiveWhisper(text,rare=false){const box=$("#archiveWhisper");$("#whisperText").textContent=text;box.classList.toggle("rare",rare);box.hidden=false;requestAnimationFrame(()=>box.classList.add("show"));clearTimeout(archiveWhisper.timer);archiveWhisper.timer=setTimeout(()=>{box.classList.remove("show");setTimeout(()=>box.hidden=true,220)},2600)}
 $("#randomBtn").onclick=()=>{
   const btn=$("#randomBtn");
-  if(isCompactMobile() && hasActiveFilters() && !applyFilters().length){
+  if(isCompactMobile() && hasActiveFilters() && !filteredBots().length){
     archiveWhisper("NO MATCHING RECORDS — RESET FILTERS",true);
     return;
   }
@@ -706,7 +758,7 @@ $("#prevBot").onclick=()=>browseModal(-1);
 $("#nextBot").onclick=()=>browseModal(1);
 
 function browseModal(direction){
-  const filteredPool=applyFilters();
+  const filteredPool=filteredBots();
   const pool=filteredPool.length || !hasActiveFilters() || !isCompactMobile() ? (filteredPool.length?filteredPool:B) : [];
   if(!pool.length) return;
   let index=current?pool.findIndex(b=>b.id===current.id):-1;
@@ -716,7 +768,7 @@ function browseModal(direction){
 }
 
 function randomModal(){
-  let pool=applyFilters().filter(b=>!current||b.id!==current.id);
+  let pool=filteredBots().filter(b=>!current||b.id!==current.id);
   if(!pool.length && (!hasActiveFilters() || !isCompactMobile())) pool=B.filter(b=>!current||b.id!==current.id);
   if(pool.length) switchModalRecord(pool[Math.floor(Math.random()*pool.length)], Math.random()<.5?-1:1);
 }

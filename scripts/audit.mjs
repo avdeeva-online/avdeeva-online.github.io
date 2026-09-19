@@ -85,6 +85,15 @@ fail(!publicMedia.includes('legacyExtraIds'),'src/hub-public-media.js: legacy EX
 fail(!publicMedia.includes("source:'legacy-media'"),'src/hub-public-media.js: virtual media EXTRAS still active');
 for(const marker of ['HUB_FILES','row.storage','row.r2_key','ensureStorageColumns','isSource','source_files','media_model:6'])fail(publicMedia.includes(marker),`src/hub-public-media.js: public SOURCE/R2 contract missing ${marker}`);
 
+const publicApp=read('public/app.js');
+const publicCharacters=read('public/characters.html');
+const cardHtmlStart=publicApp.indexOf('function cardHtml');
+const quickTagsStart=publicApp.indexOf('function renderQuickTags',cardHtmlStart);
+const cardHtmlBody=cardHtmlStart>=0&&quickTagsStart>cardHtmlStart?publicApp.slice(cardHtmlStart,quickTagsStart):'';
+for(const marker of ['const tagChip = tag => \`<span>','const hashtagChip = hashtag => \`<span>','if(passiveCardTags){e.stopPropagation();return}'])fail(publicApp.includes(marker),`public/app.js: passive list-card tag contract missing ${marker}`);
+for(const marker of ['data-tag=','data-hashtag=','<button'])fail(!cardHtmlBody.includes(marker)||marker==='<button'&&cardHtmlBody.includes('card-author'),`public/app.js: list-card tag region may still be interactive via ${marker}`);
+fail(publicCharacters.includes('app.js?v=20260919-passive-card-tags1'),'public/characters.html: passive card-tag cache-bust missing');
+
 const main=read('src/main.js');
 for(const marker of ['SCAN_DEADLINE_MS','SCAN_FETCH_MS','SCAN_PAGE_LIMIT','AbortController','preferred_variant'])fail(main.includes(marker),`src/main.js: bounded creator scan missing ${marker}`);
 if(/page\s*<=\s*50/.test(main))errors.push('src/main.js: legacy 50-page creator scan returned');
@@ -123,4 +132,4 @@ fail(refreshBody.includes('repairAffectedLorebookUniverses'),'src/source-truth.j
 fail(!refreshBody.includes('repairUniversesFromLorebooks(env)'),'src/source-truth.js: refreshOne still invokes global universe repair');
 
 if(errors.length){console.error('\nARCHIVE.EXE audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + admin filter value normalization + admin setting taxonomy contract + atomic lorebook delete lifecycle + bounded scans + zero runtime D1 DDL checked`);
+console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + passive list-card tags + admin filter value normalization + admin setting taxonomy contract + atomic lorebook delete lifecycle + bounded scans + zero runtime D1 DDL checked`);

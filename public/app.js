@@ -147,6 +147,9 @@ const canonicalHashtag = value => {
   const key=hashtagKey(value);
   return allHashtags().find(hashtag=>hashtagKey(hashtag)===key) || cleanHashtag(value);
 };
+const visibleBotHashtags = bot => [...new Map((bot?.hashtags||[])
+  .map(hashtag=>[hashtagKey(hashtag),canonicalHashtag(hashtag)])
+  .filter(([key])=>Boolean(key))).values()];
 const botHasHashtag = (bot,value) => (bot.hashtags||[]).some(hashtag=>hashtagKey(hashtag)===hashtagKey(value));
 const selectedHashtag = value => [...state.hashtags].find(hashtag=>hashtagKey(hashtag)===hashtagKey(value));
 const hasSelectedHashtag = value => Boolean(selectedHashtag(value));
@@ -334,7 +337,7 @@ function cardHtml(b,i){
       </div>
       <p class="card-short">${esc(b.short)}</p>
       <div class="card-tags">${shown.map(tagChip).join("")}${more>0?`<span class="tag-more">+${more}</span>`:''}</div>
-      ${(b.hashtags||[]).length?`<div class="card-hashtags">${(b.hashtags||[]).slice(0,3).map(hashtagChip).join("")}${(b.hashtags||[]).length>3?`<span>+${(b.hashtags||[]).length-3}</span>`:''}</div>`:''}
+      ${visibleBotHashtags(b).length?`<div class="card-hashtags">${visibleBotHashtags(b).slice(0,3).map(hashtagChip).join("")}${visibleBotHashtags(b).length>3?`<span>+${visibleBotHashtags(b).length-3}</span>`:''}</div>`:''}
     </div>
   </article>`;
 }
@@ -806,7 +809,8 @@ function openModal(b,keepOpen=false){
   $("#modalLoreFlag").title="";
   $("#modalPov").textContent=povLabel(botPov(b));
   const modalTags=visibleBotTags(b);
-  $("#modalTags").innerHTML=`<div class="modal-primary-tags">${modalTags.map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}</div>${(b.hashtags||[]).length?`<div class="modal-hashtags">${(b.hashtags||[]).map(h=>`<button data-hashtag="${esc(h)}">#${esc(cleanHashtag(h))}</button>`).join("")}</div>`:''}`;
+  const modalHashtags=visibleBotHashtags(b);
+  $("#modalTags").innerHTML=`<div class="modal-primary-tags">${modalTags.map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}</div>${modalHashtags.length?`<div class="modal-hashtags">${modalHashtags.map(h=>`<button data-hashtag="${esc(h)}">#${esc(cleanHashtag(h))}</button>`).join("")}</div>`:''}`;
   $("#openBot").href=b.url;
   $("#openBot").textContent=`OPEN ON ${b.platform} ↗`;
   $("#openBot").dataset.mobileLabel=`${b.platform} PAGE ↗`;

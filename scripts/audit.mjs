@@ -111,6 +111,7 @@ if(exists('src/lorebook-cleanup.js')){
   for(const marker of ['linkedLorebooksForCharacter','planDetachedLorebookCleanup','detachedLorebookCleanupStatements','cleanupDetachedLorebooks','JOIN characters c ON c.janitor_uuid=cl.character_uuid','DELETE FROM character_lorebooks WHERE lorebook_id=?','DELETE FROM lorebook_sources WHERE lorebook_id=?','DELETE FROM lorebooks WHERE id=?','DELETE FROM lorebook_blobs WHERE content_hash=?','env.DB.batch(statements)'])fail(l.includes(marker),`src/lorebook-cleanup.js: atomic targeted cleanup missing ${marker}`);
 }
 const discovery=read('src/discovery.js');
+for(const marker of ['export function canonicalSettingId','export function normalizeSettingIds',"['high-school','school','university','college'].includes(id)?'college':id"])fail(discovery.includes(marker),`src/discovery.js: canonical setting normalizer missing ${marker}`);
 const characterAdmin=read('src/character-admin.js');
 const characterEditor=read('public/admin/import/character-editor.js');
 const characterEditorHtml=read('public/admin/import/edit.html');
@@ -120,7 +121,8 @@ for(const marker of ['settingDefs=[]','d.settingDefinitions','settingDefs.map(x=
 for(const marker of ['const canonicalSettings=',"historical'?'medieval'","magic'?'fantasy'"])fail(!characterEditor.includes(marker),`public/admin/import/character-editor.js: destructive legacy setting normalization returned ${marker}`);
 fail(characterEditorHtml.includes('character-editor.js?v=20260919-setting-contract1'),'public/admin/import/edit.html: character editor cache-bust missing');
 
-for(const marker of ["normalizeUniverses(b.universes)","normalizeUniverses(parse(current.universes).length?parse(current.universes):[current.universe])","normalizeSettingIds(b.setting_ids)","['high-school','school','university','college'].includes(id)?'college':id"])fail(characterAdmin.includes(marker),`src/character-admin.js: filter value normalization missing ${marker}`);
+for(const marker of ["normalizeUniverses(b.universes)","normalizeUniverses(parse(current.universes).length?parse(current.universes):[current.universe])","normalizeSettingIds(b.setting_ids)"])fail(characterAdmin.includes(marker),`src/character-admin.js: filter value normalization missing ${marker}`);
+fail(!characterAdmin.includes('const canonicalSettingId='),'src/character-admin.js: duplicate local setting normalizer returned');
 for(const marker of ['const universes=uniq(b.universes)','settingIds=uniq(b.setting_ids)'])fail(!characterAdmin.includes(marker),`src/character-admin.js: raw slash-combo normalization returned ${marker}`);
 for(const marker of ['planDetachedLorebookCleanup','detachedLorebookCleanupStatements','planAffectedLorebookUniverseChanges','lorebookUniverseChangeStatements','await env.DB.batch(statements)','excludingCharacterUuid:uuid','universeRepair'])fail(characterAdmin.includes(marker),`src/character-admin.js: atomic character/lorebook delete lifecycle missing ${marker}`);
 for(const marker of ['catch(()=>[])','catch(()=>({entities:0,sources:0,blobs:0}))',"try{await env.DB.prepare('DELETE FROM character_lorebooks"])fail(!characterAdmin.includes(marker),`src/character-admin.js: swallowed character-delete cleanup returned ${marker}`);
@@ -131,6 +133,7 @@ if(exists('src/lorebook-universe-repair.js')){
   for(const marker of ['repairAffectedLorebookUniverses','repairAllLorebookUniverses','planAffectedLorebookUniverseChanges','lorebookUniverseChangeStatements','collectRepairChanges','_archive_previous_source','character_lorebooks','excludeUuids','cleared','UPDATE characters SET universe=?,universes=?,universe_source_field=?,updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?'])fail(repair.includes(marker),`src/lorebook-universe-repair.js: repair/planner contract missing ${marker}`);
 }
 const sourceTruth=read('src/source-truth.js');
+for(const marker of ['normalizeSettingIds(storedSettings)','normalizeSettingIds(inferSettingIds(null,r))'])fail(sourceTruth.includes(marker),`src/source-truth.js: public setting normalization missing ${marker}`);
 for(const marker of ["from './lorebook-universe-repair.js'",'affectedLorebookIds','repairAffectedLorebookUniverses(env,uuid','repairAllLorebookUniverses(env)'])fail(sourceTruth.includes(marker),`src/source-truth.js: lorebook universe repair integration missing ${marker}`);
 const refreshStart=sourceTruth.indexOf('async function refreshOne(env,uuid)');
 const auditStart=sourceTruth.indexOf('async function auditStats(env)');
@@ -139,4 +142,4 @@ fail(refreshBody.includes('repairAffectedLorebookUniverses'),'src/source-truth.j
 fail(!refreshBody.includes('repairUniversesFromLorebooks(env)'),'src/source-truth.js: refreshOne still invokes global universe repair');
 
 if(errors.length){console.error('\nARCHIVE.EXE audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + public school-setting canonicalization + canonical visible tags + separate POV facet + passive list-card tags + admin filter value normalization + admin setting taxonomy contract + atomic lorebook delete lifecycle + bounded scans + zero runtime D1 DDL checked`);
+console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + public school-setting canonicalization + canonical visible tags + separate POV facet + passive list-card tags + public setting API canonicalization + admin filter value normalization + admin setting taxonomy contract + atomic lorebook delete lifecycle + bounded scans + zero runtime D1 DDL checked`);

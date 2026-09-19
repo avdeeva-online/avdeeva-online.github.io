@@ -180,10 +180,14 @@ const charactersHtml=read('public/characters.html');
 fail(charactersHtml.includes('png-download.js?v=20260919-download-state1'),'public/characters.html: card download cache-bust missing');
 
 const appUi=read('public/app.js');
+fail(appUi.includes('if(q){'),'public/app.js: search hay must be gated by non-empty query');
+fail(appUi.includes('const selectedSettings=[...state.settings],selectedUniverses=[...state.universes],selectedTags=[...state.tags],selectedHashtags=[...state.hashtags];'),'public/app.js: selected filter arrays must be hoisted outside bot loop');
+fail(appUi.includes('const allAuthorsSelected=state.authors.size>0&&selectionCoversAll(state.authors,uniq("author"));'),'public/app.js: author all-selected check must be hoisted outside bot loop');
+fail(appUi.includes('const allUniversesSelected=state.universes.size>0&&selectionCoversAll(state.universes,uniq("universe"));'),'public/app.js: universe all-selected check must be hoisted outside bot loop');
 fail(appUi.includes('if($("#catalogDrawer")?.classList.contains("open")) renderDrawer();'),'public/app.js: hidden drawer render guard missing');
 fail(appUi.includes('function openDrawer(){renderDrawer();'),'public/app.js: drawer must refresh on open');
 fail(!appUi.includes('  renderDrawer();\n})();'),'public/app.js: startup hidden drawer render returned');
-fail(charactersHtml.includes('app.js?v=20260919-drawer-lazy1'),'public/characters.html: drawer optimization cache-bust missing');
+fail(charactersHtml.includes('app.js?v=20260919-filter-pass1'),'public/characters.html: drawer optimization cache-bust missing');
 
 const hubResources=read('src/hub-resources.js');
 for(const marker of ['export async function hubStorageStatus','export async function migrateHubFilesToR2','export async function injectHubResources'])fail(!hubResources.includes(marker),`src/hub-resources.js: retired R2 compatibility export returned ${marker}`);

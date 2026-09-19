@@ -86,7 +86,7 @@ fail(!publicMedia.includes("source:'legacy-media'"),'src/hub-public-media.js: vi
 for(const marker of ['HUB_FILES','row.storage','row.r2_key','ensureStorageColumns','isSource','source_files','media_model:6'])fail(publicMedia.includes(marker),`src/hub-public-media.js: public SOURCE/R2 contract missing ${marker}`);
 
 const publicApp=read('public/app.js');
-for(const marker of ['const visibleBotHashtags = bot =>','visibleBotHashtags(b).slice(0,3)','const modalHashtags=visibleBotHashtags(b)'])fail(publicApp.includes(marker),`public/app.js: visible hashtag dedupe missing ${marker}`);
+for(const marker of ['const visibleBotHashtags = bot =>','const hashtags = visibleBotHashtags(b)','hashtags.slice(0,3)','const modalHashtags=visibleBotHashtags(b)'])fail(publicApp.includes(marker),`public/app.js: visible hashtag dedupe missing ${marker}`);
 const catalogApi=read('public/catalog-api.js');
 for(const marker of ['function normalizeHashtags(values)','hashtags:normalizeHashtags(b.hashtags)'])fail(catalogApi.includes(marker),`public/catalog-api.js: fallback hashtag normalization missing ${marker}`);
 const charactersHtml=read('public/characters.html');

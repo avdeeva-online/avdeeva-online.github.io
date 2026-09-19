@@ -1,11 +1,13 @@
 import { detachedLorebookCleanupStatements, linkedLorebooksForCharacter, planDetachedLorebookCleanup } from './lorebook-cleanup.js';
 import { lorebookUniverseChangeStatements, planAffectedLorebookUniverseChanges } from './lorebook-universe-repair.js';
-import { settingDefinitions } from './discovery.js';
+import { normalizeUniverses, settingDefinitions } from './discovery.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
 const arr=v=>Array.isArray(v)?v:[];
 const uniq=v=>[...new Set(arr(v).map(clean).filter(Boolean))];
+const canonicalSettingId=v=>{const id=clean(v).toLocaleLowerCase();return['high-school','school','university','college'].includes(id)?'college':id};
+const normalizeSettingIds=v=>[...new Set(arr(v).flatMap(x=>clean(x).split(/\s*\/\s*/)).map(canonicalSettingId).filter(Boolean))];
 const parse=v=>{try{const x=JSON.parse(v||'[]');return Array.isArray(x)?x:[]}catch{return[]}};
 const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const povKey=v=>String(v||'').replace(/^[^\p{L}\p{N}#]+/u,'').toLocaleLowerCase().replace(/[^a-z]/g,'');
@@ -45,8 +47,8 @@ export async function updateAdminCharacter(request,env,uuid){
   let b;try{b=await request.json()}catch{return json({ok:false,error:'INVALID_JSON'},400)}
   const current=await env.DB.prepare('SELECT janitor_uuid,universe,universes,universe_source_field FROM characters WHERE janitor_uuid=? LIMIT 1').bind(uuid).first();
   if(!current)return json({ok:false,error:'CHARACTER_NOT_FOUND'},404);
-  const universes=uniq(b.universes),hashtags=uniq(b.hashtags),settingIds=uniq(b.setting_ids);
-  const currentUniverses=uniq(parse(current.universes).length?parse(current.universes):[current.universe]);
+  const universes=normalizeUniverses(b.universes),hashtags=uniq(b.hashtags),settingIds=normalizeSettingIds(b.setting_ids);
+  const currentUniverses=normalizeUniverses(parse(current.universes).length?parse(current.universes):[current.universe]);
   const universesChanged=!sameStringSet(universes,currentUniverses);
   const universeSource=universesChanged?'admin:manual':clean(current.universe_source_field);
   const pov=['FemPOV','MalePOV','AnyPOV'].includes(clean(b.pov))?clean(b.pov):'AnyPOV';

@@ -123,6 +123,10 @@ const canonicalTag = value => {
   const key=tagKey(value);
   return allTags().find(tag=>tagKey(tag)===key) || displayTag(value);
 };
+const visibleBotTags = bot => [...new Map((bot?.tags||[])
+  .filter(tag=>!isPovTag(tag))
+  .map(tag=>[tagKey(tag),canonicalTag(tag)])
+  .filter(([key])=>Boolean(key))).values()];
 const botHasTag = (bot,value) => (bot.tags||[]).some(tag=>tagKey(tag)===tagKey(value));
 const selectedTag = value => [...state.tags].find(tag=>tagKey(tag)===tagKey(value));
 const hasSelectedTag = value => Boolean(selectedTag(value));
@@ -310,7 +314,7 @@ if(pageSizeBtn && pageSizeMenu){
 }
 
 function cardHtml(b,i){
-  const tags = (b.tags || []).filter(tag=>!isPovTag(tag));
+  const tags = visibleBotTags(b);
   const shown = tags.slice(0,4);
   const more = tags.length - shown.length;
   const pov = botPov(b);
@@ -801,7 +805,7 @@ function openModal(b,keepOpen=false){
   $("#modalLoreFlag").innerHTML="";
   $("#modalLoreFlag").title="";
   $("#modalPov").textContent=povLabel(botPov(b));
-  const modalTags=(b.tags||[]).filter(tag=>!isPovTag(tag));
+  const modalTags=visibleBotTags(b);
   $("#modalTags").innerHTML=`<div class="modal-primary-tags">${modalTags.map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}</div>${(b.hashtags||[]).length?`<div class="modal-hashtags">${(b.hashtags||[]).map(h=>`<button data-hashtag="${esc(h)}">#${esc(cleanHashtag(h))}</button>`).join("")}</div>`:''}`;
   $("#openBot").href=b.url;
   $("#openBot").textContent=`OPEN ON ${b.platform} ↗`;

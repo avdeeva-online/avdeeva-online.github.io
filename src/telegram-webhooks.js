@@ -25,5 +25,5 @@ export async function setupTelegramWebhooks(request,env){
 
 export async function telegramWebhookStatus(request,env){
   if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
-  const out={};try{if(env.Node00admin)out.admin=await tg(clean(env.Node00admin),'getWebhookInfo')}catch(e){out.admin_error=e.message||String(e)}try{if(env.PUBLICnode00bot)out.public=await tg(clean(env.PUBLICnode00bot),'getWebhookInfo')}catch(e){out.public_error=e.message||String(e)}return json({ok:true,webhooks:out});
+  const out={},admin=clean(env.Node00admin),pub=clean(env.PUBLICnode00bot);if(!admin)out.admin_error='ADMIN_BOT_TOKEN_MISSING';else try{out.admin=await tg(admin,'getWebhookInfo')}catch(e){out.admin_error=e.message||String(e)}try{if(pub)out.public=await tg(pub,'getWebhookInfo')}catch(e){out.public_error=e.message||String(e)}const ok=!out.admin_error&&!out.public_error;return json({ok,webhooks:out},ok?200:502);
 }

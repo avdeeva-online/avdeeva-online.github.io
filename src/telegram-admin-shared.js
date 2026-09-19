@@ -17,7 +17,10 @@ export async function tg(token,method,payload={}){
 export async function send(token,chatId,text,reply_markup){return tg(token,'sendMessage',{chat_id:chatId,text,parse_mode:'HTML',disable_web_page_preview:true,...(reply_markup?{reply_markup}:{})})}
 export async function edit(token,chatId,messageId,text,reply_markup){
   try{return await tg(token,'editMessageText',{chat_id:chatId,message_id:messageId,text,parse_mode:'HTML',disable_web_page_preview:true,...(reply_markup?{reply_markup}:{})})}
-  catch{return send(token,chatId,text,reply_markup)}
+  catch(e){
+    if(/message is not modified/i.test(String(e?.message||e)))return null;
+    return send(token,chatId,text,reply_markup);
+  }
 }
 export async function answerCb(token,id,text=''){try{await tg(token,'answerCallbackQuery',{callback_query_id:id,...(text?{text}:{})})}catch{}}
 

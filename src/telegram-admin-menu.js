@@ -17,7 +17,7 @@ export async function tryHandleAdminMenuRequest(request,env){
       return okResponse();
     }
     const message=update.message,text=clean(message?.text||message?.caption),uid=String(message?.from?.id||'');
-    if(text!=='/start'&&text!=='/menu')return null;
+    if(!/^\/(?:start|menu)(?:@[A-Za-z0-9_]+)?(?:\s|$)/i.test(text))return null;
     if(uid!==adminId)return okResponse();
     await send(token,message?.chat?.id,adminMenuText,adminMenu());
     return okResponse();

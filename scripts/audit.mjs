@@ -77,6 +77,7 @@ fail(!/telegram-extra-/i.test(drafts),'src/telegram-drafts-admin.js: SOURCE medi
 fail(!drafts.includes('bytesToDataUrl'),'src/telegram-drafts-admin.js: SOURCE media is still stored as base64 data URLs');
 for(const marker of ['downloadSourceMedia','source__','action=metadata','telegram-source-r2'])fail(drafts.includes(marker),`src/telegram-drafts-admin.js: SOURCE→R2 flow missing ${marker}`);
 fail(drafts.includes("if('media'in b)"),'src/telegram-drafts-admin.js: media edits are not persisted');
+for(const marker of ['claimPublish','releasePublish',"status='publishing'",'DRAFT_ALREADY_PUBLISHED','DRAFT_PUBLISH_IN_PROGRESS',"updated_at<datetime('now','-30 minutes')","WHERE id=? AND status='review'"])fail(drafts.includes(marker),`src/telegram-drafts-admin.js: single-flight draft publish contract missing ${marker}`);
 const bridge=read('public/admin/hub/draft-bridge.js');
 fail(bridge.includes('media:mediaPayload()'),'public/admin/hub/draft-bridge.js: Telegram draft media state not submitted');
 

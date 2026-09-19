@@ -51,7 +51,7 @@ fail(edge.includes("url.pathname==='/api/admin/schema-status'"),'src/cloudflare-
 fail(exists('src/telegram-webhooks.js'),'src/telegram-webhooks.js: isolated webhook helper missing');
 if(exists('src/telegram-webhooks.js')){
   const telegramWebhooks=read('src/telegram-webhooks.js');
-  for(const marker of ['setupTelegramWebhooks','telegramWebhookStatus','setWebhook','getWebhookInfo'])fail(telegramWebhooks.includes(marker),`src/telegram-webhooks.js: missing ${marker}`);
+  for(const marker of ['setupTelegramWebhooks','telegramWebhookStatus','setWebhook','getWebhookInfo','ADMIN_BOT_TOKEN_MISSING','ok?200:502'])fail(telegramWebhooks.includes(marker),`src/telegram-webhooks.js: missing ${marker}`);
 }
 fail(app.includes("from './telegram-webhooks.js'"),'src/cloudflare-entry.js: Telegram webhook helpers not isolated');
 fail(!app.includes("from './telegram-bots.js'"),'src/cloudflare-entry.js: legacy telegram-bots.js dependency returned');
@@ -59,7 +59,7 @@ fail(!app.includes("from './telegram-bots.js'"),'src/cloudflare-entry.js: legacy
 fail(exists('src/telegram-admin-shared.js'),'src/telegram-admin-shared.js: shared Telegram admin primitives missing');
 if(exists('src/telegram-admin-shared.js')){
   const shared=read('src/telegram-admin-shared.js');
-  for(const marker of ['webhookSecret','admin|${token}','tg(','send(','edit(','answerCb','adminMenu','adminMenuText'])fail(shared.includes(marker),`src/telegram-admin-shared.js: shared primitive missing ${marker}`);
+  for(const marker of ['webhookSecret','admin|${token}','tg(','send(','edit(','answerCb','adminMenu','adminMenuText','message is not modified'])fail(shared.includes(marker),`src/telegram-admin-shared.js: shared primitive missing ${marker}`);
 }
 
 fail(exists('src/telegram-admin-router.js'),'src/telegram-admin-router.js: stable admin Telegram route seam missing');
@@ -75,7 +75,7 @@ fail(!edge.includes("from './telegram-admin-fixed.js'"),'src/cloudflare-entry-v2
 fail(exists('src/telegram-admin-menu.js'),'src/telegram-admin-menu.js: extracted static admin menu handler missing');
 if(exists('src/telegram-admin-menu.js')){
   const menu=read('src/telegram-admin-menu.js');
-  for(const marker of ["from './telegram-admin-shared.js'",'tryHandleAdminMenuRequest','/start','/menu','adm:home','noop'])fail(menu.includes(marker),`src/telegram-admin-menu.js: static menu behavior missing ${marker}`);
+  for(const marker of ["from './telegram-admin-shared.js'",'tryHandleAdminMenuRequest','(?:start|menu)','adm:home','noop'])fail(menu.includes(marker),`src/telegram-admin-menu.js: static menu behavior missing ${marker}`);
   for(const marker of ['function webhookSecret','function tg(','function send(','function edit(','function answerCb'])fail(!menu.includes(marker),`src/telegram-admin-menu.js: duplicate shared Telegram primitive returned ${marker}`);
 }
 
@@ -110,6 +110,8 @@ if(exists('src/telegram-admin-fixed.js')){
   fail(fixed.includes("from './telegram-admin-shared.js'"),'src/telegram-admin-fixed.js: shared Telegram transport not imported');
   for(const marker of ['function webhookSecret','function tg(','function send(','function edit(','function answerCb','const clean=','const esc='])fail(!fixed.includes(marker),`src/telegram-admin-fixed.js: duplicate shared Telegram primitive returned ${marker}`);
   for(const marker of ['adm:import','session:new','session:finish','session:resume:','draft:view:','draft:reanalyze:','draft:publish:','draft:delete:','sug:ignore:','sug:import:',"status='ignored'","status='reviewing'",'showAdminSuggestions','METHOD_NOT_ALLOWED','ADMIN_BOT_TOKEN_MISSING','INVALID_WEBHOOK_SECRET','INVALID_JSON','ADMIN BOT ERROR','Access denied','Once a resource is active'])fail(fixed.includes(marker),`src/telegram-admin-fixed.js: fixed callback/transport contract missing ${marker}`);
+  for(const marker of ['directFiles(message,source)','fileOnly=hasFile&&!text&&!meta&&!hasPhoto','...(old.media||[])','...(old.files||[])','PUBLISH NOT REPEATED',"origin+'/hub.html'"])fail(fixed.includes(marker),`src/telegram-admin-fixed.js: lossless/idempotent workflow missing ${marker}`);
+  fail(!fixed.includes('https://archive-exe.node-00.workers.dev/hub.html'),'src/telegram-admin-fixed.js: hard-coded HUB origin returned');
 }
 
 const curation=read('src/universe-curation.js');

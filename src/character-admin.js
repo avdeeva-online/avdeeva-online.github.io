@@ -1,6 +1,7 @@
 import { detachedLorebookCleanupStatements, linkedLorebooksForCharacter, planDetachedLorebookCleanup } from './lorebook-cleanup.js';
 import { lorebookUniverseChangeStatements, planAffectedLorebookUniverseChanges } from './lorebook-universe-repair.js';
 import { normalizeSettingIds, normalizeUniverses, settingDefinitions } from './discovery.js';
+import { normalizeHashtags } from './filter-normalization.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
@@ -24,7 +25,7 @@ function normalizeRow(r){
     uuid:r.janitor_uuid,
     name:r.name||'',author:r.author||'',author_url:r.author_url||'',
     short_description:r.short_description||'',description:r.description||'',scenario:r.scenario||'',
-    tags:parse(r.tags),hashtags:parse(r.hashtags),
+    tags:parse(r.tags),hashtags:normalizeHashtags(parse(r.hashtags)),
     universe:r.universe||'',universes:parse(r.universes),universe_source_field:r.universe_source_field||'',
     setting_ids:parse(r.setting_ids),pov:r.pov||'',
     image_url:r.image_url||'',janitor_url:r.janitor_url||'',datacat_url:r.datacat_url||'',
@@ -45,7 +46,7 @@ export async function updateAdminCharacter(request,env,uuid){
   let b;try{b=await request.json()}catch{return json({ok:false,error:'INVALID_JSON'},400)}
   const current=await env.DB.prepare('SELECT janitor_uuid,universe,universes,universe_source_field FROM characters WHERE janitor_uuid=? LIMIT 1').bind(uuid).first();
   if(!current)return json({ok:false,error:'CHARACTER_NOT_FOUND'},404);
-  const universes=normalizeUniverses(b.universes),hashtags=uniq(b.hashtags),settingIds=normalizeSettingIds(b.setting_ids);
+  const universes=normalizeUniverses(b.universes),hashtags=normalizeHashtags(b.hashtags),settingIds=normalizeSettingIds(b.setting_ids);
   const currentUniverses=normalizeUniverses(parse(current.universes).length?parse(current.universes):[current.universe]);
   const universesChanged=!sameStringSet(universes,currentUniverses);
   const universeSource=universesChanged?'admin:manual':clean(current.universe_source_field);

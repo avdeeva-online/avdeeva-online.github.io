@@ -11,6 +11,17 @@ import { guardAdminApi } from './admin-auth.js';
 import { d1SchemaStatus } from './d1-schema-status.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
+const CONTENT_SECURITY_POLICY=["default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","form-action 'self'","img-src 'self' https: data: blob:","media-src 'self' https: blob:","style-src 'self' 'unsafe-inline'","script-src 'self' 'unsafe-inline'","connect-src 'self'","font-src 'self' data:"].join('; ');
+function withSecurityHeaders(response){
+  const headers=new Headers(response.headers);
+  headers.set('content-security-policy',CONTENT_SECURITY_POLICY);
+  headers.set('cross-origin-opener-policy','same-origin');
+  headers.set('permissions-policy','camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+  headers.set('referrer-policy','strict-origin-when-cross-origin');
+  headers.set('x-content-type-options','nosniff');
+  headers.set('x-frame-options','DENY');
+  return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+}
 function rewriteRequestPath(request,pathname){const url=new URL(request.url);url.pathname=pathname;return new Request(url.toString(),request)}
 async function forwardAdminImport(request,env,ctx,pathname){
   const response=await sourceTruth.fetch(rewriteRequestPath(request,pathname),env,ctx);
@@ -23,7 +34,7 @@ async function forwardAdminImport(request,env,ctx,pathname){
     return new Response(JSON.stringify(data),{status:response.status,statusText:response.statusText,headers});
   }catch{return response}
 }
-export default {async fetch(request,env,ctx){
+async function routeRequest(request,env,ctx){
   const url=new URL(request.url),blocked=guardAdminApi(request,env,url);if(blocked)return blocked;
   if(url.pathname==='/telegram/admin')return handleAdminTelegramRoute(request,env);
   if(url.pathname==='/telegram/public')return handlePublicTelegramFull(request,env);
@@ -53,4 +64,5 @@ export default {async fetch(request,env,ctx){
   const cloudflareResponse=await handleCloudflareRoute(request,env);if(cloudflareResponse)return cloudflareResponse;
   const curationResponse=await handleUniverseCurationRoute(request,env);if(curationResponse)return curationResponse;
   let response=await sourceTruth.fetch(request,env,ctx);response=await transformUniversePublicResponse(request,response,env);return transformAdminHtmlResponse(request,response);
-}};
+}
+export default {async fetch(request,env,ctx){return withSecurityHeaders(await routeRequest(request,env,ctx))}};

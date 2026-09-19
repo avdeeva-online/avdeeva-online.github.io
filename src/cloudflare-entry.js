@@ -11,6 +11,7 @@ async function injectAdminBack(response,pathname=''){
   const type=String(response.headers.get('content-type')||'').toLowerCase();
   if(!type.includes('text/html'))return response;
   let html=await response.text();
+  if(!html.includes('data-admin-auth-client'))html=html.replace(/<\/head>/i,'<script data-admin-auth-client src="/admin/admin-auth-client.js?v=20260919-1"></script></head>');
   if(!html.includes('data-admin-back-script'))html=html.replace(/<\/body>/i,'<script data-admin-back-script src="/admin/admin-back.js?v=20260916-nav6"></script></body>');
   if(pathname==='/admin/hub/'||pathname==='/admin/hub/index.html'){
     html=html.replace(/admin-edit\.js\?v=[^"']+/g,'admin-edit.js?v=20260917-1');
@@ -43,6 +44,6 @@ export async function handleCloudflareRoute(request,env){
 
 export async function transformAdminHtmlResponse(request,response){
   const url=new URL(request.url);
-  if(request.method==='GET'&&url.pathname.startsWith('/admin/')&&url.pathname!=='/admin/')return injectAdminBack(response,url.pathname);
+  if(request.method==='GET'&&url.pathname.startsWith('/admin/'))return injectAdminBack(response,url.pathname);
   return response;
 }

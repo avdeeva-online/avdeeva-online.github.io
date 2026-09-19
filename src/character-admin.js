@@ -1,13 +1,11 @@
 import { detachedLorebookCleanupStatements, linkedLorebooksForCharacter, planDetachedLorebookCleanup } from './lorebook-cleanup.js';
 import { lorebookUniverseChangeStatements, planAffectedLorebookUniverseChanges } from './lorebook-universe-repair.js';
-import { normalizeUniverses, settingDefinitions } from './discovery.js';
+import { normalizeSettingIds, normalizeUniverses, settingDefinitions } from './discovery.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
 const arr=v=>Array.isArray(v)?v:[];
 const uniq=v=>[...new Set(arr(v).map(clean).filter(Boolean))];
-const canonicalSettingId=v=>{const id=clean(v).toLocaleLowerCase();return['high-school','school','university','college'].includes(id)?'college':id};
-const normalizeSettingIds=v=>[...new Set(arr(v).flatMap(x=>clean(x).split(/\s*\/\s*/)).map(canonicalSettingId).filter(Boolean))];
 const parse=v=>{try{const x=JSON.parse(v||'[]');return Array.isArray(x)?x:[]}catch{return[]}};
 const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const povKey=v=>String(v||'').replace(/^[^\p{L}\p{N}#]+/u,'').toLocaleLowerCase().replace(/[^a-z]/g,'');

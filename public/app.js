@@ -75,7 +75,7 @@ const SETTING_DEFS = [
   ["crime","Crime","","organized crime criminal syndicate gang криминал"]
 ].map(([id,label,parent,aliases])=>({id,label,parent,aliases}));
 const SETTING_BY_ID = new Map(SETTING_DEFS.map(x=>[x.id,x]));
-const canonicalSettingId = id => id==="high-school" ? "college" : id;
+const canonicalSettingId = id => ["high-school","school","university","college"].includes(cleanTag(id).toLocaleLowerCase()) ? "college" : cleanTag(id).toLocaleLowerCase();
 const settingLabel = id => SETTING_BY_ID.get(id)?.label || id;
 const settingSearchText = id => {const x=SETTING_BY_ID.get(id);return x?`${x.label} ${x.aliases}`.toLocaleLowerCase():String(id).toLocaleLowerCase()};
 const settingDisplayLabel = id => settingLabel(id);

@@ -187,7 +187,10 @@ fail(appUi.includes('const allUniversesSelected=state.universes.size>0&&selectio
 fail(appUi.includes('if($("#catalogDrawer")?.classList.contains("open")) renderDrawer();'),'public/app.js: hidden drawer render guard missing');
 fail(appUi.includes('function openDrawer(){renderDrawer();'),'public/app.js: drawer must refresh on open');
 fail(!appUi.includes('  renderDrawer();\n})();'),'public/app.js: startup hidden drawer render returned');
-fail(charactersHtml.includes('app.js?v=20260919-filter-pass1'),'public/characters.html: drawer optimization cache-bust missing');
+for(const marker of ['let filterCacheSource = null','function filterStateKey(){','function filteredBots(){','const renderDomCache = {','renderDomCache.gridSource!==B','renderDomCache.paginationKey===paginationKey','renderDomCache.quickTagsSource===B','renderDomCache.activeFiltersHtml===html','renderDomCache.countsKey===countsKey'])fail(appUi.includes(marker),`public/app.js: sliced catalog render cache missing ${marker}`);
+fail(appUi.includes('$("#pagination")?.addEventListener("click",e=>{'),'public/app.js: delegated pagination handler missing');
+fail(!appUi.includes('nav.querySelectorAll("button[data-page]")'),'public/app.js: pagination still rebinds every button after render');
+fail(charactersHtml.includes('app.js?v=20260919-render-slices1'),'public/characters.html: sliced render cache-bust missing');
 
 const hubResources=read('src/hub-resources.js');
 for(const marker of ['export async function hubStorageStatus','export async function migrateHubFilesToR2','export async function injectHubResources'])fail(!hubResources.includes(marker),`src/hub-resources.js: retired R2 compatibility export returned ${marker}`);

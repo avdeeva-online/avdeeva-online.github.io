@@ -1299,36 +1299,13 @@ wireHashtagGhosts();
 })();
 
 
-/* v0.9.19 — robust boot/data sync.
-   Never snapshot an empty window.BOTS forever. Re-read the data source on every render
-   and retry boot briefly in case the browser serves scripts in an odd cached order. */
+/* Catalog boot: bundled records may paint once immediately.
+   Live/fallback updates are published by catalog-api.js through archive:catalog-updated. */
 (function bootArchive(){
-  let attempts = 0;
-  function paint(){
-    syncBots();
-    attempts++;
-    if(B.length){
-      render();
-      return;
-    }
-    if(attempts < 20) setTimeout(paint, 60);
-    else render();
-  }
-
-  // data.js is loaded before app.js, so in the normal path we paint immediately.
   if(Array.isArray(window.BOTS) && window.BOTS.length){
     syncBots();
     render();
-  }else if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", paint, {once:true});
-  }else{
-    paint();
   }
-
-  window.addEventListener("load", ()=>{
-    syncBots();
-    render();
-  }, {once:true});
 })();
 
 

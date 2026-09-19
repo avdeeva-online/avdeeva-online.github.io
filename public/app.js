@@ -37,6 +37,7 @@ const displayTag = value => cleanTag(value);
 const tagLabel = value => displayTag(value);
 const povLabel = p => p === "AnyPOV" ? "◌ AnyPOV" : p === "FemPOV" ? "♀ FemPOV" : p === "MalePOV" ? "♂ MalePOV" : p;
 const povKey = value => tagText(value).toLocaleLowerCase().replace(/[^a-z]/g,"");
+const isPovTag = value => ["anypov","fempov","femalepov","malepov"].includes(povKey(value));
 const botPov = bot => {
   for(const tag of bot.tags||[]){
     const key=povKey(tag);
@@ -106,6 +107,7 @@ const allTags = () => {
   return cachedFacet("tags",()=>{
   const tags=new Map();
   B.flatMap(bot=>bot.tags||[]).forEach(tag=>{
+    if(isPovTag(tag))return;
     const key=tagKey(tag);
     // B is newest-first, so one real tag is kept per meaning and the newest
     // imported spelling/emoji becomes its visible label.
@@ -307,9 +309,10 @@ if(pageSizeBtn && pageSizeMenu){
 }
 
 function cardHtml(b,i){
-  const tags = b.tags || [];
+  const tags = (b.tags || []).filter(tag=>!isPovTag(tag));
   const shown = tags.slice(0,4);
   const more = tags.length - shown.length;
+  const pov = botPov(b);
   const tagChip = tag => `<span>${esc(tagLabel(tag))}</span>`;
   const hashtagChip = hashtag => `<span>#${esc(cleanHashtag(hashtag))}</span>`;
   const universes=botUniverses(b).map(canonicalUniverse);
@@ -320,6 +323,7 @@ function cardHtml(b,i){
       <h3 class="card-title">${esc(b.nameEn)}<span>${esc(b.nameRu)}</span></h3>
       <div class="card-author">BY <button data-author="${esc(b.author)}">@${esc(b.author)}</button></div>
       <div class="card-meta card-system-line">
+        <span class="meta-token card-pov-token" title="Player perspective">${esc(povLabel(pov))}</span>
         ${settings.slice(0,2).map(setting=>`<button class="meta-token card-setting-token" data-quick-setting="${esc(setting)}"><span class="setting-mark">⌖</span><span>${esc(settingLabel(setting))}</span></button>`).join("")}
         ${universes.slice(0,2).map(universe=>`<button class="meta-token card-universe-token" data-quick-universe="${esc(universe)}">${globeSvg}<span>${esc(universe)}</span></button>`).join("")}
       </div>
@@ -795,8 +799,9 @@ function openModal(b,keepOpen=false){
   $("#modalUniverse").innerHTML=universes.map(universe=>`<button class="universe-link" data-quick-universe="${esc(universe)}" title="Show universe: ${esc(universe)}">${globeSvg}<span>${esc(universe)}</span></button>`).join("");
   $("#modalLoreFlag").innerHTML="";
   $("#modalLoreFlag").title="";
-  $("#modalPov").textContent="";
-  $("#modalTags").innerHTML=`<div class="modal-primary-tags">${(b.tags||[]).map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}</div>${(b.hashtags||[]).length?`<div class="modal-hashtags">${(b.hashtags||[]).map(h=>`<button data-hashtag="${esc(h)}">#${esc(cleanHashtag(h))}</button>`).join("")}</div>`:''}`;
+  $("#modalPov").textContent=povLabel(botPov(b));
+  const modalTags=(b.tags||[]).filter(tag=>!isPovTag(tag));
+  $("#modalTags").innerHTML=`<div class="modal-primary-tags">${modalTags.map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}</div>${(b.hashtags||[]).length?`<div class="modal-hashtags">${(b.hashtags||[]).map(h=>`<button data-hashtag="${esc(h)}">#${esc(cleanHashtag(h))}</button>`).join("")}</div>`:''}`;
   $("#openBot").href=b.url;
   $("#openBot").textContent=`OPEN ON ${b.platform} ↗`;
   $("#openBot").dataset.mobileLabel=`${b.platform} PAGE ↗`;

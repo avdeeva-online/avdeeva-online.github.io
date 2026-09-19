@@ -1,5 +1,6 @@
 import { detachedLorebookCleanupStatements, linkedLorebooksForCharacter, planDetachedLorebookCleanup } from './lorebook-cleanup.js';
 import { lorebookUniverseChangeStatements, planAffectedLorebookUniverseChanges } from './lorebook-universe-repair.js';
+import { settingDefinitions } from './discovery.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
@@ -36,7 +37,7 @@ export async function listAdminCharacters(request,env){
   const res=await env.DB.prepare(`SELECT janitor_uuid,name,author,author_url,short_description,description,scenario,tags,hashtags,universe,universes,universe_source_field,setting_ids,pov,image_url,janitor_url,datacat_url,status,updated_at FROM characters ORDER BY author COLLATE NOCASE,name COLLATE NOCASE LIMIT ?`).bind(limit).all();
   let rows=(res.results||[]).map(normalizeRow);
   if(q)rows=rows.filter(r=>[r.name,r.author,r.uuid,...r.tags,...r.hashtags,...r.universes,...r.setting_ids].join(' ').toLocaleLowerCase().includes(q));
-  return json({ok:true,count:rows.length,characters:rows});
+  return json({ok:true,count:rows.length,characters:rows,settingDefinitions:settingDefinitions()});
 }
 
 export async function updateAdminCharacter(request,env,uuid){

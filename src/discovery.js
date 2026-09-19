@@ -27,6 +27,8 @@ export const SETTING_DEFINITIONS = [
   {id:'crime',label:'Crime',aliases:['organized crime','криминал'],any:[/organized crime/i,/\bsyndicate\b/i,/\bgang(?:ster)?\b/i,/\bcriminal\b/i,/\bdrive-by shooting\b/i,/криминальн/i]}
 ];
 
+export function settingDefinitions(){return SETTING_DEFINITIONS.map(({id,label,aliases})=>({id,label,aliases:[...(aliases||[])]}))}
+
 const definitionById = new Map(SETTING_DEFINITIONS.map(x=>[x.id,x]));
 function isDescendant(childId,parentId){let current=definitionById.get(childId);while(current?.parent){if(current.parent===parentId)return true;current=definitionById.get(current.parent)}return false}
 const descendants = id => SETTING_DEFINITIONS.filter(x=>isDescendant(x.id,id));

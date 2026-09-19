@@ -94,7 +94,16 @@ if(exists('src/lorebook-cleanup.js')){
   const l=read('src/lorebook-cleanup.js');
   for(const marker of ['linkedLorebooksForCharacter','planDetachedLorebookCleanup','detachedLorebookCleanupStatements','cleanupDetachedLorebooks','JOIN characters c ON c.janitor_uuid=cl.character_uuid','DELETE FROM character_lorebooks WHERE lorebook_id=?','DELETE FROM lorebook_sources WHERE lorebook_id=?','DELETE FROM lorebooks WHERE id=?','DELETE FROM lorebook_blobs WHERE content_hash=?','env.DB.batch(statements)'])fail(l.includes(marker),`src/lorebook-cleanup.js: atomic targeted cleanup missing ${marker}`);
 }
+const discovery=read('src/discovery.js');
 const characterAdmin=read('src/character-admin.js');
+const characterEditor=read('public/admin/import/character-editor.js');
+const characterEditorHtml=read('public/admin/import/edit.html');
+for(const marker of ['export function settingDefinitions','SETTING_DEFINITIONS.map(({id,label,aliases})'])fail(discovery.includes(marker),`src/discovery.js: reusable setting taxonomy missing ${marker}`);
+for(const marker of ["import { settingDefinitions } from './discovery.js'","settingDefinitions:settingDefinitions()"])fail(characterAdmin.includes(marker),`src/character-admin.js: admin setting taxonomy contract missing ${marker}`);
+for(const marker of ['settingDefs=[]','d.settingDefinitions','settingDefs.map(x=>x.id)','selected.settings=new Set(r.setting_ids||[])','isPovTag','selected.tags=new Set((r.tags||[]).filter(x=>!isPovTag(x)))'])fail(characterEditor.includes(marker),`public/admin/import/character-editor.js: setting/POV editor contract missing ${marker}`);
+for(const marker of ['const canonicalSettings=',"historical'?'medieval'","magic'?'fantasy'"])fail(!characterEditor.includes(marker),`public/admin/import/character-editor.js: destructive legacy setting normalization returned ${marker}`);
+fail(characterEditorHtml.includes('character-editor.js?v=20260919-setting-contract1'),'public/admin/import/edit.html: character editor cache-bust missing');
+
 for(const marker of ['planDetachedLorebookCleanup','detachedLorebookCleanupStatements','planAffectedLorebookUniverseChanges','lorebookUniverseChangeStatements','await env.DB.batch(statements)','excludingCharacterUuid:uuid','universeRepair'])fail(characterAdmin.includes(marker),`src/character-admin.js: atomic character/lorebook delete lifecycle missing ${marker}`);
 for(const marker of ['catch(()=>[])','catch(()=>({entities:0,sources:0,blobs:0}))',"try{await env.DB.prepare('DELETE FROM character_lorebooks"])fail(!characterAdmin.includes(marker),`src/character-admin.js: swallowed character-delete cleanup returned ${marker}`);
 
@@ -112,4 +121,4 @@ fail(refreshBody.includes('repairAffectedLorebookUniverses'),'src/source-truth.j
 fail(!refreshBody.includes('repairUniversesFromLorebooks(env)'),'src/source-truth.js: refreshOne still invokes global universe repair');
 
 if(errors.length){console.error('\nARCHIVE.EXE audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + atomic lorebook delete lifecycle + bounded scans + zero runtime D1 DDL checked`);
+console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + admin setting taxonomy contract + atomic lorebook delete lifecycle + bounded scans + zero runtime D1 DDL checked`);

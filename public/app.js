@@ -310,9 +310,8 @@ function cardHtml(b,i){
   const tags = b.tags || [];
   const shown = tags.slice(0,4);
   const more = tags.length - shown.length;
-  const passiveMobile = isCompactMobile();
-  const tagChip = tag => passiveMobile ? `<span>${esc(tagLabel(tag))}</span>` : `<button data-tag="${esc(tag)}">${esc(tagLabel(tag))}</button>`;
-  const hashtagChip = hashtag => passiveMobile ? `<span>#${esc(cleanHashtag(hashtag))}</span>` : `<button data-hashtag="${esc(hashtag)}">#${esc(cleanHashtag(hashtag))}</button>`;
+  const tagChip = tag => `<span>${esc(tagLabel(tag))}</span>`;
+  const hashtagChip = hashtag => `<span>#${esc(cleanHashtag(hashtag))}</span>`;
   const universes=botUniverses(b).map(canonicalUniverse);
   const settings=[...new Set((b.settingIds||[]).flatMap(id=>cleanTag(id).split(/\s*\/\s*/)).map(canonicalSettingId).filter(id=>SETTING_BY_ID.has(id)))];
   return `<article class="card" data-id="${esc(b.id)}" role="button" tabindex="0" aria-label="Open ${esc(b.nameEn)}" style="animation-delay:${Math.min(i,12)*18}ms">
@@ -642,7 +641,7 @@ document.addEventListener("click",e=>{
   const rem=e.target.closest("[data-remove]");if(rem){const m={setting:"settings",author:"authors",universe:"universes",tag:"tags",pov:"povs",hashtag:"hashtags"};m[rem.dataset.remove]?state[m[rem.dataset.remove]].delete(rem.dataset.value):state.lorebook=false;render();return}
   const au=e.target.closest("[data-author]");if(au){e.stopPropagation();state.authors.clear();state.authors.add(au.dataset.author);closeModal();render();return}
   const passiveCardTags=e.target.closest(".card .card-tags, .card .card-hashtags");
-  if(passiveCardTags && window.matchMedia?.("(max-width:760px)").matches){e.stopPropagation();return}
+  if(passiveCardTags){e.stopPropagation();return}
   const tg=e.target.closest("[data-tag]");if(tg){e.stopPropagation();toggle("tag",tg.dataset.tag);closeModal();render();return}
   const hs=e.target.closest("[data-hashtag]");if(hs){e.stopPropagation();toggle("hashtag",hs.dataset.hashtag);closeModal();render();return}
   const qs=e.target.closest("[data-quick-setting]");if(qs){e.stopPropagation();toggle("setting",qs.dataset.quickSetting);closeModal();render();return}

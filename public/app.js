@@ -28,7 +28,7 @@ const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const state = { q:"", settings:new Set(), authors:new Set(), universes:new Set(), tags:new Set(), hashtags:new Set(), povs:new Set(), lorebook:false, sort:"newest" };
-let activeFilter = null, drawerTab = "setting", drawerSort = "most", current = null, modalTab = "description", tagsExpanded = false, openIntro = 0;
+let activeFilter = null, drawerTab = "setting", drawerSort = "most", current = null, modalTab = "description", tagsExpanded = false, openIntro = 0, modalReturnFocus = null;
 
 const bookSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3.2-.9 5.7-.6 8.5 1.1v12c-2.8-1.7-5.3-2-8.5-1.1zM20.5 5.5c-3.2-.9-5.7-.6-8.5 1.1v12c2.8-1.7 5.3-2 8.5-1.1z"/></svg>`;
 const globeSvg = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.4 3.4 5.2 3.4 8.5S14.2 18.1 12 20.5M12 3.5C9.8 5.9 8.6 8.7 8.6 12s1.2 6.1 3.4 8.5"/></svg>`;
@@ -833,6 +833,10 @@ async function hydrateModalDetail(b){
 }
 
 function openModal(b,keepOpen=false){
+  const modalRoot=$("#modal");
+  modalRoot.setAttribute('role','dialog');
+  modalRoot.setAttribute('aria-modal','true');
+  modalRoot.setAttribute('aria-labelledby','modalTitle');
   const oldUniverseNode=$("#modalUniverse");
   if(oldUniverseNode?.tagName==="BUTTON"){
     const container=document.createElement("div");
@@ -891,12 +895,14 @@ function openModal(b,keepOpen=false){
   $$('.modal-tab').forEach(t=>t.classList.toggle('active',t.dataset.modalTab==='description'));
   renderModalPanel();
   if(!keepOpen){
+    modalReturnFocus=document.activeElement;
     $("#modal").hidden=false;
     document.body.style.overflow="hidden";
+    requestAnimationFrame(()=>document.querySelector('#modal .modal-close')?.focus());
   }
   if(!window.archiveDefinitionLoaderActive)hydrateModalDetail(b);
 }
-function closeModal(){$("#modal").hidden=true;document.body.style.overflow=""}
+function closeModal(){const modal=$("#modal");if(modal.hidden)return;modal.hidden=true;document.body.style.overflow="";const target=modalReturnFocus;modalReturnFocus=null;target?.focus?.()}
 function renderModalPanel(){
   const panel=$("#modalPanel");
   panel.dataset.panel=modalTab;
@@ -1096,6 +1102,13 @@ document.addEventListener("keydown",e=>{
   }
   if(!$("#modal").hidden&&e.key==="ArrowRight") browseModal(1);
   if(!$("#modal").hidden&&e.key==="ArrowLeft") browseModal(-1);
+  if(!$("#modal").hidden&&e.key==="Tab"){
+    const focusable=[...$("#modal").querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(x=>!x.hidden&&x.offsetParent!==null);
+    if(!focusable.length)return;
+    const first=focusable[0],last=focusable[focusable.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+  }
 });
 
 // v0.9.14 — dedicated anomaly / easter-egg pass.

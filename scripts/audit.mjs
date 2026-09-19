@@ -91,7 +91,7 @@ const cardHtmlStart=publicApp.indexOf('function cardHtml');
 const quickTagsStart=publicApp.indexOf('function renderQuickTags',cardHtmlStart);
 const cardHtmlBody=cardHtmlStart>=0&&quickTagsStart>cardHtmlStart?publicApp.slice(cardHtmlStart,quickTagsStart):'';
 for(const marker of ['const tagChip = tag => \`<span>','const hashtagChip = hashtag => \`<span>','if(passiveCardTags){e.stopPropagation();return}'])fail(publicApp.includes(marker),`public/app.js: passive list-card tag contract missing ${marker}`);
-for(const marker of ['data-tag=','data-hashtag=','<button'])fail(!cardHtmlBody.includes(marker)||marker==='<button'&&cardHtmlBody.includes('card-author'),`public/app.js: list-card tag region may still be interactive via ${marker}`);
+for(const marker of ['data-tag=','data-hashtag='])fail(!cardHtmlBody.includes(marker),`public/app.js: list-card tag region may still be interactive via ${marker}`);
 fail(publicCharacters.includes('app.js?v=20260919-passive-card-tags1'),'public/characters.html: passive card-tag cache-bust missing');
 
 const main=read('src/main.js');

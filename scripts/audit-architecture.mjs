@@ -51,7 +51,7 @@ fail(edge.includes("url.pathname==='/api/admin/schema-status'"),'src/cloudflare-
 fail(exists('src/telegram-webhooks.js'),'src/telegram-webhooks.js: isolated webhook helper missing');
 if(exists('src/telegram-webhooks.js')){
   const telegramWebhooks=read('src/telegram-webhooks.js');
-  for(const marker of ['setupTelegramWebhooks','telegramWebhookStatus','setWebhook','getWebhookInfo','ADMIN_BOT_TOKEN_MISSING','ok?200:502'])fail(telegramWebhooks.includes(marker),`src/telegram-webhooks.js: missing ${marker}`);
+  for(const marker of ['setupTelegramWebhooks','telegramWebhookStatus','setWebhook','getWebhookInfo','ADMIN_BOT_TOKEN_MISSING','max_connections:1','ok?200:502'])fail(telegramWebhooks.includes(marker),`src/telegram-webhooks.js: missing ${marker}`);
 }
 fail(app.includes("from './telegram-webhooks.js'"),'src/cloudflare-entry.js: Telegram webhook helpers not isolated');
 fail(!app.includes("from './telegram-bots.js'"),'src/cloudflare-entry.js: legacy telegram-bots.js dependency returned');
@@ -65,7 +65,7 @@ if(exists('src/telegram-admin-shared.js')){
 fail(exists('src/telegram-admin-router.js'),'src/telegram-admin-router.js: stable admin Telegram route seam missing');
 if(exists('src/telegram-admin-router.js')){
   const telegramAdminRouter=read('src/telegram-admin-router.js');
-  for(const marker of ["from './telegram-admin-menu.js'","from './telegram-admin-stats.js'","from './telegram-admin-readonly.js'","from './telegram-admin-fixed.js'",'handleAdminTelegramRoute','tryHandleAdminMenuRequest(request,env)','tryHandleAdminStatsRequest(request,env)','tryHandleAdminReadonlyRequest(request,env)'])fail(telegramAdminRouter.includes(marker),`src/telegram-admin-router.js: route chain missing ${marker}`);
+  for(const marker of ["from './telegram-admin-menu.js'","from './telegram-admin-stats.js'","from './telegram-admin-readonly.js'","from './telegram-admin-fixed.js'",'handleAdminTelegramRoute','tryHandleAdminMenuRequest(request,env)','tryHandleAdminStatsRequest(request,env)','tryHandleAdminReadonlyRequest(request,env)','ADMIN_USER_ID_MISSING','INVALID_WEBHOOK_SECRET'])fail(telegramAdminRouter.includes(marker),`src/telegram-admin-router.js: route chain missing ${marker}`);
   fail(!telegramAdminRouter.includes("from './telegram-bots.js'"),'src/telegram-admin-router.js: legacy bot must stay behind fixed handler, not the route seam');
 }
 fail(edge.includes("from './telegram-admin-router.js'"),'src/cloudflare-entry-v2.js: admin Telegram route bypasses stable router seam');
@@ -110,7 +110,7 @@ if(exists('src/telegram-admin-fixed.js')){
   fail(fixed.includes("from './telegram-admin-shared.js'"),'src/telegram-admin-fixed.js: shared Telegram transport not imported');
   for(const marker of ['function webhookSecret','function tg(','function send(','function edit(','function answerCb','const clean=','const esc='])fail(!fixed.includes(marker),`src/telegram-admin-fixed.js: duplicate shared Telegram primitive returned ${marker}`);
   for(const marker of ['adm:import','session:new','session:finish','session:resume:','draft:view:','draft:reanalyze:','draft:publish:','draft:delete:','sug:ignore:','sug:import:',"status='ignored'","status='reviewing'",'showAdminSuggestions','METHOD_NOT_ALLOWED','ADMIN_BOT_TOKEN_MISSING','INVALID_WEBHOOK_SECRET','INVALID_JSON','ADMIN BOT ERROR','Access denied','Once a resource is active'])fail(fixed.includes(marker),`src/telegram-admin-fixed.js: fixed callback/transport contract missing ${marker}`);
-  for(const marker of ['directFiles(message,source)','fileOnly=hasFile&&!text&&!meta&&!hasPhoto','...(old.media||[])','...(old.files||[])','PUBLISH NOT REPEATED',"origin+'/hub.html'"])fail(fixed.includes(marker),`src/telegram-admin-fixed.js: lossless/idempotent workflow missing ${marker}`);
+  for(const marker of ['directFiles(message,source)','fileOnly=hasFile&&!text&&!meta&&!hasPhoto','...(old.media||[])','...(old.files||[])','PUBLISH NOT REPEATED',"origin+'/hub.html'",'DRAFT_ALREADY_PUBLISHED',"status!=='review'",'DELETE BLOCKED'])fail(fixed.includes(marker),`src/telegram-admin-fixed.js: lossless/idempotent workflow missing ${marker}`);
   fail(!fixed.includes('https://archive-exe.node-00.workers.dev/hub.html'),'src/telegram-admin-fixed.js: hard-coded HUB origin returned');
 }
 

@@ -240,7 +240,7 @@ function render(){
   renderQuickTags();
   renderActiveFilters();
   renderCounts();
-  renderDrawer();
+  if($("#catalogDrawer")?.classList.contains("open")) renderDrawer();
 }
 
 
@@ -531,7 +531,7 @@ $("#sortTrigger").onclick=e=>{
 $("#sortMenu").onclick=e=>{const b=e.target.closest("[data-sort]");if(!b)return;state.sort=b.dataset.sort;$("#sortLabel").textContent={newest:"NEWEST",az:"A → Z",za:"Z → A",author:"AUTHOR"}[state.sort];closeFloatingMenus();render()};
 
 // Drawer
-function openDrawer(){$("#catalogDrawer").classList.add("open");$("#catalogDrawer").setAttribute("aria-hidden","false");$("#drawerShade").hidden=false;if(isCompactMobile())document.body.classList.add("drawer-open")}
+function openDrawer(){renderDrawer();$("#catalogDrawer").classList.add("open");$("#catalogDrawer").setAttribute("aria-hidden","false");$("#drawerShade").hidden=false;if(isCompactMobile())document.body.classList.add("drawer-open")}
 function closeDrawer(){$("#catalogDrawer").classList.remove("open");$("#catalogDrawer").setAttribute("aria-hidden","true");$("#drawerShade").hidden=true;document.body.classList.remove("drawer-open")}
 $("#catalogOpen").onclick=openDrawer;$("#catalogClose").onclick=closeDrawer;$("#drawerShade").onclick=closeDrawer;
 const drawerTabs=$(".drawer-tabs");
@@ -1295,7 +1295,6 @@ wireHashtagGhosts();
       btn.title = btn.classList.contains('selected') ? 'Click again to remove filter' : 'Click to add filter';
     });
   };
-  renderDrawer();
 })();
 
 

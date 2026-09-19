@@ -29,6 +29,15 @@ export const SETTING_DEFINITIONS = [
 
 export function settingDefinitions(){return SETTING_DEFINITIONS.map(({id,label,aliases})=>({id,label,aliases:[...(aliases||[])]}))}
 
+export function canonicalSettingId(value){
+  const id=clean(value).toLocaleLowerCase();
+  return ['high-school','school','university','college'].includes(id)?'college':id;
+}
+export function normalizeSettingIds(value){
+  const raw=Array.isArray(value)?value:jsonArray(value).length?jsonArray(value):[value];
+  return [...new Set(raw.flatMap(v=>clean(v).split(/\s*\/\s*/)).map(canonicalSettingId).filter(Boolean))];
+}
+
 const definitionById = new Map(SETTING_DEFINITIONS.map(x=>[x.id,x]));
 function isDescendant(childId,parentId){let current=definitionById.get(childId);while(current?.parent){if(current.parent===parentId)return true;current=definitionById.get(current.parent)}return false}
 const descendants = id => SETTING_DEFINITIONS.filter(x=>isDescendant(x.id,id));

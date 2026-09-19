@@ -95,7 +95,7 @@ for(const marker of ["window.addEventListener('archive:catalog-updated'","const 
 for(const marker of ['attempts < 20','setTimeout(paint, 60)','window.addEventListener("load", ()=>'])fail(!publicApp.includes(marker),`public/app.js: duplicate catalog boot render path returned ${marker}`);
 for(const marker of ['function normalizeHashtags(values)','hashtags:normalizeHashtags(b.hashtags)'])fail(catalogApi.includes(marker),`public/catalog-api.js: fallback hashtag normalization missing ${marker}`);
 const charactersHtml=read('public/characters.html');
-for(const marker of ['app.js?v=20260919-render-boot1','catalog-api.js?v=20260919-render-boot1'])fail(charactersHtml.includes(marker),`public/characters.html: hashtag cache-bust missing ${marker}`);
+for(const marker of ['app.js?v=20260919-drawer-lazy1','catalog-api.js?v=20260919-render-boot1'])fail(charactersHtml.includes(marker),`public/characters.html: hashtag cache-bust missing ${marker}`);
 const publicCharacters=read('public/characters.html');
 const publicCatalogApi=read('public/catalog-api.js');
 for(const [name,body] of [['public/app.js',publicApp],['public/catalog-api.js',publicCatalogApi]])for(const marker of ['high-school','school','university','college'])fail(body.includes(marker),`${name}: school/university canonical setting contract missing ${marker}`);
@@ -108,7 +108,7 @@ const quickTagsStart=publicApp.indexOf('function renderQuickTags',cardHtmlStart)
 const cardHtmlBody=cardHtmlStart>=0&&quickTagsStart>cardHtmlStart?publicApp.slice(cardHtmlStart,quickTagsStart):'';
 for(const marker of ['const tagChip = tag => \`<span>','const hashtagChip = hashtag => \`<span>','if(passiveCardTags){e.stopPropagation();return}'])fail(publicApp.includes(marker),`public/app.js: passive list-card tag contract missing ${marker}`);
 for(const marker of ['data-tag=','data-hashtag='])fail(!cardHtmlBody.includes(marker),`public/app.js: list-card tag region may still be interactive via ${marker}`);
-fail(publicCharacters.includes('app.js?v=20260919-render-boot1'),'public/characters.html: public app cache-bust missing');
+fail(publicCharacters.includes('app.js?v=20260919-drawer-lazy1'),'public/characters.html: public app cache-bust missing');
 fail(publicCharacters.includes('catalog-api.js?v=20260919-render-boot1'),'public/characters.html: catalog API cache-bust missing');
 
 const main=read('src/main.js');

@@ -179,6 +179,12 @@ fail(cardDownloadUi.includes('a[href*="/api/characters/"]'),'public/png-download
 const charactersHtml=read('public/characters.html');
 fail(charactersHtml.includes('png-download.js?v=20260919-download-state1'),'public/characters.html: card download cache-bust missing');
 
+const appUi=read('public/app.js');
+fail(appUi.includes('if($("#catalogDrawer")?.classList.contains("open")) renderDrawer();'),'public/app.js: hidden drawer render guard missing');
+fail(appUi.includes('function openDrawer(){renderDrawer();'),'public/app.js: drawer must refresh on open');
+fail(!appUi.includes('  renderDrawer();\n})();'),'public/app.js: startup hidden drawer render returned');
+fail(charactersHtml.includes('app.js?v=20260919-drawer-lazy1'),'public/characters.html: drawer optimization cache-bust missing');
+
 const hubResources=read('src/hub-resources.js');
 for(const marker of ['export async function hubStorageStatus','export async function migrateHubFilesToR2','export async function injectHubResources'])fail(!hubResources.includes(marker),`src/hub-resources.js: retired R2 compatibility export returned ${marker}`);
 for(const marker of ["from './hub-r2-migration.js'",'hubStorageStatusSafe','migrateHubFilesToR2Safe'])fail(edge.includes(marker),`src/cloudflare-entry-v2.js: safe R2 migration route missing ${marker}`);

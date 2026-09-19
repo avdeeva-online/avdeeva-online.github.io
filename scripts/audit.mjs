@@ -99,7 +99,7 @@ const characterAdmin=read('src/character-admin.js');
 const characterEditor=read('public/admin/import/character-editor.js');
 const characterEditorHtml=read('public/admin/import/edit.html');
 for(const marker of ['export function settingDefinitions','SETTING_DEFINITIONS.map(({id,label,aliases})'])fail(discovery.includes(marker),`src/discovery.js: reusable setting taxonomy missing ${marker}`);
-for(const marker of ["import { settingDefinitions } from './discovery.js'","settingDefinitions:settingDefinitions()"])fail(characterAdmin.includes(marker),`src/character-admin.js: admin setting taxonomy contract missing ${marker}`);
+for(const marker of ["from './discovery.js'","settingDefinitions","normalizeUniverses","settingDefinitions:settingDefinitions()"])fail(characterAdmin.includes(marker),`src/character-admin.js: admin setting taxonomy contract missing ${marker}`);
 for(const marker of ['settingDefs=[]','d.settingDefinitions','settingDefs.map(x=>x.id)','selected.settings=new Set(r.setting_ids||[])','isPovTag','selected.tags=new Set((r.tags||[]).filter(x=>!isPovTag(x)))'])fail(characterEditor.includes(marker),`public/admin/import/character-editor.js: setting/POV editor contract missing ${marker}`);
 for(const marker of ['const canonicalSettings=',"historical'?'medieval'","magic'?'fantasy'"])fail(!characterEditor.includes(marker),`public/admin/import/character-editor.js: destructive legacy setting normalization returned ${marker}`);
 fail(characterEditorHtml.includes('character-editor.js?v=20260919-setting-contract1'),'public/admin/import/edit.html: character editor cache-bust missing');

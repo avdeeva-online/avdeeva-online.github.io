@@ -89,9 +89,13 @@ const publicApp=read('public/app.js');
 for(const marker of ['enemy to lovers','enemies to lovers'])fail(publicApp.includes(marker),`public/app.js: defensive tag alias parity missing ${marker}`);
 for(const marker of ['const visibleBotHashtags = bot =>','const hashtags = visibleBotHashtags(b)','hashtags.slice(0,3)','const modalHashtags=visibleBotHashtags(b)'])fail(publicApp.includes(marker),`public/app.js: visible hashtag dedupe missing ${marker}`);
 const catalogApi=read('public/catalog-api.js');
+for(const marker of ["function publishBots(list){window.BOTS=list;window.dispatchEvent(new CustomEvent('archive:catalog-updated'","publishBots(liveBots)","publishBots(fallback)"])fail(catalogApi.includes(marker),`public/catalog-api.js: single catalog publication path missing ${marker}`);
+for(const marker of ["window.render()","function setBots(list)"])fail(!catalogApi.includes(marker),`public/catalog-api.js: duplicate direct catalog render returned ${marker}`);
+for(const marker of ["window.addEventListener('archive:catalog-updated'","const liveCatalogRender=render"])fail(publicApp.includes(marker),`public/app.js: catalog update render listener missing ${marker}`);
+for(const marker of ['attempts < 20','setTimeout(paint, 60)','window.addEventListener("load", ()=>'])fail(!publicApp.includes(marker),`public/app.js: duplicate catalog boot render path returned ${marker}`);
 for(const marker of ['function normalizeHashtags(values)','hashtags:normalizeHashtags(b.hashtags)'])fail(catalogApi.includes(marker),`public/catalog-api.js: fallback hashtag normalization missing ${marker}`);
 const charactersHtml=read('public/characters.html');
-for(const marker of ['app.js?v=20260919-hashtag-contract1','catalog-api.js?v=20260919-hashtag-contract1'])fail(charactersHtml.includes(marker),`public/characters.html: hashtag cache-bust missing ${marker}`);
+for(const marker of ['app.js?v=20260919-render-boot1','catalog-api.js?v=20260919-render-boot1'])fail(charactersHtml.includes(marker),`public/characters.html: hashtag cache-bust missing ${marker}`);
 const publicCharacters=read('public/characters.html');
 const publicCatalogApi=read('public/catalog-api.js');
 for(const [name,body] of [['public/app.js',publicApp],['public/catalog-api.js',publicCatalogApi]])for(const marker of ['high-school','school','university','college'])fail(body.includes(marker),`${name}: school/university canonical setting contract missing ${marker}`);
@@ -104,8 +108,8 @@ const quickTagsStart=publicApp.indexOf('function renderQuickTags',cardHtmlStart)
 const cardHtmlBody=cardHtmlStart>=0&&quickTagsStart>cardHtmlStart?publicApp.slice(cardHtmlStart,quickTagsStart):'';
 for(const marker of ['const tagChip = tag => \`<span>','const hashtagChip = hashtag => \`<span>','if(passiveCardTags){e.stopPropagation();return}'])fail(publicApp.includes(marker),`public/app.js: passive list-card tag contract missing ${marker}`);
 for(const marker of ['data-tag=','data-hashtag='])fail(!cardHtmlBody.includes(marker),`public/app.js: list-card tag region may still be interactive via ${marker}`);
-fail(publicCharacters.includes('app.js?v=20260919-hashtag-contract1'),'public/characters.html: public app cache-bust missing');
-fail(publicCharacters.includes('catalog-api.js?v=20260919-hashtag-contract1'),'public/characters.html: catalog API cache-bust missing');
+fail(publicCharacters.includes('app.js?v=20260919-render-boot1'),'public/characters.html: public app cache-bust missing');
+fail(publicCharacters.includes('catalog-api.js?v=20260919-render-boot1'),'public/characters.html: catalog API cache-bust missing');
 
 const main=read('src/main.js');
 for(const marker of ['SCAN_DEADLINE_MS','SCAN_FETCH_MS','SCAN_PAGE_LIMIT','AbortController','preferred_variant'])fail(main.includes(marker),`src/main.js: bounded creator scan missing ${marker}`);
@@ -155,4 +159,4 @@ fail(refreshBody.includes('repairAffectedLorebookUniverses'),'src/source-truth.j
 fail(!refreshBody.includes('repairUniversesFromLorebooks(env)'),'src/source-truth.js: refreshOne still invokes global universe repair');
 
 if(errors.length){console.error('\nARCHIVE.EXE audit failed:\n- '+errors.join('\n- ')+'\n');process.exit(1)}
-console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + public school-setting canonicalization + canonical visible tags + separate POV facet + passive list-card tags + semantic tag + hashtag normalization contract + public setting API canonicalization + admin filter value normalization + admin setting taxonomy contract + atomic lorebook delete lifecycle + bounded scans + zero runtime D1 DDL checked`);
+console.log(`ARCHIVE.EXE audit OK · ${sourceFiles.length} worker modules + inline scripts + publish lifecycle + SOURCE media R2 + public school-setting canonicalization + canonical visible tags + separate POV facet + passive list-card tags + single catalog render publication + semantic tag + hashtag normalization contract + public setting API canonicalization + admin filter value normalization + admin setting taxonomy contract + atomic lorebook delete lifecycle + bounded scans + zero runtime D1 DDL checked`);

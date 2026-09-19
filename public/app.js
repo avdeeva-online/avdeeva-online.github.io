@@ -36,6 +36,7 @@ const tagKey = value => TAG_ALIASES.get(rawTagKey(value)) || rawTagKey(value);
 const displayTag = value => cleanTag(value);
 const tagLabel = value => displayTag(value);
 const povLabel = p => p === "AnyPOV" ? "◌ AnyPOV" : p === "FemPOV" ? "♀ FemPOV" : p === "MalePOV" ? "♂ MalePOV" : p;
+const povSymbol = p => p === "FemPOV" ? "♀" : p === "MalePOV" ? "♂" : "◌";
 const povKey = value => tagText(value).toLocaleLowerCase().replace(/[^a-z]/g,"");
 const isPovTag = value => ["anypov","fempov","femalepov","malepov"].includes(povKey(value));
 const botPov = bot => {
@@ -323,7 +324,7 @@ function cardHtml(b,i){
       <h3 class="card-title">${esc(b.nameEn)}<span>${esc(b.nameRu)}</span></h3>
       <div class="card-author">BY <button data-author="${esc(b.author)}">@${esc(b.author)}</button></div>
       <div class="card-meta card-system-line">
-        <span class="meta-token card-pov-token" title="Player perspective">${esc(povLabel(pov))}</span>
+        <span class="card-status-icon card-pov-icon pov-${esc(pov.toLowerCase())}" title="${esc(povLabel(pov))}" aria-label="${esc(povLabel(pov))}"><span>${esc(povSymbol(pov))}</span></span>
         ${settings.slice(0,2).map(setting=>`<button class="meta-token card-setting-token" data-quick-setting="${esc(setting)}"><span class="setting-mark">⌖</span><span>${esc(settingLabel(setting))}</span></button>`).join("")}
         ${universes.slice(0,2).map(universe=>`<button class="meta-token card-universe-token" data-quick-universe="${esc(universe)}">${globeSvg}<span>${esc(universe)}</span></button>`).join("")}
       </div>

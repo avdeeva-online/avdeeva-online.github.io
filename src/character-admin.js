@@ -1,7 +1,7 @@
 import { detachedLorebookCleanupStatements, linkedLorebooksForCharacter, planDetachedLorebookCleanup } from './lorebook-cleanup.js';
 import { lorebookUniverseChangeStatements, planAffectedLorebookUniverseChanges } from './lorebook-universe-repair.js';
 import { normalizeSettingIds, normalizeUniverses, settingDefinitions } from './discovery.js';
-import { normalizeHashtags } from './filter-normalization.js';
+import { normalizeHashtags, normalizeTags } from './filter-normalization.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
@@ -25,7 +25,7 @@ function normalizeRow(r){
     uuid:r.janitor_uuid,
     name:r.name||'',author:r.author||'',author_url:r.author_url||'',
     short_description:r.short_description||'',description:r.description||'',scenario:r.scenario||'',
-    tags:parse(r.tags),hashtags:normalizeHashtags(parse(r.hashtags)),
+    tags:normalizeTags(parse(r.tags)),hashtags:normalizeHashtags(parse(r.hashtags)),
     universe:r.universe||'',universes:parse(r.universes),universe_source_field:r.universe_source_field||'',
     setting_ids:parse(r.setting_ids),pov:r.pov||'',
     image_url:r.image_url||'',janitor_url:r.janitor_url||'',datacat_url:r.datacat_url||'',
@@ -52,7 +52,7 @@ export async function updateAdminCharacter(request,env,uuid){
   const universeSource=universesChanged?'admin:manual':clean(current.universe_source_field);
   const pov=['FemPOV','MalePOV','AnyPOV'].includes(clean(b.pov))?clean(b.pov):'AnyPOV';
   const povTag=pov==='FemPOV'?'👩 FemPov':pov==='MalePOV'?'👨 MalePov':'👤 AnyPOV';
-  const tags=[...uniq(b.tags).filter(x=>!isPovTag(x)),povTag];
+  const tags=normalizeTags([...arr(b.tags).filter(x=>!isPovTag(x)),povTag]);
   const status=['published','hidden'].includes(clean(b.status))?clean(b.status):'published';
   await env.DB.prepare(`UPDATE characters SET name=?,author=?,author_url=?,short_description=?,description=?,scenario=?,tags=?,hashtags=?,universe=?,universes=?,universe_source_field=?,setting_ids=?,setting_source='rules:v6',pov=?,image_url=?,janitor_url=?,datacat_url=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?`).bind(
     clean(b.name)||'UNKNOWN CHARACTER',clean(b.author)||'Unknown',clean(b.author_url),clean(b.short_description),String(b.description??'').trim(),String(b.scenario??'').trim(),JSON.stringify(tags),JSON.stringify(hashtags),universes[0]||'',JSON.stringify(universes),universeSource,JSON.stringify(settingIds),pov,clean(b.image_url),clean(b.janitor_url),clean(b.datacat_url),status,uuid

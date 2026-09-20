@@ -65,7 +65,7 @@ export function normalizeUniverses(value){
   for(const entry of raw.flatMap(v=>clean(v).split(/\s*\/\s*/))){
     const universe=clean(entry);
     const key=fold(universe);
-    if(!universe||/^(?:unclassified|unknown|none|null|n\/?a|setting|universe|world)\s*:?$/i.test(universe)||universe.length>80||seen.has(key))continue;
+    if(!universe||/^(?:unclassified|unknown|none|null|n\/?a|no series\b.*|setting|universe|world)\s*:?$/i.test(universe)||universe.length>80||seen.has(key))continue;
     seen.add(key);out.push(universe);
   }
   return out;
@@ -73,7 +73,7 @@ export function normalizeUniverses(value){
 
 export function cleanUniverse(value){
   const universe=normalizeUniverses(value)[0]||'';
-  if(!universe || /^(?:unclassified|unknown|none|null|n\/?a|setting|universe|world)\s*:?$/i.test(universe) || universe.length>80)return'';
+  if(!universe || /^(?:unclassified|unknown|none|null|n\/?a|no series\b.*|setting|universe|world)\s*:?$/i.test(universe) || universe.length>80)return'';
   return universe;
 }
 

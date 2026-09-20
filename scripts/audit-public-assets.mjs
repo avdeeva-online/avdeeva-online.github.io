@@ -22,5 +22,12 @@ for(const file of documents){
   for(const css of styles)for(const match of css.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g))check(file,match[1]);
 }
 
+const catalogCss=fs.readFileSync(path.join(root,'styles.css'),'utf8');
+if(!catalogCss.includes('.popover[hidden]{display:none!important}'))errors.push('public/styles.css: hidden catalog popovers can remain visible');
+
+const telegramAdmin=fs.readFileSync(path.join(root,'admin/telegram.html'),'utf8');
+if(/\nconnect\(\);\s*\n/.test(telegramAdmin))errors.push('public/admin/telegram.html: page load must not mutate Telegram webhooks');
+if(!/\ncheck\(\);\s*\n/.test(telegramAdmin))errors.push('public/admin/telegram.html: read-only webhook status check missing on page load');
+
 if(errors.length){console.error(`\nPublic asset audit failed:\n- ${errors.join('\n- ')}\n`);process.exit(1)}
 console.log(`ARCHIVE.EXE public asset audit OK · ${documents.length} HTML/CSS files checked`);

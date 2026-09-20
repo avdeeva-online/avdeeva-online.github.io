@@ -4,7 +4,7 @@ import { handleUniverseCurationRoute, transformUniversePublicResponse } from './
 import { handleAdminTelegramRoute } from './telegram-admin-router.js';
 import { handlePublicTelegramFull } from './telegram-public-bot.js';
 import { serveTelegramDraftMedia } from './telegram-media.js';
-import { listHubResourcesPublic, listHubResourcesSummaryPublic, getHubResourcePublic, downloadHubFilePublic, hubMediaAudit } from './hub-public-media.js';
+import { listHubResourcesPublic, listHubResourcesSummaryPublic, getHubResourcePublic, getHubEmbeddedMediaPublic, downloadHubFilePublic, hubMediaAudit } from './hub-public-media.js';
 import { hubStorageStatusSafe, migrateHubFilesToR2Safe } from './hub-r2-migration.js';
 import { deleteLegacyMediaExtra } from './hub-admin-media.js';
 import { guardAdminApi } from './admin-auth.js';
@@ -43,6 +43,8 @@ async function routeRequest(request,env,ctx){
   if(url.pathname==='/api/hub-resources'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return url.searchParams.get('summary')==='1'?listHubResourcesSummaryPublic(env):listHubResourcesPublic(env)}
   const hubDetailMatch=url.pathname.match(/^\/api\/hub-resources\/([^/]+)$/);
   if(hubDetailMatch){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return getHubResourcePublic(env,decodeURIComponent(hubDetailMatch[1]))}
+  const hubMediaMatch=url.pathname.match(/^\/api\/hub-resources\/([^/]+)\/media\/(\d+)$/);
+  if(hubMediaMatch){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return getHubEmbeddedMediaPublic(env,decodeURIComponent(hubMediaMatch[1]),Number(hubMediaMatch[2]))}
   const hubFileMatch=url.pathname.match(/^\/api\/hub-resources\/([^/]+)\/files\/([^/]+)$/);
   if(hubFileMatch){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return downloadHubFilePublic(request,env,decodeURIComponent(hubFileMatch[1]),decodeURIComponent(hubFileMatch[2]))}
   const legacyExtraDelete=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)\/files\/(media-\d+)$/);

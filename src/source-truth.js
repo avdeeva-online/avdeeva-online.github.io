@@ -20,7 +20,23 @@ function povFromTags(tags){for(const raw of normalizePovTags(tags)){const key=po
 function extractUuid(v){const m=String(v||'').match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);return m?m[0].toLowerCase():''}
 function safeFilename(v,f='lorebook'){return String(v||f).replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,' ').trim().slice(0,120)||f}
 function stripHtmlKeepLines(v){return String(v||'').replace(/<br\s*\/?>/gi,'\n').replace(/<\/p>/gi,'\n').replace(/<\/div>/gi,'\n').replace(/<[^>]+>/g,' ').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/\r/g,'').replace(/[ \t]+/g,' ').replace(/ *\n */g,'\n').replace(/\n{3,}/g,'\n\n').trim()}
-function sourceUniverse(c){const fields=['universe','universe_name','universeName','series','series_name','seriesName','franchise','franchise_name','franchiseName','world','world_name','worldName'];for(const field of fields){const value=clean(c?.[field]);if(value)return{value,field,kind:'explicit_field'}}const sourceText=stripHtmlKeepLines(c?.description||c?.rawDescription||c?.raw_description||'');for(const label of ['SERIES','UNIVERSE','WORLD','FRANCHISE']){const m=sourceText.match(new RegExp(`(?:^|\\n)\\s*\\*{0,3}${label}\\*{0,3}(?:\\s*[:：-]\\s*|\\s+)([^\\n]+)`,'i'));if(m?.[1]?.trim())return{value:m[1].trim().replace(/^[:：-]\s*/,''),field:`description:${label}`,kind:'explicit_creator_text'}}return{value:'',field:'',kind:''}}
+const KNOWN_UNIVERSE_SIGNALS=[
+  {value:'SUCC',patterns:[/\b(?:io(?:verse)?\s+)?succ(?:\s+io)?\s+universe\b/i,/\bsupernatural university of california\b/i]},
+  {value:'SUVA University',patterns:[/\bSUVA\s*\(Superhuman Vocational Academy\)/i,/\bSUVA University\b/i]}
+];
+export function sourceUniverse(c){
+  const fields=['universe','universe_name','universeName','series','series_name','seriesName','franchise','franchise_name','franchiseName','world','world_name','worldName'];
+  for(const field of fields){const value=clean(c?.[field]);if(value&&normalizeUniverses(value).length)return{value,field,kind:'explicit_field'}}
+  const sourceText=stripHtmlKeepLines(c?.description||c?.rawDescription||c?.raw_description||'');
+  for(const label of ['SERIES','UNIVERSE','WORLD','FRANCHISE']){
+    const m=sourceText.match(new RegExp(`(?:^|\\n)\\s*\\*{0,3}${label}\\*{0,3}(?:\\s*[:：-]\\s*|\\s+)([^\\n]+)`,'i'));
+    const value=m?.[1]?.trim().replace(/^[:：-]\s*/,'')||'';
+    if(value&&normalizeUniverses(value).length)return{value,field:`description:${label}`,kind:'explicit_creator_text'};
+  }
+  const directText=sourceText.slice(0,2400).split(/\n\s*(?:more bots|other bots|check out|links?|credits?)\s*[:：-]/i)[0];
+  for(const signal of KNOWN_UNIVERSE_SIGNALS){if(signal.patterns.some(pattern=>pattern.test(directText)))return{value:signal.value,field:'description:known-universe',kind:'verified_creator_text'}}
+  return{value:'',field:'',kind:''};
+}
 function sourceAuthorUrl(c){for(const v of [c?.creator_url,c?.creatorUrl,c?.creator_profile_url,c?.creatorProfileUrl,c?.creator?.url,c?.creator?.profile_url,c?.creator?.profileUrl]){const s=clean(v);if(!s)continue;try{const u=new URL(s);if(u.protocol==='https:'||u.protocol==='http:')return s}catch{}}return''}
 function sourceScriptIdentity(s){for(const k of ['script_id','scriptId','script_uuid','scriptUuid','lorebook_id','lorebookId','uuid','id']){const v=s?.[k];if((typeof v==='string'||typeof v==='number')&&String(v).trim())return`${k}:${String(v).trim()}`}return''}
 function lorebookMetaFrom(c){return(Array.isArray(c?.scripts)?c.scripts:[]).filter(s=>s&&String(s.type||'').toLowerCase()==='lorebook'&&s.is_public!==false&&s.is_code_public!==false)}

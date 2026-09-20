@@ -12,7 +12,7 @@
 <header class="head"><div><div class="eyebrow">PRIVATE TOOL / TELEGRAM CONTROL</div><h1>TELEGRAM BOTS</h1></div><a class="back" href="/admin/">← ADMIN</a></header>
 <section class="panel">
   <div class="row"><button class="btn primary" id="setup">CONNECT / REFRESH WEBHOOKS</button><button class="btn" id="status">CHECK STATUS</button></div>
-  <div id="out" class="status">INITIALIZING TELEGRAM CONNECTION…</div>
+  <div id="out" class="status">CHECKING TELEGRAM WEBHOOKS…</div>
 </section>
 <section class="grid">
   <div class="card"><b>ADMIN BOT</b><span>Uses Node00admin + TELEGRAM_ADMIN_USER_ID. Private menu, drafts, suggestions, import, publish, stats and issue checks.</span></div>
@@ -25,7 +25,7 @@ const show=(data,ok=true)=>{out.className='status '+(ok?'ok':'bad');out.textCont
 const connect=async()=>{setup.disabled=true;show('CONNECTING TELEGRAM WEBHOOKS…');try{const r=await fetch('/api/admin/telegram/setup',{method:'POST'}),d=await r.json();show(d,r.ok&&d.ok);return r.ok&&d.ok}catch(e){show('FAILED: '+e.message,false);return false}finally{setup.disabled=false}};
 const check=async()=>{status.disabled=true;show('CHECKING…');try{const r=await fetch('/api/admin/telegram/status',{cache:'no-store'}),d=await r.json();show(d,r.ok&&d.ok)}catch(e){show('FAILED: '+e.message,false)}finally{status.disabled=false}};
 setup.onclick=connect;status.onclick=check;
-connect();
+check();
 })();
 </script>
 </body>

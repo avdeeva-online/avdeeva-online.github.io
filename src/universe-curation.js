@@ -33,7 +33,9 @@ function curateValues(values,registry,{manual=false}={}){
     const k=key(raw);
     if(manual){out.push(registry.canonicalCase.get(k)||raw);continue}
     const rule=registry.rules.get(k);
-    if(rule?.active&&rule.publics.length)out.push(...rule.publics);
+    // An active rule with an empty public list deliberately suppresses a
+    // source label that is metadata rather than a real shared universe.
+    if(rule?.active){if(rule.publics.length)out.push(...rule.publics)}
     else out.push(registry.canonicalCase.get(k)||raw);
   }
   return uniq(out);

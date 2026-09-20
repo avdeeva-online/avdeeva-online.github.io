@@ -3,9 +3,8 @@
 ## Production requirements
 
 - Deploy the repository as the Cloudflare Worker defined by `wrangler.toml`; GitHub Pages cannot serve the D1/R2-backed API routes.
-- Configure the `ADMIN_ACCESS_TOKEN` Worker secret before opening any `/admin/` workflow. Admin API routes fail closed when the secret is absent.
-- The browser asks for the token after the first `401` response and keeps it in `sessionStorage` only for the current tab session.
-- Keep Cloudflare Access in front of `/admin/*` and `/api/admin/*` when available as an additional identity-aware boundary.
+- Keep Cloudflare Access in front of both `/admin/*` and `/api/admin/*`. The Worker validates the signed Access JWT on every admin API request and fails closed when the Access configuration, token, signature, issuer, or audience is invalid.
+- `TEAM_DOMAIN` and `POLICY_AUD` in `wrangler.toml` identify the existing Access application. They are identifiers, not secrets; the browser no longer asks for a second admin token.
 - Add GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Run the `deploy-worker` workflow manually for the first release; set the repository variable `CLOUDFLARE_DEPLOY_ENABLED=true` only after the production target is verified to enable deployment from `main`.
 
 First 1.0 patch.

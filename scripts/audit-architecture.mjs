@@ -8,13 +8,13 @@ const fail=(ok,msg)=>{if(!ok)errors.push(msg)};
 fail(exists('src/admin-auth.js'),'src/admin-auth.js: shared admin authorization module missing');
 if(exists('src/admin-auth.js')){
   const auth=read('src/admin-auth.js');
-  for(const marker of ['adminRequestBlocked','guardAdminApi','ADMIN_CROSS_SITE_BLOCKED','ADMIN_AUTH_REQUIRED'])fail(auth.includes(marker),`src/admin-auth.js: missing ${marker}`);
+  for(const marker of ['adminRequestBlocked','guardAdminApi','verifyCloudflareAccess','ADMIN_CROSS_SITE_BLOCKED','CF_ACCESS_AUTH_REQUIRED','CF_ACCESS_AUTH_INVALID','createRemoteJWKSet','jwtVerify'])fail(auth.includes(marker),`src/admin-auth.js: missing ${marker}`);
 }
 
 const edge=read('src/cloudflare-entry-v2.js');
 const app=read('src/cloudflare-entry.js');
 fail(edge.includes("from './admin-auth.js'"),'src/cloudflare-entry-v2.js: shared admin auth not imported');
-fail(edge.includes('guardAdminApi(request,env,url)'),'src/cloudflare-entry-v2.js: top-level admin API guard missing');
+fail(edge.includes('await guardAdminApi(request,env,url)'),'src/cloudflare-entry-v2.js: top-level admin API guard missing');
 fail(!app.includes("from './admin-auth.js'"),'src/cloudflare-entry.js: nested admin auth dependency returned');
 fail(!app.includes('guardAdminApi('),'src/cloudflare-entry.js: duplicate nested admin guard returned');
 fail(!/adminRequestBlocked\s*\(request,env,url\)/.test(edge),'src/cloudflare-entry-v2.js: per-route admin guard returned; use guardAdminApi once before dispatch');

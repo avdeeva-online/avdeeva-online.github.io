@@ -3,6 +3,10 @@ main = "src/cloudflare-entry-v2.js"
 compatibility_date = "2026-08-30"
 keep_vars = true
 
+[vars]
+TEAM_DOMAIN = "https://calm-salad-ca7e.cloudflareaccess.com"
+POLICY_AUD = "366f84d7f9485d0a12cfe8fe7835ca7276614da855e1a18ae426f67b9c77cc29"
+
 [assets]
 directory = "./public"
 binding = "ASSETS"

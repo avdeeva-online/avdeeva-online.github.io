@@ -278,7 +278,10 @@ function render(){
     grid.innerHTML=visible.map((b,i)=>cardHtml(b,i)).join("");
     grid.querySelectorAll(".card-media").forEach(media=>{
       const image=media.querySelector("img");
-      if(image?.src)media.style.setProperty("--record-cover-image",`url(${JSON.stringify(image.src)})`);
+      if(!image?.src)return;
+      const hydrateCover=()=>media.style.setProperty("--record-cover-image",`url(${JSON.stringify(image.src)})`);
+      if(image.complete&&image.naturalWidth>0)hydrateCover();
+      else image.addEventListener("load",hydrateCover,{once:true});
     });
     renderDomCache.gridSource=B;
     renderDomCache.gridKey=gridKey;

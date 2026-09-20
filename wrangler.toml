@@ -12,6 +12,9 @@ directory = "./public"
 binding = "ASSETS"
 run_worker_first = ["/admin/*", "/api/*", "/telegram/*", "/hub", "/hub.html"]
 
+[images]
+binding = "IMAGES"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "archive-characters"

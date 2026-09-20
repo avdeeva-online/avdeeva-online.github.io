@@ -131,6 +131,7 @@ for(const marker of ["import worker from './worker.js'","import { handleEntryRou
 for(const marker of ["import app from './entry.js'",'app.fetch('])fail(!sourceTruthEntryRouter.includes(marker),`src/source-truth.js: nested entry wrapper returned ${marker}`);
 
 const entry=read('src/entry.js');
+const wrangler=read('wrangler.toml');
 fail(entry.includes('export async function handleEntryRoute'),'src/entry.js: flattened route handler missing');
 fail(!entry.includes('return worker.fetch(request,env,ctx)'),'src/entry.js: downstream worker wrapper returned');
 fail(entry.includes('worker.fetch(new Request'),'src/entry.js: internal card lookup must keep direct base-worker access');
@@ -155,6 +156,10 @@ fail(entry.includes('function allowedImageTarget'),'src/entry.js: shared image a
 fail(avatarFetchBody.includes('allowedImageTarget(url)'),'src/entry.js: avatar PNG fetch bypasses shared image allowlist');
 fail(!avatarFetchBody.includes('fetch(url,'),'src/entry.js: unrestricted avatar fetch returned');
 fail(entry.includes('allowedImageTarget(raw)'),'src/entry.js: image proxy bypasses shared image allowlist');
+fail(entry.includes('images.input(source.body)'),'src/entry.js: server PNG conversion must use the Images binding');
+fail(entry.includes("output({format:'image/png',anim:false})"),'src/entry.js: Images binding output must be a still PNG');
+fail(entry.includes('fetchAvatarPng(avatar,env.IMAGES)'),'src/entry.js: PNG route does not pass the Images binding');
+fail(/\[images\]\s+binding\s*=\s*"IMAGES"/m.test(wrangler),'wrangler.toml: IMAGES binding missing');
 for(const marker of ['canvasPngDataUrl','x-archive-png-fallback',"content-type':'text/html"])fail(!pngDownloadBodyEntry.includes(marker)&&!entry.includes(marker),`src/entry.js: retired PNG HTML fallback returned ${marker}`);
 fail(pngDownloadBodyEntry.includes("state:'PNG_SOURCE_NOT_AVAILABLE'"),'src/entry.js: PNG endpoint must fail explicitly when no PNG source is available');
 

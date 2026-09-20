@@ -1348,9 +1348,12 @@ wireHashtagGhosts();
 
   function drawerIsOpen(){ return drawer.classList.contains('open'); }
 
-  // Clicking anywhere outside the drawer closes it. Clicks inside never do.
+  // Clicking anywhere outside the drawer closes it. The shade closes on its
+  // own click so it stays mounted for the full gesture and cannot expose the
+  // CATALOG button between pointerdown and click.
   document.addEventListener('pointerdown', function(e){
     if(!drawerIsOpen()) return;
+    if(e.target===shade) return;
     if(drawer.contains(e.target)) return;
     if(e.target.closest('#catalogOpen')) return;
     closeDrawer();

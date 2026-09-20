@@ -276,6 +276,10 @@ function render(){
   const gridKey=JSON.stringify([pageSize,start,visible.map(bot=>bot.id)]);
   if(renderDomCache.gridSource!==B || renderDomCache.gridKey!==gridKey){
     grid.innerHTML=visible.map((b,i)=>cardHtml(b,i)).join("");
+    grid.querySelectorAll(".card-media").forEach(media=>{
+      const image=media.querySelector("img");
+      if(image?.src)media.style.setProperty("--record-cover-image",`url(${JSON.stringify(image.src)})`);
+    });
     renderDomCache.gridSource=B;
     renderDomCache.gridKey=gridKey;
   }

@@ -6918,6 +6918,19 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   }
 
   .card-meta{min-height:27px!important}
+  .card-media{
+    background-color:#0a0d0a!important;
+    background-image:linear-gradient(rgba(7,10,7,.58),rgba(7,10,7,.58)),var(--record-cover-image)!important;
+    background-position:center!important;
+    background-size:cover!important;
+    background-repeat:no-repeat!important;
+  }
+  .card-media img{
+    object-fit:contain!important;
+    object-position:center!important;
+    background:rgba(5,8,5,.18)!important;
+    filter:drop-shadow(0 0 12px rgba(0,0,0,.32))!important;
+  }
   .card-meta .meta-token{
     min-height:26px!important;
     padding:4px 5px!important;

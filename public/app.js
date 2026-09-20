@@ -587,9 +587,10 @@ $("#sortTrigger").onclick=e=>{
 $("#sortMenu").onclick=e=>{const b=e.target.closest("[data-sort]");if(!b)return;state.sort=b.dataset.sort;$("#sortLabel").textContent={newest:"NEWEST",az:"A → Z",za:"Z → A",author:"AUTHOR"}[state.sort];closeFloatingMenus();render()};
 
 // Drawer
-function openDrawer(){renderDrawer();$("#catalogDrawer").classList.add("open");$("#catalogDrawer").setAttribute("aria-hidden","false");$("#drawerShade").hidden=false;if(isCompactMobile())document.body.classList.add("drawer-open")}
-function closeDrawer(){$("#catalogDrawer").classList.remove("open");$("#catalogDrawer").setAttribute("aria-hidden","true");$("#drawerShade").hidden=true;document.body.classList.remove("drawer-open")}
-$("#catalogOpen").onclick=openDrawer;$("#catalogClose").onclick=closeDrawer;$("#drawerShade").onclick=closeDrawer;
+function openDrawer(){renderDrawer();$("#catalogDrawer").classList.add("open");$("#catalogDrawer").setAttribute("aria-hidden","false");$("#catalogOpen").setAttribute("aria-expanded","true");$("#drawerShade").hidden=false;if(isCompactMobile())document.body.classList.add("drawer-open")}
+function closeDrawer(){$("#catalogDrawer").classList.remove("open");$("#catalogDrawer").setAttribute("aria-hidden","true");$("#catalogOpen").setAttribute("aria-expanded","false");$("#drawerShade").hidden=true;document.body.classList.remove("drawer-open")}
+function toggleDrawer(){if($("#catalogDrawer").classList.contains("open"))closeDrawer();else openDrawer()}
+const catalogToggle=$("#catalogOpen");catalogToggle.setAttribute("aria-controls","catalogDrawer");catalogToggle.setAttribute("aria-expanded","false");catalogToggle.onclick=toggleDrawer;$("#catalogClose").onclick=closeDrawer;$("#drawerShade").onclick=closeDrawer;
 const drawerTabs=$(".drawer-tabs");
 if(drawerTabs)drawerTabs.onclick=e=>{
   const b=e.target.closest(".drawer-tab");
@@ -1338,7 +1339,7 @@ wireHashtagGhosts();
 
 /* v0.9.17 — persistent catalog multi-select
    Catalog stays open while toggling filters. Clicking a selected entry again removes it.
-   It closes only by X, Escape, or a click outside the drawer. */
+   It closes by the CATALOG toggle, X, Escape, or a click outside the drawer. */
 (function(){
   const drawer = document.querySelector('#catalogDrawer');
   const list = document.querySelector('#drawerList');

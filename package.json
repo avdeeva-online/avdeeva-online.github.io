@@ -3,6 +3,9 @@
   "private": true,
   "type": "module",
   "version": "1.0.0",
+  "dependencies": {
+    "jose": "^6.2.12"
+  },
   "scripts": {
     "check:audit": "node scripts/audit.mjs && node scripts/audit-architecture.mjs && node scripts/audit-migrations.mjs && node scripts/audit-public-assets.mjs && node scripts/test-security.mjs && node scripts/test-telegram.mjs",
     "check:js": "find src public -type f -name '*.js' -print0 | xargs -0 -n1 node --check",

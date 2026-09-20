@@ -35,7 +35,7 @@ async function forwardAdminImport(request,env,ctx,pathname){
   }catch{return response}
 }
 async function routeRequest(request,env,ctx){
-  const url=new URL(request.url),blocked=guardAdminApi(request,env,url);if(blocked)return blocked;
+  const url=new URL(request.url),blocked=await guardAdminApi(request,env,url);if(blocked)return blocked;
   if(url.pathname==='/telegram/admin')return handleAdminTelegramRoute(request,env);
   if(url.pathname==='/telegram/public')return handlePublicTelegramFull(request,env);
   const mediaMatch=url.pathname.match(/^\/api\/admin\/hub-telegram-media\/([^/]+)\/(\d+)$/);

@@ -87,6 +87,8 @@ fail(!publicMedia.includes("source:'legacy-media'"),'src/hub-public-media.js: vi
 for(const marker of ['HUB_FILES','row.storage','row.r2_key','ensureStorageColumns','isSource','source_files','media_model:6'])fail(publicMedia.includes(marker),`src/hub-public-media.js: public SOURCE/R2 contract missing ${marker}`);
 
 const publicApp=read('public/app.js');
+const publicStyles=read('public/styles.css');
+for(const marker of ['v1.4.3 — FINAL MOBILE DENSITY CONTRACT','.toolbar-row>#catalogOpen{grid-column:1!important}','.toolbar-row>#randomBtn{grid-column:6!important;justify-self:end!important}','height:36px!important','width:min(88vw,330px)!important'])fail(publicStyles.includes(marker),`public/styles.css: final mobile density contract missing ${marker}`);
 for(const marker of ['function toggleDrawer()','catalogToggle.onclick=toggleDrawer','setAttribute("aria-expanded","true")','setAttribute("aria-expanded","false")','if(e.target===shade) return;'])fail(publicApp.includes(marker),`public/app.js: catalog button toggle contract missing ${marker}`);
 for(const marker of ['enemy to lovers','enemies to lovers'])fail(publicApp.includes(marker),`public/app.js: defensive tag alias parity missing ${marker}`);
 for(const marker of ['const visibleBotHashtags = bot =>','const hashtags = visibleBotHashtags(b)','hashtags.slice(0,3)','const modalHashtags=visibleBotHashtags(b)'])fail(publicApp.includes(marker),`public/app.js: visible hashtag dedupe missing ${marker}`);
@@ -111,6 +113,7 @@ const cardHtmlBody=cardHtmlStart>=0&&quickTagsStart>cardHtmlStart?publicApp.slic
 for(const marker of ['const tagChip = tag => \`<span>','const hashtagChip = hashtag => \`<span>','if(passiveCardTags){e.stopPropagation();return}'])fail(publicApp.includes(marker),`public/app.js: passive list-card tag contract missing ${marker}`);
 for(const marker of ['data-tag=','data-hashtag='])fail(!cardHtmlBody.includes(marker),`public/app.js: list-card tag region may still be interactive via ${marker}`);
 fail(publicCharacters.includes('app.js?v=20260920-catalog-toggle2'),'public/characters.html: public app cache-bust missing');
+fail(publicCharacters.includes('styles.css?v=20260921-mobile-density1'),'public/characters.html: mobile density stylesheet cache-bust missing');
 fail(publicCharacters.includes('catalog-api.js?v=20260919-render-boot1'),'public/characters.html: catalog API cache-bust missing');
 
 const main=read('src/main.js');

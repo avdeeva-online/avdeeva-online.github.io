@@ -6864,3 +6864,89 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   .modal-text-wrap[data-panel="description"]{margin-top:6px!important;padding:10px 11px!important;border:1px solid rgba(141,116,78,.48)!important;border-left:3px solid #9a8058!important;border-radius:8px!important;background:linear-gradient(135deg,rgba(82,65,41,.24),rgba(34,42,31,.58))!important;box-shadow:inset 0 0 24px rgba(117,91,51,.07)!important}
   .modal-text-wrap[data-panel="description"] .modal-copy{margin:0!important;color:#e3dac3!important}
 }
+
+/* =========================================================
+   v1.4.3 — FINAL MOBILE DENSITY CONTRACT
+   Restore the compact app layout after the readability layer.
+   Inputs keep 16px text for iOS zoom safety; their chrome and
+   the surrounding controls stay deliberately shallow.
+   ========================================================= */
+@media(max-width:760px){
+  .toolbar-row>#catalogOpen,
+  .toolbar-row>#randomBtn{
+    grid-row:1!important;
+    width:34px!important;
+    min-width:34px!important;
+    max-width:34px!important;
+    height:34px!important;
+    min-height:34px!important;
+    padding:0!important;
+    justify-self:start!important;
+  }
+  .toolbar-row>#catalogOpen{grid-column:1!important}
+  .toolbar-row>#randomBtn{grid-column:6!important;justify-self:end!important}
+  #catalogOpen>span:not(.hamb),
+  #randomBtn>span:not(.random-mark){
+    position:absolute!important;
+    width:1px!important;
+    height:1px!important;
+    overflow:hidden!important;
+    clip-path:inset(50%)!important;
+    white-space:nowrap!important;
+  }
+  #catalogOpen .hamb,
+  #randomBtn .random-mark,
+  #randomBtn .dice-icon{
+    width:15px!important;
+    min-width:15px!important;
+    height:15px!important;
+    font-size:15px!important;
+  }
+  .searchbar{
+    height:36px!important;
+    min-height:36px!important;
+    padding-inline:9px!important;
+  }
+  .searchbar input{font-size:16px!important}
+  .searchbar input::placeholder{font-size:10.5px!important}
+  .primary-group>.control,
+  .secondary-group>.control,
+  #povCycle,#loreToggle{
+    height:36px!important;
+    min-height:36px!important;
+    padding:2px 1px!important;
+  }
+
+  .card-meta{min-height:27px!important}
+  .card-meta .meta-token{
+    min-height:26px!important;
+    padding:4px 5px!important;
+    font-size:8px!important;
+  }
+  .card-tags span,.card-hashtags span{
+    min-height:24px!important;
+    padding:4px 5px!important;
+    font-size:8.5px!important;
+  }
+
+  .catalog-drawer{
+    width:min(88vw,330px)!important;
+    padding:9px 9px 7px!important;
+  }
+  .drawer-head{min-height:38px!important;padding-bottom:5px!important}
+  .drawer-head strong{font-size:13px!important}
+  .drawer-head button{width:34px!important;height:34px!important;font-size:18px!important}
+  .drawer-status{min-height:24px!important;margin-bottom:4px!important;font-size:8px!important}
+  .drawer-tabs .drawer-tab{min-height:34px!important;padding:5px 1px!important;font-size:6.8px!important}
+  .drawer-query-row{min-height:38px!important}
+  .drawer-search{height:36px!important;min-height:36px!important;margin:3px 0 6px!important}
+  .drawer-tool-btn{min-width:58px!important;min-height:36px!important;font-size:7.5px!important}
+  .drawer-tag-item,.drawer-author-item,.drawer-world-item{
+    min-height:36px!important;
+    height:auto!important;
+    padding:5px 6px!important;
+    font-size:10.5px!important;
+  }
+  .drawer-author-copy b,.drawer-world-copy b{font-size:10.5px!important}
+  .drawer-foot{height:24px!important;font-size:7px!important}
+}

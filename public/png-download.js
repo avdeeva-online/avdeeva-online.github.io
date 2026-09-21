@@ -20,6 +20,7 @@
     const name=String(card?.data?.name||"Character").trim(),creator=String(card?.data?.creator||"").trim();
     return safeName(creator?`${name}_${creator}`:name)+ext;
   }
+  const partialCard=card=>card?.data?.extensions?.archive_exe?.export_quality==="partial"||card?.data?.extensions?.archive_exe?.definition_available===false;
   function saveBlob(blob,filename){
     const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;a.style.display="none";
     document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
@@ -52,7 +53,7 @@
       const {card,response}=await fetchReadyCard(uuid,()=>{if(trigger)trigger.textContent="WAITING FOR CARD…";toast("CARD IS PROCESSING…")});
       const fallback=cardFilename(card,".json"),filename=filenameFromDisposition(response.headers.get("content-disposition"),fallback);
       saveBlob(new Blob([JSON.stringify(card,null,2)],{type:"application/json"}),filename);
-      toast("JSON CARD DOWNLOADED ✓");return true;
+      toast(partialCard(card)?"PARTIAL CARD — DEFINITION UNAVAILABLE":"JSON CARD DOWNLOADED ✓");return true;
     }catch(err){
       console.error("JSON download failed",err);
       toast(err?.message==="CARD_STILL_PROCESSING"?"CARD STILL PROCESSING — TRY AGAIN":"JSON DOWNLOAD FAILED");
@@ -75,7 +76,7 @@
       const pngBlob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("PNG_ENCODE_FAILED")),"image/png"));
       const bytes=embed(await pngBlob.arrayBuffer(),card);
       saveBlob(new Blob([bytes],{type:"image/png"}),cardFilename(card,".png"));
-      toast("PNG CARD DOWNLOADED ✓");return true;
+      toast(partialCard(card)?"PARTIAL CARD — DEFINITION UNAVAILABLE":"PNG CARD DOWNLOADED ✓");return true;
     }catch(err){
       console.error("PNG download failed",err);
       toast(err?.message==="CARD_STILL_PROCESSING"?"CARD STILL PROCESSING — TRY AGAIN":"PNG DOWNLOAD FAILED");

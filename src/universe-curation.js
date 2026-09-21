@@ -1,4 +1,5 @@
 import { requireD1Schema } from './d1-schema.js';
+import { inferKnownUniverseTitles } from './discovery.js';
 
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
 const key=v=>clean(v).toLocaleLowerCase();
@@ -45,7 +46,11 @@ function curateCharacter(character,registry){
   if(!character||typeof character!=='object')return character;
   const manual=clean(character.universeSourceField)==='admin:manual';
   const raw=Array.isArray(character.universes)&&character.universes.length?character.universes:[character.universe];
-  const universes=curateValues(raw,registry,{manual});
+  let universes=curateValues(raw,registry,{manual}),titleFallback=false;
+  if(!manual&&!universes.length){
+    universes=curateValues(inferKnownUniverseTitles(character.nameEn||character.name),registry);
+    titleFallback=universes.length>0;
+  }
   const hierarchy=[];
   if(!manual){
     for(const value of uniq(raw)){
@@ -53,7 +58,7 @@ function curateCharacter(character,registry){
       if(rule?.active&&(rule.parent||rule.sub))hierarchy.push({source:value,parent:rule.parent||'',subuniverse:rule.sub||''});
     }
   }
-  return{...character,universe:universes[0]||'',universes,universeHierarchy:hierarchy};
+  return{...character,universe:universes[0]||'',universes,universeSourceField:titleFallback?'name:known-universe':character.universeSourceField,universeHierarchy:hierarchy};
 }
 
 function curateLorebooks(items,registry){

@@ -17,7 +17,9 @@ const input={ok:true,characters:[
   {id:'succ',universe:'succ - a universe created by io on janitorai',universes:['succ - a universe created by io on janitorai'],universeSourceField:'description:SERIES'},
   {id:'suva',universe:'SUVAUNIVERSITY',universes:['SUVAUNIVERSITY'],universeSourceField:'description:SERIES'},
   {id:'crossover',universe:'hale university x vdb',universes:['hale university x vdb','byc next gen'],universeSourceField:'description:SERIES'},
-  {id:'manual',universe:'Collab',universes:['Collab'],universeSourceField:'admin:manual'}
+  {id:'manual',universe:'Collab',universes:['Collab'],universeSourceField:'admin:manual'},
+  {id:'title-fallback',nameEn:'JAMES | THE VAULT',universe:'AND PLOT',universes:['AND PLOT'],universeSourceField:'description:WORLD'},
+  {id:'suppressed',nameEn:'Standalone bot',universe:'AND PLOT',universes:['AND PLOT'],universeSourceField:'description:WORLD'}
 ]};
 const response=await transformUniversePublicResponse(new Request('https://archive.test/api/catalog'),new Response(JSON.stringify(input),{headers:{'content-type':'application/json'}}),env);
 const output=await response.json();
@@ -28,4 +30,7 @@ assert.deepEqual(output.characters[2].universes,['SUVA University']);
 assert.deepEqual(output.characters[3].universes,['Hale University','Voodoo Boys','Voodoo Boys Next Gen','Bayou Crew','Bayou Crew Next Gen']);
 assert.deepEqual(output.characters[3].universeHierarchy,[{source:'byc next gen',parent:'Bayou Crew',subuniverse:'Bayou Crew Next Gen'}]);
 assert.deepEqual(output.characters[4].universes,['Collab'],'manual override must remain untouched');
-console.log('ARCHIVE.EXE universe curation behavior OK · suppressions + verified labels + crossover expansion + manual override checked');
+assert.deepEqual(output.characters[5].universes,['The Vault'],'a suppressed metadata label must allow strict title fallback');
+assert.equal(output.characters[5].universeSourceField,'name:known-universe');
+assert.deepEqual(output.characters[6].universes,[],'suppressed metadata without a known title label must stay blank');
+console.log('ARCHIVE.EXE universe curation behavior OK · suppressions + verified labels + crossover expansion + title fallback + manual override checked');

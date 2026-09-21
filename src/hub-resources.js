@@ -118,9 +118,13 @@ async function storeBuffer(env,{resourceId,name,mime,size,isPrimary,buffer}){
 
 async function sourceUrlConflict(env,sourceUrl,resourceId=''){
   const url=clean(sourceUrl);if(!url)return null;
-  return resourceId
-    ?env.DB.prepare('SELECT id,title,status FROM hub_resources WHERE source_url=? AND id<>? LIMIT 1').bind(url,resourceId).first()
-    :env.DB.prepare('SELECT id,title,status FROM hub_resources WHERE source_url=? LIMIT 1').bind(url).first();
+  let row=resourceId
+    ?await env.DB.prepare('SELECT id,title,status,source_url FROM hub_resources WHERE source_url=? AND id<>? LIMIT 1').bind(url,resourceId).first()
+    :await env.DB.prepare('SELECT id,title,status,source_url FROM hub_resources WHERE source_url=? LIMIT 1').bind(url).first();
+  if(row?.id)return row;
+  const rows=(await env.DB.prepare('SELECT id,title,status,source_url FROM hub_resources').all()).results||[];
+  row=rows.find(x=>clean(x.source_url)===url&&(!resourceId||clean(x.id)!==clean(resourceId)))||null;
+  return row;
 }
 async function removeStaleSourceUrlOwner(env,conflict){
   if(!conflict?.id||clean(conflict.status)==='published')return false;
@@ -304,7 +308,7 @@ export async function publishHubResource(request,env){
     if(msg==='FILE_TOO_LARGE'||msg==='FILES_TOTAL_TOO_LARGE')return json({ok:false,error:msg,limit:'10 MB per file / 25 MB total'},413);
     if(msg==='EXTRA_IMAGE_TOO_LARGE'||msg==='EXTRAS_TOTAL_TOO_LARGE')return json({ok:false,error:msg,limit:'4 MB per image / 12 MB total'},413);
     if(msg==='PUBLISH_SESSION_FINALIZE_REQUIRED')return json({ok:false,error:msg},409);
-    if(msg==='SOURCE_URL_CONFLICT'){const existingId=e?.conflict?.id||'',existingTitle=e?.conflict?.title||'';return json({ok:false,error:msg,detail:[existingTitle,existingId].filter(Boolean).join(' · '),existing_id:existingId,existing_title:existingTitle},409)}
+    if(msg==='SOURCE_URL_CONFLICT'){const existingId=e?.conflict?.id||'',existingTitle=e?.conflict?.title||'',label=[existingTitle,existingId].filter(Boolean).join(' · '),errorText=label?`SOURCE_URL_CONFLICT: ${label}`:'SOURCE_URL_CONFLICT: another published HUB resource already uses this source URL';return json({ok:false,error:errorText,detail:label||'Another published HUB resource already uses this source URL.',existing_id:existingId,existing_title:existingTitle},409)}
     if(msg==='R2_BINDING_REQUIRED')return json({ok:false,error:msg},503);
     if(/SQLITE_TOOBIG|string or blob too big/i.test(msg))return json({ok:false,error:'D1_CHUNK_WRITE_FAILED',detail:'A storage chunk exceeded D1 limits.'},500);
     return json({ok:false,error:'HUB_RESOURCE_UPDATE_FAILED',detail:msg},500);

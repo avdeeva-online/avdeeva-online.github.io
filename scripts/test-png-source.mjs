@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { fetchAvatarPng } from '../src/entry.js';
 import { definitionFromEmbeddedCard, extractEmbeddedCard } from '../src/janny-card.js';
+import { extractDefinitionFromViews } from '../src/worker.js';
 
 const png=new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0]);
 const originalFetch=globalThis.fetch;
@@ -12,6 +13,8 @@ const size=new Uint8Array([payload.length>>>24,(payload.length>>>16)&255,(payloa
 fakePng.set([137,80,78,71,13,10,26,10],0);fakePng.set(size,8);fakePng.set(type,12);fakePng.set(payload,16);fakePng.set([0,0,0,0],16+payload.length);fakePng.set([0,0,0,0,73,69,78,68,0,0,0,0],20+payload.length);
 assert.deepEqual(extractEmbeddedCard(fakePng),sourceCard);
 assert.deepEqual(definitionFromEmbeddedCard(sourceCard),{personality:'Full private definition',firstMes:'Hello',scenario:'Recovered scenario',mesExample:'',alternateGreetings:['Alt one']});
+const datacatViews={personality:{state:'NOT_AVAILABLE',status:204},greeting:{state:'FOUND',status:200,data:{character:{chara_card_v2_json:sourceCard}}},scenario:{state:'NOT_AVAILABLE',status:204},alt_greetings:{state:'NOT_AVAILABLE',status:204}};
+assert.deepEqual(extractDefinitionFromViews(datacatViews),{personality:'Full private definition',firstMes:'Hello',scenario:'Recovered scenario',mesExample:'',alternateGreetings:['Alt one']});
 
 try{
   globalThis.fetch=async url=>{fetched=String(url);return new Response(new Uint8Array([82,73,70,70,0,0,0,0,87,69,66,80]),{status:200,headers:{'content-type':'image/webp'}})};
@@ -33,4 +36,4 @@ try{
   assert.equal(fetched,'','blocked image hosts must not be fetched');
 }finally{globalThis.fetch=originalFetch}
 
-console.log('ARCHIVE.EXE PNG source behavior OK · embedded card recovery + Images binding conversion + PNG signature + host allowlist checked');
+console.log('ARCHIVE.EXE card source behavior OK · embedded DataCat/PNG recovery + Images binding conversion + PNG signature + host allowlist checked');

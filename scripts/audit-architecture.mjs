@@ -141,7 +141,7 @@ fail(!entry.includes('url.pathname==="/api/characters"')&&!entry.includes("url.p
 fail(!entry.includes('url.pathname==="/api/lorebooks"')&&!entry.includes("url.pathname==='/api/lorebooks'"),'src/entry.js: shadowed lorebook catalog route returned');
 
 const getCardStart=entry.indexOf('async function getCard');
-const getCardEnd=entry.indexOf('async function fetchJannyPng',getCardStart);
+const getCardEnd=entry.indexOf('async function fetchAvatarPng',getCardStart);
 const getCardBody=getCardStart>=0&&getCardEnd>getCardStart?entry.slice(getCardStart,getCardEnd):'';
 fail(getCardBody.includes('if(r.status!==200)'),'src/entry.js: queued/non-200 card responses must not be parsed as cards');
 fail(!getCardBody.includes('if(!r.ok)'),'src/entry.js: broad 2xx card success check returned');
@@ -179,12 +179,13 @@ for(const marker of ['/api/characters','/lorebooks$/i','/lorebooks\\/([0-9a-f]{3
 for(const marker of ['legacyLorebookDownload','/lorebook$/i'])fail(!sourceTruthEntryRouter.includes(marker),`src/source-truth.js: retired singular lorebook compatibility returned ${marker}`);
 
 const cardDownloadUi=read('public/png-download.js');
-for(const marker of ['async function fetchReadyCard','res.status===200','res.status!==202','CARD_STILL_PROCESSING','async function downloadJson','async function downloadPng','window.ARCHIVE_DOWNLOAD_JSON','window.ARCHIVE_DOWNLOAD_PNG'])fail(cardDownloadUi.includes(marker),`public/png-download.js: queued download contract missing ${marker}`);
+for(const marker of ['async function fetchReadyCard','res.status===200','res.status!==202','CARD_STILL_PROCESSING','async function downloadJson','async function downloadPng','window.ARCHIVE_DOWNLOAD_JSON','window.ARCHIVE_DOWNLOAD_PNG','partialCard','PARTIAL CARD — DEFINITION UNAVAILABLE'])fail(cardDownloadUi.includes(marker),`public/png-download.js: queued/partial download contract missing ${marker}`);
 fail(!cardDownloadUi.includes('if(!cardRes.ok)'),'public/png-download.js: broad 2xx card success check returned');
 fail(!cardDownloadUi.includes('cardRes.ok'),'public/png-download.js: stale Response.ok card readiness check returned');
 fail(cardDownloadUi.includes('a[href*="/api/characters/"]'),'public/png-download.js: JSON/PNG card click interception missing');
 const charactersHtml=read('public/characters.html');
-fail(charactersHtml.includes('png-download.js?v=20260919-download-state1'),'public/characters.html: card download cache-bust missing');
+fail(charactersHtml.includes('png-download.js?v=20260921-partial-card1'),'public/characters.html: card download cache-bust missing');
+for(const marker of ["from './janny-card.js'",'fetchJannySource(uuid)','definitionFromEmbeddedCard(janny.card)','mergeDefinition(definition,recovered)','definition_available:definitionAvailable','definition_source:recovery||"datacat"','export_quality:definitionAvailable?"complete":"partial"','SOURCE_DEFINITION_UNAVAILABLE'])fail(workerBase.includes(marker),`src/worker.js: Janny recovery/truthful partial metadata missing ${marker}`);
 
 const appUi=read('public/app.js');
 fail(appUi.includes('if(q){'),'public/app.js: search hay must be gated by non-empty query');

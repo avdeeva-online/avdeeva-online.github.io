@@ -2,6 +2,19 @@ import { requireD1Schema } from './d1-schema.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
+const normalizeSourceUrl=v=>{
+  const raw=clean(v);if(!raw)return'';
+  try{
+    const u=new URL(raw);
+    u.hash='';
+    u.hostname=u.hostname.toLowerCase();
+    if((u.protocol==='https:'&&u.port==='443')||(u.protocol==='http:'&&u.port==='80'))u.port='';
+    u.pathname=u.pathname.replace(/\/+$/,'')||'/';
+    const params=[...u.searchParams.entries()].sort((a,b)=>a[0].localeCompare(b[0])||a[1].localeCompare(b[1]));
+    u.search='';for(const [k,val] of params)u.searchParams.append(k,val);
+    return u.toString().replace(/\/$/,'');
+  }catch{return raw.replace(/\/+$/,'')}
+};
 const arr=v=>Array.isArray(v)?v:[];
 const safeJson=v=>{try{return JSON.stringify(v??[])}catch{return'[]'}};
 const parseJson=(v,fallback=[])=>{try{const x=JSON.parse(v||'');return x??fallback}catch{return fallback}};
@@ -28,7 +41,7 @@ const ensureSchema=env=>requireD1Schema(env,'hub-resources',`SELECT
   (SELECT COUNT(*) FROM hub_resource_publish_sessions) AS sessions,
   (SELECT COUNT(*) FROM hub_resource_publish_files) AS session_files`);
 
-function normalizeDraft(d){const source=d?.source||{};return{editingId:clean(d?.editing_id),sourceUrl:clean(source.url),sourceType:clean(source.type)||'telegram',type:clean(d?.type).toLowerCase(),title:clean(d?.title),creatorName:clean(d?.creator?.name),creatorLink:clean(d?.creator?.link),short:clean(d?.description_short),full:clean(d?.description_full),additionalInfo:clean(d?.additional_info),models:arr(d?.models).map(clean).filter(Boolean),settings:normalizeSettings(d?.settings),tags:arr(d?.tags).map(clean).filter(Boolean),media:arr(d?.media),confidence:d?.confidence&&typeof d.confidence==='object'?d.confidence:{}}}
+function normalizeDraft(d){const source=d?.source||{};return{editingId:clean(d?.editing_id),sourceUrl:normalizeSourceUrl(source.url),sourceType:clean(source.type)||'telegram',type:clean(d?.type).toLowerCase(),title:clean(d?.title),creatorName:clean(d?.creator?.name),creatorLink:clean(d?.creator?.link),short:clean(d?.description_short),full:clean(d?.description_full),additionalInfo:clean(d?.additional_info),models:arr(d?.models).map(clean).filter(Boolean),settings:normalizeSettings(d?.settings),tags:arr(d?.tags).map(clean).filter(Boolean),media:arr(d?.media),confidence:d?.confidence&&typeof d.confidence==='object'?d.confidence:{}}}
 function parseSessionState(session){let raw=null;try{raw=JSON.parse(session?.backup||'null')}catch{}if(raw&&raw.version===2&&raw.draft)return{version:2,old:raw.old||null,draft:normalizeDraft(raw.draft),oldPrimaryId:clean(raw.oldPrimaryId),phase:clean(raw.phase)||'editing'};return{version:1,old:raw&&typeof raw==='object'?raw:null,draft:null,oldPrimaryId:'',phase:'legacy'}}
 async function saveSessionState(env,session,state){await env.DB.prepare('UPDATE hub_resource_publish_sessions SET backup=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(JSON.stringify({version:2,old:state.old||null,draft:state.draft,oldPrimaryId:clean(state.oldPrimaryId),phase:clean(state.phase)||'editing'}),session.id).run()}
 
@@ -122,8 +135,8 @@ async function sourceUrlConflict(env,sourceUrl,resourceId=''){
     ?await env.DB.prepare('SELECT id,title,status,source_url FROM hub_resources WHERE source_url=? AND id<>? LIMIT 1').bind(url,resourceId).first()
     :await env.DB.prepare('SELECT id,title,status,source_url FROM hub_resources WHERE source_url=? LIMIT 1').bind(url).first();
   if(row?.id)return row;
-  const rows=(await env.DB.prepare('SELECT id,title,status,source_url FROM hub_resources').all()).results||[];
-  row=rows.find(x=>clean(x.source_url)===url&&(!resourceId||clean(x.id)!==clean(resourceId)))||null;
+  const canonical=normalizeSourceUrl(url),rows=(await env.DB.prepare('SELECT id,title,status,source_url FROM hub_resources').all()).results||[];
+  row=rows.find(x=>normalizeSourceUrl(x.source_url)===canonical&&(!resourceId||clean(x.id)!==clean(resourceId)))||null;
   return row;
 }
 async function removeStaleSourceUrlOwner(env,conflict){

@@ -141,7 +141,7 @@ fail(!entry.includes('url.pathname==="/api/characters"')&&!entry.includes("url.p
 fail(!entry.includes('url.pathname==="/api/lorebooks"')&&!entry.includes("url.pathname==='/api/lorebooks'"),'src/entry.js: shadowed lorebook catalog route returned');
 
 const getCardStart=entry.indexOf('async function getCard');
-const getCardEnd=entry.indexOf('async function fetchJannyPng',getCardStart);
+const getCardEnd=entry.indexOf('async function fetchAvatarPng',getCardStart);
 const getCardBody=getCardStart>=0&&getCardEnd>getCardStart?entry.slice(getCardStart,getCardEnd):'';
 fail(getCardBody.includes('if(r.status!==200)'),'src/entry.js: queued/non-200 card responses must not be parsed as cards');
 fail(!getCardBody.includes('if(!r.ok)'),'src/entry.js: broad 2xx card success check returned');
@@ -185,7 +185,7 @@ fail(!cardDownloadUi.includes('cardRes.ok'),'public/png-download.js: stale Respo
 fail(cardDownloadUi.includes('a[href*="/api/characters/"]'),'public/png-download.js: JSON/PNG card click interception missing');
 const charactersHtml=read('public/characters.html');
 fail(charactersHtml.includes('png-download.js?v=20260921-partial-card1'),'public/characters.html: card download cache-bust missing');
-for(const marker of ['definition_available:definitionAvailable','export_quality:definitionAvailable?"complete":"partial"','SOURCE_DEFINITION_UNAVAILABLE'])fail(workerBase.includes(marker),`src/worker.js: truthful partial card metadata missing ${marker}`);
+for(const marker of ["from './janny-card.js'",'fetchJannySource(uuid)','definitionFromEmbeddedCard(janny.card)','mergeDefinition(definition,recovered)','definition_available:definitionAvailable','definition_source:recovery||"datacat"','export_quality:definitionAvailable?"complete":"partial"','SOURCE_DEFINITION_UNAVAILABLE'])fail(workerBase.includes(marker),`src/worker.js: Janny recovery/truthful partial metadata missing ${marker}`);
 
 const appUi=read('public/app.js');
 fail(appUi.includes('if(q){'),'public/app.js: search hay must be gated by non-empty query');

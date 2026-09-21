@@ -41,12 +41,23 @@ export function extractEmbeddedCard(input){
 const field=(data,...names)=>{for(const name of names){const value=data?.[name];if(typeof value==='string'&&value.trim())return value.trim()}return''};
 export function definitionFromEmbeddedCard(card){
   const data=card?.data||card||{},alternate=data.alternate_greetings||data.alternateGreetings||data.alt_greetings||[];
+  const object=value=>value&&typeof value==='object'&&!Array.isArray(value)?value:null;
   return{
-    personality:field(data,'description','personality','char_persona'),
+    name:field(data,'name'),
+    description:field(data,'description','char_persona'),
+    personality:field(data,'personality'),
     firstMes:field(data,'first_mes','first_message','greeting','char_greeting'),
     scenario:field(data,'scenario','world_scenario'),
     mesExample:field(data,'mes_example','example_dialogue'),
-    alternateGreetings:Array.isArray(alternate)?alternate.filter(value=>typeof value==='string'&&value.trim()).map(value=>value.trim()):[]
+    creatorNotes:field(data,'creator_notes','creatorNotes'),
+    systemPrompt:field(data,'system_prompt','systemPrompt'),
+    postHistoryInstructions:field(data,'post_history_instructions','postHistoryInstructions'),
+    alternateGreetings:Array.isArray(alternate)?alternate.filter(value=>typeof value==='string'&&value.trim()).map(value=>value.trim()):[],
+    tags:Array.isArray(data.tags)?data.tags.filter(value=>typeof value==='string'&&value.trim()).map(value=>value.trim()):[],
+    creator:field(data,'creator'),
+    characterVersion:field(data,'character_version','characterVersion'),
+    characterBook:object(data.character_book||data.characterBook),
+    extensions:object(data.extensions)||{}
   };
 }
 

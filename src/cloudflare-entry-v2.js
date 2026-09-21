@@ -11,6 +11,7 @@ import { guardAdminApi } from './admin-auth.js';
 import { d1SchemaStatus } from './d1-schema-status.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
+const BUILD_INFO={build:'hub-source-url-guard-v2',deployed_from:'main'};
 const CONTENT_SECURITY_POLICY=["default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","form-action 'self'","img-src 'self' https: data: blob:","media-src 'self' https: blob:","style-src 'self' 'unsafe-inline'","script-src 'self' 'unsafe-inline'","connect-src 'self'","font-src 'self' data:"].join('; ');
 function withSecurityHeaders(response){
   const headers=new Headers(response.headers);
@@ -40,6 +41,7 @@ async function routeRequest(request,env,ctx){
   if(url.pathname==='/telegram/public')return handlePublicTelegramFull(request,env);
   const mediaMatch=url.pathname.match(/^\/api\/admin\/hub-telegram-media\/([^/]+)\/(\d+)$/);
   if(mediaMatch)return serveTelegramDraftMedia(request,env,decodeURIComponent(mediaMatch[1]),mediaMatch[2]);
+  if(url.pathname==='/api/build-info'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return json({ok:true,...BUILD_INFO})}
   if(url.pathname==='/api/hub-resources'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return url.searchParams.get('summary')==='1'?listHubResourcesSummaryPublic(env):listHubResourcesPublic(env)}
   const hubDetailMatch=url.pathname.match(/^\/api\/hub-resources\/([^/]+)$/);
   if(hubDetailMatch){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return getHubResourcePublic(env,decodeURIComponent(hubDetailMatch[1]))}

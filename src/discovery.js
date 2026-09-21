@@ -71,6 +71,33 @@ export function normalizeUniverses(value){
   return out;
 }
 
+const KNOWN_TITLE_UNIVERSES = [
+  {pattern:/\bVOODOO BOYS NEXT GEN\b/i,values:['Voodoo Boys','Voodoo Boys Next Gen']},
+  {pattern:/\bVOODOO BOYS\b/i,values:['Voodoo Boys']},
+  {pattern:/\bBAYOU CREW NEXT GEN\b/i,values:['Bayou Crew','Bayou Crew Next Gen']},
+  {pattern:/\bBAYOU CREW\b/i,values:['Bayou Crew']},
+  {pattern:/\bHALE (?:UNIVERSITY|U)\b/i,values:['Hale University']},
+  {pattern:/\bTHE VAULT\b/i,values:['The Vault']},
+  {pattern:/\bCASH CASINOS?\b/i,values:['Cash Casino']},
+  {pattern:/\bTHE FIRM\b/i,values:['The Firm']},
+  {pattern:/\bDEMIGODS?\b/i,values:['Demigods']},
+  {pattern:/\bSUVA (?:UNIVERSITY|U)\b/i,values:['SUVA University']},
+  {pattern:/\bSUCC\b/i,values:['SUCC']},
+  {pattern:/\b212 KINGS\b/i,values:['212 KINGS']},
+  {pattern:/\bTHE GROUP CHAT\b/i,values:['THE GROUP CHAT']},
+  {pattern:/\bVALENTINOS?\b/i,values:['The Valentinos']},
+  {pattern:/\bVINCE RICCARDO['’]S SYNDICATE\b/i,values:["Vince Riccardo's Syndicate"]},
+  {pattern:/\bARENA\b/i,values:['Arena']}
+];
+
+export function inferKnownUniverseTitles(value){
+  const title=clean(value);
+  const separator=title.indexOf('|');
+  if(separator<0)return[];
+  const labels=title.slice(separator+1);
+  return normalizeUniverses(KNOWN_TITLE_UNIVERSES.flatMap(rule=>rule.pattern.test(labels)?rule.values:[]));
+}
+
 export function cleanUniverse(value){
   const universe=normalizeUniverses(value)[0]||'';
   if(!universe || /^(?:unclassified|unknown|none|null|n\/?a|no series\b.*|setting|universe|world)\s*:?$/i.test(universe) || universe.length>80)return'';

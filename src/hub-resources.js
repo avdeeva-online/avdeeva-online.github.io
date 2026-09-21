@@ -304,7 +304,7 @@ export async function publishHubResource(request,env){
     if(msg==='FILE_TOO_LARGE'||msg==='FILES_TOTAL_TOO_LARGE')return json({ok:false,error:msg,limit:'10 MB per file / 25 MB total'},413);
     if(msg==='EXTRA_IMAGE_TOO_LARGE'||msg==='EXTRAS_TOTAL_TOO_LARGE')return json({ok:false,error:msg,limit:'4 MB per image / 12 MB total'},413);
     if(msg==='PUBLISH_SESSION_FINALIZE_REQUIRED')return json({ok:false,error:msg},409);
-    if(msg==='SOURCE_URL_CONFLICT')return json({ok:false,error:msg,existing_id:e?.conflict?.id||'',existing_title:e?.conflict?.title||''},409);
+    if(msg==='SOURCE_URL_CONFLICT'){const existingId=e?.conflict?.id||'',existingTitle=e?.conflict?.title||'';return json({ok:false,error:msg,detail:[existingTitle,existingId].filter(Boolean).join(' · '),existing_id:existingId,existing_title:existingTitle},409)}
     if(msg==='R2_BINDING_REQUIRED')return json({ok:false,error:msg},503);
     if(/SQLITE_TOOBIG|string or blob too big/i.test(msg))return json({ok:false,error:'D1_CHUNK_WRITE_FAILED',detail:'A storage chunk exceeded D1 limits.'},500);
     return json({ok:false,error:'HUB_RESOURCE_UPDATE_FAILED',detail:msg},500);

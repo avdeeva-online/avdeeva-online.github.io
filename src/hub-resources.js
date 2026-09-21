@@ -122,17 +122,41 @@ async function sourceUrlConflict(env,sourceUrl,resourceId=''){
     ?env.DB.prepare('SELECT id,title,status FROM hub_resources WHERE source_url=? AND id<>? LIMIT 1').bind(url,resourceId).first()
     :env.DB.prepare('SELECT id,title,status FROM hub_resources WHERE source_url=? LIMIT 1').bind(url).first();
 }
+async function removeStaleSourceUrlOwner(env,conflict){
+  if(!conflict?.id||clean(conflict.status)==='published')return false;
+  const active=await env.DB.prepare('SELECT id FROM hub_resource_publish_sessions WHERE resource_id=? LIMIT 1').bind(conflict.id).first();
+  if(active?.id)return false;
+  const files=(await env.DB.prepare('SELECT id FROM hub_resource_files WHERE resource_id=?').bind(conflict.id).all()).results||[];
+  for(const file of files)await retireStoredFile(env,file.id,conflict.id,'stale-source-url-owner');
+  await env.DB.prepare('DELETE FROM hub_resources WHERE id=? AND status<>?').bind(conflict.id,'published').run();
+  return true;
+}
 async function assertSourceUrlAvailable(env,sourceUrl,resourceId=''){
-  const conflict=await sourceUrlConflict(env,sourceUrl,resourceId);
+  let conflict=await sourceUrlConflict(env,sourceUrl,resourceId);
+  if(conflict?.id&&await removeStaleSourceUrlOwner(env,conflict))conflict=await sourceUrlConflict(env,sourceUrl,resourceId);
   if(conflict?.id){const e=new Error('SOURCE_URL_CONFLICT');e.conflict=conflict;throw e}
 }
 
 async function writeResourceRow(env,id,old,d,status='published'){
   await assertSourceUrlAvailable(env,d.sourceUrl,old?.id||'');
-  if(old?.id){
-    await env.DB.prepare(`UPDATE hub_resources SET source_url=?,source_type=?,type=?,title=?,creator_name=?,creator_link=?,description_short=?,description_full=?,additional_info=?,models=?,settings=?,tags=?,media=?,confidence=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(d.sourceUrl,d.sourceType,d.type,d.title,d.creatorName,d.creatorLink,d.short,d.full,d.additionalInfo,safeJson(d.models),safeJson(d.settings),safeJson(d.tags),safeJson(d.media),JSON.stringify(d.confidence||{}),status,id).run();return;
+  try{
+    if(old?.id){
+      await env.DB.prepare(`UPDATE hub_resources SET source_url=?,source_type=?,type=?,title=?,creator_name=?,creator_link=?,description_short=?,description_full=?,additional_info=?,models=?,settings=?,tags=?,media=?,confidence=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(d.sourceUrl,d.sourceType,d.type,d.title,d.creatorName,d.creatorLink,d.short,d.full,d.additionalInfo,safeJson(d.models),safeJson(d.settings),safeJson(d.tags),safeJson(d.media),JSON.stringify(d.confidence||{}),status,id).run();return;
+    }
+    await env.DB.prepare(`INSERT INTO hub_resources(id,source_url,source_type,type,title,creator_name,creator_link,description_short,description_full,additional_info,models,settings,tags,media,confidence,status,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)`).bind(id,d.sourceUrl,d.sourceType,d.type,d.title,d.creatorName,d.creatorLink,d.short,d.full,d.additionalInfo,safeJson(d.models),safeJson(d.settings),safeJson(d.tags),safeJson(d.media),JSON.stringify(d.confidence||{}),status).run();
+  }catch(err){
+    const msg=String(err?.message||err);
+    if(/UNIQUE constraint failed:\\s*hub_resources\\.source_url|SQLITE_CONSTRAINT_UNIQUE/i.test(msg)){
+      let conflict=await sourceUrlConflict(env,d.sourceUrl,old?.id||'');
+      if(conflict?.id&&await removeStaleSourceUrlOwner(env,conflict)){
+        if(old?.id){await env.DB.prepare(`UPDATE hub_resources SET source_url=?,source_type=?,type=?,title=?,creator_name=?,creator_link=?,description_short=?,description_full=?,additional_info=?,models=?,settings=?,tags=?,media=?,confidence=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(d.sourceUrl,d.sourceType,d.type,d.title,d.creatorName,d.creatorLink,d.short,d.full,d.additionalInfo,safeJson(d.models),safeJson(d.settings),safeJson(d.tags),safeJson(d.media),JSON.stringify(d.confidence||{}),status,id).run();return}
+        await env.DB.prepare(`INSERT INTO hub_resources(id,source_url,source_type,type,title,creator_name,creator_link,description_short,description_full,additional_info,models,settings,tags,media,confidence,status,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)`).bind(id,d.sourceUrl,d.sourceType,d.type,d.title,d.creatorName,d.creatorLink,d.short,d.full,d.additionalInfo,safeJson(d.models),safeJson(d.settings),safeJson(d.tags),safeJson(d.media),JSON.stringify(d.confidence||{}),status).run();return
+      }
+      conflict=conflict||await sourceUrlConflict(env,d.sourceUrl,old?.id||'');
+      const e=new Error('SOURCE_URL_CONFLICT');e.conflict=conflict||null;throw e;
+    }
+    throw err;
   }
-  await env.DB.prepare(`INSERT INTO hub_resources(id,source_url,source_type,type,title,creator_name,creator_link,description_short,description_full,additional_info,models,settings,tags,media,confidence,status,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)`).bind(id,d.sourceUrl,d.sourceType,d.type,d.title,d.creatorName,d.creatorLink,d.short,d.full,d.additionalInfo,safeJson(d.models),safeJson(d.settings),safeJson(d.tags),safeJson(d.media),JSON.stringify(d.confidence||{}),status).run();
 }
 
 async function restoreRow(env,row){if(!row?.id)return;await env.DB.prepare(`UPDATE hub_resources SET source_url=?,source_type=?,type=?,title=?,creator_name=?,creator_link=?,description_short=?,description_full=?,additional_info=?,models=?,settings=?,tags=?,media=?,confidence=?,status=?,created_at=?,updated_at=? WHERE id=?`).bind(row.source_url,row.source_type,row.type,row.title,row.creator_name,row.creator_link,row.description_short,row.description_full,row.additional_info||'',row.models,row.settings,row.tags,row.media,row.confidence,row.status||'published',row.created_at,row.updated_at,row.id).run()}

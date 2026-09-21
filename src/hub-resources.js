@@ -116,7 +116,19 @@ async function storeBuffer(env,{resourceId,name,mime,size,isPrimary,buffer}){
   }catch(e){await retireStoredFile(env,fileId,resourceId,'store-buffer-rollback');throw e}
 }
 
+async function sourceUrlConflict(env,sourceUrl,resourceId=''){
+  const url=clean(sourceUrl);if(!url)return null;
+  return resourceId
+    ?env.DB.prepare('SELECT id,title,status FROM hub_resources WHERE source_url=? AND id<>? LIMIT 1').bind(url,resourceId).first()
+    :env.DB.prepare('SELECT id,title,status FROM hub_resources WHERE source_url=? LIMIT 1').bind(url).first();
+}
+async function assertSourceUrlAvailable(env,sourceUrl,resourceId=''){
+  const conflict=await sourceUrlConflict(env,sourceUrl,resourceId);
+  if(conflict?.id){const e=new Error('SOURCE_URL_CONFLICT');e.conflict=conflict;throw e}
+}
+
 async function writeResourceRow(env,id,old,d,status='published'){
+  await assertSourceUrlAvailable(env,d.sourceUrl,old?.id||'');
   if(old?.id){
     await env.DB.prepare(`UPDATE hub_resources SET source_url=?,source_type=?,type=?,title=?,creator_name=?,creator_link=?,description_short=?,description_full=?,additional_info=?,models=?,settings=?,tags=?,media=?,confidence=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(d.sourceUrl,d.sourceType,d.type,d.title,d.creatorName,d.creatorLink,d.short,d.full,d.additionalInfo,safeJson(d.models),safeJson(d.settings),safeJson(d.tags),safeJson(d.media),JSON.stringify(d.confidence||{}),status,id).run();return;
   }
@@ -137,6 +149,7 @@ async function sessionRow(env,id){return env.DB.prepare('SELECT * FROM hub_resou
 async function beginSession(env,draft){
   const d=normalizeDraft(draft);if(!d.sourceUrl||!d.type||!d.title)throw new Error('SOURCE_URL_TYPE_TITLE_REQUIRED');
   let old=null;if(d.editingId)old=await env.DB.prepare('SELECT * FROM hub_resources WHERE id=? LIMIT 1').bind(d.editingId).first();if(!old)old=await env.DB.prepare('SELECT * FROM hub_resources WHERE source_url=? LIMIT 1').bind(d.sourceUrl).first();
+  await assertSourceUrlAvailable(env,d.sourceUrl,old?.id||'');
   if(old?.id){const active=await env.DB.prepare('SELECT id FROM hub_resource_publish_sessions WHERE resource_id=? LIMIT 1').bind(old.id).first();if(active?.id){const cancelled=await cancelSession(env,active.id);if(cancelled?.finalizeRequired)throw new Error('PUBLISH_SESSION_FINALIZE_REQUIRED')}}
   const oldPrimary=old?.id?await env.DB.prepare("SELECT id FROM hub_resource_files WHERE resource_id=? AND is_primary=1 AND name NOT LIKE '__extra__%' LIMIT 1").bind(old.id).first():null;
   const id=old?.id||crypto.randomUUID(),sessionId=crypto.randomUUID(),state={version:2,old:old||null,draft:d,oldPrimaryId:oldPrimary?.id||'',phase:'editing'};
@@ -148,6 +161,7 @@ async function updateSessionMetadata(env,session,draft){
   const d=normalizeDraft(draft);if(!d.sourceUrl||!d.type||!d.title)throw new Error('SOURCE_URL_TYPE_TITLE_REQUIRED');
   const state=parseSessionState(session);
   if(state.version===2&&state.phase==='committing')throw new Error('PUBLISH_SESSION_FINALIZE_REQUIRED');
+  await assertSourceUrlAvailable(env,d.sourceUrl,session.resource_id);
   if(state.version===2){state.draft=d;await saveSessionState(env,session,state)}
   else await writeResourceRow(env,session.resource_id,{id:session.resource_id},d,'staging');
   return{id:session.resource_id};
@@ -266,6 +280,7 @@ export async function publishHubResource(request,env){
     if(msg==='FILE_TOO_LARGE'||msg==='FILES_TOTAL_TOO_LARGE')return json({ok:false,error:msg,limit:'10 MB per file / 25 MB total'},413);
     if(msg==='EXTRA_IMAGE_TOO_LARGE'||msg==='EXTRAS_TOTAL_TOO_LARGE')return json({ok:false,error:msg,limit:'4 MB per image / 12 MB total'},413);
     if(msg==='PUBLISH_SESSION_FINALIZE_REQUIRED')return json({ok:false,error:msg},409);
+    if(msg==='SOURCE_URL_CONFLICT')return json({ok:false,error:msg,existing_id:e?.conflict?.id||'',existing_title:e?.conflict?.title||''},409);
     if(msg==='R2_BINDING_REQUIRED')return json({ok:false,error:msg},503);
     if(/SQLITE_TOOBIG|string or blob too big/i.test(msg))return json({ok:false,error:'D1_CHUNK_WRITE_FAILED',detail:'A storage chunk exceeded D1 limits.'},500);
     return json({ok:false,error:'HUB_RESOURCE_UPDATE_FAILED',detail:msg},500);

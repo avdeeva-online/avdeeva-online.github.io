@@ -5,7 +5,7 @@
   const slug=v=>{const s=String(v||'unknown').trim().toLowerCase().normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-|-$/g,'');return s||'unknown'};
   const plural=t=>t.endsWith('s')?t:`${t}s`;
   const cleanAuthor=v=>{let s=String(v||'').trim();if(!s)return'UNKNOWN';try{const u=new URL(s);if(/(^|\.)t\.me$/i.test(u.hostname)){let p=u.pathname.replace(/^\/+|\/+$/g,'').split('/').filter(Boolean);if(p[0]==='s')p.shift();if(p.length)return p[0].replace(/^@/,'')}}catch{}return s.replace(/^@/,'')};
-  const creatorHref=(v,fallback='')=>{const s=String(v||'').trim();if(s.startsWith('@'))return`https://t.me/${s.slice(1)}`;if(/^https?:\/\//i.test(s))return s;const f=String(fallback||'').trim();if(/^https?:\/\//i.test(f))return f;if(f.startsWith('@'))return`https://t.me/${f.slice(1)}`;return''};
+  const creatorHref=(v,fallback='')=>{const s=String(v||'').trim();if(s.startsWith('@'))return`https://t.me/${s.slice(1)}`;if(/^https?:\/\//i.test(s))return s;if(/^(?:www\.)?t\.me\/[A-Za-z0-9_]+/i.test(s))return`https://${s}`;const f=String(fallback||'').trim();if(/^https?:\/\//i.test(f))return f;if(f.startsWith('@'))return`https://t.me/${f.slice(1)}`;return''};
   const imageFile=f=>/^image\//i.test(String(f?.mime||''))||/\.(png|jpe?g|webp|gif)$/i.test(String(f?.name||''));
   const extraFile=f=>Boolean(f?.extra)||String(f?.name||'').startsWith('__extra__');
   const cover=(media,files=[])=>{const list=Array.isArray(media)?media:[],c=list.find(x=>x&&x.cover)||list[0],direct=c?.url||c?.src||'';if(direct)return direct;const imgs=(Array.isArray(files)?files:[]).filter(f=>imageFile(f)&&!extraFile(f)),fallback=imgs.find(f=>f?.primary)||imgs[0];return fallback?.view_url||fallback?.download_url||fallback?.external_url||''};

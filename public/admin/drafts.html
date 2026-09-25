@@ -9,10 +9,8 @@
 </head>
 <body>
 <main class="shell">
-<header class="head"><div><div class="eyebrow">PRIVATE TOOL / ARCHIVE.EXE</div><h1>DRAFTS</h1><div class="sub">One queue for unfinished work. Open a draft in the normal import form, finish it there, then publish.</div></div><div class="system-note">RESOURCE + BOT DRAFTS</div></header>
-<section class="section"><div class="section-head"><b>RESOURCE DRAFTS</b><span class="count" id="resourceCount">LOADING…</span></div><div id="resourceList" class="list"><div class="empty">LOADING RESOURCE DRAFTS…</div></div></section>
-<section class="section"><div class="section-head"><b>BOT DRAFTS</b><span class="count">0</span></div><div class="empty">No bot drafts yet. When bot-draft intake is added, it will live here and open in the normal BOT IMPORT flow.</div></section>
-</main>
+<header class="head"><div><div class="eyebrow">PRIVATE TOOL / ARCHIVE.EXE</div><h1>DRAFTS</h1><div class="sub">One queue for unfinished work. Open a draft in the normal import form, finish it there, then publish.</div></div><div class="system-note">RESOURCE DRAFTS</div></header>
+<section class="section"><div class="section-head"><b>RESOURCE DRAFTS</b><span class="count" id="resourceCount">LOADING…</span></div><div id="resourceList" class="list"><div class="empty">LOADING RESOURCE DRAFTS…</div></div></section></main>
 <script>
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function removeDraft(id,title){if(!confirm(`Delete draft “${title||'UNTITLED RESOURCE'}”?`))return;const r=await fetch('/api/admin/telegram-drafts/'+encodeURIComponent(id),{method:'DELETE'}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok){alert('DELETE FAILED: '+(d.error||r.status));return}load()}

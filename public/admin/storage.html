@@ -28,8 +28,8 @@
     <button class="btn" id="dry" type="button">DRY RUN · 10</button>
     <button class="btn primary" id="batch" type="button">MIGRATE · 10</button>
     <button class="btn primary" id="all" type="button">MIGRATE ALL</button>
-    <button class="btn" id="tgCheck" type="button">TELEGRAM COVERS · CHECK</button>
-    <button class="btn primary" id="tgRepair" type="button">TELEGRAM COVERS · REPAIR</button>
+    <button class="btn" id="tgCheck" type="button">HUB IMAGES → R2 · CHECK</button>
+    <button class="btn primary" id="tgRepair" type="button">HUB IMAGES → R2 · REPAIR</button>
   </div>
   <div id="log" class="log">No migration started.</div>
   <div class="note">Migration order: read D1 → PUT R2 → commit storage metadata → remove old D1 chunks. If the R2 write or metadata commit fails, the D1 copy remains authoritative. SCHEMA CHECK is read-only and does not alter D1.</div>
@@ -50,8 +50,8 @@
   $('#batch').onclick=async()=>{if(!confirm('Migrate the next 10 D1 files to R2?'))return;setBusy(true);try{await migrate(10,false)}catch(e){write('MIGRATION FAILED: '+e.message)}finally{setBusy(false)}};
   $('#all').onclick=async()=>{if(!confirm('Migrate all remaining HUB files from D1 to R2 in safe batches?'))return;setBusy(true);try{let rounds=0;for(;;){const d=await migrate(10,false);rounds++;if(d.errors?.length)throw new Error(`${d.errors.length} file(s) failed; stopped before continuing.`);if(!d.remaining)break;if(rounds>=200)throw new Error('Safety stop after 200 batches.');await new Promise(r=>setTimeout(r,120))}write('MIGRATION COMPLETE.')}catch(e){write('MIGRATE ALL STOPPED: '+e.message)}finally{setBusy(false)}};
   async function mediaRepair(method){const r=await fetch('/api/admin/hub-media-repair',{method,cache:'no-store'}),text=await r.text();let d={};try{d=JSON.parse(text)}catch{d={ok:false,error:text||`HTTP_${r.status}`}}if(!r.ok)throw new Error(d.error||`HTTP_${r.status}`);return d}
-  $('#tgCheck').onclick=async()=>{setBusy(true);try{write(await mediaRepair('GET'))}catch(e){write('TELEGRAM CHECK FAILED: '+e.message)}finally{setBusy(false)}};
-  $('#tgRepair').onclick=async()=>{if(!confirm('Re-download expired Telegram images from the source posts and store them in R2?'))return;setBusy(true);try{write(await mediaRepair('POST'));await refresh()}catch(e){write('TELEGRAM REPAIR FAILED: '+e.message)}finally{setBusy(false)}};
+  $('#tgCheck').onclick=async()=>{setBusy(true);try{write(await mediaRepair('GET'))}catch(e){write('HUB IMAGES CHECK FAILED: '+e.message)}finally{setBusy(false)}};
+  $('#tgRepair').onclick=async()=>{if(!confirm('Move embedded HUB images to R2 and re-download expired Telegram images from their source posts?'))return;setBusy(true);try{write(await mediaRepair('POST'));await refresh()}catch(e){write('HUB IMAGES REPAIR FAILED: '+e.message)}finally{setBusy(false)}};
   refresh().catch(e=>status.innerHTML=`<span class="bad">STATUS FAILED:</span> ${e.message}`);
 })();
 </script>

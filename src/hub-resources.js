@@ -42,7 +42,9 @@ const ensureSchema=env=>requireD1Schema(env,'hub-resources',`SELECT
   (SELECT COUNT(*) FROM hub_resource_publish_sessions) AS sessions,
   (SELECT COUNT(*) FROM hub_resource_publish_files) AS session_files`);
 
-function normalizeDraft(d){const source=d?.source||{};return{editingId:clean(d?.editing_id),sourceUrl:normalizeSourceUrl(source.url),sourceType:clean(source.type)||'telegram',type:clean(d?.type).toLowerCase(),title:clean(d?.title),creatorName:clean(d?.creator?.name),creatorLink:clean(d?.creator?.link),short:clean(d?.description_short),full:clean(d?.description_full),additionalInfo:clean(d?.additional_info),models:arr(d?.models).map(clean).filter(Boolean),settings:normalizeSettings(d?.settings),tags:arr(d?.tags).map(clean).filter(Boolean),media:arr(d?.media),confidence:d?.confidence&&typeof d.confidence==='object'?d.confidence:{}}}
+// Session state stores the already-normalized draft; re-reading it must not run the raw-payload mapping again
+// (that dropped source URL, creator and descriptions on finalize).
+function normalizeDraft(d){if(d&&typeof d==='object'&&'sourceUrl'in d)return{...d,editingId:clean(d.editingId),sourceUrl:normalizeSourceUrl(d.sourceUrl),sourceType:clean(d.sourceType)||'telegram',models:arr(d.models),settings:normalizeSettings(d.settings),tags:arr(d.tags),media:arr(d.media),confidence:d.confidence&&typeof d.confidence==='object'?d.confidence:{}};const source=d?.source||{};return{editingId:clean(d?.editing_id),sourceUrl:normalizeSourceUrl(source.url),sourceType:clean(source.type)||'telegram',type:clean(d?.type).toLowerCase(),title:clean(d?.title),creatorName:clean(d?.creator?.name),creatorLink:clean(d?.creator?.link),short:clean(d?.description_short),full:clean(d?.description_full),additionalInfo:clean(d?.additional_info),models:arr(d?.models).map(clean).filter(Boolean),settings:normalizeSettings(d?.settings),tags:arr(d?.tags).map(clean).filter(Boolean),media:arr(d?.media),confidence:d?.confidence&&typeof d.confidence==='object'?d.confidence:{}}}
 function parseSessionState(session){let raw=null;try{raw=JSON.parse(session?.backup||'null')}catch{}if(raw&&raw.version===2&&raw.draft)return{version:2,old:raw.old||null,draft:normalizeDraft(raw.draft),oldPrimaryId:clean(raw.oldPrimaryId),phase:clean(raw.phase)||'editing'};return{version:1,old:raw&&typeof raw==='object'?raw:null,draft:null,oldPrimaryId:'',phase:'legacy'}}
 async function saveSessionState(env,session,state){await env.DB.prepare('UPDATE hub_resource_publish_sessions SET backup=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(JSON.stringify({version:2,old:state.old||null,draft:state.draft,oldPrimaryId:clean(state.oldPrimaryId),phase:clean(state.phase)||'editing'}),session.id).run()}
 
@@ -130,48 +132,67 @@ async function storeBuffer(env,{resourceId,name,mime,size,isPrimary,buffer}){
   }catch(e){await retireStoredFile(env,fileId,resourceId,'store-buffer-rollback');throw e}
 }
 
-// Telegram CDN links (cdn*.telesco.pe) expire, so SOURCE media from them is copied into storage on publish.
+// Resource media is stored as files (R2) on publish so every image has a stable URL:
+// - Telegram CDN links (cdn*.telesco.pe) expire;
+// - manual covers arrive as base64 data: URIs, which bloat the D1 row;
+// - the editor reloads embedded images as /api/hub-resources/{id}/media/{n}, which must resolve to the old bytes.
 const TELEGRAM_MEDIA_HOST=/(^|\.)(telesco\.pe|telegram-cdn\.org)$/i;
 const MEDIA_EXT={'image/jpeg':'.jpg','image/png':'.png','image/webp':'.webp','image/gif':'.gif'};
+const DATA_IMAGE=/^data:(image\/[a-z0-9.+-]+);base64,([a-z0-9+/=\s]+)$/i;
 const mediaItemUrl=m=>clean(m?.url||m?.src);
 function isTelegramMediaUrl(raw){try{const u=new URL(clean(raw));return u.protocol==='https:'&&TELEGRAM_MEDIA_HOST.test(u.hostname)}catch{return false}}
-async function mirrorTelegramMedia(env,resourceId,media){
+const isDataImage=raw=>DATA_IMAGE.test(clean(raw));
+function embeddedIndex(raw,resourceId){const m=clean(raw).match(/\/api\/hub-resources\/([^/?#]+)\/media\/(\d+)(?:[?#]|$)/);return m&&decodeURIComponent(m[1])===resourceId?Number(m[2]):-1}
+const needsStoring=(url,resourceId)=>isTelegramMediaUrl(url)||isDataImage(url)||embeddedIndex(url,resourceId)>=0;
+async function mediaBytes(url,resourceId,oldMedia){
+  const idx=embeddedIndex(url,resourceId);if(idx>=0)url=mediaItemUrl(arr(oldMedia)[idx]);
+  const data=clean(url).match(DATA_IMAGE);
+  if(data){const binary=atob(data[2].replace(/\s+/g,''));return{type:data[1].toLowerCase(),buffer:Uint8Array.from(binary,c=>c.charCodeAt(0)).buffer,origin:'embedded'}}
+  if(!isTelegramMediaUrl(url))throw new Error(idx>=0?'EMBEDDED_SOURCE_MISSING':'UNSUPPORTED_MEDIA_URL');
+  const r=await fetch(url,{redirect:'follow'}),type=clean(r.headers.get('content-type')).split(';')[0].toLowerCase();
+  if(!r.ok||!type.startsWith('image/'))throw new Error(`HTTP_${r.status}_${type||'NO_TYPE'}`);
+  return{type,buffer:await r.arrayBuffer(),origin:'telegram'};
+}
+async function storeResourceMedia(env,resourceId,media,oldMedia=[]){
   const out=[];
   for(const item of arr(media)){
-    const url=mediaItemUrl(item);if(!isTelegramMediaUrl(url)){out.push(item);continue}
+    const url=mediaItemUrl(item);if(!needsStoring(url,resourceId)){out.push(item);continue}
     try{
-      const r=await fetch(url,{redirect:'follow'}),type=clean(r.headers.get('content-type')).split(';')[0].toLowerCase();
-      if(!r.ok||!type.startsWith('image/'))throw new Error(`HTTP_${r.status}_${type||'NO_TYPE'}`);
-      const buffer=await r.arrayBuffer();if(!buffer.byteLength||buffer.byteLength>EXTRA_FILE_LIMIT)throw new Error(`BAD_SIZE_${buffer.byteLength}`);
-      const name=`${SOURCE_PREFIX}${item?.cover?'cover__':''}telegram_${crypto.randomUUID().slice(0,8)}${MEDIA_EXT[type]||'.jpg'}`;
+      const {type,buffer,origin}=await mediaBytes(url,resourceId,oldMedia);
+      if(!buffer.byteLength||buffer.byteLength>EXTRA_FILE_LIMIT)throw new Error(`BAD_SIZE_${buffer.byteLength}`);
+      const name=`${SOURCE_PREFIX}${item?.cover?'cover__':''}${origin}_${crypto.randomUUID().slice(0,8)}${MEDIA_EXT[type]||'.jpg'}`;
       const fileId=await storeBuffer(env,{resourceId,name,mime:type,size:buffer.byteLength,isPrimary:false,buffer});
       const stored=`/api/hub-resources/${encodeURIComponent(resourceId)}/files/${encodeURIComponent(fileId)}?view=1`;
-      out.push({...item,url:stored,...(item?.src!=null?{src:stored}:{}),file_id:fileId,source:'telegram-source-r2'});
-    }catch(e){console.error('telegram media mirror failed',url.slice(0,80),String(e?.message||e));out.push(item)}
+      out.push({...item,url:stored,...(item?.src!=null?{src:stored}:{}),file_id:fileId,source:`${origin}-r2`});
+    }catch(e){console.error('hub media store failed',url.slice(0,80),String(e?.message||e));out.push(item)}
   }
   return out;
 }
 
-// One-off repair for resources published before mirroring: re-read the source post for fresh CDN links,
-// replace the expired Telegram entries in order (other media untouched), then copy them into storage.
+// One-off repair for resources published before media storage: embedded images are moved to R2; expired
+// Telegram entries are replaced in order with fresh links from the source post (other media untouched) and stored.
 // GET = plan only, POST = apply. updated_at is left alone so HUB ordering does not change.
-export async function repairTelegramMedia(request,env){
+export async function repairHubMedia(request,env){
   await ensureSchema(env);const apply=request.method==='POST',report=[];
   const rows=(await env.DB.prepare("SELECT id,title,source_url,media FROM hub_resources WHERE status='published' ORDER BY updated_at DESC").all()).results||[];
   for(const row of rows){
-    const media=arr(parseJson(row.media,[])),expired=media.filter(m=>isTelegramMediaUrl(mediaItemUrl(m))).length;if(!expired)continue;
-    const item={id:row.id,title:row.title,source_url:row.source_url,expired_entries:expired};report.push(item);
-    if(!clean(row.source_url)){item.result='SKIPPED_NO_SOURCE_POST';continue}
-    const analyzed=await analyzeTelegramPost(new Request('https://internal/api/admin/hub-telegram-analyze',{method:'POST',body:JSON.stringify({url:row.source_url})}));
-    const data=await analyzed.json().catch(()=>({})),fresh=arr(data.media).map(mediaItemUrl).filter(isTelegramMediaUrl);
-    if(!fresh.length){item.result='SKIPPED_SOURCE_POST_HAS_NO_MEDIA';item.detail=data.error||null;continue}
-    let k=0;const next=[];for(const m of media){if(!isTelegramMediaUrl(mediaItemUrl(m))){next.push(m);continue}if(k<fresh.length){const url=fresh[k++];next.push({...m,url,...(m?.src!=null?{src:url}:{})})}}
-    if(next.length&&!next.some(m=>m?.cover))next[0]={...next[0],cover:true};
-    item.fresh_images=fresh.length;item.replaced=Math.min(expired,fresh.length);item.dropped=Math.max(0,expired-fresh.length);
+    const media=arr(parseJson(row.media,[])),expired=media.filter(m=>isTelegramMediaUrl(mediaItemUrl(m))).length,embedded=media.filter(m=>isDataImage(mediaItemUrl(m))).length;
+    if(!expired&&!embedded)continue;
+    const item={id:row.id,title:row.title,source_url:row.source_url,expired_entries:expired,embedded_entries:embedded};report.push(item);
+    let next=media;
+    if(expired){
+      const analyzed=clean(row.source_url)?await analyzeTelegramPost(new Request('https://internal/api/admin/hub-telegram-analyze',{method:'POST',body:JSON.stringify({url:row.source_url})})):null;
+      const data=analyzed?await analyzed.json().catch(()=>({})):{},fresh=arr(data.media).map(mediaItemUrl).filter(isTelegramMediaUrl);
+      if(fresh.length){
+        let k=0;next=[];for(const m of media){if(!isTelegramMediaUrl(mediaItemUrl(m))){next.push(m);continue}if(k<fresh.length){const url=fresh[k++];next.push({...m,url,...(m?.src!=null?{src:url}:{})})}}
+        if(next.length&&!next.some(m=>m?.cover))next[0]={...next[0],cover:true};
+        item.fresh_images=fresh.length;item.replaced=Math.min(expired,fresh.length);item.dropped=Math.max(0,expired-fresh.length);
+      }else item.telegram=clean(row.source_url)?'SOURCE_POST_HAS_NO_MEDIA':'NO_SOURCE_POST';
+    }
     if(!apply){item.result='PLANNED';continue}
-    const mirrored=await mirrorTelegramMedia(env,row.id,next),left=mirrored.filter(m=>isTelegramMediaUrl(mediaItemUrl(m))).length;
-    await env.DB.prepare('UPDATE hub_resources SET media=? WHERE id=?').bind(safeJson(mirrored),row.id).run();
-    item.stored=item.replaced-left;item.result=left?'PARTIAL_SOME_IMAGES_STILL_REMOTE':'REPAIRED';
+    const stored=await storeResourceMedia(env,row.id,next),left=stored.filter(m=>needsStoring(mediaItemUrl(m),row.id)).length;
+    await env.DB.prepare('UPDATE hub_resources SET media=? WHERE id=?').bind(safeJson(stored),row.id).run();
+    item.result=left?'PARTIAL_SOME_IMAGES_NOT_STORED':'REPAIRED';item.not_stored=left;
   }
   return json({ok:true,mode:apply?'apply':'dry-run',resources:report.length,report});
 }
@@ -210,7 +231,7 @@ async function writeResourceRow(env,id,old,d,status='published'){
     await env.DB.prepare(`INSERT INTO hub_resources(id,source_url,source_type,type,title,creator_name,creator_link,description_short,description_full,additional_info,models,settings,tags,media,confidence,status,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)`).bind(id,d.sourceUrl,d.sourceType,d.type,d.title,d.creatorName,d.creatorLink,d.short,d.full,d.additionalInfo,safeJson(d.models),safeJson(d.settings),safeJson(d.tags),safeJson(d.media),JSON.stringify(d.confidence||{}),status).run();
   }catch(err){
     const msg=String(err?.message||err);
-    if(/UNIQUE constraint failed:\\s*hub_resources\\.source_url|SQLITE_CONSTRAINT_UNIQUE/i.test(msg)){
+    if(/UNIQUE constraint failed:\s*hub_resources\.source_url|SQLITE_CONSTRAINT_UNIQUE/i.test(msg)){
       let conflict=await sourceUrlConflict(env,d.sourceUrl,old?.id||'');
       if(conflict?.id&&await removeStaleSourceUrlOwner(env,conflict)){
         if(old?.id){await env.DB.prepare(`UPDATE hub_resources SET source_url=?,source_type=?,type=?,title=?,creator_name=?,creator_link=?,description_short=?,description_full=?,additional_info=?,models=?,settings=?,tags=?,media=?,confidence=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(d.sourceUrl,d.sourceType,d.type,d.title,d.creatorName,d.creatorLink,d.short,d.full,d.additionalInfo,safeJson(d.models),safeJson(d.settings),safeJson(d.tags),safeJson(d.media),JSON.stringify(d.confidence||{}),status,id).run();return}
@@ -308,7 +329,7 @@ async function finalizeSession(env,sessionId){
   const staged=(await env.DB.prepare('SELECT file_id,replace_old_id,is_primary FROM hub_resource_publish_files WHERE session_id=?').bind(session.id).all()).results||[],state=parseSessionState(session);
   const preferred=staged.find(x=>Number(x.is_primary)===1)?.file_id||'';
   if(state.version===2&&state.phase!=='committing'){
-    state.draft.media=await mirrorTelegramMedia(env,session.resource_id,state.draft.media);
+    state.draft.media=await storeResourceMedia(env,session.resource_id,state.draft.media,parseJson(state.old?.media,[]));
     await writeResourceRow(env,session.resource_id,state.old,state.draft,'published');
     if(preferred){await env.DB.prepare("UPDATE hub_resource_files SET is_primary=0 WHERE resource_id=? AND name NOT LIKE '__extra__%'").bind(session.resource_id).run();await env.DB.prepare('UPDATE hub_resource_files SET is_primary=1 WHERE id=? AND resource_id=?').bind(preferred,session.resource_id).run()}else await ensurePrimary(env,session.resource_id);
     state.phase='committing';await saveSessionState(env,session,state);

@@ -1,1 +1,0 @@
-(()=>{/* compatibility no-op; retained because hub.html still references this asset */})();

@@ -11,7 +11,7 @@ async function injectAdminBack(response,pathname=''){
   const type=String(response.headers.get('content-type')||'').toLowerCase();
   if(!type.includes('text/html'))return response;
   let html=await response.text();
-  if(!html.includes('data-admin-back-script'))html=html.replace(/<\/body>/i,'<script data-admin-back-script src="/admin/admin-back.js?v=20260916-nav6"></script></body>');
+  if(!html.includes('data-admin-back-script'))html=html.replace(/<\/body>/i,'<script data-admin-back-script src="/admin/admin-back.js?v=20260925-nav7"></script></body>');
   if(pathname==='/admin/hub/'||pathname==='/admin/hub/index.html'){
     html=html.replace(/admin-edit\.js\?v=[^"']+/g,'admin-edit.js?v=20260917-1');
     if(!html.includes('data-source-media-remove'))html=html.replace(/<\/body>/i,'<script data-source-media-remove src="/admin/hub/source-media-remove.js?v=20260917-1"></script></body>');

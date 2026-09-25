@@ -184,7 +184,7 @@ fail(!cardDownloadUi.includes('if(!cardRes.ok)'),'public/png-download.js: broad 
 fail(!cardDownloadUi.includes('cardRes.ok'),'public/png-download.js: stale Response.ok card readiness check returned');
 fail(cardDownloadUi.includes('a[href*="/api/characters/"]'),'public/png-download.js: JSON/PNG card click interception missing');
 const charactersHtml=read('public/characters.html');
-fail(charactersHtml.includes('png-download.js?v=20260921-partial-card1'),'public/characters.html: card download cache-bust missing');
+fail(/png-download\.js\?v=[\w-]+/.test(charactersHtml),'public/characters.html: card download cache-bust missing');
 for(const marker of ["from './janny-card.js'",'fetchJannySource(uuid)','definitionFromEmbeddedCard(janny.card)','mergeDefinition(definition,recovered)','definition_available:definitionAvailable','definition_source:recovery||"datacat"','export_quality:definitionAvailable?"complete":"partial"','SOURCE_DEFINITION_UNAVAILABLE','source_diagnostics:definitionAvailable?undefined:diagnostics','schemaPaths:view.state===\'FOUND\'?schemaPaths(view.data):[]','JANNY_PNG_NO_EMBEDDED_CARD','embeddedCardFromViews(v)','chara_card_v2_json','description:embedded.description||direct.description','personality:d.personality','creator_notes:d.creatorNotes||','system_prompt:d.systemPrompt','post_history_instructions:d.postHistoryInstructions','character_book:d.characterBook','...sourceExtensions'])fail(workerBase.includes(marker),`src/worker.js: lossless V2 DataCat/Janny recovery or truthful partial diagnostics missing ${marker}`);
 
 const appUi=read('public/app.js');

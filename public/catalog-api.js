@@ -15,6 +15,6 @@
   function disablePublicImport(){const btn=$('#importOpen');if(!btn)return;btn.hidden=true;btn.disabled=true;btn.setAttribute('aria-hidden','true')}
   function loadAddon(src,key){if(document.querySelector(`script[data-${key}]`))return;const s=document.createElement('script');s.src=src;s.setAttribute(`data-${key}`,'1');document.body.appendChild(s)}
   function openGatewayRandom(){const params=new URLSearchParams(location.search);if(params.get('gatewayRandom')!=='1')return;params.delete('gatewayRandom');const next=`${location.pathname}${params.toString()?`?${params}`:''}${location.hash||''}`;history.replaceState(null,'',next);setTimeout(()=>$('#randomBtn')?.click(),180)}
-  const start=()=>{baseBots=normalizeCatalog(Array.isArray(window.BOTS)?[...window.BOTS]:baseBots);disablePublicImport();loadAddon('ui-fixes.js','archive-ui-fixes');loadLive().then(openGatewayRandom).finally(()=>loadAddon('lorebooks.js','archive-lorebooks'))};
+  const start=()=>{baseBots=normalizeCatalog(Array.isArray(window.BOTS)?[...window.BOTS]:baseBots);disablePublicImport();loadAddon('ui-fixes.js?v=20260926-author1','archive-ui-fixes');loadLive().then(openGatewayRandom).finally(()=>loadAddon('lorebooks.js','archive-lorebooks'))};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

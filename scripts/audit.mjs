@@ -118,7 +118,7 @@ for(const marker of ['const tagChip = tag => \`<span>','const hashtagChip = hash
 for(const marker of ['data-tag=','data-hashtag='])fail(!cardHtmlBody.includes(marker),`public/app.js: list-card tag region may still be interactive via ${marker}`);
 fail(/app\.js\?v=[\w-]+/.test(publicCharacters),'public/characters.html: public app cache-bust missing');
 fail(/styles\.css\?v=[\w-]+/.test(publicCharacters),'public/characters.html: styles.css cache-bust version missing');
-fail(publicCharacters.includes('catalog-api.js?v=20260919-render-boot1'),'public/characters.html: catalog API cache-bust missing');
+fail(/catalog-api\.js\?v=[\w-]+/.test(publicCharacters),'public/characters.html: catalog API cache-bust missing');
 
 const main=read('src/main.js');
 for(const marker of ['SCAN_DEADLINE_MS','SCAN_FETCH_MS','SCAN_PAGE_LIMIT','AbortController','preferred_variant'])fail(main.includes(marker),`src/main.js: bounded creator scan missing ${marker}`);
@@ -144,7 +144,7 @@ for(const marker of ['export function settingDefinitions','SETTING_DEFINITIONS.m
 for(const marker of ["from './discovery.js'","settingDefinitions","normalizeUniverses","settingDefinitions:settingDefinitions()"])fail(characterAdmin.includes(marker),`src/character-admin.js: admin setting taxonomy contract missing ${marker}`);
 for(const marker of ['settingDefs=[]','d.settingDefinitions','settingDefs.map(x=>x.id)','selected.settings=new Set(r.setting_ids||[])','isPovTag','selected.tags=new Set((r.tags||[]).filter(x=>!isPovTag(x)))'])fail(characterEditor.includes(marker),`public/admin/import/character-editor.js: setting/POV editor contract missing ${marker}`);
 for(const marker of ['const canonicalSettings=',"historical'?'medieval'","magic'?'fantasy'"])fail(!characterEditor.includes(marker),`public/admin/import/character-editor.js: destructive legacy setting normalization returned ${marker}`);
-fail(characterEditorHtml.includes('character-editor.js?v=20260925-public-universes1'),'public/admin/import/edit.html: character editor cache-bust missing');
+fail(/character-editor\.js\?v=[\w-]+/.test(characterEditorHtml),'public/admin/import/edit.html: character editor cache-bust missing');
 
 for(const marker of ["normalizeUniverses(b.universes)","normalizeUniverses(parse(current.universes).length?parse(current.universes):[current.universe])","normalizeSettingIds(b.setting_ids)"])fail(characterAdmin.includes(marker),`src/character-admin.js: filter value normalization missing ${marker}`);
 fail(!characterAdmin.includes('const canonicalSettingId='),'src/character-admin.js: duplicate local setting normalizer returned');

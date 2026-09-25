@@ -142,7 +142,7 @@ for(const marker of ['export function settingDefinitions','SETTING_DEFINITIONS.m
 for(const marker of ["from './discovery.js'","settingDefinitions","normalizeUniverses","settingDefinitions:settingDefinitions()"])fail(characterAdmin.includes(marker),`src/character-admin.js: admin setting taxonomy contract missing ${marker}`);
 for(const marker of ['settingDefs=[]','d.settingDefinitions','settingDefs.map(x=>x.id)','selected.settings=new Set(r.setting_ids||[])','isPovTag','selected.tags=new Set((r.tags||[]).filter(x=>!isPovTag(x)))'])fail(characterEditor.includes(marker),`public/admin/import/character-editor.js: setting/POV editor contract missing ${marker}`);
 for(const marker of ['const canonicalSettings=',"historical'?'medieval'","magic'?'fantasy'"])fail(!characterEditor.includes(marker),`public/admin/import/character-editor.js: destructive legacy setting normalization returned ${marker}`);
-fail(characterEditorHtml.includes('character-editor.js?v=20260919-setting-contract1'),'public/admin/import/edit.html: character editor cache-bust missing');
+fail(characterEditorHtml.includes('character-editor.js?v=20260925-public-universes1'),'public/admin/import/edit.html: character editor cache-bust missing');
 
 for(const marker of ["normalizeUniverses(b.universes)","normalizeUniverses(parse(current.universes).length?parse(current.universes):[current.universe])","normalizeSettingIds(b.setting_ids)"])fail(characterAdmin.includes(marker),`src/character-admin.js: filter value normalization missing ${marker}`);
 fail(!characterAdmin.includes('const canonicalSettingId='),'src/character-admin.js: duplicate local setting normalizer returned');

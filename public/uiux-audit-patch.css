@@ -312,3 +312,6 @@
   .hero{height:82px!important;min-height:82px!important;max-height:82px!important}
   .hero-art{background-size:auto 82px!important}
 }
+
+/* Unavailable lorebook / author-link actions are hidden instead of shown as disabled 'N/A' buttons. */
+#downloadLore[aria-disabled="true"],#openAuthor[aria-disabled="true"]{display:none!important}

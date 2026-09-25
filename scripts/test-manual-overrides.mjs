@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { updateAdminCharacter } from '../src/character-admin.js';
 import sourceTruth from '../src/source-truth.js';
+import { catalogCacheKey } from '../src/catalog-cache.js';
+import { hashtagKey, semanticTagKey, unifyFacetSpelling } from '../src/filter-normalization.js';
 
 // Real SQL on an in-memory SQLite built from the migrations, behind a minimal D1 shim.
 const db=new DatabaseSync(':memory:');
@@ -45,4 +47,14 @@ await saveCharacter(env,card({janitor_uuid:U2,name:'Fantasy magic kingdom bot',d
 await backfill();
 assert.equal(row(U2).setting_source,'rules:v6','untouched records stay automatically classified');
 
-console.log('ARCHIVE.EXE manual override behavior OK · hidden status + manual Setting/POV/Universe survive re-import and backfill, source text still refreshes');
+// Admin save must invalidate the very cache key the public catalog is stored under.
+const deleted=[];globalThis.caches={default:{async delete(req){deleted.push(req.url);return true}}};
+await updateAdminCharacter(new Request(`https://x.test/api/admin/characters/${UUID}`,{method:'PATCH',body:JSON.stringify({name:'Test Bot',tags:[],hashtags:[],universes:['Manual World'],setting_ids:['fantasy'],pov:'MalePOV',status:'hidden'})}),env,UUID);
+assert.ok(deleted.includes(catalogCacheKey(new Request('https://x.test/api/catalog'),1000).url),'admin save must clear the live catalog cache key');
+delete globalThis.caches;
+
+// One spelling per tag/hashtag across the catalog.
+const unified=unifyFacetSpelling(unifyFacetSpelling([{tags:['👨 Male'],hashtags:['Mafia']},{tags:['👨 Male'],hashtags:['mafia']},{tags:['👨‍🦰 Male'],hashtags:['mafia']}],'tags',semanticTagKey),'hashtags',hashtagKey);
+assert.deepEqual(unified.map(x=>[x.tags[0],x.hashtags[0]]),[['👨 Male','mafia'],['👨 Male','mafia'],['👨 Male','mafia']]);
+
+console.log('ARCHIVE.EXE manual override behavior OK · hidden status + manual Setting/POV/Universe survive re-import and backfill, source text still refreshes, admin save clears the live catalog cache, one spelling per tag');

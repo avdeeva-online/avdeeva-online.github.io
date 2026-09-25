@@ -2,6 +2,7 @@ import { detachedLorebookCleanupStatements, linkedLorebooksForCharacter, planDet
 import { lorebookUniverseChangeStatements, planAffectedLorebookUniverseChanges } from './lorebook-universe-repair.js';
 import { normalizeSettingIds, normalizeUniverses, settingDefinitions } from './discovery.js';
 import { normalizeHashtags, normalizeTags } from './filter-normalization.js';
+import { clearCatalogCache } from './catalog-cache.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
@@ -14,11 +15,6 @@ const isPovTag=v=>['fempov','femalepov','malepov','anypov'].includes(povKey(v));
 const normKey=v=>clean(v).toLocaleLowerCase();
 const sameStringSet=(a,b)=>{const aa=uniq(a).map(normKey).sort(),bb=uniq(b).map(normKey).sort();return aa.length===bb.length&&aa.every((v,i)=>v===bb[i])};
 
-async function clearCatalogCache(request){
-  const cache=globalThis.caches?.default;if(!cache)return;
-  const u=new URL(request.url);
-  await Promise.all([500,1000].map(limit=>{const key=new URL(u.origin);key.pathname='/__archive_cache/catalog-v6';key.search=`?limit=${limit}`;return cache.delete(new Request(key.toString(),{method:'GET'}))}));
-}
 
 function normalizeRow(r){
   return{

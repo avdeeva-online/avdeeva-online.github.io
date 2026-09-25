@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head>
+<head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#080a08">
@@ -23,7 +23,7 @@
     .brand{position:relative;display:inline-block;margin:0;font:700 28px/1 var(--mono);letter-spacing:.05em;color:#eee6d8;animation:logoGlitch 6.6s infinite steps(1,end)}
     .brand:before,.brand:after{content:attr(data-text);position:absolute;inset:0;pointer-events:none;opacity:0}.brand:before{color:#9dc4aa;text-shadow:-2px 0 rgba(103,190,146,.55);animation:logoGhostA 6.6s infinite steps(1,end)}.brand:after{color:#d5a18f;text-shadow:2px 0 rgba(213,110,92,.45);animation:logoGhostB 6.6s infinite steps(1,end)}
     .brand-sub{margin-top:8px;font:8.8px/1.35 var(--mono);letter-spacing:.12em;color:#b5beb0}.boot{margin-top:23px;display:grid;gap:6px;font:8.6px/1.28 var(--mono);letter-spacing:.07em;color:#b3bcad}.boot span:before{content:'> ';color:#b8c99b}.boot b{font-weight:400;color:#d2dcc1}
-    .top-index{position:absolute;right:32px;top:28px;z-index:10;text-align:right;text-transform:uppercase;font:8.4px/1.5 var(--mono);letter-spacing:.085em;color:#b0b9ad;text-shadow:0 2px 14px rgba(0,0,0,.82);animation:signalFlicker 13s infinite steps(1,end)}.top-index b{font-weight:400;color:#c7d1b8}
+    .top-index{position:absolute;right:32px;top:28px;z-index:10;text-align:right;text-transform:uppercase;font:8.4px/1.5 var(--mono);letter-spacing:.085em;color:#b0b9ad;text-shadow:0 2px 14px rgba(0,0,0,.82);animation:signalFlicker 13s infinite steps(1,end)}.top-index b{font-weight:400;color:#c7d1b8}.top-index a{color:inherit;text-decoration:none}.top-index a:hover,.top-index a:focus-visible{color:#e8dfcf}
     .motto{position:absolute;left:50%;top:21%;z-index:9;transform:translateX(-50%);text-align:center;text-transform:uppercase;font:9.6px/1.48 var(--mono);letter-spacing:.15em;color:#e2d1b3;text-shadow:0 3px 20px rgba(0,0,0,.9)}.motto:after{content:'';display:block;width:30px;height:1px;margin:11px auto 0;background:#ad9572}
     .connection-status{position:absolute;left:50%;top:28.5%;z-index:11;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid rgba(135,153,118,.25);border-radius:7px;background:rgba(5,9,6,.48);box-shadow:0 8px 20px rgba(0,0,0,.2),inset 0 0 18px rgba(119,150,115,.025);font:8.8px/1 var(--mono);letter-spacing:.085em;text-transform:uppercase;color:#b9c5b3;text-shadow:0 2px 8px rgba(0,0,0,.8)}.connection-status .signal-label{color:#96a194}.connection-status .online-text{display:inline-block;color:#d0dfb3;font-weight:700;animation:onlineTextFault 6.1s infinite steps(1,end)}.connection-status .online{display:inline-block;width:7px;height:7px;border-radius:50%;background:#a9bb80;box-shadow:0 0 9px rgba(169,187,128,.7);animation:onlineFault 6.1s infinite steps(1,end)}
 
@@ -56,7 +56,7 @@
   <main class="gateway">
     <div class="scene" aria-hidden="true"></div><div class="shade" aria-hidden="true"></div><div class="scanlines" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
     <header class="brand-block"><h1 class="brand" data-text="ARCHIVE.EXE">ARCHIVE.EXE</h1><div class="brand-sub">TAVO RESOURCE DATABASE</div><div class="boot" aria-hidden="true"><span>SYSTEM BOOT: <b>OK</b></span><span>DATABASE: <b>READY</b></span><span>VISITOR ACCESS: <b>GRANTED</b></span></div></header>
-    <div class="top-index" aria-hidden="true">// ARCHIVE INDEX<br>// CHARACTERS<br>// RESOURCES<br>// COMMUNITY<br>// FIELD NOTES<br><br><b>NODE_00 / GATEWAY</b></div>
+    <nav class="top-index" aria-label="Archive index">// ARCHIVE INDEX<br><a href="characters.html">// CHARACTERS</a><br><a href="hub.html">// RESOURCES</a><br><br><b>NODE_00 / GATEWAY</b></nav>
     <div class="motto">EVERY STORY<br>LEADS SOMEWHERE.</div>
     <div class="connection-status" aria-hidden="true"><span class="signal-label">NODE_00 // LINK:</span><span class="online-text">ONLINE</span><span class="online"></span></div>
     <div class="boot-terminal" id="liveTerminal" aria-hidden="true"><div class="terminal-feed" id="terminalFeed"></div><div>&gt; <span class="terminal-cursor">_</span></div></div>

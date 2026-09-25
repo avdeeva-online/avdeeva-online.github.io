@@ -30,6 +30,8 @@
     <button class="btn primary" id="all" type="button">MIGRATE ALL</button>
     <button class="btn" id="tgCheck" type="button">HUB IMAGES → R2 · CHECK</button>
     <button class="btn primary" id="tgRepair" type="button">HUB IMAGES → R2 · REPAIR</button>
+    <button class="btn" id="authorCheck" type="button">AUTHOR LINKS · CHECK</button>
+    <button class="btn primary" id="authorFill" type="button">AUTHOR LINKS · FILL</button>
   </div>
   <div id="log" class="log">No migration started.</div>
   <div class="note">Migration order: read D1 → PUT R2 → commit storage metadata → remove old D1 chunks. If the R2 write or metadata commit fails, the D1 copy remains authoritative. SCHEMA CHECK is read-only and does not alter D1.</div>
@@ -52,6 +54,9 @@
   async function mediaRepair(method){const r=await fetch('/api/admin/hub-media-repair',{method,cache:'no-store'}),text=await r.text();let d={};try{d=JSON.parse(text)}catch{d={ok:false,error:text||`HTTP_${r.status}`}}if(!r.ok)throw new Error(d.error||`HTTP_${r.status}`);return d}
   $('#tgCheck').onclick=async()=>{setBusy(true);try{write(await mediaRepair('GET'))}catch(e){write('HUB IMAGES CHECK FAILED: '+e.message)}finally{setBusy(false)}};
   $('#tgRepair').onclick=async()=>{if(!confirm('Move embedded HUB images to R2 and re-download expired Telegram images from their source posts?'))return;setBusy(true);try{write(await mediaRepair('POST'));await refresh()}catch(e){write('HUB IMAGES REPAIR FAILED: '+e.message)}finally{setBusy(false)}};
+  async function authorLinks(body){const r=await fetch('/api/admin/author-links',body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);return d}
+  $('#authorCheck').onclick=async()=>{setBusy(true);try{write(await authorLinks())}catch(e){write('AUTHOR LINKS CHECK FAILED: '+e.message)}finally{setBusy(false)}};
+  $('#authorFill').onclick=async()=>{if(!confirm('Fill empty author profile links from JanitorAI card data (one author at a time)?'))return;setBusy(true);try{const plan=await authorLinks();for(const a of plan.authors.filter(x=>x.missing||x.schemeless)){write(await authorLinks({author:a.author}))}write('AUTHOR LINKS DONE.')}catch(e){write('AUTHOR LINKS FILL FAILED: '+e.message)}finally{setBusy(false)}};
   refresh().catch(e=>status.innerHTML=`<span class="bad">STATUS FAILED:</span> ${e.message}`);
 })();
 </script>

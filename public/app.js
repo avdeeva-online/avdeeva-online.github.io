@@ -1450,30 +1450,6 @@ wireHashtagGhosts();
 })();
 
 
-// v1.0 final9 — deterministic hero moments.
-// These class pulses avoid the historical stack of animation overrides.
-// First events happen quickly after page load so the effect is actually visible.
-(function initGuaranteedHeroMoments(){
-  const flare=document.querySelector(".hero-light-sweep");
-  const terminal=document.querySelector(".hero-terminal-glitch");
-  if(!flare || !terminal || window.matchMedia?.('(max-width:760px)').matches) return;
-
-  function pulse(el,cls,duration){
-    el.classList.remove(cls);
-    void el.offsetWidth;
-    el.classList.add(cls);
-    setTimeout(()=>el.classList.remove(cls),duration);
-  }
-  function flareNow(){ if(document.visibilityState==="visible") pulse(flare,"fx-flare-now",2200) }
-  function terminalNow(){ if(document.visibilityState==="visible") pulse(terminal,"fx-terminal-now",1500) }
-
-  setTimeout(flareNow,2200);
-  setTimeout(terminalNow,4700);
-  setInterval(flareNow,14500);
-  setInterval(terminalNow,10500);
-})();
-
-
 (function initLostDirectoryTriggerGlitch(){
   const btn=$("#lostFileBtn");
   if(!btn) return;

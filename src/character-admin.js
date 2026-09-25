@@ -3,6 +3,7 @@ import { lorebookUniverseChangeStatements, planAffectedLorebookUniverseChanges }
 import { normalizeSettingIds, normalizeUniverses, settingDefinitions } from './discovery.js';
 import { normalizeHashtags, normalizeTags } from './filter-normalization.js';
 import { clearCatalogCache } from './catalog-cache.js';
+import { buildCharacterBundle } from './worker.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
@@ -58,6 +59,33 @@ export async function updateAdminCharacter(request,env,uuid){
   ).run();
   await clearCatalogCache(request);
   return json({ok:true,uuid,universeOverrideChanged:universesChanged,universeSourceField:universeSource||null,settingSource,povSource:povSource||null});
+}
+
+// One-off: fill empty author profile links. All records of one author share a Janitor profile, so each author is
+// resolved from two of their records (both must agree) — one author per POST keeps DataCat subrequests bounded.
+// GET = plan (no network). POST {author} = resolve + fill that author's empty links. Scheme-less links get https://.
+export async function backfillAuthorLinks(request,env){
+  const origin=new URL(request.url).origin;
+  if(request.method==='GET'){
+    const rows=(await env.DB.prepare("SELECT author,COUNT(*) AS total,SUM(CASE WHEN author_url='' THEN 1 ELSE 0 END) AS missing,SUM(CASE WHEN author_url<>'' AND author_url NOT LIKE 'http%' THEN 1 ELSE 0 END) AS schemeless FROM characters GROUP BY author ORDER BY total DESC").all()).results||[];
+    return json({ok:true,mode:'plan',authors:rows.map(r=>({author:r.author,total:Number(r.total),missing:Number(r.missing),schemeless:Number(r.schemeless)}))});
+  }
+  let b;try{b=await request.json()}catch{return json({ok:false,error:'INVALID_JSON'},400)}
+  const author=clean(b.author);if(!author)return json({ok:false,error:'AUTHOR_REQUIRED'},400);
+  const fixed=await env.DB.prepare("UPDATE characters SET author_url='https://'||author_url WHERE author=? AND author_url<>'' AND author_url NOT LIKE 'http%'").bind(author).run();
+  const samples=(await env.DB.prepare("SELECT janitor_uuid FROM characters WHERE author=? AND author_url='' ORDER BY updated_at DESC LIMIT 2").bind(author).all()).results||[];
+  const found=[];
+  for(const s of samples){try{const bundle=await buildCharacterBundle(env,s.janitor_uuid,`https://janitorai.com/characters/${s.janitor_uuid}`,origin);found.push(clean(bundle?.character?.author_url))}catch(e){found.push('')}}
+  const urls=[...new Set(found.filter(Boolean))];
+  const schemeFixed=Number(fixed?.meta?.changes||0);
+  if(!samples.length){await clearCatalogCache(request);return json({ok:true,author,result:'NOTHING_MISSING',schemeFixed})}
+  if(urls.length!==1){
+    if(schemeFixed)await clearCatalogCache(request);
+    return json({ok:true,author,result:urls.length>1?'SKIPPED_PROFILES_DISAGREE':'SKIPPED_NO_PROFILE_IN_SOURCE',found,schemeFixed});
+  }
+  const updated=await env.DB.prepare("UPDATE characters SET author_url=? WHERE author=? AND author_url=''").bind(urls[0],author).run();
+  await clearCatalogCache(request);
+  return json({ok:true,author,result:'FILLED',profile:urls[0],filled:Number(updated?.meta?.changes||0),schemeFixed});
 }
 
 export async function deleteAdminCharacter(request,env,uuid){

@@ -83,7 +83,7 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 
 /* FOOTER + EASTER EGG */
 .site-footer{max-width:1540px;margin:0 auto;padding:20px 26px 28px;border-top:1px solid #232823;display:flex;justify-content:space-between;align-items:center;gap:20px;color:#50584f;font:8px var(--mono);letter-spacing:.08em}.footer-left{display:flex;gap:18px}.lost-file{border:0;background:none;color:#4d554c;font:8px var(--mono);letter-spacing:.08em;cursor:pointer;padding:5px;transition:color .18s,text-shadow .18s}.lost-file:hover{color:#8f987c;text-shadow:0 0 10px rgba(156,168,121,.2)}
-.lost-terminal{position:fixed;inset:0;z-index:150;display:flex;align-items:center;justify-content:center}.lost-terminal[hidden]{display:none}.terminal-backdrop{position:absolute;inset:0;background:rgba(4,5,4,.76)}.terminal-card{position:relative;width:min(520px,88vw);border:1px solid #4a5345;padding:18px;border-radius:7px;box-shadow:0 24px 70px rgba(0,0,0,.55);font-family:var(--mono);}@keyframes terminalIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}.terminal-title{padding-bottom:10px;border-bottom:1px solid #2f352d;color:#8d9879;font-size:9px;letter-spacing:.12em}.terminal-lines{padding:15px 2px;font-size:10px;}.terminal-lines .ok{color:#9ea886}.terminal-close{border:0;background:none;color:#70786c;cursor:pointer}.terminal-retry{height:31px;border:1px solid #424b3d;border-radius:5px;background:#171d15;color:#aab293;font:8px var(--mono);cursor:pointer;padding:0 12px}.terminal-retry:hover{background:#222a1e}
+.lost-terminal{position:fixed;inset:0;z-index:150;display:flex;align-items:center;justify-content:center}.lost-terminal[hidden]{display:none}.terminal-backdrop{position:absolute;inset:0;background:rgba(4,5,4,.76)}.terminal-card{position:relative;width:min(520px,88vw);border:1px solid #4a5345;padding:18px;border-radius:7px;box-shadow:0 24px 70px rgba(0,0,0,.55);font-family:var(--mono);}.terminal-title{padding-bottom:10px;border-bottom:1px solid #2f352d;color:#8d9879;font-size:9px;letter-spacing:.12em}.terminal-lines{padding:15px 2px;font-size:10px;}.terminal-lines .ok{color:#9ea886}.terminal-close{border:0;background:none;color:#70786c;cursor:pointer}.terminal-retry{height:31px;border:1px solid #424b3d;border-radius:5px;background:#171d15;color:#aab293;font:8px var(--mono);cursor:pointer;padding:0 12px}.terminal-retry:hover{background:#222a1e}
 
 @media(max-width:1250px){.grid{grid-template-columns:repeat(5,minmax(0,1fr))}.secondary-group{display:none}.modal-prev{left:18px}.modal-next{right:18px}}
 @media(max-width:1020px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.toolbar-row{flex-wrap:wrap}.searchbar{order:1;flex-basis:100%}.control-primary{order:2}.primary-group{order:2}.random-trigger{order:2;}.secondary-group{display:flex;order:2;border-left:0;padding-left:0}}
@@ -122,7 +122,7 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 .modal-action-groups{display:grid;border-top:1px solid #2d332d}.modal-action-group>small{display:block;}.modal-actions{margin:0;padding:0;grid-template-columns:1fr;}.modal-actions a{text-align:center}.author-action{background:#171a17;color:#a5ad98;border:1px solid #353c34}.intro-toggle{width:100%;border:0;background:none;display:flex;justify-content:space-between;cursor:pointer;}.intro-body{font-size:11px;line-height:1.55;}.intro-body[hidden]{display:none}
 
 /* Tiny in-theme anomaly. It never disables or moves a control. */
-@keyframes archiveFlicker{0%,100%{opacity:1;filter:none}18%{opacity:.68;filter:contrast(1.25)}30%{opacity:1}47%{box-shadow:inset 2px 0 0 #744536}56%{box-shadow:inset -2px 0 0 #744536}70%{box-shadow:none}}
+
 
 
 @media(max-width:760px){.lore-toggle-label{display:none}.lore-toggle{width:36px;padding:0;justify-content:center}}
@@ -260,12 +260,7 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 
 /* Slightly more visible archive glitch, still decorative and never blocks interaction. */
 .hero-title{position:relative;}
-@keyframes heroSignal{
-  0%,91%,100%{text-shadow:0 2px 18px rgba(0,0,0,.45);transform:none;filter:none}
-  92%{text-shadow:2px 0 #8b453a,-2px 0 #667258,0 2px 18px rgba(0,0,0,.45);transform:translateX(1px)}
-  93%{text-shadow:-1px 0 #8b453a,2px 0 #667258;transform:translateX(-1px);filter:brightness(1.14)}
-  94%{text-shadow:0 2px 18px rgba(0,0,0,.45);transform:none;filter:none}
-}
+
 
 
 @media(max-width:1250px){.random-trigger{margin-left:5px}.searchbar{flex:1 1 360px;width:auto}}
@@ -563,22 +558,9 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 
 /* v0.9.13 — restrained signal anomalies. */
 .hero-title{will-change:transform,filter,text-shadow}
-@keyframes heroSignalQuiet{
-  0%,95%,100%{text-shadow:0 2px 18px rgba(0,0,0,.45);transform:none;filter:none}
-  95.5%{text-shadow:3px 0 rgba(151,67,55,.72),-2px 0 rgba(111,132,89,.65),0 2px 18px rgba(0,0,0,.45);transform:translateX(1px);filter:contrast(1.14)}
-  96%{text-shadow:-2px 0 rgba(151,67,55,.78),3px 0 rgba(111,132,89,.55);transform:translateX(-2px);filter:brightness(1.12)}
-  96.45%{text-shadow:1px 0 rgba(151,67,55,.55),-1px 0 rgba(111,132,89,.48);transform:translateX(1px)}
-  97%{text-shadow:0 2px 18px rgba(0,0,0,.45);transform:none;filter:none}
-}
 
-@keyframes heroGlitchNow{
-  0%,100%{transform:none;filter:none;text-shadow:0 2px 18px rgba(0,0,0,.45)}
-  14%{transform:translateX(3px);text-shadow:-4px 0 rgba(174,75,58,.88),3px 0 rgba(111,138,88,.78);filter:brightness(1.2) contrast(1.12)}
-  29%{transform:translateX(-2px);clip-path:inset(18% 0 48% 0)}
-  43%{transform:translateX(1px);clip-path:inset(58% 0 16% 0);text-shadow:3px 0 rgba(174,75,58,.72),-3px 0 rgba(111,138,88,.68)}
-  59%{transform:none;clip-path:none;filter:brightness(.84)}
-  78%{transform:translateX(-1px);filter:none}
-}
+
+
 .hero-title>span{cursor:pointer}
 .hero-kicker.kicker-secret{color:#a96c5a;text-shadow:0 0 10px rgba(169,108,90,.18)}
 .archive-flicker{animation-duration:.76s!important}
@@ -1290,69 +1272,24 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   transform:skewX(-15deg);
 }
 
-@keyframes archiveSunBreath{
-  0%{opacity:.44; transform:translate3d(-5px,0,0) scale(.99)}
-  52%{opacity:.65}
-  100%{opacity:.52; transform:translate3d(7px,3px,0) scale(1.018)}
-}
+
 
 /* Terminal screen overlay. Coordinates are aligned to the current 1920×300 header. */
-.hero-terminal-glitch{
-  position:absolute;
-}
-.hero-terminal-glitch::before,
-.hero-terminal-glitch::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  opacity:0;
-}
-
-
-.terminal-glitch-line{
-  position:absolute;
-}
 
 
 
 
-@keyframes terminalWake{
-  0%,68%,70%,75%,100%{opacity:0}
-  68.3%{opacity:.72;transform:translateX(0)}
-  68.8%{opacity:.34;transform:translateX(2px)}
-  69.2%{opacity:.62;transform:translateX(-1px)}
-  69.7%{opacity:0;transform:none}
-}
-@keyframes terminalSweep{
-  0%,68%,100%{opacity:0;transform:translateX(0)}
-  68.3%{opacity:.75;transform:translateX(-4px)}
-  68.9%{opacity:.22;transform:translateX(5px)}
-  69.5%{opacity:0;transform:translateX(0)}
-}
-@keyframes terminalFlash{
-  0%,83%,84.1%,100%{opacity:0}
-  83.2%{opacity:.7}
-  83.45%{opacity:.16}
-  83.72%{opacity:.42}
-  84%{opacity:0}
-}
-@keyframes terminalSliceA{
-  0%,47%,48.5%,100%{opacity:0;transform:translateX(0)}
-  47.2%{opacity:.7;transform:translateX(5px)}
-  47.7%{opacity:.18;transform:translateX(-4px)}
-  48.1%{opacity:.48;transform:translateX(2px)}
-}
-@keyframes terminalSliceB{
-  0%,72%,73.1%,100%{opacity:0;transform:translateX(0)}
-  72.2%{opacity:.58;transform:translateX(-7px)}
-  72.7%{opacity:.3;transform:translateX(4px)}
-}
-@keyframes terminalSliceC{
-  0%,31%,32.2%,100%{opacity:0;transform:translateX(0)}
-  31.2%{opacity:.5;transform:translateX(4px)}
-  31.6%{opacity:.15;transform:translateX(-3px)}
-  31.95%{opacity:.37;transform:translateX(1px)}
-}
+
+
+
+
+
+
+
+
+
+
+
 
 /* Dust particles are created and removed by JS; they never accumulate forever. */
 .hero-dust-live{
@@ -1392,14 +1329,9 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 
 @media(prefers-reduced-motion:reduce){
   .hero-sun-glare,
-  .hero-terminal-glitch,
-  .hero-terminal-glitch::before,
-  .hero-terminal-glitch::after,
-  .terminal-glitch-line,
-  .hero-dust-particle{
+.hero-dust-particle{
     animation:none!important;
   }
-  .hero-terminal-glitch,
   .hero-dust-live{display:none!important}
 }
 
@@ -1618,45 +1550,17 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 
 /* A slow diagonal light sweep. It should be noticeable at a glance,
    but it passes rarely so the header doesn't constantly move. */
-.hero-light-sweep{
-  position:absolute;
-}
-@keyframes archiveLightSweep{
-  0%,12%{opacity:0; transform:skewX(-15deg) translateX(0)}
-  18%{opacity:.48}
-  46%{opacity:.26}
-  58%{opacity:0; transform:skewX(-15deg) translateX(520%)}
-  100%{opacity:0; transform:skewX(-15deg) translateX(520%)}
-}
+
+
 
 /* Terminal: make the actual screen effect visible, not just a 2px line. */
 
 
 
 
-@keyframes terminalWakeVisible{
-  0%,55%,56.2%,62%,100%{opacity:0;transform:none}
-  55.15%{opacity:.82;transform:translateX(0)}
-  55.38%{opacity:.34;transform:translateX(3px)}
-  55.62%{opacity:.74;transform:translateX(-2px)}
-  55.92%{opacity:.24;transform:translateX(1px)}
-  56.18%{opacity:0;transform:none}
-}
-@keyframes terminalSweepVisible{
-  0%,55%,100%{opacity:0;transform:translateX(0)}
-  55.12%{opacity:.90;transform:translateX(-6px)}
-  55.40%{opacity:.36;transform:translateX(8px)}
-  55.68%{opacity:.74;transform:translateX(-3px)}
-  56.05%{opacity:0;transform:translateX(0)}
-}
-@keyframes terminalFlashVisible{
-  0%,72%,73.5%,100%{opacity:0}
-  72.15%{opacity:.88}
-  72.38%{opacity:.20}
-  72.62%{opacity:.62}
-  72.88%{opacity:.12}
-  73.2%{opacity:0}
-}
+
+
+
 
 /* More readable terminal slices. */
 
@@ -1686,12 +1590,10 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   
 }
 @media(max-width:760px){
-  .hero-light-sweep,
   .hero-live-fx::after{display:none!important}
 }
 
 @media(prefers-reduced-motion:reduce){
-  .hero-light-sweep,
   .hero-live-fx::after{
     animation:none!important;
   }
@@ -1826,44 +1728,11 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 
 /* ---------- HERO: ROUND SUN FLARE, RARER ---------- */
 /* Retire the frequent diagonal sweep. */
-.hero-light-sweep{
-  transform:none!important;
-}
-.hero-light-sweep::before,
-.hero-light-sweep::after{
-  content:"";
-  position:absolute;
-  border-radius:50%;
-  pointer-events:none;
-}
 
 
-@keyframes archiveRoundSolarFlare{
-  0%,64%{
-    opacity:0;
-    transform:translate3d(-5px,3px,0) scale(.86);
-  }
-  68%{
-    opacity:.15;
-    transform:translate3d(-2px,1px,0) scale(.94);
-  }
-  73%{
-    opacity:.52;
-    transform:translate3d(2px,-1px,0) scale(1);
-  }
-  79%{
-    opacity:.31;
-    transform:translate3d(5px,-2px,0) scale(1.045);
-  }
-  84%{
-    opacity:.10;
-    transform:translate3d(7px,-3px,0) scale(1.07);
-  }
-  88%,100%{
-    opacity:0;
-    transform:translate3d(8px,-3px,0) scale(1.08);
-  }
-}
+
+
+
 
 /* The overall warm breathing light is now slower and calmer too. */
 .hero-sun-glare{
@@ -1874,58 +1743,18 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 /* ---------- TERMINAL: SLOWER + MORE LEGIBLE ---------- */
 
 
-.hero-terminal-glitch::after{
-  box-shadow:0 0 15px rgba(99,255,76,.22)!important;
-}
 
 
 
 
 
-@keyframes terminalWakeSlow{
-  0%,57%,75%,100%{opacity:0;transform:none}
-  58%{opacity:.30;transform:translateX(0)}
-  60%{opacity:.78;transform:translateX(2px)}
-  63%{opacity:.48;transform:translateX(-1px)}
-  67%{opacity:.86;transform:translateX(1px)}
-  71%{opacity:.34;transform:translateX(-1px)}
-  74%{opacity:0;transform:none}
-}
-@keyframes terminalSweepSlow{
-  0%,57%,75%,100%{opacity:0;transform:translateX(0)}
-  59%{opacity:.55;transform:translateX(-4px)}
-  62%{opacity:.88;transform:translateX(5px)}
-  66%{opacity:.42;transform:translateX(-3px)}
-  70%{opacity:.74;transform:translateX(2px)}
-  74%{opacity:0;transform:translateX(0)}
-}
-@keyframes terminalFlashSlow{
-  0%,76%,88%,100%{opacity:0}
-  78%{opacity:.28}
-  80%{opacity:.74}
-  83%{opacity:.31}
-  85%{opacity:.64}
-  87%{opacity:0}
-}
-@keyframes terminalSliceSlowA{
-  0%,58%,75%,100%{opacity:0;transform:translateX(0)}
-  60%{opacity:.72;transform:translateX(6px)}
-  64%{opacity:.32;transform:translateX(-4px)}
-  69%{opacity:.58;transform:translateX(3px)}
-  73%{opacity:0}
-}
-@keyframes terminalSliceSlowB{
-  0%,60%,75%,100%{opacity:0;transform:translateX(0)}
-  62%{opacity:.48;transform:translateX(-6px)}
-  67%{opacity:.76;transform:translateX(4px)}
-  72%{opacity:.25;transform:translateX(-2px)}
-}
-@keyframes terminalSliceSlowC{
-  0%,59%,75%,100%{opacity:0;transform:translateX(0)}
-  61%{opacity:.38;transform:translateX(4px)}
-  65%{opacity:.66;transform:translateX(-3px)}
-  71%{opacity:.30;transform:translateX(2px)}
-}
+
+
+
+
+
+
+
 
 /* Lower whole-header scanline movement so it doesn't compete with the scene. */
 .hero-live-fx::after{
@@ -1954,86 +1783,26 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 
 
 /* Two narrow "signal tear" bands rather than a full-screen flash. */
-.hero-terminal-glitch::before{
-  filter:blur(.25px)!important;
-  transform:translateX(0)!important;
-}
 
-.hero-terminal-glitch::after{
-  filter:blur(.15px)!important;
-  transform:translateX(0)!important;
-}
+
+
 
 /* Existing three line elements become tiny CRT fragments. */
-.terminal-glitch-line{
-  width:58%!important;
-  left:8%!important;
-  opacity:0!important;
-}
-.terminal-glitch-line-a{
-  top:18%!important;
-}
-.terminal-glitch-line-b{
-  top:49%!important;
-  left:31%!important;
-  width:61%!important;
-}
-.terminal-glitch-line-c{
-  top:82%!important;
-  left:14%!important;
-  width:72%!important;
-}
+
+
+
+
 
 /* Event lasts ~1.4s, but remains restrained. */
-@keyframes terminalSignalEvent{
-  0%,68%,79%,100%{opacity:0; transform:translateX(0)}
-  69%{opacity:.30; transform:translateX(0)}
-  71%{opacity:.46; transform:translateX(.7px)}
-  73%{opacity:.22; transform:translateX(-.5px)}
-  75%{opacity:.38; transform:translateX(.4px)}
-  78%{opacity:0; transform:translateX(0)}
-}
-@keyframes terminalTearOne{
-  0%,68%,79%,100%{opacity:0; transform:translateX(0)}
-  70%{opacity:.72; transform:translateX(-5px)}
-  72%{opacity:.30; transform:translateX(3px)}
-  74%{opacity:.58; transform:translateX(-2px)}
-  77%{opacity:.18; transform:translateX(1px)}
-  79%{opacity:0}
-}
-@keyframes terminalTearTwo{
-  0%,70%,79%,100%{opacity:0; transform:translateX(0)}
-  72%{opacity:.46; transform:translateX(4px)}
-  74%{opacity:.18; transform:translateX(-3px)}
-  76%{opacity:.40; transform:translateX(2px)}
-  79%{opacity:0}
-}
-@keyframes terminalFragmentA{
-  0%,69%,79%,100%{opacity:0; transform:translateX(0)}
-  71%{opacity:.55; transform:translateX(4px)}
-  73%{opacity:.18; transform:translateX(-2px)}
-  76%{opacity:.32; transform:translateX(1px)}
-}
-@keyframes terminalFragmentB{
-  0%,68%,79%,100%{opacity:0; transform:translateX(0)}
-  70%{opacity:.40; transform:translateX(-5px)}
-  74%{opacity:.24; transform:translateX(3px)}
-  77%{opacity:.38; transform:translateX(-1px)}
-}
-@keyframes terminalFragmentC{
-  0%,71%,79%,100%{opacity:0; transform:translateX(0)}
-  73%{opacity:.42; transform:translateX(3px)}
-  75%{opacity:.20; transform:translateX(-2px)}
-  78%{opacity:.30; transform:translateX(1px)}
-}
+
+
+
+
+
+
 
 /* Override previous terminal animations completely. */
-.hero-terminal-glitch,
-.hero-terminal-glitch::before,
-.hero-terminal-glitch::after,
-.terminal-glitch-line{
-  animation-delay:0s!important;
-}
+
 
 
 /* =========================================================
@@ -2043,86 +1812,30 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 /* SOLAR FLARE
    Clearly visible, but only once every ~16 seconds.
    Positioned around the actual warm sunlight, not across the whole banner. */
-.hero-light-sweep{
-  display:block!important;
-  animation:archiveFlareVisible 16s ease-in-out infinite!important;
-}
 
 
-@keyframes archiveFlareVisible{
-  0%,54%{opacity:0;transform:translate3d(-5px,3px,0) scale(.90)}
-  59%{opacity:.24}
-  65%{opacity:.68;transform:translate3d(0,0,0) scale(1)}
-  71%{opacity:.50;transform:translate3d(4px,-2px,0) scale(1.035)}
-  77%{opacity:.20}
-  82%,100%{opacity:0;transform:translate3d(7px,-3px,0) scale(1.07)}
-}
+
+
 
 /* TERMINAL
    A visible CRT malfunction every ~9 seconds.
    No full green rectangle: two signal tears + short fragments. */
-.hero-terminal-glitch{
-  display:block!important;
-  animation:terminalEventVisible 9s steps(1,end) infinite!important;
-}
-.hero-terminal-glitch::before{
-  animation:terminalTearVisibleA 9s steps(1,end) infinite!important;
-}
-.hero-terminal-glitch::after{
-  animation:terminalTearVisibleB 9s steps(1,end) infinite!important;
-}
-.terminal-glitch-line{
-  height:1px!important;
-  background:rgba(190,255,156,.50)!important;
-  box-shadow:0 0 5px rgba(126,255,91,.28)!important;
-}
 
-@keyframes terminalEventVisible{
-  0%,58%,78%,100%{opacity:0;transform:translateX(0)}
-  60%{opacity:.50}
-  63%{opacity:.78;transform:translateX(1px)}
-  67%{opacity:.43;transform:translateX(-1px)}
-  71%{opacity:.72;transform:translateX(.5px)}
-  76%{opacity:.28}
-}
-@keyframes terminalTearVisibleA{
-  0%,58%,78%,100%{opacity:0;transform:translateX(0)}
-  61%{opacity:.82;transform:translateX(-6px)}
-  64%{opacity:.40;transform:translateX(5px)}
-  68%{opacity:.76;transform:translateX(-3px)}
-  72%{opacity:.34;transform:translateX(3px)}
-  76%{opacity:.62;transform:translateX(-1px)}
-}
-@keyframes terminalTearVisibleB{
-  0%,60%,78%,100%{opacity:0;transform:translateX(0)}
-  63%{opacity:.58;transform:translateX(5px)}
-  67%{opacity:.30;transform:translateX(-4px)}
-  71%{opacity:.70;transform:translateX(3px)}
-  75%{opacity:.28;transform:translateX(-2px)}
-}
+
+
+
+
+
+
+
 
 /* Keep the three tiny fragments synchronized with the visible event. */
-.terminal-glitch-line-a{animation:terminalFragVisibleA 9s steps(1,end) infinite!important}
-.terminal-glitch-line-b{animation:terminalFragVisibleB 9s steps(1,end) infinite!important}
-.terminal-glitch-line-c{animation:terminalFragVisibleC 9s steps(1,end) infinite!important}
-@keyframes terminalFragVisibleA{
-  0%,59%,78%,100%{opacity:0;transform:translateX(0)}
-  62%{opacity:.75;transform:translateX(5px)}
-  67%{opacity:.28;transform:translateX(-3px)}
-  72%{opacity:.60;transform:translateX(2px)}
-}
-@keyframes terminalFragVisibleB{
-  0%,60%,78%,100%{opacity:0;transform:translateX(0)}
-  64%{opacity:.62;transform:translateX(-5px)}
-  69%{opacity:.32;transform:translateX(4px)}
-  74%{opacity:.54;transform:translateX(-2px)}
-}
-@keyframes terminalFragVisibleC{
-  0%,61%,78%,100%{opacity:0;transform:translateX(0)}
-  65%{opacity:.52;transform:translateX(4px)}
-  70%{opacity:.25;transform:translateX(-3px)}
-  75%{opacity:.48;transform:translateX(2px)}
-}
+
+
+
+
+
+
 
 /* Previous mobile rule hid the flare completely. Keep only terminal alignment safety. */
 @media(max-width:760px){
@@ -2249,10 +1962,7 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   z-index:0;
 }
 .terminal-card>*{position:relative;z-index:1}
-@keyframes lostScan{
-  from{transform:translateY(-5px)}
-  to{transform:translateY(5px)}
-}
+
 .terminal-title{
   display:flex!important;
   align-items:center;
@@ -2353,190 +2063,40 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   opacity:1!important;
   z-index:4!important;
 }
-.hero-light-sweep,
-.hero-terminal-glitch{
-  display:block!important;
-  visibility:visible!important;
-  animation:none!important;
-}
+
 
 /* Circular warm reflection near the opening. */
-.hero-light-sweep{
-  left:57.5%!important;
-  top:14%!important;
-  width:122px!important;
-  height:122px!important;
-  opacity:0!important;
-  border-radius:50%!important;
-  pointer-events:none!important;
-  mix-blend-mode:screen!important;
-  filter:none!important;
-  background:
-    radial-gradient(circle at 50% 50%,
-      rgba(255,249,224,.82) 0 2%,
-      rgba(255,229,158,.48) 3% 7%,
-      rgba(250,197,102,.22) 8% 16%,
-      rgba(235,162,60,.085) 17% 31%,
-      transparent 44%)!important;
-  box-shadow:
-    0 0 22px rgba(255,219,140,.18),
-    0 0 56px rgba(241,178,78,.11),
-    0 0 100px rgba(222,148,50,.055)!important;
-}
-.hero-light-sweep::before{
-  content:""!important;
-  position:absolute!important;
-  width:34px!important;
-  height:34px!important;
-  left:-52px!important;
-  top:57px!important;
-  border-radius:50%!important;
-  border:1px solid rgba(255,228,165,.34)!important;
-  background:rgba(255,211,121,.055)!important;
-  box-shadow:0 0 14px rgba(246,190,91,.12)!important;
-}
-.hero-light-sweep::after{
-  content:""!important;
-  position:absolute!important;
-  width:18px!important;
-  height:18px!important;
-  right:-61px!important;
-  top:35px!important;
-  border-radius:50%!important;
-  background:rgba(255,230,170,.27)!important;
-  box-shadow:0 0 12px rgba(246,190,91,.15)!important;
-}
-.hero-light-sweep.fx-flare-now{
-  animation:heroFlareMoment 2.2s ease-in-out 1!important;
-}
-@keyframes heroFlareMoment{
-  0%{opacity:0;transform:translate3d(-5px,3px,0) scale(.91)}
-  18%{opacity:.28}
-  43%{opacity:.78;transform:translate3d(0,0,0) scale(1)}
-  64%{opacity:.59;transform:translate3d(3px,-2px,0) scale(1.025)}
-  84%{opacity:.22}
-  100%{opacity:0;transform:translate3d(6px,-3px,0) scale(1.05)}
-}
+
+
+
+
+
 
 /* Local CRT tearing on the monitor, never a full green rectangle. */
-.hero-terminal-glitch{
-  left:7.35%!important;
-  top:1%!important;
-  width:14.85%!important;
-  height:54%!important;
-  opacity:0!important;
-  overflow:hidden!important;
-  border-radius:2px!important;
-  pointer-events:none!important;
-  mix-blend-mode:screen!important;
-  background:
-    repeating-linear-gradient(180deg,
-      transparent 0 3px,
-      rgba(162,255,126,.065) 3px 4px)!important;
-  box-shadow:inset 0 0 12px rgba(126,255,91,.09)!important;
-}
-.hero-terminal-glitch::before{
-  content:""!important;
-  position:absolute!important;
-  left:-4%!important;
-  top:31%!important;
-  width:108%!important;
-  height:10%!important;
-  opacity:.8!important;
-  background:linear-gradient(180deg,
-    transparent,
-    rgba(187,255,153,.16) 28%,
-    rgba(158,255,117,.36) 51%,
-    rgba(111,239,79,.10) 75%,
-    transparent)!important;
-}
-.hero-terminal-glitch::after{
-  content:""!important;
-  position:absolute!important;
-  left:4%!important;
-  top:67%!important;
-  width:92%!important;
-  height:5%!important;
-  opacity:.55!important;
-  background:rgba(180,255,145,.22)!important;
-}
-.hero-terminal-glitch.fx-terminal-now{
-  animation:heroTerminalMoment 1.5s steps(1,end) 1!important;
-}
-.hero-terminal-glitch.fx-terminal-now::before{
-  animation:heroTerminalBandA 1.5s steps(1,end) 1!important;
-}
-.hero-terminal-glitch.fx-terminal-now::after{
-  animation:heroTerminalBandB 1.5s steps(1,end) 1!important;
-}
-.hero-terminal-glitch .terminal-glitch-line{
-  display:block!important;
-  position:absolute!important;
-  height:1px!important;
-  opacity:0;
-  background:rgba(205,255,180,.62)!important;
-  box-shadow:0 0 4px rgba(140,255,104,.28)!important;
-}
-.hero-terminal-glitch.fx-terminal-now .terminal-glitch-line-a{
-  left:8%!important;width:72%!important;top:18%!important;
-  animation:heroTermLineA 1.5s steps(1,end) 1!important;
-}
-.hero-terminal-glitch.fx-terminal-now .terminal-glitch-line-b{
-  left:28%!important;width:63%!important;top:51%!important;
-  animation:heroTermLineB 1.5s steps(1,end) 1!important;
-}
-.hero-terminal-glitch.fx-terminal-now .terminal-glitch-line-c{
-  left:12%!important;width:77%!important;top:82%!important;
-  animation:heroTermLineC 1.5s steps(1,end) 1!important;
-}
-@keyframes heroTerminalMoment{
-  0%,100%{opacity:0;transform:translateX(0)}
-  12%{opacity:.42}
-  24%{opacity:.82;transform:translateX(1px)}
-  38%{opacity:.48;transform:translateX(-1px)}
-  52%{opacity:.78;transform:translateX(.7px)}
-  67%{opacity:.46;transform:translateX(-.5px)}
-  82%{opacity:.70}
-}
-@keyframes heroTerminalBandA{
-  0%,100%{transform:translateX(0);opacity:0}
-  18%{transform:translateX(-6px);opacity:.85}
-  36%{transform:translateX(5px);opacity:.38}
-  55%{transform:translateX(-3px);opacity:.78}
-  74%{transform:translateX(3px);opacity:.42}
-}
-@keyframes heroTerminalBandB{
-  0%,100%{transform:translateX(0);opacity:0}
-  24%{transform:translateX(5px);opacity:.58}
-  48%{transform:translateX(-4px);opacity:.30}
-  69%{transform:translateX(3px);opacity:.72}
-}
-@keyframes heroTermLineA{
-  0%,100%{opacity:0;transform:translateX(0)}
-  19%{opacity:.78;transform:translateX(5px)}
-  49%{opacity:.28;transform:translateX(-3px)}
-  73%{opacity:.64;transform:translateX(2px)}
-}
-@keyframes heroTermLineB{
-  0%,100%{opacity:0;transform:translateX(0)}
-  27%{opacity:.67;transform:translateX(-5px)}
-  56%{opacity:.31;transform:translateX(4px)}
-  81%{opacity:.55;transform:translateX(-2px)}
-}
-@keyframes heroTermLineC{
-  0%,100%{opacity:0;transform:translateX(0)}
-  31%{opacity:.58;transform:translateX(4px)}
-  61%{opacity:.25;transform:translateX(-3px)}
-  84%{opacity:.50;transform:translateX(2px)}
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* Even if an earlier breakpoint tried to hide the terminal, final bundle wins. */
 @media(max-width:1200px){
-  .hero-terminal-glitch{display:block!important}
+  
 }
 @media(max-width:760px){
-  .hero-light-sweep{display:block!important;transform:scale(.72)}
-  .hero-terminal-glitch{display:none!important} /* terminal alignment stops matching after mobile crop */
+  
+   /* terminal alignment stops matching after mobile crop */
 }
 
 /* Respect reduced motion for the stronger interactive easter egg, but leave
@@ -2829,9 +2389,7 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
    ========================================================= */
 
 /* Old flare/glitch layers are retired. Dust stays alive. */
-.hero-sun-glare,
-.hero-light-sweep,
-.hero-terminal-glitch{
+.hero-sun-glare{
   display:none!important;
 }
 .hero-dust-live{
@@ -2973,15 +2531,7 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   background:rgba(212,238,176,.19);
 }
 
-@keyframes heroSolarV2{
-  0%{opacity:0;transform:translate3d(-9px,5px,0) scale(.90)}
-  14%{opacity:.28}
-  34%{opacity:.82;transform:translate3d(-1px,1px,0) scale(1)}
-  51%{opacity:1;transform:translate3d(1px,0,0) scale(1.035)}
-  69%{opacity:.62;transform:translate3d(5px,-3px,0) scale(1.065)}
-  86%{opacity:.22}
-  100%{opacity:0;transform:translate3d(10px,-5px,0) scale(1.10)}
-}
+
 
 /* CRT tearing only on the monitor glass at far left. */
 .hero-terminal-crt-v2{
@@ -3036,49 +2586,12 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 
 
 
-@keyframes heroCrtV2{
-  0%,100%{opacity:0;transform:translateX(0);filter:none}
-  10%{opacity:.38}
-  21%{opacity:.86;transform:translateX(1px)}
-  34%{opacity:.52;transform:translateX(-1px)}
-  48%{opacity:.94;transform:translateX(1.5px);filter:brightness(1.10)}
-  63%{opacity:.50;transform:translateX(-1px)}
-  78%{opacity:.80;transform:translateX(.5px)}
-  90%{opacity:.30}
-}
-@keyframes crtTearA{
-  0%,100%{opacity:0;transform:translateX(0)}
-  16%{opacity:.88;transform:translateX(-8px)}
-  34%{opacity:.30;transform:translateX(6px)}
-  50%{opacity:.94;transform:translateX(-4px)}
-  68%{opacity:.40;transform:translateX(3px)}
-  82%{opacity:.70;transform:translateX(-1px)}
-}
-@keyframes crtTearB{
-  0%,100%{opacity:0;transform:translateX(0)}
-  23%{opacity:.68;transform:translateX(7px)}
-  43%{opacity:.28;transform:translateX(-5px)}
-  61%{opacity:.82;transform:translateX(4px)}
-  79%{opacity:.36;transform:translateX(-2px)}
-}
-@keyframes crtTearC{
-  0%,100%{opacity:0;transform:translateX(0)}
-  31%{opacity:.54;transform:translateX(-4px)}
-  55%{opacity:.76;transform:translateX(5px)}
-  74%{opacity:.32;transform:translateX(-3px)}
-}
-@keyframes crtScanA{
-  0%,100%{opacity:0;transform:translateX(0)}
-  18%{opacity:.80;transform:translateX(6px)}
-  46%{opacity:.26;transform:translateX(-4px)}
-  72%{opacity:.62;transform:translateX(3px)}
-}
-@keyframes crtScanB{
-  0%,100%{opacity:0;transform:translateX(0)}
-  27%{opacity:.64;transform:translateX(-5px)}
-  54%{opacity:.30;transform:translateX(4px)}
-  80%{opacity:.56;transform:translateX(-2px)}
-}
+
+
+
+
+
+
 
 @media(max-width:900px){
   .hero-terminal-crt-v2{display:none!important}
@@ -3405,30 +2918,7 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 .ambient-glitch{
   position:relative;
 }
-@keyframes ambientInterfaceGlitch{
-  0%,100%{
-    transform:none;
-    filter:none;
-    text-shadow:none;
-  }
-  18%{
-    transform:translateX(-1px);
-    filter:brightness(1.10);
-    text-shadow:-1px 0 rgba(145,255,111,.24);
-  }
-  36%{
-    transform:translateX(1px);
-    text-shadow:1px 0 rgba(170,84,71,.16);
-  }
-  54%{
-    transform:translateX(-.5px);
-    filter:contrast(1.06);
-  }
-  72%{
-    transform:translateX(.5px);
-    text-shadow:0 0 4px rgba(136,160,107,.14);
-  }
-}
+
 
 /* Existing hover glitches remain, but calm down slightly so the ambient
    anomalies do not make the interface feel constantly noisy. */
@@ -3460,12 +2950,7 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
 
 /* Rare hover glitch, triggered probabilistically by JS. */
 
-@keyframes hoverGlitchOnce{
-  0%,100%{transform:none;filter:none;text-shadow:none}
-  30%{transform:translateX(-1px);text-shadow:-1px 0 rgba(145,255,111,.18)}
-  55%{transform:translateX(.7px);filter:brightness(1.06)}
-  78%{transform:translateX(-.4px);text-shadow:1px 0 rgba(170,84,71,.12)}
-}
+
 
 
 /* =========================================================
@@ -3527,36 +3012,7 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
    because they happen away from the pointer and never interfere with clicking.
    Still only one chosen element per autonomous event. */
 
-@keyframes ambientInterfaceGlitchFinal{
-  0%,100%{
-    transform:none;
-    filter:none;
-    text-shadow:none;
-  }
-  16%{
-    transform:translateX(-2px) skewX(-1deg);
-    filter:brightness(1.14);
-    text-shadow:-2px 0 rgba(145,255,111,.28);
-  }
-  31%{
-    transform:translateX(2px);
-    text-shadow:2px 0 rgba(174,83,72,.18);
-  }
-  48%{
-    transform:translateX(-1px);
-    filter:contrast(1.10);
-  }
-  65%{
-    transform:translateX(1.5px) skewX(.7deg);
-    text-shadow:
-      -1px 0 rgba(145,255,111,.20),
-       1px 0 rgba(174,83,72,.12);
-  }
-  82%{
-    transform:translateX(-.5px);
-    filter:brightness(1.06);
-  }
-}
+
 
 
 /* =========================================================

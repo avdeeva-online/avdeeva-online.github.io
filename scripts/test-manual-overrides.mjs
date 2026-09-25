@@ -4,6 +4,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { updateAdminCharacter } from '../src/character-admin.js';
 import sourceTruth from '../src/source-truth.js';
 import { catalogCacheKey } from '../src/catalog-cache.js';
+import { janitorProfileUrl } from '../src/worker.js';
 import { hashtagKey, semanticTagKey, unifyFacetSpelling } from '../src/filter-normalization.js';
 
 // Real SQL on an in-memory SQLite built from the migrations, behind a minimal D1 shim.
@@ -47,6 +48,17 @@ await saveCharacter(env,card({janitor_uuid:U2,name:'Fantasy magic kingdom bot',d
 await backfill();
 assert.equal(row(U2).setting_source,'rules:v6','untouched records stay automatically classified');
 
+// Author profile links: parsed from Janitor card data, never blanked by a re-import that lacks one.
+assert.equal(janitorProfileUrl('https://janitorai.com/profiles/F6C1607B-7E35-4750-8D8A-71DE9AEEE37E'),'https://janitorai.com/profiles/f6c1607b-7e35-4750-8d8a-71de9aeee37e');
+assert.equal(janitorProfileUrl('https://janitorai.com/ru/profiles/7687620e-17a6-4fe1-9b72-36bd6f564330_profile-of-sepha'),'https://janitorai.com/profiles/7687620e-17a6-4fe1-9b72-36bd6f564330');
+assert.equal(janitorProfileUrl('Kinanak','','7687620e-17a6-4fe1-9b72-36bd6f564330'),'https://janitorai.com/profiles/7687620e-17a6-4fe1-9b72-36bd6f564330');
+assert.equal(janitorProfileUrl('Kinanak',''),'');
+db.prepare("UPDATE characters SET author_url='https://janitorai.com/profiles/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' WHERE janitor_uuid=?").run(UUID);
+await saveCharacter(env,card({author_url:''}));
+assert.equal(row().author_url,'https://janitorai.com/profiles/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee','re-import without a profile must keep the stored link');
+await saveCharacter(env,card({author_url:'https://janitorai.com/profiles/11111111-2222-3333-4444-555555555555'}));
+assert.equal(row().author_url,'https://janitorai.com/profiles/11111111-2222-3333-4444-555555555555','re-import with a profile updates the link');
+
 // Admin save must invalidate the very cache key the public catalog is stored under.
 const deleted=[];globalThis.caches={default:{async delete(req){deleted.push(req.url);return true}}};
 await updateAdminCharacter(new Request(`https://x.test/api/admin/characters/${UUID}`,{method:'PATCH',body:JSON.stringify({name:'Test Bot',tags:[],hashtags:[],universes:['Manual World'],setting_ids:['fantasy'],pov:'MalePOV',status:'hidden'})}),env,UUID);
@@ -57,4 +69,4 @@ delete globalThis.caches;
 const unified=unifyFacetSpelling(unifyFacetSpelling([{tags:['👨 Male'],hashtags:['Mafia']},{tags:['👨 Male'],hashtags:['mafia']},{tags:['👨‍🦰 Male'],hashtags:['mafia']}],'tags',semanticTagKey),'hashtags',hashtagKey);
 assert.deepEqual(unified.map(x=>[x.tags[0],x.hashtags[0]]),[['👨 Male','mafia'],['👨 Male','mafia'],['👨 Male','mafia']]);
 
-console.log('ARCHIVE.EXE manual override behavior OK · hidden status + manual Setting/POV/Universe survive re-import and backfill, source text still refreshes, admin save clears the live catalog cache, one spelling per tag');
+console.log('ARCHIVE.EXE manual override behavior OK · hidden status + manual Setting/POV/Universe survive re-import and backfill, source text still refreshes, admin save clears the live catalog cache, one spelling per tag, author profile links parsed and never blanked');

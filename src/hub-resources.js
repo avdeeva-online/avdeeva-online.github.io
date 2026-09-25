@@ -1,4 +1,5 @@
 import { requireD1Schema } from './d1-schema.js';
+import { analyzeTelegramPost } from './hub-telegram.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
@@ -127,6 +128,52 @@ async function storeBuffer(env,{resourceId,name,mime,size,isPrimary,buffer}){
     }
     return fileId;
   }catch(e){await retireStoredFile(env,fileId,resourceId,'store-buffer-rollback');throw e}
+}
+
+// Telegram CDN links (cdn*.telesco.pe) expire, so SOURCE media from them is copied into storage on publish.
+const TELEGRAM_MEDIA_HOST=/(^|\.)(telesco\.pe|telegram-cdn\.org)$/i;
+const MEDIA_EXT={'image/jpeg':'.jpg','image/png':'.png','image/webp':'.webp','image/gif':'.gif'};
+const mediaItemUrl=m=>clean(m?.url||m?.src);
+function isTelegramMediaUrl(raw){try{const u=new URL(clean(raw));return u.protocol==='https:'&&TELEGRAM_MEDIA_HOST.test(u.hostname)}catch{return false}}
+async function mirrorTelegramMedia(env,resourceId,media){
+  const out=[];
+  for(const item of arr(media)){
+    const url=mediaItemUrl(item);if(!isTelegramMediaUrl(url)){out.push(item);continue}
+    try{
+      const r=await fetch(url,{redirect:'follow'}),type=clean(r.headers.get('content-type')).split(';')[0].toLowerCase();
+      if(!r.ok||!type.startsWith('image/'))throw new Error(`HTTP_${r.status}_${type||'NO_TYPE'}`);
+      const buffer=await r.arrayBuffer();if(!buffer.byteLength||buffer.byteLength>EXTRA_FILE_LIMIT)throw new Error(`BAD_SIZE_${buffer.byteLength}`);
+      const name=`${SOURCE_PREFIX}${item?.cover?'cover__':''}telegram_${crypto.randomUUID().slice(0,8)}${MEDIA_EXT[type]||'.jpg'}`;
+      const fileId=await storeBuffer(env,{resourceId,name,mime:type,size:buffer.byteLength,isPrimary:false,buffer});
+      const stored=`/api/hub-resources/${encodeURIComponent(resourceId)}/files/${encodeURIComponent(fileId)}?view=1`;
+      out.push({...item,url:stored,...(item?.src!=null?{src:stored}:{}),file_id:fileId,source:'telegram-source-r2'});
+    }catch(e){console.error('telegram media mirror failed',url.slice(0,80),String(e?.message||e));out.push(item)}
+  }
+  return out;
+}
+
+// One-off repair for resources published before mirroring: re-read the source post for fresh CDN links,
+// replace the expired Telegram entries in order (other media untouched), then copy them into storage.
+// GET = plan only, POST = apply. updated_at is left alone so HUB ordering does not change.
+export async function repairTelegramMedia(request,env){
+  await ensureSchema(env);const apply=request.method==='POST',report=[];
+  const rows=(await env.DB.prepare("SELECT id,title,source_url,media FROM hub_resources WHERE status='published' ORDER BY updated_at DESC").all()).results||[];
+  for(const row of rows){
+    const media=arr(parseJson(row.media,[])),expired=media.filter(m=>isTelegramMediaUrl(mediaItemUrl(m))).length;if(!expired)continue;
+    const item={id:row.id,title:row.title,source_url:row.source_url,expired_entries:expired};report.push(item);
+    if(!clean(row.source_url)){item.result='SKIPPED_NO_SOURCE_POST';continue}
+    const analyzed=await analyzeTelegramPost(new Request('https://internal/api/admin/hub-telegram-analyze',{method:'POST',body:JSON.stringify({url:row.source_url})}));
+    const data=await analyzed.json().catch(()=>({})),fresh=arr(data.media).map(mediaItemUrl).filter(isTelegramMediaUrl);
+    if(!fresh.length){item.result='SKIPPED_SOURCE_POST_HAS_NO_MEDIA';item.detail=data.error||null;continue}
+    let k=0;const next=[];for(const m of media){if(!isTelegramMediaUrl(mediaItemUrl(m))){next.push(m);continue}if(k<fresh.length){const url=fresh[k++];next.push({...m,url,...(m?.src!=null?{src:url}:{})})}}
+    if(next.length&&!next.some(m=>m?.cover))next[0]={...next[0],cover:true};
+    item.fresh_images=fresh.length;item.replaced=Math.min(expired,fresh.length);item.dropped=Math.max(0,expired-fresh.length);
+    if(!apply){item.result='PLANNED';continue}
+    const mirrored=await mirrorTelegramMedia(env,row.id,next),left=mirrored.filter(m=>isTelegramMediaUrl(mediaItemUrl(m))).length;
+    await env.DB.prepare('UPDATE hub_resources SET media=? WHERE id=?').bind(safeJson(mirrored),row.id).run();
+    item.stored=item.replaced-left;item.result=left?'PARTIAL_SOME_IMAGES_STILL_REMOTE':'REPAIRED';
+  }
+  return json({ok:true,mode:apply?'apply':'dry-run',resources:report.length,report});
 }
 
 async function sourceUrlConflict(env,sourceUrl,resourceId=''){
@@ -261,6 +308,7 @@ async function finalizeSession(env,sessionId){
   const staged=(await env.DB.prepare('SELECT file_id,replace_old_id,is_primary FROM hub_resource_publish_files WHERE session_id=?').bind(session.id).all()).results||[],state=parseSessionState(session);
   const preferred=staged.find(x=>Number(x.is_primary)===1)?.file_id||'';
   if(state.version===2&&state.phase!=='committing'){
+    state.draft.media=await mirrorTelegramMedia(env,session.resource_id,state.draft.media);
     await writeResourceRow(env,session.resource_id,state.old,state.draft,'published');
     if(preferred){await env.DB.prepare("UPDATE hub_resource_files SET is_primary=0 WHERE resource_id=? AND name NOT LIKE '__extra__%'").bind(session.resource_id).run();await env.DB.prepare('UPDATE hub_resource_files SET is_primary=1 WHERE id=? AND resource_id=?').bind(preferred,session.resource_id).run()}else await ensurePrimary(env,session.resource_id);
     state.phase='committing';await saveSessionState(env,session,state);

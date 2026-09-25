@@ -7,7 +7,7 @@
     "jose": "^6.2.12"
   },
   "scripts": {
-    "check:audit": "node scripts/audit.mjs && node scripts/audit-architecture.mjs && node scripts/audit-migrations.mjs && node scripts/audit-public-assets.mjs && node scripts/test-security.mjs && node scripts/test-telegram.mjs && node scripts/test-hub-public-media.mjs && node scripts/test-universe-curation.mjs && node scripts/test-source-universe.mjs && node scripts/test-png-source.mjs && node scripts/test-manual-overrides.mjs",
+    "check:audit": "node scripts/audit.mjs && node scripts/audit-architecture.mjs && node scripts/audit-migrations.mjs && node scripts/audit-public-assets.mjs && node scripts/test-security.mjs && node scripts/test-telegram.mjs && node scripts/test-hub-public-media.mjs && node scripts/test-universe-curation.mjs && node scripts/test-source-universe.mjs && node scripts/test-png-source.mjs && node scripts/test-manual-overrides.mjs && node scripts/test-hub-telegram-media.mjs",
     "check:js": "find src public -type f -name '*.js' -print0 | xargs -0 -n1 node --check",
     "check:worker": "wrangler deploy --dry-run --outdir .wrangler-dist",
     "check": "npm run check:audit && npm run check:js && npm run check:worker",

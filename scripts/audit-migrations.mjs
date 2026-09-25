@@ -9,7 +9,8 @@ const migrationFiles=[
   'migrations/0001_baseline.sql',
   'migrations/0002_universe_curation_seed.sql',
   'migrations/0003_hub_storage_normalize.sql',
-  'migrations/0004_source_truth_marker.sql'
+  'migrations/0004_source_truth_marker.sql',
+  'migrations/0009_manual_pov_marker.sql'
 ];
 for(const file of migrationFiles)fail(fs.existsSync(file),`${file}: required migration missing`);
 
@@ -44,6 +45,8 @@ function createdTables(fullSql){
     }
     tables.set(match[1],columns);
   }
+  const alter=/ALTER TABLE\s+([A-Za-z_][A-Za-z0-9_]*)\s+ADD COLUMN\s+["\[]?([A-Za-z_][A-Za-z0-9_]*)/gi;
+  while((match=alter.exec(fullSql))){if(tables.has(match[1]))tables.get(match[1]).push(match[2])}
   return tables;
 }
 

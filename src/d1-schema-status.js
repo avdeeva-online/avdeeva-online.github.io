@@ -1,5 +1,5 @@
 export const D1_EXPECTED_SCHEMA={
-  characters:['id','janitor_uuid','slug','name','author','author_url','universe','pov','tags','hashtags','short_description','description','scenario','intros','image_url','janitor_url','datacat_url','card_url','lorebook_url','lorebook_title','universe_source_field','universes','setting_ids','setting_source','source','status','created_at','updated_at'],
+  characters:['id','janitor_uuid','slug','name','author','author_url','universe','pov','tags','hashtags','short_description','description','scenario','intros','image_url','janitor_url','datacat_url','card_url','lorebook_url','lorebook_title','universe_source_field','universes','setting_ids','setting_source','source','status','created_at','updated_at','pov_source'],
   lorebooks:['id','title','script','author','source','content_hash','source_identity','created_at','updated_at'],
   lorebook_blobs:['content_hash','script','created_at','updated_at'],
   lorebook_sources:['source_identity','lorebook_id','updated_at'],

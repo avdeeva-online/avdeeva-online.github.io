@@ -44,21 +44,24 @@ export async function listAdminCharacters(request,env){
 export async function updateAdminCharacter(request,env,uuid){
   if(!UUID_RE.test(uuid))return json({ok:false,error:'INVALID_UUID'},400);
   let b;try{b=await request.json()}catch{return json({ok:false,error:'INVALID_JSON'},400)}
-  const current=await env.DB.prepare('SELECT janitor_uuid,universe,universes,universe_source_field FROM characters WHERE janitor_uuid=? LIMIT 1').bind(uuid).first();
+  const current=await env.DB.prepare('SELECT janitor_uuid,universe,universes,universe_source_field,setting_ids,setting_source,pov,pov_source FROM characters WHERE janitor_uuid=? LIMIT 1').bind(uuid).first();
   if(!current)return json({ok:false,error:'CHARACTER_NOT_FOUND'},404);
   const universes=normalizeUniverses(b.universes),hashtags=normalizeHashtags(b.hashtags),settingIds=normalizeSettingIds(b.setting_ids);
   const currentUniverses=normalizeUniverses(parse(current.universes).length?parse(current.universes):[current.universe]);
   const universesChanged=!sameStringSet(universes,currentUniverses);
   const universeSource=universesChanged?'admin:manual':clean(current.universe_source_field);
+  const settingsChanged=!sameStringSet(settingIds,normalizeSettingIds(parse(current.setting_ids)));
+  const settingSource=settingsChanged||clean(current.setting_source)==='admin:manual'?'admin:manual':'rules:v6';
   const pov=['FemPOV','MalePOV','AnyPOV'].includes(clean(b.pov))?clean(b.pov):'AnyPOV';
+  const povSource=pov!==clean(current.pov)?'admin:manual':clean(current.pov_source);
   const povTag=pov==='FemPOV'?'👩 FemPov':pov==='MalePOV'?'👨 MalePov':'👤 AnyPOV';
   const tags=normalizeTags([...arr(b.tags).filter(x=>!isPovTag(x)),povTag]);
   const status=['published','hidden'].includes(clean(b.status))?clean(b.status):'published';
-  await env.DB.prepare(`UPDATE characters SET name=?,author=?,author_url=?,short_description=?,description=?,scenario=?,tags=?,hashtags=?,universe=?,universes=?,universe_source_field=?,setting_ids=?,setting_source='rules:v6',pov=?,image_url=?,janitor_url=?,datacat_url=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?`).bind(
-    clean(b.name)||'UNKNOWN CHARACTER',clean(b.author)||'Unknown',clean(b.author_url),clean(b.short_description),String(b.description??'').trim(),String(b.scenario??'').trim(),JSON.stringify(tags),JSON.stringify(hashtags),universes[0]||'',JSON.stringify(universes),universeSource,JSON.stringify(settingIds),pov,clean(b.image_url),clean(b.janitor_url),clean(b.datacat_url),status,uuid
+  await env.DB.prepare(`UPDATE characters SET name=?,author=?,author_url=?,short_description=?,description=?,scenario=?,tags=?,hashtags=?,universe=?,universes=?,universe_source_field=?,setting_ids=?,setting_source=?,pov=?,pov_source=?,image_url=?,janitor_url=?,datacat_url=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?`).bind(
+    clean(b.name)||'UNKNOWN CHARACTER',clean(b.author)||'Unknown',clean(b.author_url),clean(b.short_description),String(b.description??'').trim(),String(b.scenario??'').trim(),JSON.stringify(tags),JSON.stringify(hashtags),universes[0]||'',JSON.stringify(universes),universeSource,JSON.stringify(settingIds),settingSource,pov,povSource,clean(b.image_url),clean(b.janitor_url),clean(b.datacat_url),status,uuid
   ).run();
   await clearCatalogCache(request);
-  return json({ok:true,uuid,universeOverrideChanged:universesChanged,universeSourceField:universeSource||null});
+  return json({ok:true,uuid,universeOverrideChanged:universesChanged,universeSourceField:universeSource||null,settingSource,povSource:povSource||null});
 }
 
 export async function deleteAdminCharacter(request,env,uuid){

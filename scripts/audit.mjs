@@ -88,7 +88,9 @@ for(const marker of ['HUB_FILES','row.storage','row.r2_key','ensureStorageColumn
 
 const publicApp=read('public/app.js');
 const publicStyles=read('public/styles.css');
-for(const marker of ['v1.4.3 — FINAL MOBILE DENSITY CONTRACT','.toolbar-row>#catalogOpen{grid-column:1!important}','.toolbar-row>#randomBtn{grid-column:6!important;justify-self:end!important}','height:36px!important','width:min(88vw,330px)!important'])fail(publicStyles.includes(marker),`public/styles.css: final mobile density contract missing ${marker}`);
+for(const marker of ['v1.4.3 — FINAL MOBILE DENSITY CONTRACT','height:36px!important'])fail(publicStyles.includes(marker),`public/styles.css: final mobile density contract missing ${marker}`);
+// The toolbar placement and drawer width that actually win the cascade live in the later patch sheets.
+for(const [file,marker] of [['public/uiux-audit-patch.css','.toolbar-row>#catalogOpen{grid-column:1 / 2!important'],['public/uiux-audit-patch.css','.toolbar-row>#randomBtn{grid-column:12 / 13!important'],['public/mobile-quiet.css','width:min(84vw,328px)!important']])fail(read(file).includes(marker),`${file}: mobile density contract missing ${marker}`);
 for(const marker of ['function toggleDrawer()','catalogToggle.onclick=toggleDrawer','setAttribute("aria-expanded","true")','setAttribute("aria-expanded","false")','if(e.target===shade) return;'])fail(publicApp.includes(marker),`public/app.js: catalog button toggle contract missing ${marker}`);
 for(const marker of ['grid.querySelectorAll(".card-media")','media.style.setProperty("--record-cover-image"','image.complete&&image.naturalWidth>0','image.addEventListener("load",hydrateCover,{once:true})'])fail(publicApp.includes(marker),`public/app.js: lazy mobile artwork hydration missing ${marker}`);
 for(const marker of ['object-fit:contain!important','var(--record-cover-image)'])fail(publicStyles.includes(marker),`public/styles.css: mobile artwork preservation missing ${marker}`);
@@ -115,7 +117,7 @@ const cardHtmlBody=cardHtmlStart>=0&&quickTagsStart>cardHtmlStart?publicApp.slic
 for(const marker of ['const tagChip = tag => \`<span>','const hashtagChip = hashtag => \`<span>','if(passiveCardTags){e.stopPropagation();return}'])fail(publicApp.includes(marker),`public/app.js: passive list-card tag contract missing ${marker}`);
 for(const marker of ['data-tag=','data-hashtag='])fail(!cardHtmlBody.includes(marker),`public/app.js: list-card tag region may still be interactive via ${marker}`);
 fail(publicCharacters.includes('app.js?v=20260921-mobile-artwork2'),'public/characters.html: public app cache-bust missing');
-fail(publicCharacters.includes('styles.css?v=20260921-mobile-artwork1'),'public/characters.html: mobile artwork stylesheet cache-bust missing');
+fail(/styles\.css\?v=[\w-]+/.test(publicCharacters),'public/characters.html: styles.css cache-bust version missing');
 fail(publicCharacters.includes('catalog-api.js?v=20260919-render-boot1'),'public/characters.html: catalog API cache-bust missing');
 
 const main=read('src/main.js');

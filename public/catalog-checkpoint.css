@@ -25,7 +25,7 @@
   .drawer-head button{width:27px!important;height:27px!important}
   .drawer-status{min-height:18px!important;height:18px!important}
   .drawer-tabs .drawer-tab{min-height:28px!important;height:28px!important;padding:2px 1px!important}
-  .drawer-query-row{min-height:31px!important;height:31px!important;gap:3px!important}
+  .drawer-query-row{min-height:31px!important;height:31px!important;}
   .drawer-search{height:29px!important;min-height:29px!important;margin:3px 0!important;padding-inline:6px!important}
   .drawer-search input{font-size:16px!important}
   .drawer-tool-btn{min-width:45px!important;min-height:29px!important;height:29px!important;padding:2px 4px!important}

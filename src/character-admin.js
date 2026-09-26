@@ -28,7 +28,10 @@ function normalizeRow(r){
     universe:r.universe||'',universes:parse(r.universes),universe_source_field:r.universe_source_field||'',
     setting_ids:parse(r.setting_ids),pov:r.pov||'',
     image_url:r.image_url||'',janitor_url:r.janitor_url||'',datacat_url:r.datacat_url||'',
-    status:r.status||'',updated_at:r.updated_at||null
+    status:r.status||'',updated_at:r.updated_at||null,
+    // Public tagline / description: manual override (empty = automatic) and the automatic split to start from.
+    public_hook:r.public_hook||'',public_about:r.public_about||'',
+    ...autoPublicText(r)
   };
 }
 

@@ -78,6 +78,13 @@ assert.deepEqual(d2.sections.about,[{title:'',text:'Intro by admin.'},{title:'WH
 assert.equal(d2.sections.introNotes[1].title,'THE MEETING','intro notes stay automatic');
 const catalogRow=(await (await sourceTruth.fetch(new Request('https://x.test/api/catalog?limit=10'),env,ctx)).json()).characters.find(c=>c.janitorUuid===UUID);
 assert.equal(catalogRow.short,'Admin tagline.','the list card shows the admin tagline');
+// The admin editor gets the saved override and the automatic split to start from.
+const { listAdminCharacters } = await import('../src/character-admin.js');
+const adminRow=(await (await listAdminCharacters(new Request('https://x.test/api/admin/characters'),env)).json()).characters.find(c=>c.uuid===UUID);
+assert.equal(adminRow.public_hook,'Admin tagline.');
+assert.match(adminRow.public_about,/## WHO SHE IS/);
+assert.equal(adminRow.auto_hook,s.hook,'admin list carries the automatic tagline');
+assert.match(adminRow.auto_about,/^## THE KINGDOM\nKael is the incoming king/,'admin list carries the automatic description');
 assert.equal((await patch({public_hook:undefined,public_about:undefined})).status,200);
 assert.equal(row().public_hook,'Admin tagline.','fields omitted from a save are kept');
 const workerSrc=fs.readFileSync('src/worker.js','utf8'),upsert=workerSrc.slice(workerSrc.indexOf('async function saveCharacter('),workerSrc.indexOf('\n',workerSrc.indexOf('async function saveCharacter(')));

@@ -276,6 +276,7 @@ function render(){
   const gridKey=JSON.stringify([pageSize,start,visible.map(bot=>bot.id)]);
   if(renderDomCache.gridSource!==B || renderDomCache.gridKey!==gridKey){
     grid.innerHTML=visible.map((b,i)=>cardHtml(b,i)).join("");
+    fitCardChips(grid);
     grid.querySelectorAll(".card-media").forEach(media=>{
       const image=media.querySelector("img");
       if(!image?.src)return;
@@ -369,11 +370,30 @@ if(pageSizeBtn && pageSizeMenu){
   });
 }
 
+// Tag / hashtag rows on list cards: show as many chips as fit whole, the rest go into "+N".
+// (Chips used to shrink to fit and got cut mid-word: "Dominar", "Religi".)
+function fitCardChips(root=document){
+  root.querySelectorAll(".card-tags[data-total],.card-hashtags[data-total]").forEach(row=>{
+    const total=Number(row.dataset.total)||0,chips=[...row.children].filter(x=>!x.classList.contains("chip-more"));
+    let more=row.querySelector(".chip-more");
+    chips.forEach(c=>c.hidden=false);
+    if(more)more.hidden=true;
+    const limit=row.clientWidth;
+    if(!limit)return;
+    const fits=()=>row.scrollWidth<=limit;
+    let shown=chips.length;
+    const sync=()=>{const n=total-shown;if(!n){if(more)more.hidden=true;return}if(!more){more=document.createElement("span");more.className="chip-more tag-more";row.appendChild(more)}more.hidden=false;more.textContent=`+${n}`};
+    sync();
+    while(shown>0&&!fits()){chips[--shown].hidden=true;sync()}
+  });
+}
+let fitChipsFrame=0;
+window.addEventListener("resize",()=>{cancelAnimationFrame(fitChipsFrame);fitChipsFrame=requestAnimationFrame(()=>fitCardChips($("#grid")))},{passive:true});
+
 function cardHtml(b,i){
   const tags = visibleBotTags(b);
   const hashtags = visibleBotHashtags(b);
-  const shown = tags.slice(0,4);
-  const more = tags.length - shown.length;
+  const shown = tags.slice(0,6); // fitCardChips hides what does not fit and adds "+N"
   const pov = botPov(b);
   const tagChip = tag => `<span>${esc(tagLabel(tag))}</span>`;
   const hashtagChip = hashtag => `<span>#${esc(cleanHashtag(hashtag))}</span>`;
@@ -390,8 +410,8 @@ function cardHtml(b,i){
         ${settings.slice(0,universes.length?1:2).map(setting=>`<button class="meta-token card-setting-token" data-quick-setting="${esc(setting)}" title="${esc(settingLabel(setting))}"><span class="setting-mark">⌖</span><span>${esc(settingLabel(setting))}</span></button>`).join("")}
       </div>
       <p class="card-short">${esc(b.short)}</p>
-      <div class="card-tags">${shown.map(tagChip).join("")}${more>0?`<span class="tag-more">+${more}</span>`:''}</div>
-      <div class="card-hashtags"${hashtags.length?'':' aria-hidden="true"'}>${hashtags.slice(0,3).map(hashtagChip).join("")}${hashtags.length>3?`<span>+${hashtags.length-3}</span>`:''}</div>
+      <div class="card-tags" data-total="${tags.length}">${shown.map(tagChip).join("")}</div>
+      <div class="card-hashtags" data-total="${hashtags.length}"${hashtags.length?'':' aria-hidden="true"'}>${hashtags.slice(0,6).map(hashtagChip).join("")}</div>
     </div>
   </article>`;
 }

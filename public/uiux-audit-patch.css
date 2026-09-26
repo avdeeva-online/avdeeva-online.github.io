@@ -371,3 +371,20 @@
   #grid .card-meta .meta-token~.meta-token{display:none!important}
   #grid .card-meta .meta-token{flex:0 1 auto!important;max-width:100%!important}
 }
+
+/* List card chip rows: chips keep their natural width (no mid-word cuts); app.js fitCardChips hides the ones that do not fit and adds +N. */
+#grid .card-tags>*,#grid .card-hashtags>*{flex:0 0 auto!important;min-width:auto!important;max-width:none!important}
+#grid .card-tags,#grid .card-hashtags{flex-wrap:nowrap!important;overflow:hidden!important}
+#grid .card-tags>[hidden],#grid .card-hashtags>[hidden]{display:none!important}
+
+/* Laptops / tablets (761–1180px): one toolbar row needs ~1140px, so below that the right group stacked
+   into a column and "SHOW / TOTAL" ran off the page. Two rows instead: actions + search, then filters + meta. */
+@media(min-width:761px) and (max-width:1180px){
+  .toolbar-row{
+    grid-template-columns:auto auto minmax(0,1fr) auto!important;
+    grid-template-areas:"catalog import search random" "primary primary secondary meta"!important;
+    row-gap:8px!important;
+  }
+  .secondary-group{justify-self:start!important}
+  .toolbar-meta{justify-self:end!important}
+}

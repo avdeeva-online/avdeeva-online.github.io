@@ -18,7 +18,8 @@ const normKey=v=>clean(v).toLocaleLowerCase();
 const sameStringSet=(a,b)=>{const aa=uniq(a).map(normKey).sort(),bb=uniq(b).map(normKey).sort();return aa.length===bb.length&&aa.every((v,i)=>v===bb[i])};
 
 
-function autoPublicText(r){const s=describeSections(r.description||'',{introCount:parse(r.intros).length});return{auto_hook:s.hook,auto_about:sectionsToText(s.about)}}
+// When nothing is recognised as the main description the site shows the whole creator text, so the editor starts from it too.
+function autoPublicText(r){const s=describeSections(r.description||'',{introCount:parse(r.intros).length});return{auto_hook:s.hook,auto_about:sectionsToText(s.about)||String(r.description||'').trim()}}
 function normalizeRow(r){
   return{
     uuid:r.janitor_uuid,

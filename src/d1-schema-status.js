@@ -11,7 +11,7 @@ export const D1_EXPECTED_SCHEMA={
   hub_resource_publish_files:['session_id','file_id','replace_old_id','is_primary'],
   telegram_admin_drafts:['id','source_url','payload','status','created_at','updated_at'],
   telegram_admin_import_session:['admin_user_id','channel','draft_id','last_post_id','updated_at'],
-  hub_suggestions:['id','url','note','status','created_at','updated_at'],
+  hub_suggestions:['id','url','note','status','created_at','updated_at','client_hash'],
   universe_curation:['source_key','source_value','public_universes','parent_universe','subuniverse','active','note','updated_at'],
   admin_universe_review:['review_key','status','note','updated_at'],
   archive_schema:['version','applied_at']

@@ -10,7 +10,8 @@ const migrationFiles=[
   'migrations/0002_universe_curation_seed.sql',
   'migrations/0003_hub_storage_normalize.sql',
   'migrations/0004_source_truth_marker.sql',
-  'migrations/0009_manual_pov_marker.sql'
+  'migrations/0009_manual_pov_marker.sql',
+  'migrations/0010_suggestion_rate_limit.sql'
 ];
 for(const file of migrationFiles)fail(fs.existsSync(file),`${file}: required migration missing`);
 

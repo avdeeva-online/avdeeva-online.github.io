@@ -721,7 +721,8 @@ document.addEventListener("click",e=>{
   if(passiveCardTags){e.stopPropagation();return}
   const tg=e.target.closest("[data-tag]");if(tg){e.stopPropagation();toggle("tag",tg.dataset.tag);closeModal();render();return}
   const hs=e.target.closest("[data-hashtag]");if(hs){e.stopPropagation();toggle("hashtag",hs.dataset.hashtag);closeModal();render();return}
-  const qs=e.target.closest("[data-quick-setting]");if(qs){e.stopPropagation();toggle("setting",qs.dataset.quickSetting);closeModal();render();return}
+  // Setting chips filter only from the opened record; on list cards they are passive (a tap opens the card), like tags.
+  const qs=e.target.closest("[data-quick-setting]");if(qs&&!qs.closest("#grid")){e.stopPropagation();toggle("setting",qs.dataset.quickSetting);closeModal();render();return}
   const qu=e.target.closest("[data-quick-universe]");if(qu){toggle("universe",qu.dataset.quickUniverse);closeModal();render();return}
   const actionToggle=e.target.closest(".mobile-action-toggle");
   if(actionToggle){

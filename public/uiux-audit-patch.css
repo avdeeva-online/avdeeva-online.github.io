@@ -315,3 +315,6 @@
 
 /* Unavailable lorebook / author-link actions are hidden instead of shown as disabled 'N/A' buttons. */
 #downloadLore[aria-disabled="true"],#openAuthor[aria-disabled="true"]{display:none!important}
+
+/* List-card setting chips are passive labels (plan: no accidental filters while scrolling); taps go to the card. */
+#grid .card-setting-token{pointer-events:none}

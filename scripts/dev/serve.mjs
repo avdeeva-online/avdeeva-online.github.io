@@ -19,6 +19,13 @@ http.createServer(async (req, res) => {
     fs.writeFileSync(path.join(SNAP_DIR, name + '.json'), Buffer.concat(chunks));
     res.writeHead(200); return res.end('saved ' + name);
   }
+  if (url.pathname === '/__save' && req.method === 'POST') { // binary output of in-browser image work, into <snapDir>/out
+    const chunks = []; for await (const c of req) chunks.push(c);
+    const name = path.basename(url.searchParams.get('name') || 'out.bin');
+    fs.mkdirSync(path.join(SNAP_DIR, 'out'), { recursive: true });
+    fs.writeFileSync(path.join(SNAP_DIR, 'out', name), Buffer.concat(chunks));
+    res.writeHead(200); return res.end('saved ' + name + ' ' + Buffer.concat(chunks).length);
+  }
   if (url.pathname === '/__snap.js') { res.writeHead(200, { 'content-type': 'text/javascript' }); return res.end(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'snap.js'))); }
   if (url.pathname.startsWith('/api/')) {
     if (req.method !== 'GET') { res.writeHead(405); return res.end('read-only preview'); }

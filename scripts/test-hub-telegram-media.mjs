@@ -4,6 +4,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { publishHubResource, repairHubMedia } from '../src/hub-resources.js';
 import { getHubResourcePublic, downloadHubFilePublic } from '../src/hub-public-media.js';
 import { postSummary, postTitle, tidyPostText } from '../src/hub-telegram.js';
+import { submitHubSuggestion } from '../src/hub-suggestions.js';
 
 // Real SQL on an in-memory SQLite built from the migrations, behind a minimal D1 shim; R2 is a Map.
 const db=new DatabaseSync(':memory:');
@@ -62,11 +63,18 @@ assert.equal(m[0].cover,true);await storedOk('old',m[0].url);await storedOk('old
 // 5. Running again finds nothing left to repair.
 assert.equal((await (await repairHubMedia(new Request('https://x.test/api/admin/hub-media-repair'),env)).json()).resources,0);
 
-// 6. Post text cleanup (samples from real channels).
+// 6. Public suggestion form: 5 per visitor per hour, other visitors unaffected, raw IP never stored.
+const suggest=(ip,n)=>submitHubSuggestion(new Request('https://x.test/api/hub-suggestions',{method:'POST',headers:{'content-type':'application/json','cf-connecting-ip':ip},body:JSON.stringify({url:`https://t.me/spam/${n}`})}),env);
+for(let n=0;n<5;n++)assert.equal((await suggest('203.0.113.7',n)).status,201);
+assert.equal((await suggest('203.0.113.7',99)).status,429,'6th suggestion within an hour is rejected');
+assert.equal((await suggest('198.51.100.2',100)).status,201,'another visitor can still suggest');
+assert.equal(JSON.stringify(db.prepare('SELECT * FROM hub_suggestions').all()).includes('203.0.113.7'),false,'raw IP must not be stored');
+
+// 7. Post text cleanup (samples from real channels).
 const post='🎀🎀🎀\n\n🌫   🎀  ☺️овый\nSCP – ███⠀(«Shadow»)\n#psitro_presets\nMale/not a person/dominant/horror/AnyPOV\nВ глубоководном бункере Фонда SCP произошёл катастрофический прорыв.\n\n    Please open Telegram to view this post\n\n    VIEW IN TELEGRAM\n\n1282';
 assert.equal(tidyPostText(post),'🌫   🎀  ☺️овый\nSCP – ███⠀(«Shadow»)\nMale/not a person/dominant/horror/AnyPOV\nВ глубоководном бункере Фонда SCP произошёл катастрофический прорыв.');
 assert.equal(postTitle(post),'SCP – ███⠀(«Shadow»)','premium-emoji line skipped, first real line is the title');
 assert.equal(postSummary(post),'В глубоководном бункере Фонда SCP произошёл катастрофический прорыв.','tag line skipped');
 assert.equal(postTitle('Этот пресет станет основным для моего канала, я очень долго продумывала визуал.'),'','a long sentence is not a title');
 
-console.log('ARCHIVE.EXE HUB media behavior OK · post text cleanup + Telegram CDN + manual covers stored as files, editor re-save keeps embedded cover, expired covers repaired from source post');
+console.log('ARCHIVE.EXE HUB media behavior OK · suggestion rate limit + post text cleanup + Telegram CDN + manual covers stored as files, editor re-save keeps embedded cover, expired covers repaired from source post');

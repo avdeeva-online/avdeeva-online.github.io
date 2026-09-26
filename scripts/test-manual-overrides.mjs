@@ -21,7 +21,7 @@ const saveCharacter=new Function(`${workerSrc.slice(start,end)}\nreturn saveChar
 
 const UUID='11111111-2222-3333-4444-555555555555',row=(u=UUID)=>db.prepare('SELECT * FROM characters WHERE janitor_uuid=?').get(u),list=v=>JSON.parse(v||'[]');
 const card=over=>({janitor_uuid:UUID,slug:'x',name:'Test Bot',author:'Auth',author_url:'',universe:'Source Universe',pov:'FemPOV',tags:['😂 Comedy','👩 FemPov'],hashtags:[],short_description:'s',description:'d',scenario:'',intros:[],image_url:'i',janitor_url:'j',datacat_url:'dc',card_url:'',lorebook_url:'',source:'janitor',status:'published',...over});
-const backfill=()=>sourceTruth.fetch(new Request('https://x.test/api/admin/discovery-backfill'),env,{waitUntil(){}});
+const backfill=()=>sourceTruth.fetch(new Request('https://x.test/api/admin/discovery-backfill',{method:'POST'}),env,{waitUntil(){}});
 
 await saveCharacter(env,card());
 assert.equal(row().status,'published');

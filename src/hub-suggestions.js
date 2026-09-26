@@ -7,10 +7,6 @@ async function ensureTable(env){
   return schemaReady;
 }
 
-// Spam guard for the public form: per-visitor and site-wide hourly caps. Only a salted IP hash is kept.
-const PER_CLIENT_PER_HOUR=5,GLOBAL_PER_HOUR=60;
-async function clientHash(request){const ip=request.headers.get('cf-connecting-ip')||request.headers.get('x-forwarded-for')||'unknown';const bytes=new TextEncoder().encode(`archive-hub-suggest|${ip}`),hash=await crypto.subtle.digest('SHA-256',bytes);return[...new Uint8Array(hash)].slice(0,12).map(x=>x.toString(16).padStart(2,'0')).join('')}
-
 function normalizeUrl(raw){
   try{
     const u=new URL(String(raw||'').trim());
@@ -33,10 +29,7 @@ export async function submitHubSuggestion(request,env){
   await ensureTable(env);
   const recent=await env.DB.prepare("SELECT id FROM hub_suggestions WHERE url=? AND status IN ('new','reviewing') AND created_at >= datetime('now','-30 days') LIMIT 1").bind(url).first();
   if(recent)return json({ok:true,duplicate:true});
-  const client=await clientHash(request);
-  const limits=await env.DB.prepare("SELECT (SELECT COUNT(*) FROM hub_suggestions WHERE client_hash=? AND created_at >= datetime('now','-1 hour')) AS mine,(SELECT COUNT(*) FROM hub_suggestions WHERE created_at >= datetime('now','-1 hour')) AS total").bind(client).first();
-  if(Number(limits?.mine||0)>=PER_CLIENT_PER_HOUR||Number(limits?.total||0)>=GLOBAL_PER_HOUR)return json({ok:false,error:'TOO MANY SUGGESTIONS — TRY AGAIN LATER'},429);
-  const out=await env.DB.prepare("INSERT INTO hub_suggestions(url,note,status,client_hash,created_at,updated_at) VALUES(?,?,'new',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind(url,note,client).run();
+  const out=await env.DB.prepare("INSERT INTO hub_suggestions(url,note,status,created_at,updated_at) VALUES(?,?,'new',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind(url,note).run();
   return json({ok:true,id:out.meta?.last_row_id||null},201);
 }
 

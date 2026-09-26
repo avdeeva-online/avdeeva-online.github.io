@@ -319,12 +319,13 @@
 /* List-card setting chips are passive labels (plan: no accidental filters while scrolling); taps go to the card. */
 #grid .card-setting-token{pointer-events:none}
 
-/* ---------- Phone: catalog drawer ----------
+/* ---------- Catalog drawer (phone and desktop) ----------
    The archive look: compact, monospace labels, translucent glass. Only the sizes that were unreadable
-   (5.5–6px tabs, counters, footer) are raised a little; names stay small and light. */
-@media(max-width:760px){
+   (5.5–6.7px tabs, counters, footer) are raised a little; names stay small and light. */
+@media(max-width:760px){#catalogDrawer.catalog-drawer{width:min(86vw,340px)!important;max-width:none!important}}
+@media(min-width:761px){#catalogDrawer.catalog-drawer{width:344px!important;max-width:none!important}}
+@media all{
   #catalogDrawer.catalog-drawer{
-    width:min(86vw,340px)!important;max-width:none!important;
     background:rgba(13,16,13,.8)!important;
     -webkit-backdrop-filter:blur(14px) saturate(1.1)!important;backdrop-filter:blur(14px) saturate(1.1)!important;
     border-right:1px solid rgba(120,136,108,.18)!important;

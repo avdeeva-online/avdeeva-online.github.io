@@ -31,7 +31,6 @@ const normalizeSettings=v=>[...new Set(arr(v).map(x=>{x=clean(x).toLowerCase();i
 const isExtraMeta=name=>clean(name).startsWith(EXTRA_PREFIX);
 const isSourceMeta=name=>clean(name).startsWith(SOURCE_PREFIX);
 const inferMime=(name,mime='')=>{const m=clean(mime).toLowerCase();if(m&&m!=='application/octet-stream')return m;const n=clean(name).toLowerCase();if(/\.webp$/.test(n))return'image/webp';if(/\.png$/.test(n))return'image/png';if(/\.jpe?g$/.test(n))return'image/jpeg';if(/\.gif$/.test(n))return'image/gif';if(/\.json$/.test(n))return'application/json';if(/\.zip$/.test(n))return'application/zip';if(/\.txt$/.test(n))return'text/plain';if(/\.css$/.test(n))return'text/css';return m||'application/octet-stream'};
-const toBytes=v=>{if(v instanceof Uint8Array)return v;if(v instanceof ArrayBuffer)return new Uint8Array(v);if(ArrayBuffer.isView(v))return new Uint8Array(v.buffer,v.byteOffset,v.byteLength);if(Array.isArray(v))return Uint8Array.from(v);return new Uint8Array(0)};
 const hasR2=env=>Boolean(env?.HUB_FILES&&typeof env.HUB_FILES.put==='function'&&typeof env.HUB_FILES.get==='function');
 const safeKeyName=name=>clean(name).replace(/[^a-z0-9._-]+/gi,'_').replace(/^_+|_+$/g,'').slice(0,120)||'file';
 const r2Key=(resourceId,fileId,name)=>`hub/${resourceId}/${fileId}/${safeKeyName(name)}`;
@@ -67,14 +66,6 @@ async function parsePublishRequest(request){
   return{draft,files:[],extraImages:[],remoteFiles:arr(draft?.files).filter(x=>x?.source==='telegram'&&x?.url)};
 }
 
-async function readD1Body(env,row){
-  if(row?.data!=null){const body=toBytes(row.data);if(!body.byteLength&&Number(row.size||0)>0)throw new Error('FILE_DATA_INVALID');return body}
-  const chunks=await env.DB.prepare('SELECT data FROM hub_resource_file_chunks WHERE file_id=? ORDER BY chunk_index ASC').bind(row.id).all();
-  if(!(chunks.results||[]).length){if(Number(row.size||0)===0)return new Uint8Array(0);throw new Error('FILE_DATA_MISSING')}
-  const parts=(chunks.results||[]).map(x=>toBytes(x.data)),total=parts.reduce((n,p)=>n+p.byteLength,0),joined=new Uint8Array(total);
-  let offset=0;for(const p of parts){joined.set(p,offset);offset+=p.byteLength}
-  return joined;
-}
 
 async function deleteStoredFile(env,fileId,resourceId=''){
   const row=resourceId
@@ -376,6 +367,8 @@ export async function publishHubResource(request,env){
   await ensureSchema(env);const url=new URL(request.url),action=clean(url.searchParams.get('action')).toLowerCase();let parsed;
   try{parsed=await parsePublishRequest(request)}catch(e){return json({ok:false,error:String(e.message||e)},400)}
   try{
+    // Recover publish sessions abandoned >30 min ago (finalize if they were committing, otherwise roll back) before starting a new one.
+    if(action==='begin'||!action)await cleanupStaleSessions(env);
     if(action==='begin'){const x=await beginSession(env,parsed.draft);return json({ok:true,session_id:x.sessionId,id:x.id,updated:x.updated,status:'staging',storage:hasR2(env)?'r2':'d1'})}
     if(action==='upload'){const sid=clean(parsed.draft?._publish_session||url.searchParams.get('session'));const session=await sessionRow(env,sid);if(!session)return json({ok:false,error:'PUBLISH_SESSION_NOT_FOUND'},404);const out=await uploadToSession(env,session,parsed);return json({ok:true,session_id:sid,id:session.resource_id,...out,status:'staging'})}
     if(action==='metadata'){const sid=clean(parsed.draft?._publish_session||url.searchParams.get('session'));const session=await sessionRow(env,sid);if(!session)return json({ok:false,error:'PUBLISH_SESSION_NOT_FOUND'},404);const out=await updateSessionMetadata(env,session,parsed.draft);return json({ok:true,session_id:sid,...out,status:'staging'})}
@@ -414,27 +407,3 @@ export async function deleteHubResource(env,resourceId){
   await env.DB.prepare('DELETE FROM hub_resources WHERE id=?').bind(resourceId).run();return json({ok:true});
 }
 
-export async function listHubResources(env){
-  await ensureSchema(env);await cleanupStaleSessions(env);
-  const res=await env.DB.prepare(`SELECT r.*, (SELECT f.id FROM hub_resource_files f WHERE f.resource_id=r.id AND f.name NOT LIKE '__extra__%' AND NOT EXISTS(SELECT 1 FROM hub_resource_publish_files sf WHERE sf.file_id=f.id) ORDER BY f.is_primary DESC,f.created_at ASC LIMIT 1) primary_file_id,(SELECT COUNT(*) FROM hub_resource_files f WHERE f.resource_id=r.id AND f.name NOT LIKE '__extra__%' AND NOT EXISTS(SELECT 1 FROM hub_resource_publish_files sf WHERE sf.file_id=f.id)) file_count FROM hub_resources r WHERE r.status='published' ORDER BY r.updated_at DESC`).all();
-  const fileRes=await env.DB.prepare(`SELECT f.id,f.resource_id,f.name,f.mime,f.size,f.is_primary,f.external_url,f.storage,f.r2_key FROM hub_resource_files f INNER JOIN hub_resources r ON r.id=f.resource_id WHERE r.status='published' AND NOT EXISTS(SELECT 1 FROM hub_resource_publish_files sf WHERE sf.file_id=f.id) ORDER BY f.is_primary DESC,f.created_at ASC`).all(),filesByResource=new Map();
-  for(const f of fileRes.results||[]){if(!filesByResource.has(f.resource_id))filesByResource.set(f.resource_id,[]);filesByResource.get(f.resource_id).push({id:f.id,name:f.name,mime:inferMime(f.name,f.mime),size:Number(f.size||0),primary:Boolean(f.is_primary),extra:isExtraMeta(f.name)&&!isSourceMeta(f.name),source:isSourceMeta(f.name),external_url:f.external_url||'',storage:clean(f.storage)||'d1',download_url:`/api/hub-resources/${encodeURIComponent(f.resource_id)}/files/${encodeURIComponent(f.id)}`})}
-  const items=(res.results||[]).map(r=>({id:r.id,source_url:r.source_url,type:r.type,title:r.title,creator:{name:r.creator_name,link:r.creator_link},description_short:r.description_short,description_full:r.description_full,additional_info:r.additional_info||'',models:parseJson(r.models),settings:normalizeSettings(parseJson(r.settings)),tags:parseJson(r.tags).filter(x=>clean(x).toLowerCase()!=='magic'),media:parseJson(r.media),primary_file_id:r.primary_file_id||null,file_count:Number(r.file_count||0),files:(filesByResource.get(r.id)||[]).filter(f=>!f.source),source_files:(filesByResource.get(r.id)||[]).filter(f=>f.source),updated_at:r.updated_at}));
-  return json({ok:true,resources:items,count:items.length,storage:{r2_available:hasR2(env)}});
-}
-
-export async function downloadHubFile(env,resourceId,fileId){
-  await ensureSchema(env);const published=await env.DB.prepare("SELECT id FROM hub_resources WHERE id=? AND status='published' LIMIT 1").bind(resourceId).first();if(!published)return json({ok:false,error:'RESOURCE_NOT_FOUND'},404);
-  const row=await env.DB.prepare('SELECT id,name,mime,size,data,external_url,storage,r2_key FROM hub_resource_files WHERE id=? AND resource_id=? AND NOT EXISTS(SELECT 1 FROM hub_resource_publish_files sf WHERE sf.file_id=hub_resource_files.id) LIMIT 1').bind(fileId,resourceId).first();if(!row)return json({ok:false,error:'FILE_NOT_FOUND'},404);
-  if(row.external_url)return Response.redirect(row.external_url,302);
-  const mime=inferMime(row.name,row.mime),extra=isExtraMeta(row.name),headers=new Headers({'content-type':mime,'cache-control':'public, max-age=86400','x-content-type-options':'nosniff'});
-  if(!extra)headers.set('content-disposition',`attachment; filename*=UTF-8''${encodeURIComponent(row.name||'download')}`);
-  if(clean(row.storage)==='r2'&&clean(row.r2_key)){
-    if(!hasR2(env))return json({ok:false,error:'R2_BINDING_REQUIRED'},503);
-    const object=await env.HUB_FILES.get(clean(row.r2_key));if(!object)return json({ok:false,error:'R2_OBJECT_MISSING'},404);
-    headers.set('content-length',String(object.size));if(object.httpEtag)headers.set('etag',object.httpEtag);
-    return new Response(object.body,{status:200,headers});
-  }
-  let body;try{body=await readD1Body(env,row)}catch(e){return json({ok:false,error:String(e?.message||e)},500)}
-  headers.set('content-length',String(body.byteLength));return new Response(body,{status:200,headers});
-}

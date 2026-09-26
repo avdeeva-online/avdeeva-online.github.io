@@ -10,7 +10,8 @@ POLICY_AUD = "366f84d7f9485d0a12cfe8fe7835ca7276614da855e1a18ae426f67b9c77cc29"
 [assets]
 directory = "./public"
 binding = "ASSETS"
-run_worker_first = ["/admin/*", "/api/*", "/telegram/*", "/hub", "/hub.html"]
+# HTML pages go through the Worker so they get the security headers (CSP, frame-ancestors, nosniff…).
+run_worker_first = ["/admin/*", "/api/*", "/telegram/*", "/hub", "/hub.html", "/", "/index.html", "/characters", "/characters.html"]
 
 [images]
 binding = "IMAGES"

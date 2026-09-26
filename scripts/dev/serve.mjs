@@ -38,6 +38,8 @@ http.createServer(async (req, res) => {
   let file = path.join(ROOT, p);
   if (!path.extname(file) && fs.existsSync(file + '.html')) file += '.html';
   if (!file.startsWith(ROOT) || !fs.existsSync(file)) { res.writeHead(404); return res.end('not found'); }
-  res.writeHead(200, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream', 'cache-control': 'no-store' });
+  const headers = { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream', 'cache-control': 'no-store' };
+  if (process.env.PREVIEW_CSP && file.endsWith('.html')) headers['content-security-policy'] = process.env.PREVIEW_CSP; // test the production CSP locally
+  res.writeHead(200, headers);
   fs.createReadStream(file).pipe(res);
 }).listen(PORT, () => console.log(`preview on http://localhost:${PORT}`));

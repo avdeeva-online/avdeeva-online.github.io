@@ -63,6 +63,18 @@ assert.equal(m[0].cover,true);await storedOk('old',m[0].url);await storedOk('old
 // 5. Running again finds nothing left to repair.
 assert.equal((await (await repairHubMedia(new Request('https://x.test/api/admin/hub-media-repair'),env)).json()).resources,0);
 
+// 5b. A publish abandoned >30 min ago is rolled back (staged file removed, draft never published) when the next one begins.
+const beginBody=url=>JSON.stringify({source:{type:'telegram',url},type:'preset',title:'Abandoned'});
+const abandoned=await (await publishHubResource(new Request('https://x.test/api/admin/hub-resource?action=begin',{method:'POST',headers:{'content-type':'application/json'},body:beginBody('https://t.me/CHAN/40')}),env)).json();
+const upForm=new FormData();upForm.append('resource',new Blob([JSON.stringify({_publish_session:abandoned.session_id})],{type:'application/json'}),'resource.json');upForm.append('files',new File([jpeg],'preset.json',{type:'application/json'}));
+await publishHubResource(new Request('https://x.test/api/admin/hub-resource?action=upload',{method:'POST',body:upForm}),env);
+assert.equal(db.prepare('SELECT COUNT(*) AS n FROM hub_resource_files WHERE resource_id=?').get(abandoned.id).n,1);
+db.prepare("UPDATE hub_resource_publish_sessions SET updated_at=datetime('now','-40 minutes') WHERE id=?").run(abandoned.session_id);
+await publishHubResource(new Request('https://x.test/api/admin/hub-resource?action=begin',{method:'POST',headers:{'content-type':'application/json'},body:beginBody('https://t.me/CHAN/41')}),env);
+assert.equal(db.prepare('SELECT COUNT(*) AS n FROM hub_resource_publish_sessions WHERE id=?').get(abandoned.session_id).n,0,'stale session must be cleaned up');
+assert.equal(db.prepare('SELECT COUNT(*) AS n FROM hub_resource_files WHERE resource_id=?').get(abandoned.id).n,0,'staged files of a stale session must be removed');
+assert.equal(db.prepare('SELECT COUNT(*) AS n FROM hub_resources WHERE id=?').get(abandoned.id).n,0,'an abandoned new resource must never appear');
+
 // 6. Public suggestion form: accepted, and the same link is not queued twice.
 const suggest=n=>submitHubSuggestion(new Request('https://x.test/api/hub-suggestions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:`https://t.me/chan/${n}`})}),env);
 for(let n=0;n<7;n++)assert.equal((await suggest(n)).status,201,'no per-visitor limit');

@@ -20,6 +20,9 @@ for(const path of ['/','/characters','/hub']){
   const {response,bytes}=await request(path);
   assert.match(response.headers.get('content-type')||'',/text\/html/i,`${path}: HTML content type missing`);
   assert.ok(bytes.byteLength>1_000,`${path}: response is unexpectedly small`);
+  // Pages must go through the Worker (wrangler run_worker_first) so they carry the security headers.
+  assert.match(response.headers.get('content-security-policy')||'',/frame-ancestors 'none'/,`${path}: security headers missing (page bypassed the Worker)`);
+  assert.equal(response.headers.get('x-content-type-options'),'nosniff',`${path}: nosniff header missing`);
 }
 
 const catalog=await request('/api/catalog?limit=1000',{json:true});
@@ -38,6 +41,8 @@ if(hub.data.resources.length){
   assert.equal(detail.data?.resource?.id,first.id,'HUB detail returned the wrong resource');
 }
 
+const expiringCovers=hub.data.resources.filter(item=>/telesco\.pe|telegram-cdn\.org/i.test(String(item.cover_url||'')));
+assert.equal(expiringCovers.length,0,`HUB covers still point at expiring Telegram CDN links: ${expiringCovers.map(x=>x.title).join(', ')}`);
 const localCovers=hub.data.resources.filter(item=>String(item.cover_url||'').startsWith('/api/'));
 for(const item of localCovers){
   const cover=await request(item.cover_url,{attempts:3});

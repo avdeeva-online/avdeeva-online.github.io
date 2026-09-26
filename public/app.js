@@ -386,12 +386,12 @@ function cardHtml(b,i){
       <div class="card-author">BY <button data-author="${esc(b.author)}">@${esc(b.author)}</button></div>
       <div class="card-meta card-system-line">
         <span class="card-status-icon card-pov-icon pov-${esc(pov.toLowerCase())}" title="${esc(povLabel(pov))}" aria-label="${esc(povLabel(pov))}"><span>${esc(povSymbol(pov))}</span></span>
-        ${settings.slice(0,2).map(setting=>`<button class="meta-token card-setting-token" data-quick-setting="${esc(setting)}"><span class="setting-mark">⌖</span><span>${esc(settingLabel(setting))}</span></button>`).join("")}
-        ${universes.slice(0,2).map(universe=>`<button class="meta-token card-universe-token" data-quick-universe="${esc(universe)}">${globeSvg}<span>${esc(universe)}</span></button>`).join("")}
+        ${universes.slice(0,1).map(universe=>`<button class="meta-token card-universe-token" data-quick-universe="${esc(universe)}" title="${esc(universe)}">${globeSvg}<span>${esc(universe)}</span></button>`).join("")}
+        ${settings.slice(0,universes.length?1:2).map(setting=>`<button class="meta-token card-setting-token" data-quick-setting="${esc(setting)}" title="${esc(settingLabel(setting))}"><span class="setting-mark">⌖</span><span>${esc(settingLabel(setting))}</span></button>`).join("")}
       </div>
       <p class="card-short">${esc(b.short)}</p>
       <div class="card-tags">${shown.map(tagChip).join("")}${more>0?`<span class="tag-more">+${more}</span>`:''}</div>
-      ${hashtags.length?`<div class="card-hashtags">${hashtags.slice(0,3).map(hashtagChip).join("")}${hashtags.length>3?`<span>+${hashtags.length-3}</span>`:''}</div>`:''}
+      <div class="card-hashtags"${hashtags.length?'':' aria-hidden="true"'}>${hashtags.slice(0,3).map(hashtagChip).join("")}${hashtags.length>3?`<span>+${hashtags.length-3}</span>`:''}</div>
     </div>
   </article>`;
 }

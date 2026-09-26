@@ -46,6 +46,9 @@ fail(hub.includes('extraFile(f)&&imageFile(f)'),'public/hub-dynamic.js: EXTRAS m
 fail(hub.includes('downloadFiles=files.filter(f=>!extraFile(f))'),'public/hub-dynamic.js: downloads must exclude EXTRAS');
 
 const catalog=read('public/characters.html');
+const appJs=read('public/app.js');
+fail(appJs.includes('universes.slice(0,1)')&&appJs.includes('settings.slice(0,universes.length?1:2)'),'public/app.js: list cards show at most 1 universe + 1 setting (2 settings without a universe)');
+fail(!read('public/source-label-fix.js').includes('decorateCard'),'public/source-label-fix.js: list cards must not be re-decorated after render (two card layouts)');
 fail(/id=["']importOpen["']/.test(catalog),'public/characters.html: public + IMPORT button missing');
 fail(/src=["']character-import\.js/.test(catalog),'public/characters.html: character-import.js not loaded');
 fail(!read('public/catalog-api.js').includes('disablePublicImport'),'public/catalog-api.js: public import must not be hidden');

@@ -29,8 +29,8 @@
       .card-meta{display:flex!important;align-items:center!important;flex-wrap:nowrap!important;gap:5px!important;overflow:hidden!important;min-width:0!important}
       .card-meta .card-universe-token,.card-meta .card-setting-token{flex:0 1 auto!important;min-width:0!important;max-width:100%!important;overflow:hidden!important}.card-meta .card-universe-token span,.card-meta .card-setting-token span:last-child{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}.card-meta .card-universe-token .ui-icon,.card-meta .setting-mark,.card-meta .card-pov-icon{flex:0 0 auto!important}
       .card-hashtags{min-height:15px!important}.card-hashtags:empty{visibility:hidden!important}
-      .card-tags button,.card-tags span{font-family:Arial,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif!important}
-      .card-hashtags button,.card-hashtags span{font-family:Arial,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif!important}
+      .card-tags button,.card-tags span{font-family:var(--font-text),"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif!important}
+      .card-hashtags button,.card-hashtags span{font-family:var(--font-text),"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif!important}
       .facet-extra{display:none!important}.modal-setting-more,.modal-universe-more,.modal-tag-more,.modal-hashtag-more{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;color:#6f796e!important;font:7px/1 var(--mono)!important}
       @media(min-width:761px){
         .modal-card{height:min(446px,84vh)!important;min-height:min(446px,84vh)!important;max-height:min(446px,84vh)!important}

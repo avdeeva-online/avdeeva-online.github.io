@@ -82,7 +82,7 @@
     box-shadow:none!important;
   }
   .primary-group>.control::after,.secondary-group>.control::after{
-    font:500 6px/1 Arial,sans-serif!important;
+    font:500 6px/1 var(--font-text)!important;
     letter-spacing:.045em!important;
     color:#717a70!important;
   }
@@ -247,7 +247,7 @@
     height:15px!important;
     margin:0!important;
     padding:0!important;
-    font-family:Arial,sans-serif!important;
+    font-family:var(--font-text)!important;
     font-size:13px!important;
     font-weight:400!important;
     line-height:15px!important;

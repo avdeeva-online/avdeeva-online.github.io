@@ -223,7 +223,17 @@ body{min-height:100vh;overflow-x:hidden}
   .hub-modal .hub-tab-pane.active{overflow:visible!important;padding-right:0!important}
   .hub-modal .hub-modal-cover{border-radius:16px 16px 0 0!important}
   .hub-modal .hub-modal-nav{display:none!important}
-  .hub-modal .hub-modal-close{position:fixed!important;top:8px!important;right:10px!important;width:auto!important;height:30px!important;padding:0 11px 0 12px!important;border-radius:16px!important;display:inline-flex!important;align-items:center!important;gap:6px!important;background:rgba(10,13,10,.88)!important;font:400 15px/1 Arial,sans-serif!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+  .hub-modal .hub-modal-close{position:fixed!important;top:8px!important;right:10px!important;width:auto!important;height:30px!important;padding:0 11px 0 12px!important;border-radius:16px!important;display:inline-flex!important;align-items:center!important;gap:6px!important;background:rgba(10,13,10,.88)!important;font:400 15px/1 var(--font-text)!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
   .hub-modal .hub-modal-close::before{content:"CLOSE";font:600 8px/1 var(--mono);letter-spacing:.14em}
 }
 @media(max-width:760px){.search-wrap .hub-suggest-btn{position:static!important;display:inline-flex!important;margin:8px 0 0!important}}
+
+/* Typography (Overgrown archive): Cormorant replaces Georgia; it reads smaller, so titles run a few px larger. */
+.resource-card .card-title-row h3{font-family:var(--font-title)!important;font-weight:700!important;font-size:19px!important;letter-spacing:0!important}
+.hub-modal .hub-modal-title{font-family:var(--font-title)!important;font-size:31px!important;line-height:1!important}
+@media(max-width:700px){.hub-modal .hub-modal-title{font-size:26px!important}}
+.hub-suggest-title{font-family:var(--font-title)!important;font-size:26px!important}
+.resource-card .card-body>p{font-family:var(--font-text)!important;font-size:11.5px!important;line-height:1.45!important;letter-spacing:0!important}
+.hub-modal .hub-modal-desc,.hub-modal .hub-extra-text{font-family:var(--font-text)!important;font-size:14.5px!important;line-height:1.65!important}
+@media(max-width:700px){.hub-modal .hub-modal-desc,.hub-modal .hub-extra-text{font-size:14px!important}}
+.directory h1,.hub h1{font-size:27px!important;letter-spacing:.01em!important}

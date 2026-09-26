@@ -3,7 +3,7 @@
 
   if(!document.querySelector('script[data-archive-cross-nav]')){
     const navScript=document.createElement('script');
-    navScript.src='cross-nav.js?v=1';
+    navScript.src='cross-nav.js?v=20260926-fonts1';
     navScript.dataset.archiveCrossNav='1';
     document.head.appendChild(navScript);
   }

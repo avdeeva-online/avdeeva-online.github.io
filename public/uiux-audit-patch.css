@@ -346,7 +346,7 @@
   #catalogDrawer #drawerSortCycle b{font-size:8.5px!important;letter-spacing:.1em!important}
   /* Rows: name 12px light, counter 7.5px monospace. */
   #catalogDrawer .drawer-item{min-height:40px!important}
-  #catalogDrawer .drawer-world-copy b,#catalogDrawer .drawer-item-name{font:400 12px/1.3 Arial,"Segoe UI",sans-serif!important;letter-spacing:.01em!important;color:#d6dbcf!important}
+  #catalogDrawer .drawer-world-copy b,#catalogDrawer .drawer-item-name{font:400 12px/1.3 var(--font-text)!important;letter-spacing:.01em!important;color:#d6dbcf!important}
   #catalogDrawer .drawer-item small,#catalogDrawer .drawer-world-copy small{font:7.5px/1.3 var(--mono)!important;letter-spacing:.1em!important;color:#7d8878!important}
   #catalogDrawer .drawer-world-id{font:7.5px/1 var(--mono)!important;letter-spacing:.08em!important}
   #catalogDrawer .drawer-item>i{font-size:11px!important;color:#7d8878!important;opacity:1!important}
@@ -354,7 +354,7 @@
   #catalogDrawer .drawer-tag-item small{font-size:7px!important}
   #catalogDrawer [data-tag-mode]{font:8px/1 var(--mono)!important;letter-spacing:.12em!important}
   /* Lorebooks: the same scale. The list of bots a file belongs to is clamped to two lines. */
-  #catalogDrawer .lore-index-row b{font:400 12px/1.3 Arial,sans-serif!important}
+  #catalogDrawer .lore-index-row b{font:400 12px/1.3 var(--font-text)!important}
   #catalogDrawer .lore-index-row small,#catalogDrawer .lore-index-no{font-size:7.5px!important;letter-spacing:.1em!important}
   #catalogDrawer .lore-back,#catalogDrawer .lore-crumbs,#catalogDrawer .lore-crumbs *{font-size:8.5px!important;letter-spacing:.08em!important}
   #catalogDrawer .lore-section-title{font-size:12px!important}
@@ -389,3 +389,7 @@
   .secondary-group{justify-self:start!important}
   .toolbar-meta{justify-self:end!important}
 }
+
+/* Typography (Overgrown archive): bot names are titles in the old-book serif. Cormorant has a small x-height, so it runs a few px larger than the old Arial. */
+#grid .card-title{font-family:var(--font-title)!important;font-weight:700!important;font-size:17px!important;line-height:1.05!important;letter-spacing:0!important}
+@media(max-width:760px){#grid .card-title{font-size:15.5px!important}}

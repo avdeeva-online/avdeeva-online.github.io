@@ -6,6 +6,7 @@ import { registerHooks } from 'node:module';
 // Admin JWT checks are not exercised here; stub 'jose' so the test runs without node_modules.
 registerHooks({resolve:(spec,ctx,next)=>spec==='jose'?{url:'data:text/javascript,export const createRemoteJWKSet=()=>null;export const jwtVerify=async()=>{throw new Error(\'stub\')};',shortCircuit:true}:next(spec,ctx)});
 const {default:entry}=await import('../src/cloudflare-entry-v2.js');
+const {makeCard}=await import('../src/worker.js');
 
 // Public "+ IMPORT" gate: real SQL on an in-memory SQLite built from the migrations, behind a minimal D1 shim.
 const db=new DatabaseSync(':memory:');
@@ -41,4 +42,8 @@ assert.equal(r.status,404,'status polling must not expose a hidden bot either');
 assert.equal((await call('/api/import')).status,405);
 assert.equal((await call(`/api/import/status?uuid=${PUBLISHED}`,{method:'POST'})).status,405);
 
-console.log('Public import gate OK');
+// Imported cards: the first greeting must not come back as an alternate (whitespace-only difference), junk greetings are dropped.
+const greetings=makeCard({name:'X'},{description:'d',firstMes:'Hello feet. \n\nBye',alternateGreetings:['Hello feet.\n\nBye','.','Second']},PUBLISHED).data.alternate_greetings;
+assert.deepEqual(greetings,['Second']);
+
+console.log('Public import gate OK · no duplicate or junk greetings');

@@ -25,6 +25,7 @@
 | `source-label-fix.js` | Обёртка `render`: строки сеттингов, вселенных и тегов на карточках и в модалке |
 | `lorebook-picker.js` / `lorebooks.js` | Выбор и скачивание лорбуков; вкладки лорбуков и хэштегов в каталоге |
 | `ui-fixes.js` | Открытие карточки по событию `archive:open-character` (например, из импорта) |
+| `hub-facets.js` | Характеристики ресурсов HUB (темы: тон / стиль / цвет / мотивы; плагины: назначение). Хранятся в обычных тегах как `группа:значение` (`tone:dark`, `color:pink`). Один словарь для кнопок в админке (`admin/hub/facet-picker.js`) и фильтров на сайте (`hub-category-filters.js`) — новое значение добавляется только здесь |
 | `fonts/fonts.css` | Шрифты сайта («Заросший архив»), лежат на самом сайте (CSP не пускает Google Fonts). Роли: `--font-title` Cormorant Garamond — заголовки, `--font-mono` IBM Plex Mono — подписи и кнопки, `--font-text` IBM Plex Sans — текст для чтения. Лицензия OFL в `fonts/OFL.txt` |
 | `character-modal.css` | Вид карточки бота: одна колонка текста, вкладки About / Intros / Scenario / Creator notes. Текст делится на сервере в `src/description-sections.js` |
 | `uiux-audit-patch.js` | Мобильные правки интерфейса, подключает `cross-nav.js` |

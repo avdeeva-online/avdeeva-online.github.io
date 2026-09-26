@@ -174,16 +174,19 @@ body{min-height:100vh;overflow-x:hidden}
 
 /* ---------- TAVO HUB: UI/UX pass ---------- */
 
-/* Resource cards: fixed zones (type · 2-line title · 2-line summary · one tag row · meta pinned to the bottom),
-   so every card in a row has the same height (were 200–239px). */
+/* Resource cards. Every card in the grid has the same height; inside, the text flows from the top
+   (type → title → summary, fixed gaps, no reserved empty line under a short title) and the tag row +
+   meta are pinned to the bottom, so tags line up across cards. */
 .resource-grid{grid-auto-rows:1fr!important}
 .resource-grid .resource-card{display:flex!important;flex-direction:column!important}
-.resource-grid .resource-card .card-body{display:flex!important;flex-direction:column!important;flex:1 1 auto!important;min-height:0!important}
-.resource-grid .resource-card .card-title-row h3{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;min-height:2.1em!important;line-height:1.05!important}
-.resource-grid .resource-card .card-body>p{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;min-height:2.9em!important}
-.resource-grid .resource-card .card-tags{display:flex!important;flex-wrap:nowrap!important;overflow:hidden!important;min-height:20px!important}
-.resource-grid .resource-card .card-tags .card-tag{flex:0 0 auto!important}
-.resource-grid .resource-card .meta{margin-top:auto!important}
+.resource-grid .resource-card .thumb{height:auto!important;aspect-ratio:2/1!important;flex:0 0 auto!important;background-size:cover!important;background-position:center top!important}
+.resource-grid .resource-card .card-body{display:flex!important;flex-direction:column!important;flex:1 1 auto!important;min-height:0!important;padding:12px 13px 11px!important}
+.resource-grid .resource-card .card-title-row{margin:6px 0 0!important}
+.resource-grid .resource-card .card-title-row h3{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;min-height:0!important;line-height:1.08!important}
+.resource-grid .resource-card .card-body>p{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;min-height:0!important;margin:7px 0 12px!important}
+.resource-grid .resource-card .card-tags{display:flex!important;flex-wrap:nowrap!important;gap:5px!important;overflow:hidden!important;min-height:20px!important;margin:auto 0 0!important}
+.resource-grid .resource-card .card-tags .card-tag{flex:0 0 auto!important;display:inline-flex!important;align-items:center!important;height:20px!important;padding:0 8px!important;margin:0!important;border-radius:999px!important;font:500 8px/1 var(--font-mono)!important;letter-spacing:.08em!important;text-transform:uppercase!important}
+.resource-grid .resource-card .meta{margin-top:10px!important}
 
 /* Labels that were 6.4–7px are raised a little; the look (monospace, small caps) stays. */
 .resource-card .card-tag{font-size:7.5px!important}

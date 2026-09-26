@@ -12,7 +12,7 @@ import { d1SchemaStatus } from './d1-schema-status.js';
 import { repairHubMedia } from './hub-resources.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
-const BUILD_INFO={build:'reaudit-security-headers-v1',deployed_from:'main'};
+const BUILD_INFO={build:'public-import-v1',deployed_from:'main'};
 const CONTENT_SECURITY_POLICY=["default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","form-action 'self'","img-src 'self' https: data: blob:","media-src 'self' https: blob:","style-src 'self' 'unsafe-inline'","script-src 'self' 'unsafe-inline'","connect-src 'self'","font-src 'self' data:"].join('; ');
 function withSecurityHeaders(response){
   const headers=new Headers(response.headers);
@@ -35,6 +35,23 @@ async function forwardAdminImport(request,env,ctx,pathname){
     const headers=new Headers(response.headers);headers.delete('content-length');
     return new Response(JSON.stringify(data),{status:response.status,statusText:response.statusText,headers});
   }catch{return response}
+}
+// Public "+ IMPORT" from the catalog: any visitor may add a Janitor bot, and it goes straight into the public catalog.
+// A bot already in the archive is not re-fetched (no DataCat call, no overwrite); a bot the admin hid stays hidden.
+const JANITOR_UUID=/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+async function publicImport(request,env,ctx,url){
+  const isStatus=url.pathname==='/api/import/status';
+  if(request.method!==(isStatus?'GET':'POST'))return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
+  let body='',target='';
+  if(isStatus)target=url.searchParams.get('uuid')||'';
+  else{body=await request.text();try{target=String(JSON.parse(body||'{}')?.url||'')}catch{return json({ok:false,error:'INVALID_JSON'},400)}}
+  const uuid=(target.match(JANITOR_UUID)||[])[0]?.toLowerCase();
+  if(!uuid)return json({ok:false,error:'INVALID_JANITOR_URL'},400);
+  const existing=await env.DB.prepare('SELECT status FROM characters WHERE janitor_uuid=? LIMIT 1').bind(uuid).first();
+  // Status polls still go through: a record saved before its definition arrived keeps filling in.
+  if(existing?.status==='published'&&!isStatus)return json({ok:true,state:'ALREADY_IN_ARCHIVE',janitorUuid:uuid,ready:true});
+  if(existing&&existing.status!=='published')return json({ok:false,error:'NOT_AVAILABLE',janitorUuid:uuid},404);
+  return sourceTruth.fetch(isStatus?request:new Request(request.url,{method:'POST',headers:{'content-type':'application/json'},body}),env,ctx);
 }
 async function routeRequest(request,env,ctx){
   const url=new URL(request.url),blocked=await guardAdminApi(request,env,url);if(blocked)return blocked;
@@ -66,7 +83,7 @@ async function routeRequest(request,env,ctx){
   }
   if(url.pathname==='/api/admin/hub-media-repair'){if(request.method!=='GET'&&request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return repairHubMedia(request,env)}
   if(url.pathname==='/api/debug/datacat')return json({ok:false,error:'NOT_FOUND'},404);
-  if(url.pathname==='/api/import'||url.pathname==='/api/import/status')return json({ok:false,error:'ADMIN_IMPORT_ONLY'},403);
+  if(url.pathname==='/api/import'||url.pathname==='/api/import/status')return publicImport(request,env,ctx,url);
   const cloudflareResponse=await handleCloudflareRoute(request,env);if(cloudflareResponse)return cloudflareResponse;
   const curationResponse=await handleUniverseCurationRoute(request,env);if(curationResponse)return curationResponse;
   let response=await sourceTruth.fetch(request,env,ctx);response=await transformUniversePublicResponse(request,response,env);return transformAdminHtmlResponse(request,response);

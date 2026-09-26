@@ -171,3 +171,59 @@ body{min-height:100vh;overflow-x:hidden}
 
 /* TAVO HUB — reveal more hero background without changing resource capacity */
 @media(min-width:901px){.top-shell{min-height:118px;padding-top:17px;padding-bottom:12px}}
+
+/* ---------- TAVO HUB: UI/UX pass ---------- */
+
+/* Resource cards: fixed zones (type · 2-line title · 2-line summary · one tag row · meta pinned to the bottom),
+   so every card in a row has the same height (were 200–239px). */
+.resource-grid{grid-auto-rows:1fr!important}
+.resource-grid .resource-card{display:flex!important;flex-direction:column!important}
+.resource-grid .resource-card .card-body{display:flex!important;flex-direction:column!important;flex:1 1 auto!important;min-height:0!important}
+.resource-grid .resource-card .card-title-row h3{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;min-height:2.1em!important;line-height:1.05!important}
+.resource-grid .resource-card .card-body>p{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;min-height:2.9em!important}
+.resource-grid .resource-card .card-tags{display:flex!important;flex-wrap:nowrap!important;overflow:hidden!important;min-height:20px!important}
+.resource-grid .resource-card .card-tags .card-tag{flex:0 0 auto!important}
+.resource-grid .resource-card .meta{margin-top:auto!important}
+
+/* Labels that were 6.4–7px are raised a little; the look (monospace, small caps) stays. */
+.resource-card .card-tag{font-size:7.5px!important}
+.resource-card .free,.resource-card .card-by,.resource-card .meta{font-size:7.5px!important}
+.hub-section-copy,.directory .sub,.hub-sort-label,.filter-label{font-size:7.2px!important}
+.hub-sort-btn{font-size:7.6px!important}
+
+/* Empty categories (count 0) are hidden instead of offering an empty page. */
+.side-nav .side-link.is-empty{display:none!important}
+
+/* "Suggest resource" floated over the panel between 861 and ~1180px: keep it in the header flow there too. */
+@media(max-width:1180px){.hub-suggest-btn{position:static!important;display:inline-flex!important;align-items:center!important;margin-top:8px!important}}
+
+/* Phone */
+@media(max-width:760px){
+  /* Categories: one horizontal row of chips instead of a 2-column block that pushed the first resource half a screen down. */
+  /* min-width:0 keeps the non-wrapping chip row from stretching the whole page column wider than the screen */
+  .directory-body{grid-template-columns:minmax(0,1fr)!important}
+  .side,.content{min-width:0!important;max-width:100%!important}
+  .side{padding:10px 0 4px!important}
+  .side-nav{display:flex!important;flex-wrap:nowrap!important;gap:6px!important;overflow-x:auto!important;scrollbar-width:none!important;padding:0 2px 6px!important;grid-template-columns:none!important}
+  .side-nav::-webkit-scrollbar{display:none}
+  .side-nav .side-link{flex:0 0 auto!important;width:auto!important;min-height:32px!important;padding:0 11px!important;gap:6px!important;border:1px solid rgba(151,162,129,.22)!important;border-radius:999px!important;font-size:8px!important}
+  .side-nav .side-link .nav-icon{width:14px!important;height:14px!important}
+  .side-nav .side-link .nav-icon svg{width:14px!important;height:14px!important}
+  .side-nav .side-link.active{border-color:rgba(194,179,112,.55)!important}
+  .side-nav .side-link .count{display:inline!important;font-size:7px!important;opacity:.7}
+  .side-quote{display:none!important}
+
+  /* Open resource: the overlay scrolls as one page (no scroll box inside a scroll box), close stays reachable,
+     arrows give way to swipe. */
+  /* backdrop-filter on the overlay would turn the fixed Close button into a scrolling one */
+  .hub-modal.open{display:block!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(1,4,2,.86)!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:44px 0 0!important}
+  .hub-modal .hub-modal-panel{height:auto!important;min-height:calc(100dvh - 44px)!important;overflow:visible!important;border-radius:16px 16px 0 0!important;border-bottom:0!important}
+  .hub-modal #hubModalContent{height:auto!important;display:block!important}
+  .hub-modal .hub-modal-body{overflow:visible!important;display:block!important;padding-bottom:calc(28px + env(safe-area-inset-bottom))!important}
+  .hub-modal .hub-tab-pane.active{overflow:visible!important;padding-right:0!important}
+  .hub-modal .hub-modal-cover{border-radius:16px 16px 0 0!important}
+  .hub-modal .hub-modal-nav{display:none!important}
+  .hub-modal .hub-modal-close{position:fixed!important;top:8px!important;right:10px!important;width:auto!important;height:30px!important;padding:0 11px 0 12px!important;border-radius:16px!important;display:inline-flex!important;align-items:center!important;gap:6px!important;background:rgba(10,13,10,.88)!important;font:400 15px/1 Arial,sans-serif!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+  .hub-modal .hub-modal-close::before{content:"CLOSE";font:600 8px/1 var(--mono);letter-spacing:.14em}
+}
+@media(max-width:760px){.search-wrap .hub-suggest-btn{position:static!important;display:inline-flex!important;margin:8px 0 0!important}}

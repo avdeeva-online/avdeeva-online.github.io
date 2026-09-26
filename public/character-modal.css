@@ -94,7 +94,7 @@
 /* Hook: the tagline, the first thing to read. */
 #modal .cm-hook{
   margin:20px 0 0;padding:0 0 0 16px;border-left:2px solid #6d7d57;
-  color:#ece6d8;font:italic 17px/1.55 Georgia,"Times New Roman",serif;
+  color:#e6e0d2;font:italic 16px/1.55 Arial,"Segoe UI",sans-serif;
 }
 #modal .cm-hook p{margin:0}
 #modal .cm-hook p+p{margin-top:8px}
@@ -197,7 +197,9 @@
     border:1px solid #384236!important;border-bottom:0!important;border-radius:16px 16px 0 0!important;
     overflow:visible!important;
     box-shadow:0 -12px 40px rgba(0,0,0,.5)!important;
+    background:rgba(19,23,19,.9)!important;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
   }
+  #modal .cm-tabs{background:rgba(19,23,19,.94)}
   #modal .cm-card .modal-cover{height:min(40vh,330px)!important;aspect-ratio:auto!important;border-radius:16px 16px 0 0!important}
   #modal .cm-card .modal-cover:after{height:18%;background:linear-gradient(180deg,transparent,rgba(19,23,19,.6))}
   /* The dim strip above the sheet is the catalog: tapping it (or "Close") closes the card.
@@ -206,32 +208,38 @@
   #modal .cm-card::before{content:"";position:absolute;top:8px;left:50%;z-index:4;width:38px;height:4px;margin-left:-19px;border-radius:4px;background:rgba(255,255,255,.55);box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none}
   #modal .cm-card .modal-close{
     position:fixed!important;top:9px!important;right:10px!important;
-    width:auto!important;height:34px!important;padding:0 13px 0 12px!important;border-radius:18px!important;
+    width:auto!important;height:30px!important;padding:0 11px 0 12px!important;border-radius:16px!important;
     display:inline-flex!important;align-items:center!important;gap:6px!important;
     background:rgba(14,18,14,.9)!important;border:1px solid rgba(255,255,255,.14)!important;color:#eef1e8!important;
-    font:600 20px/1 Arial,sans-serif!important;
+    font:400 16px/1 Arial,sans-serif!important;
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
   }
-  #modal .cm-card .modal-close::before{content:"Close";font:600 13px/1 Arial,sans-serif;letter-spacing:.01em}
+  #modal .cm-card .modal-close::before{content:"CLOSE";font:600 8.5px/1 var(--mono);letter-spacing:.14em}
   /* Title sits under the photo, not over it: text touching the picture edge read as cramped. */
   #modal .cm-card .cm-content{height:auto!important;overflow:visible!important;padding:14px 16px 32px!important;margin-top:0!important;position:relative!important}
   #modal .cm-head{margin:0;padding-top:0}
-  #modal .cm-card #modalTitle{font-size:22px!important;line-height:1.15!important}
-  #modal .cm-card #modalTitle.is-long-title{font-size:19px!important}
-  #modal .cm-byline{margin-top:5px;font-size:12.5px}
-  #modal .cm-byline button{font-size:12.5px}
-  #modal .cm-facts{margin-top:8px;font-size:12.5px;gap:3px 7px}
-  #modal .cm-hook{margin-top:14px;padding-left:12px;font-size:15px;line-height:1.5}
-  #modal .cm-files{gap:6px;margin-top:14px}
-  #modal .cm-btn{height:36px;padding:0 12px;font-size:12.5px}
-  #modal .cm-link{padding:8px 2px;font-size:12.5px}
+  #modal .cm-card #modalTitle{font-size:19px!important;line-height:1.2!important}
+  #modal .cm-card #modalTitle.is-long-title{font-size:17px!important}
+  #modal .cm-byline{margin-top:4px;font-size:11px}
+  #modal .cm-byline button{font-size:11px}
+  #modal .cm-facts{margin-top:6px;font:9px/1.5 var(--mono);letter-spacing:.06em;text-transform:uppercase;gap:2px 7px}
+  #modal .cm-fact .ui-icon{width:11px;height:11px}
+  #modal .cm-hook{margin-top:12px;padding-left:10px;border-left-width:1px;font-size:13.5px;line-height:1.5}
+  #modal .cm-files{gap:6px;margin-top:12px}
+  #modal .cm-btn{height:32px;padding:0 11px;border-radius:6px;font-size:11px;letter-spacing:.02em}
+  #modal .cm-link{padding:8px 2px;font-size:11px}
   #modal .cm-files-gap{display:none}
   /* Room on the right for the Close button, which floats over the stuck tab bar. */
-  #modal .cm-tabs{top:0;margin:16px -16px 0;padding:14px 104px 0 16px;gap:20px}
-  #modal .cm-tab{padding-bottom:10px;font-size:12.5px}
-  #modal .cm-panel{--cm-read:14.5px;padding-top:16px;line-height:1.62}
+  #modal .cm-tabs{top:0;margin:14px -16px 0;padding:14px 104px 0 16px;gap:16px}
+  #modal .cm-tab{padding-bottom:9px;font:9px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase}
+  #modal .cm-tab.active{font-weight:700}
+  #modal .cm-panel{--cm-read:13.5px;padding-top:14px;line-height:1.6}
+  #modal .cm-section h3{font-size:9px;margin-bottom:7px}
+  #modal .cm-tag{padding:4px 8px;font-size:10.5px}
+  #modal .cm-hashtag{font-size:10.5px}
   #modal .cm-section+.cm-section{margin-top:20px}
   #modal .cm-tags{margin-top:20px;padding-top:14px;gap:6px 8px}
   #modal .cm-card .cm-content{padding-bottom:calc(32px + env(safe-area-inset-bottom))!important}
-  #modal .cm-swipe-hint{display:block;margin:28px 0 0;color:var(--cm-muted);font:12px/1.4 Arial,sans-serif;text-align:center}
+  #modal .cm-swipe-hint{display:block;margin:24px 0 0;color:var(--cm-muted);font:8px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase;text-align:center;opacity:.8}
 }
 @media(min-width:761px){#modal .cm-swipe-hint{display:none}}

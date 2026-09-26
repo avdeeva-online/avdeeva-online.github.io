@@ -319,61 +319,51 @@
 /* List-card setting chips are passive labels (plan: no accidental filters while scrolling); taps go to the card. */
 #grid .card-setting-token{pointer-events:none}
 
-/* ---------- Phone: catalog drawer readability ----------
-   The drawer was set in 5.5–10px monospace (tabs, counters, footer) while the search field was 16px,
-   and the lorebook view used a different font. One readable scale: names 15px, secondary 11–12px. */
+/* ---------- Phone: catalog drawer ----------
+   The archive look: compact, monospace labels, translucent glass. Only the sizes that were unreadable
+   (5.5–6px tabs, counters, footer) are raised a little; names stay small and light. */
 @media(max-width:760px){
-  #catalogDrawer.catalog-drawer{width:min(88vw,380px)!important;max-width:none!important;font-family:Arial,"Segoe UI",sans-serif!important}
-  #catalogDrawer .drawer-head{min-height:44px!important;padding-top:4px!important}
-  #catalogDrawer .drawer-head-copy small{font:600 10px/1.2 var(--mono)!important;letter-spacing:.08em!important;opacity:.75}
-  #catalogDrawer .drawer-head-copy strong{font:700 15px/1.2 var(--mono)!important;letter-spacing:.06em!important}
-  #catalogDrawer #catalogClose{width:36px!important;height:36px!important;font-size:20px!important}
-  #catalogDrawer .drawer-status,#catalogDrawer .drawer-status *{font-size:10.5px!important}
-  #catalogDrawer .drawer-status{min-height:26px!important}
-  /* Tabs: one scrollable row with readable labels; the "01…05" numbering is decoration and is dropped here. */
-  #catalogDrawer .drawer-tabs{display:flex!important;gap:4px!important;overflow-x:auto!important;scrollbar-width:none!important;min-height:40px!important}
+  #catalogDrawer.catalog-drawer{
+    width:min(86vw,340px)!important;max-width:none!important;
+    background:rgba(13,16,13,.8)!important;
+    -webkit-backdrop-filter:blur(14px) saturate(1.1)!important;backdrop-filter:blur(14px) saturate(1.1)!important;
+    border-right:1px solid rgba(120,136,108,.18)!important;
+  }
+  #catalogDrawer .drawer-head-copy small{font-size:7px!important;letter-spacing:.12em!important}
+  #catalogDrawer .drawer-head-copy strong{font-size:11px!important;letter-spacing:.1em!important}
+  #catalogDrawer .drawer-status,#catalogDrawer .drawer-status *{font-size:7.5px!important;letter-spacing:.1em!important}
+  /* Tabs: one scrollable row, monospace, no "01…05" numbering (it pushed labels down to 6px). */
+  #catalogDrawer .drawer-tabs{display:flex!important;gap:2px!important;overflow-x:auto!important;scrollbar-width:none!important}
   #catalogDrawer .drawer-tabs::-webkit-scrollbar{display:none}
-  #catalogDrawer .drawer-tab{flex:0 0 auto!important;min-width:0!important;width:auto!important;height:40px!important;padding:0 11px!important}
+  #catalogDrawer .drawer-tab{flex:0 0 auto!important;min-width:0!important;width:auto!important;padding:0 9px!important}
   #catalogDrawer .drawer-tab em{display:none!important}
-  #catalogDrawer .drawer-tab span{font:700 12px/1 Arial,sans-serif!important;letter-spacing:.04em!important}
-  /* Search stays 16px (smaller makes iOS zoom in), the rest of the row matches its height. */
-  #catalogDrawer .drawer-query-row{gap:6px!important;margin:8px 0!important}
-  #catalogDrawer .drawer-search{height:42px!important;min-height:42px!important}
-  #catalogDrawer #drawerSearch{font:16px/1.2 Arial,sans-serif!important}
-  #catalogDrawer #drawerSearch::placeholder{font-size:15px;letter-spacing:.02em;text-transform:none}
-  #catalogDrawer #drawerSortCycle{height:42px!important;min-height:42px!important;min-width:64px!important}
-  #catalogDrawer #drawerSortCycle small{font:600 9.5px/1 Arial,sans-serif!important}
-  #catalogDrawer #drawerSortCycle b{font:700 12px/1.2 Arial,sans-serif!important}
-  /* List rows: settings / authors / universes / tags. */
-  #catalogDrawer .drawer-item{min-height:52px!important;font-size:15px!important}
-  #catalogDrawer .drawer-item,#catalogDrawer .drawer-item span,#catalogDrawer .drawer-item-name,#catalogDrawer .drawer-world-copy{font-family:Arial,"Segoe UI",sans-serif!important;font-size:15px!important;line-height:1.3!important}
-  #catalogDrawer .drawer-world-copy b,#catalogDrawer .drawer-item-name{display:block!important;font:600 15px/1.3 Arial,"Segoe UI",sans-serif!important;letter-spacing:0!important;text-transform:none!important}
-  #catalogDrawer .drawer-item small,#catalogDrawer .drawer-world-copy small{display:block!important;margin-top:3px!important;font:11px/1.2 Arial,sans-serif!important;letter-spacing:.03em!important;color:#8c9786!important}
-  #catalogDrawer .drawer-item>i,#catalogDrawer .drawer-item em{font-size:14px!important;color:#9aa592!important;opacity:1!important}
-  #catalogDrawer .drawer-tag-item{min-height:48px!important}
-  /* Tags sit in two columns: a step smaller so names like "Enemies to Lovers" fit. */
-  #catalogDrawer .drawer-tag-item .drawer-item-name{font-size:13.5px!important;font-weight:600!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
-  #catalogDrawer .drawer-tag-item small{font-size:10.5px!important}
-  #catalogDrawer [data-tag-mode]{min-height:36px!important;font:700 12px/1 Arial,sans-serif!important;letter-spacing:.04em!important}
-  /* Lorebooks: same font and scale as the other tabs. */
-  #catalogDrawer .lore-index-row,#catalogDrawer .lore-index-row *,#catalogDrawer .lore-back,#catalogDrawer .lore-crumbs,#catalogDrawer .lore-crumbs *,#catalogDrawer .lore-section-title,#catalogDrawer .lore-file,#catalogDrawer .lore-file *{font-family:Arial,"Segoe UI",sans-serif!important}
-  #catalogDrawer .lore-index-row{min-height:54px!important}
-  #catalogDrawer .lore-index-row b{font-size:15px!important;font-weight:600!important}
-  #catalogDrawer .lore-index-row small{font-size:11px!important;color:#8c9786!important}
-  #catalogDrawer .lore-index-no{font-size:11px!important;opacity:.6}
-  #catalogDrawer .lore-back,#catalogDrawer .lore-crumbs,#catalogDrawer .lore-crumbs *{font-size:12.5px!important}
-  #catalogDrawer .lore-section-title{font-size:16px!important;font-weight:700!important}
-  #catalogDrawer .lore-section-title small{font-size:11px!important}
-  #catalogDrawer .lore-file strong{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;white-space:normal!important;font-size:14px!important;font-weight:700!important;line-height:1.3!important}
-  /* The list of bots a lorebook belongs to: normal case, clamped to three lines instead of a wall of capitals. */
-  #catalogDrawer .lore-file-copy small{display:-webkit-box!important;-webkit-line-clamp:3!important;-webkit-box-orient:vertical!important;overflow:hidden!important;margin-top:4px!important;font:12px/1.4 Arial,sans-serif!important;text-transform:none!important;color:#8c9786!important}
-  #catalogDrawer .lore-file a{font:700 12px/1 Arial,sans-serif!important;white-space:nowrap!important}
+  #catalogDrawer .drawer-tab span{font:400 8.5px/1 var(--mono)!important;letter-spacing:.12em!important}
+  #catalogDrawer .drawer-tab.active span{font-weight:700!important}
+  /* Search: typed text must stay 16px (iOS zooms otherwise); the placeholder matches the drawer labels. */
+  #catalogDrawer #drawerSearch::placeholder{font:8.5px var(--mono);letter-spacing:.14em}
+  #catalogDrawer #drawerSortCycle small{font-size:6.5px!important;letter-spacing:.12em!important}
+  #catalogDrawer #drawerSortCycle b{font-size:8.5px!important;letter-spacing:.1em!important}
+  /* Rows: name 12px light, counter 7.5px monospace. */
+  #catalogDrawer .drawer-item{min-height:40px!important}
+  #catalogDrawer .drawer-world-copy b,#catalogDrawer .drawer-item-name{font:400 12px/1.3 Arial,"Segoe UI",sans-serif!important;letter-spacing:.01em!important;color:#d6dbcf!important}
+  #catalogDrawer .drawer-item small,#catalogDrawer .drawer-world-copy small{font:7.5px/1.3 var(--mono)!important;letter-spacing:.1em!important;color:#7d8878!important}
+  #catalogDrawer .drawer-world-id{font:7.5px/1 var(--mono)!important;letter-spacing:.08em!important}
+  #catalogDrawer .drawer-item>i{font-size:11px!important;color:#7d8878!important;opacity:1!important}
+  #catalogDrawer .drawer-tag-item .drawer-item-name{font-size:11px!important}
+  #catalogDrawer .drawer-tag-item small{font-size:7px!important}
+  #catalogDrawer [data-tag-mode]{font:8px/1 var(--mono)!important;letter-spacing:.12em!important}
+  /* Lorebooks: the same scale. The list of bots a file belongs to is clamped to two lines. */
+  #catalogDrawer .lore-index-row b{font:400 12px/1.3 Arial,sans-serif!important}
+  #catalogDrawer .lore-index-row small,#catalogDrawer .lore-index-no{font-size:7.5px!important;letter-spacing:.1em!important}
+  #catalogDrawer .lore-back,#catalogDrawer .lore-crumbs,#catalogDrawer .lore-crumbs *{font-size:8.5px!important;letter-spacing:.08em!important}
+  #catalogDrawer .lore-section-title{font-size:12px!important}
+  #catalogDrawer .lore-file strong{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;white-space:normal!important;font-size:10px!important;line-height:1.35!important}
+  #catalogDrawer .lore-file-copy small{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;font-size:7.5px!important;line-height:1.45!important;text-transform:none!important}
   /* Footer clears the browser toolbar. */
-  #catalogDrawer .drawer-foot{padding-bottom:calc(10px + env(safe-area-inset-bottom))!important;min-height:44px!important}
-  #catalogDrawer .drawer-foot span{font-size:9.5px!important}
-  #catalogDrawer .drawer-foot button,#catalogDrawer #drawerResetFilters{font:700 11px/1 Arial,sans-serif!important;padding:9px 12px!important}
+  #catalogDrawer .drawer-foot{padding-bottom:calc(8px + env(safe-area-inset-bottom))!important}
+  #catalogDrawer .drawer-foot span{font-size:6.5px!important}
+  #catalogDrawer .drawer-foot button,#catalogDrawer #drawerResetFilters{font-size:7.5px!important;letter-spacing:.1em!important}
 }
-
 /* List cards: AnyPOV is the default and its empty circle read as an unticked radio button, so only ♀ / ♂ are shown. */
 #grid .card-pov-icon.pov-anypov{display:none!important}
 @media(max-width:760px){

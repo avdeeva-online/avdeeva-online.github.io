@@ -34,8 +34,8 @@
         const btn=document.createElement('button');
         btn.type='button';
         btn.dataset.removeSourceMedia='1';
-        btn.textContent='REMOVE';
-        btn.title='Remove this source image from the resource';
+        btn.textContent='Убрать';
+        btn.title='Убрать эту картинку из ресурса';
         btn.addEventListener('click',e=>{
           e.preventDefault();e.stopPropagation();
           const wasCover=item.classList.contains('cover');
@@ -43,7 +43,7 @@
           if(wasCover)grid.querySelector(':scope > .media')?.classList.add('cover');
           syncCover();
           const status=document.querySelector('#analyzeStatus');
-          if(status){status.textContent='SOURCE IMAGE REMOVED · publish/update to save changes.';status.className='status ok'}
+          if(status){status.textContent='Картинка убрана · сохрани ресурс, чтобы применить.';status.className='status ok'}
           window.dispatchEvent(new CustomEvent('archive:hub-source-media-change'));
         });
         item.appendChild(btn);

@@ -2,7 +2,7 @@
 <html lang="ru">
 <head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta http-equiv="Cache-Control" content="no-store">
-<title>ARCHIVE.EXE / TELEGRAM</title>
+<title>Telegram-боты · ARCHIVE ADMIN</title>
 <style>
 :root{--bg:#0b0e0b;--panel:#11150f;--line:#2f382b;--text:#cbd4c2;--muted:#6f7a69;--accent:#d1bd87;--ok:#9eb58f;--bad:#c08d7c;--mono:Consolas,ui-monospace,monospace}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 30% 0,#161d14 0,#0b0e0b 42%);color:var(--text);font-family:var(--mono)}.shell{width:min(860px,calc(100% - 28px));margin:32px auto 70px}.head{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;border-bottom:1px solid var(--line);padding-bottom:16px}.eyebrow{font-size:8px;letter-spacing:.14em;color:var(--muted)}h1{margin:7px 0 0;font-size:26px}.back{border:1px solid var(--line);color:#abb5a4;text-decoration:none;padding:8px 10px;font-size:8px}.panel{margin-top:14px;border:1px solid var(--line);background:rgba(17,21,15,.9);padding:16px}.row{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid #4a5644;background:#10140e;color:#c6cfbe;padding:10px 13px;font:9px var(--mono);cursor:pointer}.btn.primary{border-color:#756d4a;color:#eadfbd;background:#1b1d13}.status{margin-top:12px;border:1px solid #303a2c;background:#0b0f0a;padding:12px;min-height:88px;white-space:pre-wrap;font-size:8.5px;line-height:1.55;color:#929e8f}.ok{color:var(--ok)}.bad{color:var(--bad)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.card{border:1px solid #2e382a;background:#0d110c;padding:12px}.card b{display:block;font-size:10px}.card span{display:block;margin-top:6px;color:var(--muted);font-size:8px;line-height:1.45}@media(max-width:650px){.grid{grid-template-columns:1fr}.head{align-items:flex-start;flex-direction:column}}
 </style>
@@ -11,19 +11,22 @@
 <main class="shell">
 <header class="head"><div><div class="eyebrow">PRIVATE TOOL / TELEGRAM CONTROL</div><h1>TELEGRAM BOTS</h1></div><a class="back" href="/admin/">← ADMIN</a></header>
 <section class="panel">
-  <div class="row"><button class="btn primary" id="setup">CONNECT / REFRESH WEBHOOKS</button><button class="btn" id="status">CHECK STATUS</button></div>
-  <div id="out" class="status">CHECKING TELEGRAM WEBHOOKS…</div>
+  <div class="row"><button class="btn primary" id="setup">Переподключить ботов</button><button class="btn" id="status">Проверить</button></div>
+  <div id="out" class="status">Проверяю…</div>
 </section>
 <section class="grid">
-  <div class="card"><b>ADMIN BOT</b><span>Uses Node00admin + TELEGRAM_ADMIN_USER_ID. Private menu, drafts, suggestions, import, publish, stats and issue checks.</span></div>
-  <div class="card"><b>PUBLIC BOT</b><span>Uses PUBLICnode00bot. Public catalog search, latest resources, categories, random resource and links to TAVO HUB.</span></div>
+  <div class="card"><b>Админ-бот</b><span>Node00admin, отвечает только тебе. Черновики из пересланных постов, предложения, импорт, публикация, статистика и проверки.</span></div>
+  <div class="card"><b>Публичный бот</b><span>PUBLICnode00bot: поиск по каталогу, новые ресурсы, категории, случайный ресурс, ссылки на TAVO HUB.</span></div>
 </section>
 </main>
 <script>
 (()=>{const out=document.querySelector('#out'),setup=document.querySelector('#setup'),status=document.querySelector('#status');
-const show=(data,ok=true)=>{out.className='status '+(ok?'ok':'bad');out.textContent=typeof data==='string'?data:JSON.stringify(data,null,2)};
-const connect=async()=>{setup.disabled=true;show('CONNECTING TELEGRAM WEBHOOKS…');try{const r=await fetch('/api/admin/telegram/setup',{method:'POST'}),d=await r.json();show(d,r.ok&&d.ok);return r.ok&&d.ok}catch(e){show('FAILED: '+e.message,false);return false}finally{setup.disabled=false}};
-const check=async()=>{status.disabled=true;show('CHECKING…');try{const r=await fetch('/api/admin/telegram/status',{cache:'no-store'}),d=await r.json();show(d,r.ok&&d.ok)}catch(e){show('FAILED: '+e.message,false)}finally{status.disabled=false}};
+// Human-readable webhook state; the raw Telegram answer stays available under "подробности".
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const botLine=(name,w)=>{if(!w)return`${name}: нет данных`;if(!w.url)return`${name}: не подключён ✗`;const err=w.last_error_message?` · последняя ошибка: ${w.last_error_message}`:'';return`${name}: подключён ✓ · в очереди ${w.pending_update_count||0}${err}`};
+const show=(data,ok=true)=>{out.className='status '+(ok?'ok':'bad');if(typeof data==='string'){out.textContent=data;return}const w=data?.webhooks||{};const lines=data?.ok?[botLine('Админ-бот',w.admin),botLine('Публичный бот',w.public)]:[`Ошибка: ${data?.error||'неизвестно'}`];out.innerHTML=`${lines.map(esc).join('<br>')}<details style="margin-top:10px"><summary style="cursor:pointer;opacity:.7">подробности</summary><pre style="white-space:pre-wrap;margin:8px 0 0">${esc(JSON.stringify(data,null,2))}</pre></details>`};
+const connect=async()=>{setup.disabled=true;show('Подключаю…');try{const r=await fetch('/api/admin/telegram/setup',{method:'POST'}),d=await r.json();show(d,r.ok&&d.ok);return r.ok&&d.ok}catch(e){show('Ошибка: '+e.message,false);return false}finally{setup.disabled=false}};
+const check=async()=>{status.disabled=true;show('Проверяю…');try{const r=await fetch('/api/admin/telegram/status',{cache:'no-store'}),d=await r.json();show(d,r.ok&&d.ok)}catch(e){show('Ошибка: '+e.message,false)}finally{status.disabled=false}};
 setup.onclick=connect;status.onclick=check;
 check();
 })();

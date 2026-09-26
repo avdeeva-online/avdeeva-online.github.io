@@ -11,12 +11,12 @@ async function injectAdminBack(response,pathname=''){
   const type=String(response.headers.get('content-type')||'').toLowerCase();
   if(!type.includes('text/html'))return response;
   let html=await response.text();
-  if(!html.includes('data-admin-back-script'))html=html.replace(/<\/body>/i,'<script data-admin-back-script src="/admin/admin-back.js?v=20260925-nav7"></script></body>');
+  if(!html.includes('data-admin-back-script'))html=html.replace(/<\/body>/i,'<script data-admin-back-script src="/admin/admin-back.js?v=20260927-ru1"></script></body>');
   if(pathname==='/admin/hub/'||pathname==='/admin/hub/index.html'){
-    html=html.replace(/admin-edit\.js\?v=[^"']+/g,'admin-edit.js?v=20260917-1');
-    if(!html.includes('data-source-media-remove'))html=html.replace(/<\/body>/i,'<script data-source-media-remove src="/admin/hub/source-media-remove.js?v=20260917-1"></script></body>');
-    else html=html.replace(/source-media-remove\.js\?v=[^"']+/g,'source-media-remove.js?v=20260917-1');
-    html=html.replace(/draft-bridge\.js\?v=[^"']+/g,'draft-bridge.js?v=20260917-1');
+    html=html.replace(/admin-edit\.js\?v=[^"']+/g,'admin-edit.js?v=20260927-ru1');
+    if(!html.includes('data-source-media-remove'))html=html.replace(/<\/body>/i,'<script data-source-media-remove src="/admin/hub/source-media-remove.js?v=20260927-ru1"></script></body>');
+    else html=html.replace(/source-media-remove\.js\?v=[^"']+/g,'source-media-remove.js?v=20260927-ru1');
+    html=html.replace(/draft-bridge\.js\?v=[^"']+/g,'draft-bridge.js?v=20260927-ru1');
   }
   const headers=new Headers(response.headers);headers.set('cache-control','no-store');headers.delete('content-length');return new Response(html,{status:response.status,statusText:response.statusText,headers})
 }

@@ -5,36 +5,27 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-<title>ARCHIVE.EXE / STORAGE</title>
+<title>Обслуживание · ARCHIVE ADMIN</title>
 <style>
 :root{--bg:#0b0e0b;--panel:#11150f;--line:#2f382b;--text:#cbd4c2;--muted:#6f7a69;--accent:#d1bd87;--bad:#c97f72;--mono:Consolas,ui-monospace,monospace}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 30% 0,#161d14 0,#0b0e0b 42%);color:var(--text);font-family:var(--mono);padding:24px}.shell{width:min(920px,100%);margin:auto;border:1px solid var(--line);background:rgba(17,21,15,.95);padding:22px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px}.back,.btn{border:1px solid var(--line);background:#0d110c;color:#b8c2ae;padding:9px 11px;font:8px var(--mono);letter-spacing:.06em;text-decoration:none;cursor:pointer}.btn:hover{border-color:#6c6f4c}.btn.primary{color:#eadfbf;border-color:#665f3f}.btn:disabled{opacity:.45;cursor:not-allowed}.eyebrow{font-size:8px;color:var(--muted);letter-spacing:.12em}h1{margin:12px 0 6px;font-size:26px}.sub{font-size:8px;color:var(--muted);line-height:1.6}.status{margin:18px 0 12px;padding:13px;border:1px solid var(--line);background:#0d110c;font-size:9px;line-height:1.7}.ok{color:var(--accent)}.bad{color:var(--bad)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.stat{border:1px solid var(--line);background:#0d110c;padding:14px}.stat b{display:block;font-size:20px;color:#e7dfc7}.stat span{display:block;margin-top:6px;font-size:7px;color:var(--muted)}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.log{margin-top:14px;min-height:180px;max-height:360px;overflow:auto;white-space:pre-wrap;border:1px solid var(--line);background:#080b08;padding:12px;font:8px/1.55 var(--mono);color:#8e9989}.note{margin-top:12px;color:#657060;font:7px/1.55 var(--mono)}@media(max-width:640px){body{padding:10px}.shell{padding:15px}.grid{grid-template-columns:1fr}.top{align-items:flex-start}.actions{display:grid}.btn{width:100%}}
-</style>
+.group{margin:14px 0 0;padding:14px 16px;border:1px solid var(--line,#2f382b);background:#0d110c}.group>b,.group summary b{display:block;font-size:12px;color:#e7dfc7;letter-spacing:.04em}.group>span,.group summary span{display:block;margin:5px 0 10px;font-size:11px;color:#7f8a79;line-height:1.5}.group summary{cursor:pointer;list-style:none}.group summary span{display:inline;margin:0 0 0 6px}.group .actions{margin-top:0}.archive[open] summary{margin-bottom:12px}.log-title{margin:18px 0 6px;font-size:10px;letter-spacing:.1em;color:#7f8a79}</style>
 </head>
 <body>
 <main class="shell">
   <div class="top"><div class="eyebrow">ARCHIVE ADMIN / HUB STORAGE</div><a class="back" href="/admin/">← ADMIN</a></div>
   <h1>HUB STORAGE</h1>
-  <div class="sub">R2 migration console. Existing D1 files stay readable until each file is safely committed to R2.</div>
-  <div id="status" class="status">LOADING STORAGE STATUS…</div>
-  <div class="grid">
-    <div class="stat"><b id="d1">—</b><span>D1 FILES</span></div>
-    <div class="stat"><b id="r2">—</b><span>R2 FILES</span></div>
-    <div class="stat"><b id="remote">—</b><span>REMOTE FILES</span></div>
-  </div>
-  <div class="actions">
-    <button class="btn" id="refresh" type="button">REFRESH</button>
-    <button class="btn" id="schema" type="button">SCHEMA CHECK</button>
-    <button class="btn" id="dry" type="button">DRY RUN · 10</button>
-    <button class="btn primary" id="batch" type="button">MIGRATE · 10</button>
-    <button class="btn primary" id="all" type="button">MIGRATE ALL</button>
-    <button class="btn" id="tgCheck" type="button">HUB IMAGES → R2 · CHECK</button>
-    <button class="btn primary" id="tgRepair" type="button">HUB IMAGES → R2 · REPAIR</button>
-    <button class="btn" id="authorCheck" type="button">AUTHOR LINKS · CHECK</button>
-    <button class="btn primary" id="authorFill" type="button">AUTHOR LINKS · FILL</button>
-  </div>
-  <div id="log" class="log">No migration started.</div>
-  <div class="note">Migration order: read D1 → PUT R2 → commit storage metadata → remove old D1 chunks. If the R2 write or metadata commit fails, the D1 copy remains authoritative. SCHEMA CHECK is read-only and does not alter D1.</div>
+  <div class="sub"></div>
+  <div id="status" class="status">Проверяю хранилище…</div>
+  <div class="group"><b>Картинки HUB</b><span>Переносит картинки ресурсов в своё хранилище и заново скачивает протухшие картинки из исходных постов Telegram.</span><div class="actions"><button class="btn" id="tgCheck" type="button">Проверить</button><button class="btn primary" id="tgRepair" type="button">Починить</button></div></div>
+<div class="group"><b>Ссылки на авторов</b><span>Заполняет пустые ссылки на профили авторов ботов по данным JanitorAI.</span><div class="actions"><button class="btn" id="authorCheck" type="button">Проверить</button><button class="btn primary" id="authorFill" type="button">Заполнить</button></div></div>
+<details class="group archive"><summary><b>Перенос файлов D1 → R2</b> <span>завершён · открыть, если понадобится</span></summary>
+<div class="grid"> <div class="stat"><b id="d1">—</b><span>файлов в D1 (старое)</span></div> <div class="stat"><b id="r2">—</b><span>файлов в R2</span></div> <div class="stat"><b id="remote">—</b><span>внешних ссылок</span></div> </div>
+<div class="actions"><button class="btn" id="refresh" type="button">Обновить</button><button class="btn" id="schema" type="button">Проверить схему базы</button><button class="btn" id="dry" type="button">Пробный перенос · 10</button><button class="btn primary" id="batch" type="button">Перенести · 10</button><button class="btn primary" id="all" type="button">Перенести всё</button></div>
+<div class="note">Файл читается из D1, записывается в R2, и только после успешной записи старая копия удаляется. «Проверить схему» ничего не меняет.</div>
+</details>
+<div class="log-title">Журнал</div><div id="log" class="log">Здесь появится результат.</div>
+  
 </main>
 <script>
 (()=>{
@@ -44,20 +35,20 @@
   async function api(method='GET',body){const r=await fetch('/api/admin/hub-storage',{method,headers:body?{'content-type':'application/json'}:{},body:body?JSON.stringify(body):undefined,cache:'no-store'}),text=await r.text();let d={};try{d=JSON.parse(text)}catch{d={ok:false,error:text||`HTTP_${r.status}`}}if(!r.ok&&r.status!==207)throw new Error(d.error||d.message||`HTTP_${r.status}`);return d}
   async function schemaStatus(){const r=await fetch('/api/admin/schema-status',{method:'GET',cache:'no-store'}),text=await r.text();let d={};try{d=JSON.parse(text)}catch{d={ok:false,error:text||`HTTP_${r.status}`}}if(!r.ok)throw new Error(d.error||`HTTP_${r.status}`);return d}
   function count(d,key){return Number((d.groups||[]).find(x=>x.storage===key)?.files||0)}
-  async function refresh(){const d=await api();$('#d1').textContent=count(d,'d1');$('#r2').textContent=count(d,'r2');$('#remote').textContent=count(d,'remote');status.innerHTML=d.r2_available?`<span class="ok">● R2 CONNECTED</span> · ${d.pending_d1_files} D1 file(s) pending migration`:`<span class="bad">● R2 NOT CONNECTED</span> · deploy HUB_FILES binding first`;return d}
+  async function refresh(){const d=await api();$('#d1').textContent=count(d,'d1');$('#r2').textContent=count(d,'r2');$('#remote').textContent=count(d,'remote');status.innerHTML=d.r2_available?`<span class="ok">● хранилище R2 подключено</span> · осталось перенести из D1: ${d.pending_d1_files}`:`<span class="bad">● хранилище R2 не подключено</span> · нужна привязка HUB_FILES в Cloudflare`;return d}
   async function migrate(limit=10,dry_run=false){const d=await api('POST',{limit,dry_run});write(d);await refresh();return d}
-  $('#refresh').onclick=async()=>{setBusy(true);try{await refresh()}catch(e){status.innerHTML=`<span class="bad">STATUS FAILED:</span> ${e.message}`}finally{setBusy(false)}};
-  $('#schema').onclick=async()=>{setBusy(true);try{const d=await schemaStatus();write({schema_ok:d.ok,read_only:d.read_only,missing_columns:d.missing_columns,characters_identity:d.characters_identity,tables:d.tables});}catch(e){write('SCHEMA CHECK FAILED: '+e.message)}finally{setBusy(false)}};
-  $('#dry').onclick=async()=>{setBusy(true);try{await migrate(10,true)}catch(e){write('DRY RUN FAILED: '+e.message)}finally{setBusy(false)}};
-  $('#batch').onclick=async()=>{if(!confirm('Migrate the next 10 D1 files to R2?'))return;setBusy(true);try{await migrate(10,false)}catch(e){write('MIGRATION FAILED: '+e.message)}finally{setBusy(false)}};
-  $('#all').onclick=async()=>{if(!confirm('Migrate all remaining HUB files from D1 to R2 in safe batches?'))return;setBusy(true);try{let rounds=0;for(;;){const d=await migrate(10,false);rounds++;if(d.errors?.length)throw new Error(`${d.errors.length} file(s) failed; stopped before continuing.`);if(!d.remaining)break;if(rounds>=200)throw new Error('Safety stop after 200 batches.');await new Promise(r=>setTimeout(r,120))}write('MIGRATION COMPLETE.')}catch(e){write('MIGRATE ALL STOPPED: '+e.message)}finally{setBusy(false)}};
+  $('#refresh').onclick=async()=>{setBusy(true);try{await refresh()}catch(e){status.innerHTML=`<span class="bad">Не удалось получить статус:</span> ${e.message}`}finally{setBusy(false)}};
+  $('#schema').onclick=async()=>{setBusy(true);try{const d=await schemaStatus();write({schema_ok:d.ok,read_only:d.read_only,missing_columns:d.missing_columns,characters_identity:d.characters_identity,tables:d.tables});}catch(e){write('Проверка схемы не удалась: '+e.message)}finally{setBusy(false)}};
+  $('#dry').onclick=async()=>{setBusy(true);try{await migrate(10,true)}catch(e){write('Пробный перенос не удался: '+e.message)}finally{setBusy(false)}};
+  $('#batch').onclick=async()=>{if(!confirm('Перенести следующие 10 файлов из D1 в R2?'))return;setBusy(true);try{await migrate(10,false)}catch(e){write('Перенос не удался: '+e.message)}finally{setBusy(false)}};
+  $('#all').onclick=async()=>{if(!confirm('Перенести все оставшиеся файлы HUB из D1 в R2 небольшими партиями?'))return;setBusy(true);try{let rounds=0;for(;;){const d=await migrate(10,false);rounds++;if(d.errors?.length)throw new Error(`${d.errors.length} file(s) failed; stopped before continuing.`);if(!d.remaining)break;if(rounds>=200)throw new Error('Остановлено после 200 партий (защита).');await new Promise(r=>setTimeout(r,120))}write('Перенос завершён.')}catch(e){write('Перенос остановлен: '+e.message)}finally{setBusy(false)}};
   async function mediaRepair(method){const r=await fetch('/api/admin/hub-media-repair',{method,cache:'no-store'}),text=await r.text();let d={};try{d=JSON.parse(text)}catch{d={ok:false,error:text||`HTTP_${r.status}`}}if(!r.ok)throw new Error(d.error||`HTTP_${r.status}`);return d}
-  $('#tgCheck').onclick=async()=>{setBusy(true);try{write(await mediaRepair('GET'))}catch(e){write('HUB IMAGES CHECK FAILED: '+e.message)}finally{setBusy(false)}};
-  $('#tgRepair').onclick=async()=>{if(!confirm('Move embedded HUB images to R2 and re-download expired Telegram images from their source posts?'))return;setBusy(true);try{write(await mediaRepair('POST'));await refresh()}catch(e){write('HUB IMAGES REPAIR FAILED: '+e.message)}finally{setBusy(false)}};
+  $('#tgCheck').onclick=async()=>{setBusy(true);try{write(await mediaRepair('GET'))}catch(e){write('Проверка картинок не удалась: '+e.message)}finally{setBusy(false)}};
+  $('#tgRepair').onclick=async()=>{if(!confirm('Перенести картинки HUB в R2 и заново скачать протухшие картинки из исходных постов Telegram?'))return;setBusy(true);try{write(await mediaRepair('POST'));await refresh()}catch(e){write('Починка картинок не удалась: '+e.message)}finally{setBusy(false)}};
   async function authorLinks(body){const r=await fetch('/api/admin/author-links',body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);return d}
-  $('#authorCheck').onclick=async()=>{setBusy(true);try{write(await authorLinks())}catch(e){write('AUTHOR LINKS CHECK FAILED: '+e.message)}finally{setBusy(false)}};
-  $('#authorFill').onclick=async()=>{if(!confirm('Fill empty author profile links from JanitorAI card data (one author at a time)?'))return;setBusy(true);try{const plan=await authorLinks();for(const a of plan.authors.filter(x=>x.missing||x.schemeless)){write(await authorLinks({author:a.author}))}write('AUTHOR LINKS DONE.')}catch(e){write('AUTHOR LINKS FILL FAILED: '+e.message)}finally{setBusy(false)}};
-  refresh().catch(e=>status.innerHTML=`<span class="bad">STATUS FAILED:</span> ${e.message}`);
+  $('#authorCheck').onclick=async()=>{setBusy(true);try{write(await authorLinks())}catch(e){write('Проверка ссылок не удалась: '+e.message)}finally{setBusy(false)}};
+  $('#authorFill').onclick=async()=>{if(!confirm('Заполнить пустые ссылки на профили авторов по данным JanitorAI (по одному автору)?'))return;setBusy(true);try{const plan=await authorLinks();for(const a of plan.authors.filter(x=>x.missing||x.schemeless)){write(await authorLinks({author:a.author}))}write('Ссылки авторов заполнены.')}catch(e){write('Заполнение ссылок не удалось: '+e.message)}finally{setBusy(false)}};
+  refresh().catch(e=>status.innerHTML=`<span class="bad">Не удалось получить статус:</span> ${e.message}`);
 })();
 </script>
 </body>

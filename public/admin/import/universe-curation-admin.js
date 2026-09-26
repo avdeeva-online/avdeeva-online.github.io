@@ -12,20 +12,20 @@
     const block=document.createElement('div');
     block.id='curationRegistryBlock';
     block.innerHTML=`
-      <div class="section-title" style="margin-top:22px"><b>CURATION REGISTRY</b><span>SOURCE → PUBLIC UNIVERSE</span></div>
+      <div class="section-title" style="margin-top:22px"><b>Правила переименования</b><span>как вселенная названа у автора → как показывать на сайте</span></div>
       <div class="hint">Исходное значение импорта не меняется. Здесь задаётся только то, что увидит публичный каталог. Ручные значения персонажа (admin:manual) имеют приоритет.</div>
-      <div id="curationStatus" class="status">NOT LOADED YET. OPEN UNIVERSE REVIEW TO LOAD.</div>
+      <div id="curationStatus" class="status">Загрузятся вместе со вселенными.</div>
       <div class="panel" style="margin-top:10px;padding:10px">
         <div style="display:grid;grid-template-columns:minmax(180px,1.4fr) minmax(180px,1fr);gap:7px">
-          <input id="curationSource" placeholder="Imported/source Universe exactly">
-          <input id="curationPublic" list="curationCanonicalNames" placeholder="Public Universe(s), comma separated">
-          <input id="curationParent" list="curationCanonicalNames" placeholder="Parent Universe (optional)">
-          <input id="curationSub" list="curationCanonicalNames" placeholder="Subuniverse (optional)">
+          <input id="curationSource" placeholder="Название у автора (точно)">
+          <input id="curationPublic" list="curationCanonicalNames" placeholder="Как показывать на сайте (через запятую)">
+          <input id="curationParent" list="curationCanonicalNames" placeholder="Родительская вселенная (необязательно)">
+          <input id="curationSub" list="curationCanonicalNames" placeholder="Подвселенная (необязательно)">
         </div>
-        <div class="toolbar" style="margin:8px 0 0"><button class="btn primary" id="curationSave" type="button">SAVE RULE</button><button class="btn" id="curationClear" type="button">CLEAR FORM</button><span class="count" id="curationCount">000 RULES</span></div>
+        <div class="toolbar" style="margin:8px 0 0"><button class="btn primary" id="curationSave" type="button">Сохранить правило</button><button class="btn" id="curationClear" type="button">Очистить</button><span class="count" id="curationCount">000 RULES</span></div>
       </div>
       <datalist id="curationCanonicalNames"></datalist>
-      <div id="curationList" class="universe-list"><div class="empty">CURATION REGISTRY NOT LOADED</div></div>`;
+      <div id="curationList" class="universe-list"><div class="empty">Правила не загружены</div></div>`;
     panel.appendChild(block);
     $('#curationSave').addEventListener('click',saveRule);
     $('#curationClear').addEventListener('click',clearForm);
@@ -46,14 +46,14 @@
       const hierarchy=[rule.parentUniverse?`MAIN: ${rule.parentUniverse}`:'',rule.subuniverse?`SUB: ${rule.subuniverse}`:''].filter(Boolean).join(' · ');
       return `<div class="universe-row ${rule.active?'':'flagged'}" data-curation-source="${esc(rule.source)}">
         <div class="universe-copy"><b>${esc(rule.source)}</b><small>PUBLIC → ${esc(publicText)}</small>${hierarchy?`<div class="review-note">${esc(hierarchy)}</div>`:''}</div>
-        <div class="universe-edit"><button class="btn" data-curation-edit type="button">EDIT</button><button class="btn ${rule.active?'':'warn'}" data-curation-toggle type="button">${rule.active?'DISABLE':'ENABLE'}</button></div>
+        <div class="universe-edit"><button class="btn" data-curation-edit type="button">Изменить</button><button class="btn ${rule.active?'':'warn'}" data-curation-toggle type="button">${rule.active?'Выключить':'Включить'}</button></div>
       </div>`;
-    }).join(''):'<div class="empty">NO CURATION RULES</div>';
+    }).join(''):'<div class="empty">Правил нет</div>';
   }
 
   async function load(force=false){
     ensureUi();if(loading||(!force&&loaded))return;loading=true;
-    const status=$('#curationStatus');if(status)status.textContent='LOADING CURATION REGISTRY...';
+    const status=$('#curationStatus');if(status)status.textContent='Загружаю правила…';
     try{const r=await fetch('/api/admin/universe-curation',{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||d.message||`HTTP_${r.status}`);data=d;loaded=true;render();if(status)status.textContent=`READY. ${d.count||0} CURATION RULES. IMPORT SOURCE VALUES ARE UNCHANGED.`}catch(e){if(status)status.textContent=`CURATION LOAD FAILED: ${e.message}`}finally{loading=false}
   }
 
@@ -61,7 +61,7 @@
 
   async function saveRule(){
     const source=$('#curationSource')?.value.trim()||'',publicUniverses=($('#curationPublic')?.value||'').split(',').map(x=>x.trim()).filter(Boolean),parentUniverse=$('#curationParent')?.value.trim()||'',subuniverse=$('#curationSub')?.value.trim()||'',status=$('#curationStatus'),btn=$('#curationSave');
-    if(!source||!publicUniverses.length){status.textContent='SOURCE AND AT LEAST ONE PUBLIC UNIVERSE ARE REQUIRED.';return}
+    if(!source||!publicUniverses.length){status.textContent='Нужны название у автора и хотя бы одна вселенная для сайта.';return}
     btn.disabled=true;try{await post({action:'set',source,publicUniverses,parentUniverse,subuniverse});status.textContent=`SAVED: ${source} → ${publicUniverses.join(' + ')}`;clearForm();await load(true)}catch(e){status.textContent=`SAVE FAILED: ${e.message}`}finally{btn.disabled=false}
   }
 

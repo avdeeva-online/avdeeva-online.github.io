@@ -12,7 +12,7 @@ import { d1SchemaStatus } from './d1-schema-status.js';
 import { repairHubMedia } from './hub-resources.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
-const BUILD_INFO={build:'record-card-v2',deployed_from:'main'};
+const BUILD_INFO={build:'public-text-overrides-v1',deployed_from:'main'};
 const CONTENT_SECURITY_POLICY=["default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","form-action 'self'","img-src 'self' https: data: blob:","media-src 'self' https: blob:","style-src 'self' 'unsafe-inline'","script-src 'self' 'unsafe-inline'","connect-src 'self'","font-src 'self' data:"].join('; ');
 function withSecurityHeaders(response){
   const headers=new Headers(response.headers);

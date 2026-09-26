@@ -65,4 +65,26 @@ assert.deepEqual(detail.character.sections.about.map(x=>x.title),['THE KINGDOM',
 assert.equal(detail.character.sections.introNotes[1].title,'THE MEETING');
 assert.ok(detail.character.full.includes('WHAT I WRITE'),'the original text is still served in full');
 
-console.log('ARCHIVE.EXE description sections OK · tagline + main description + intro titles + creator notes, served by the detail API');
+// Admin-written tagline / description win over the automatic split, survive re-import, and "" goes back to automatic.
+const { updateAdminCharacter } = await import('../src/character-admin.js');
+const { manualSections, sectionsToText } = await import('../src/description-sections.js');
+assert.deepEqual(manualSections(sectionsToText(s.about)),s.about,'the editor round-trips the automatic description');
+const row=()=>db.prepare('SELECT * FROM characters WHERE janitor_uuid=?').get(UUID);
+const patch=body=>updateAdminCharacter(new Request(`https://x.test/api/admin/characters/${UUID}`,{method:'PATCH',body:JSON.stringify({name:'Queen',author:'A',tags:[],hashtags:[],universes:[],setting_ids:[],pov:'AnyPOV',status:'published',description:row().description,...body})}),env,UUID);
+assert.equal((await patch({public_hook:'Admin tagline.',public_about:'Intro by admin.\n\n## WHO SHE IS\nThe new queen.'})).status,200);
+let d2=(await (await sourceTruth.fetch(new Request(`https://x.test/api/characters/${UUID}`),env,ctx)).json()).character;
+assert.equal(d2.short,'Admin tagline.');
+assert.deepEqual(d2.sections.about,[{title:'',text:'Intro by admin.'},{title:'WHO SHE IS',text:'The new queen.'}]);
+assert.equal(d2.sections.introNotes[1].title,'THE MEETING','intro notes stay automatic');
+const catalogRow=(await (await sourceTruth.fetch(new Request('https://x.test/api/catalog?limit=10'),env,ctx)).json()).characters.find(c=>c.janitorUuid===UUID);
+assert.equal(catalogRow.short,'Admin tagline.','the list card shows the admin tagline');
+assert.equal((await patch({public_hook:undefined,public_about:undefined})).status,200);
+assert.equal(row().public_hook,'Admin tagline.','fields omitted from a save are kept');
+const workerSrc=fs.readFileSync('src/worker.js','utf8'),upsert=workerSrc.slice(workerSrc.indexOf('async function saveCharacter('),workerSrc.indexOf('\n',workerSrc.indexOf('async function saveCharacter(')));
+assert.ok(upsert.includes('ON CONFLICT')&&!upsert.includes('public_hook')&&!upsert.includes('public_about'),'re-import never writes the admin text');
+assert.equal((await patch({public_hook:'',public_about:''})).status,200);
+d2=(await (await sourceTruth.fetch(new Request(`https://x.test/api/characters/${UUID}`),env,ctx)).json()).character;
+assert.equal(d2.short,s.hook,'empty admin text = automatic again');
+assert.deepEqual(d2.sections.about.map(x=>x.title),['THE KINGDOM','ABOUT USER']);
+
+console.log('ARCHIVE.EXE description sections OK · tagline + main description + intro titles + creator notes, served by the detail API; admin tagline/description override, kept on re-import');

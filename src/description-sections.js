@@ -129,3 +129,18 @@ export function describeSections(description,{introCount=0}={}){
   out.intros=Array.from({length:out.intros.length},(_,i)=>out.intros[i]||null);
   return out;
 }
+
+// Admin-written main description: plain text where a line "## Title" starts a titled section.
+export function manualSections(text){
+  const out=[];let current={title:'',lines:[]};
+  const push=()=>{const body=current.lines.join('\n').replace(/^\n+|\n+$/g,'');if(current.title||body)out.push({title:current.title,text:body});};
+  for(const line of String(text||'').replace(/\r/g,'').split('\n')){
+    const m=line.match(/^\s*##\s+(.+?)\s*$/);
+    if(m){push();current={title:m[1],lines:[]};continue}
+    current.lines.push(line);
+  }
+  push();
+  return out.filter(s=>s.text);
+}
+// The reverse, so the admin editor can start from the automatic split instead of a blank field.
+export function sectionsToText(list){return (list||[]).map(s=>`${s.title?`## ${s.title}\n`:''}${s.text}`).join('\n\n')}

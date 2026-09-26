@@ -197,19 +197,27 @@
     overflow:visible!important;
     box-shadow:0 -12px 40px rgba(0,0,0,.5)!important;
   }
-  #modal .cm-card .modal-cover{height:min(46vh,380px)!important;aspect-ratio:auto!important;border-radius:16px 16px 0 0!important}
-  #modal .cm-card .modal-cover:after{height:45%;background:linear-gradient(180deg,transparent,var(--cm-bg))}
+  #modal .cm-card .modal-cover{height:min(40vh,330px)!important;aspect-ratio:auto!important;border-radius:16px 16px 0 0!important}
+  #modal .cm-card .modal-cover:after{height:18%;background:linear-gradient(180deg,transparent,rgba(19,23,19,.6))}
   #modal .cm-card .modal-close{position:fixed!important;top:34px!important;right:12px!important;background:rgba(10,13,10,.72)!important;border-color:rgba(255,255,255,.1)!important;color:#e6e9e0!important}
-  #modal .cm-card .cm-content{height:auto!important;overflow:visible!important;padding:0 18px 40px!important;margin-top:-38px!important;position:relative!important}
+  /* Title sits under the photo, not over it: text touching the picture edge read as cramped. */
+  #modal .cm-card .cm-content{height:auto!important;overflow:visible!important;padding:14px 16px 32px!important;margin-top:0!important;position:relative!important}
   #modal .cm-head{margin:0;padding-top:0}
-  #modal .cm-card #modalTitle{font-size:25px!important;text-shadow:0 2px 14px rgba(0,0,0,.6)}
-  #modal .cm-card #modalTitle.is-long-title{font-size:21px!important}
-  #modal .cm-hook{font-size:16px}
-  #modal .cm-files{gap:7px}
-  #modal .cm-btn{height:40px;padding:0 13px}
+  #modal .cm-card #modalTitle{font-size:22px!important;line-height:1.15!important}
+  #modal .cm-card #modalTitle.is-long-title{font-size:19px!important}
+  #modal .cm-byline{margin-top:5px;font-size:12.5px}
+  #modal .cm-byline button{font-size:12.5px}
+  #modal .cm-facts{margin-top:8px;font-size:12.5px;gap:3px 7px}
+  #modal .cm-hook{margin-top:14px;padding-left:12px;font-size:15px;line-height:1.5}
+  #modal .cm-files{gap:6px;margin-top:14px}
+  #modal .cm-btn{height:36px;padding:0 12px;font-size:12.5px}
+  #modal .cm-link{padding:8px 2px;font-size:12.5px}
   #modal .cm-files-gap{display:none}
-  #modal .cm-tabs{top:0;margin:24px -18px 0;padding:14px 18px 0;gap:22px}
-  #modal .cm-panel{--cm-read:15px}
+  #modal .cm-tabs{top:0;margin:16px -16px 0;padding:12px 16px 0;gap:20px}
+  #modal .cm-tab{padding-bottom:10px;font-size:12.5px}
+  #modal .cm-panel{--cm-read:14.5px;padding-top:16px;line-height:1.62}
+  #modal .cm-section+.cm-section{margin-top:20px}
+  #modal .cm-tags{margin-top:20px;padding-top:14px;gap:6px 8px}
   #modal .cm-swipe-hint{display:block;margin:28px 0 0;color:var(--cm-muted);font:12px/1.4 Arial,sans-serif;text-align:center}
 }
 @media(min-width:761px){#modal .cm-swipe-hint{display:none}}

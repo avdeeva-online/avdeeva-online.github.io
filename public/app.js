@@ -940,6 +940,7 @@ function openModal(b,keepOpen=false){
   renderModalPanel();
   $(".cm-content").scrollTop=0;
   $(".modal-card").scrollTop=0;
+  modalRoot.scrollTop=0;
   if(!keepOpen){
     modalReturnFocus=document.activeElement;
     $("#modal").hidden=false;
@@ -961,6 +962,22 @@ $("#modal").addEventListener("click",e=>{
     $("#modalTabs")?.scrollIntoView({block:"nearest"});
   }
 });
+// Phone: a clear horizontal swipe on the card flips to the next / previous bot (arrows are hidden there).
+// Swipes that start on horizontally scrollable rows (tabs, intro picker, buttons) are left alone.
+(()=>{
+  let start=null;
+  const modal=$("#modal");
+  modal.addEventListener("touchstart",e=>{
+    const t=e.touches[0];
+    start=e.touches.length===1&&!e.target.closest(".cm-tabs,.cm-intro-picker,.cm-files,.cm-tags,#archiveLorePicker")?{x:t.clientX,y:t.clientY,at:Date.now()}:null;
+  },{passive:true});
+  modal.addEventListener("touchend",e=>{
+    if(!start||modal.hidden)return;
+    const t=e.changedTouches[0],dx=t.clientX-start.x,dy=t.clientY-start.y,fast=Date.now()-start.at<700;
+    start=null;
+    if(fast&&Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*1.8)browseModal(dx<0?1:-1);
+  },{passive:true});
+})();
 
 // Small archive anomalies: decorative only, never block interaction.
 const anomalyTargets=["#catalogOpen",".hashtag-trigger",".setting-trigger","#sortTrigger","#loreToggle","#povCycle","#randomBtn"];

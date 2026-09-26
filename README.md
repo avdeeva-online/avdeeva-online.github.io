@@ -18,17 +18,14 @@
 
 | Файл | Отвечает за |
 |---|---|
-| `app.js` | Основа: фильтры, поиск, сортировка, сетка карточек, модалка (`openModal`), эффекты шапки, пасхалки |
+| `app.js` | Основа: фильтры, поиск, сортировка, сетка карточек, карточка бота (`openModal` → `renderModalHead` / `renderModalPanel`), эффекты шапки, пасхалки |
 | `catalog-api.js` | Загрузка `/api/catalog`, нормализация данных, догружает `ui-fixes.js` и `lorebooks.js` |
 | `character-import.js` | Кнопка «+ IMPORT» для всех: ссылка JanitorAI → `/api/import` (ожидание DataCat) → бот сразу в каталоге, открывается его карточка. Уже добавленный бот не перезаписывается, скрытый админом — не возвращается |
 | `png-download.js` | Скачивание карточки PNG/JSON |
-| `modal-content-fix.js` | Блок «CARD DATA»: описание по разделам, сценарий, интро (`renderModalPanel`) |
-| `public-summary-clean.js` | Короткое описание в модалке, срез промо-блоков автора |
-| `modal-carddata-ux.js` | Раскладка и поведение модалки |
-| `modal-definition.js` | Обёртка `openModal`: подгрузка полного описания `/api/characters/<id>` |
 | `source-label-fix.js` | Обёртка `render`: строки сеттингов, вселенных и тегов на карточках и в модалке |
 | `lorebook-picker.js` / `lorebooks.js` | Выбор и скачивание лорбуков; вкладки лорбуков и хэштегов в каталоге |
-| `ui-fixes.js` | Обёртка `openModal`: кнопки файлов, лорбук, ссылка и бейдж автора |
+| `ui-fixes.js` | Открытие карточки по событию `archive:open-character` (например, из импорта) |
+| `character-modal.css` | Вид карточки бота: одна колонка текста, вкладки About / Intros / Scenario / Creator notes. Текст делится на сервере в `src/description-sections.js` |
 | `uiux-audit-patch.js` | Мобильные правки интерфейса, подключает `cross-nav.js` |
 
 Стили: `styles.css` → `mobile-quiet.css` → `catalog-checkpoint.css` → `uiux-audit-patch.css` (поздний файл перекрывает ранний). Для безопасной чистки CSS/JS — `scripts/dev/`.

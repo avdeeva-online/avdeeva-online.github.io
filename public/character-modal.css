@@ -1,0 +1,202 @@
+/* Record card (modal) — one layout, one scroll.
+   Scoped under #modal .cm-card so the older .modal-* rules in styles.css / patches cannot leak in. */
+#modal{
+  --cm-bg:#131713;
+  --cm-panel:#171c17;
+  --cm-line:#2c352b;
+  --cm-line-soft:rgba(90,104,86,.28);
+  --cm-text:#d9ddd2;
+  --cm-text-soft:#aeb5a7;
+  --cm-muted:#7f8a7a;
+  --cm-title:#f5f1e8;
+  --cm-accent:#b9cf8f;
+  --cm-warm:#dcc6a0;
+  --cm-tag:#e0b59d;
+  --cm-read:15.5px;
+}
+#modal .modal-card.cm-card{
+  box-sizing:border-box!important;
+  width:min(1000px,calc(100vw - 150px))!important;
+  height:min(780px,calc(100dvh - 48px))!important;
+  min-height:0!important;
+  max-height:none!important;
+  display:grid!important;
+  grid-template-columns:minmax(260px,34%) minmax(0,1fr)!important;
+  grid-template-rows:minmax(0,1fr)!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:1px solid #384236!important;
+  border-radius:12px!important;
+  background:var(--cm-bg)!important;
+  box-shadow:0 30px 90px rgba(0,0,0,.62)!important;
+}
+#modal .cm-card .modal-cover{
+  position:relative!important;
+  height:100%!important;min-height:0!important;aspect-ratio:auto!important;
+  overflow:hidden!important;background:#0c0f0c!important;
+}
+#modal .cm-card .modal-cover img{
+  width:100%!important;height:100%!important;object-fit:cover!important;object-position:center top!important;
+  filter:none!important;background:transparent!important;
+}
+#modal .cm-card .modal-cover:after{
+  content:"";position:absolute;inset:auto 0 0 0;height:22%;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(12,15,12,.55));
+}
+#modal .cm-card .modal-close{
+  position:absolute!important;top:14px!important;right:16px!important;z-index:6!important;
+  width:34px!important;height:34px!important;padding:0!important;
+  border:1px solid transparent!important;border-radius:50%!important;background:transparent!important;box-shadow:none!important;
+  color:var(--cm-muted)!important;font:400 24px/1 Arial,sans-serif!important;opacity:1!important;transform:none!important;cursor:pointer!important;
+}
+#modal .cm-card .modal-close:hover,#modal .cm-card .modal-close:focus-visible{color:var(--cm-title)!important;border-color:var(--cm-line)!important;background:rgba(255,255,255,.03)!important}
+
+/* Right column: the only scroll area on desktop. */
+#modal .cm-card .cm-content{
+  box-sizing:border-box!important;
+  display:block!important;
+  height:100%!important;min-height:0!important;min-width:0!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  padding:30px 36px 32px!important;
+  color:var(--cm-text)!important;
+  scrollbar-width:thin;scrollbar-color:#3a4538 transparent;
+  overscroll-behavior:contain;
+}
+#modal .cm-content::-webkit-scrollbar{width:8px}
+#modal .cm-content::-webkit-scrollbar-thumb{background:#313b30;border-radius:8px;border:2px solid var(--cm-bg)}
+
+/* Head */
+#modal .cm-head{margin:0 44px 0 0}
+#modal .cm-card #modalTitle{
+  margin:0!important;padding:0!important;max-width:none!important;overflow:visible!important;
+  font:800 30px/1.12 Arial,"Segoe UI",sans-serif!important;letter-spacing:-.02em!important;color:var(--cm-title)!important;
+  overflow-wrap:anywhere;
+}
+#modal .cm-card #modalTitle.is-long-title{font-size:24px!important}
+#modal .cm-byline{margin:8px 0 0;color:var(--cm-muted);font:13px/1.3 Arial,sans-serif}
+#modal .cm-byline button{
+  margin:0;padding:0;border:0;background:none;cursor:pointer;
+  color:var(--cm-text);font:600 13px/1.3 Arial,sans-serif;text-decoration:underline;text-decoration-color:rgba(217,221,210,.35);text-underline-offset:3px;
+}
+#modal .cm-byline button:hover{color:var(--cm-title);text-decoration-color:currentColor}
+#modal .cm-facts{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:12px 0 0;color:var(--cm-text-soft);font:13px/1.4 Arial,sans-serif}
+#modal .cm-fact{
+  display:inline-flex;align-items:center;gap:5px;margin:0;padding:0;border:0;background:none;
+  color:var(--cm-text-soft);font:inherit;cursor:pointer;
+}
+#modal button.cm-fact:hover{color:var(--cm-title);text-decoration:underline;text-underline-offset:3px}
+#modal .cm-fact .ui-icon{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;opacity:.8}
+#modal .cm-fact-universe{color:var(--cm-warm)}
+#modal .cm-fact-pov{cursor:default;color:var(--cm-muted)}
+#modal .cm-dot{color:#4d574b}
+
+/* Hook: the tagline, the first thing to read. */
+#modal .cm-hook{
+  margin:20px 0 0;padding:0 0 0 16px;border-left:2px solid #6d7d57;
+  color:#ece6d8;font:italic 17px/1.55 Georgia,"Times New Roman",serif;
+}
+#modal .cm-hook p{margin:0}
+#modal .cm-hook p+p{margin-top:8px}
+
+/* Files: the main action, right under the hook. */
+#modal .cm-files{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:22px 0 0}
+#modal .cm-btn{
+  box-sizing:border-box;display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 15px;
+  border:1px solid #475243;border-radius:7px;background:#1b221a;color:#dfe4d7;
+  font:600 13px/1 Arial,sans-serif;text-decoration:none;white-space:nowrap;cursor:pointer;
+  transition:background .14s,border-color .14s,color .14s;
+}
+#modal .cm-btn:hover{background:#243023;border-color:#6c7c62;color:#fff}
+#modal .cm-btn-primary{background:#3a4d2d;border-color:#6f8a57;color:#f4f8ec}
+#modal .cm-btn-primary:hover{background:#476036;border-color:#8ea972}
+#modal .cm-btn .ui-icon{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6}
+#modal .cm-btn.is-loading{opacity:.6;cursor:progress}
+#modal .cm-files-gap{flex:1 1 8px}
+#modal .cm-link{color:var(--cm-text-soft);font:13px/1 Arial,sans-serif;text-decoration:none;padding:10px 4px;white-space:nowrap}
+#modal .cm-link:hover{color:var(--cm-title);text-decoration:underline;text-underline-offset:3px}
+
+/* Tabs stay reachable while reading a long text. */
+#modal .cm-tabs{
+  position:sticky;top:0;z-index:3;
+  display:flex;gap:26px;margin:26px -36px 0;padding:14px 36px 0;
+  border-bottom:1px solid var(--cm-line);background:var(--cm-bg);
+  overflow-x:auto;scrollbar-width:none;
+}
+#modal .cm-tabs::-webkit-scrollbar{display:none}
+#modal .cm-tabs[hidden]{display:none}
+#modal .cm-tab{
+  flex:0 0 auto;margin:0 0 -1px;padding:0 0 11px;border:0;border-bottom:2px solid transparent;background:none;cursor:pointer;
+  color:var(--cm-muted);font:600 13px/1 Arial,sans-serif;letter-spacing:.01em;
+}
+#modal .cm-tab:hover{color:var(--cm-text)}
+#modal .cm-tab.active{color:var(--cm-title);border-bottom-color:var(--cm-accent)}
+
+/* Reading text */
+#modal .cm-panel{padding:22px 0 4px;min-height:120px;color:var(--cm-text);font:var(--cm-read)/1.7 Arial,"Segoe UI",sans-serif;max-width:68ch}
+#modal .cm-panel p{margin:0 0 .85em;overflow-wrap:break-word}
+#modal .cm-section+.cm-section{margin-top:26px}
+#modal .cm-section h3{
+  margin:0 0 10px;color:var(--cm-warm);
+  font:700 12px/1.3 var(--mono,Consolas,monospace);letter-spacing:.12em;text-transform:uppercase;
+}
+#modal .cm-state{color:var(--cm-muted);font-size:14px}
+#modal .cm-error{color:#d49784}
+#modal .cm-loading{display:grid;gap:12px;padding-top:4px}
+#modal .cm-loading i{display:block;height:12px;border-radius:6px;background:linear-gradient(90deg,#1c231b,#273026,#1c231b);background-size:200% 100%;animation:cmShimmer 1.2s linear infinite}
+#modal .cm-loading i:nth-child(2){width:86%}#modal .cm-loading i:nth-child(3){width:64%}
+@keyframes cmShimmer{to{background-position:-200% 0}}
+
+/* Intros */
+#modal .cm-intro-picker{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+#modal .cm-intro-choice{
+  padding:8px 12px;border:1px solid var(--cm-line);border-radius:7px;background:transparent;cursor:pointer;
+  color:var(--cm-text-soft);font:600 12.5px/1.2 Arial,sans-serif;text-align:left;
+}
+#modal .cm-intro-choice:hover{border-color:#4a5647;color:var(--cm-text)}
+#modal .cm-intro-choice.active{border-color:#6f8a57;background:#1d261b;color:var(--cm-title)}
+#modal .cm-intro-note{margin:0 0 18px!important;padding:10px 14px;border-radius:7px;background:#1a2019;color:var(--cm-text-soft);font:italic 14px/1.55 Arial,sans-serif}
+#modal .cm-intro-text{white-space:normal}
+
+/* Creator notes */
+#modal .cm-original{margin-top:28px;border-top:1px solid var(--cm-line);padding-top:14px}
+#modal .cm-original summary{cursor:pointer;color:var(--cm-muted);font:13px/1.4 Arial,sans-serif}
+#modal .cm-original summary:hover{color:var(--cm-text)}
+#modal .cm-original[open] summary{margin-bottom:14px}
+#modal .cm-original p{color:var(--cm-text-soft)}
+
+/* Tags: last, quiet — useful for browsing, not for reading. */
+#modal .cm-tags{display:flex;flex-wrap:wrap;gap:8px 10px;margin:26px 0 0;padding:18px 0 0;border-top:1px solid var(--cm-line)}
+#modal .cm-tags[hidden]{display:none}
+#modal .cm-tag{padding:5px 10px;border:1px solid #43372e;border-radius:6px;background:#1e1916;color:var(--cm-tag);font:600 12px/1.2 Arial,"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;cursor:pointer}
+#modal .cm-tag:hover{border-color:#6a5646;color:#f0cdb6}
+#modal .cm-hashtag{padding:5px 2px;border:0;background:none;color:var(--cm-muted);font:12px/1.2 Arial,sans-serif;cursor:pointer}
+#modal .cm-hashtag:hover{color:var(--cm-text);text-decoration:underline;text-underline-offset:3px}
+
+/* Prev / next arrows sit outside the wider card. */
+#modal .modal-nav{z-index:4}
+
+#modal .cm-byline button::before,#modal .cm-byline button::after{content:none!important}
+
+/* Phone: one column, the whole card scrolls (cover included). */
+@media(max-width:760px){
+  #modal{padding:0!important}
+  #modal .modal-card.cm-card{
+    width:100vw!important;height:100dvh!important;max-height:100dvh!important;
+    grid-template-columns:1fr!important;grid-template-rows:auto auto!important;
+    border:0!important;border-radius:0!important;
+    overflow-y:auto!important;overscroll-behavior:contain;
+  }
+  #modal .cm-card .modal-cover{height:min(48vh,400px)!important;aspect-ratio:auto!important}
+  #modal .cm-card .modal-cover:after{height:40%;background:linear-gradient(180deg,transparent,var(--cm-bg))}
+  #modal .cm-card .modal-close{position:fixed!important;top:10px!important;right:10px!important;background:rgba(10,13,10,.72)!important;border-color:rgba(255,255,255,.08)!important;color:#e6e9e0!important}
+  #modal .cm-card .cm-content{height:auto!important;overflow:visible!important;padding:0 18px 36px!important;margin-top:-34px!important;position:relative!important}
+  #modal .cm-head{margin:0}
+  #modal .cm-card #modalTitle{font-size:25px!important}
+  #modal .cm-card #modalTitle.is-long-title{font-size:21px!important}
+  #modal .cm-hook{font-size:16px}
+  #modal .cm-files{gap:7px}
+  #modal .cm-btn{height:40px;padding:0 13px}
+  #modal .cm-files-gap{display:none}
+  #modal .cm-tabs{top:0;margin:24px -18px 0;padding:14px 18px 0;gap:22px}
+  #modal .cm-panel{--cm-read:15px}
+}

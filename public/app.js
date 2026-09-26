@@ -825,6 +825,7 @@ async function hydrateModalDetail(b){
   if(!b?.janitorUuid || b.detailLoaded || b.detailLoading)return;
   b.detailLoading=true;
   b.detailError=false;
+  if(current===b)renderModalPanel();
   try{
     const response=await fetch(`/api/characters/${encodeURIComponent(b.janitorUuid)}`);
     const data=await response.json();
@@ -832,7 +833,7 @@ async function hydrateModalDetail(b){
     Object.assign(b,data.character,{detailLoaded:true,detailLoading:false,detailError:false});
     const stored=B.find(x=>x.id===b.id||x.janitorUuid===b.janitorUuid);
     if(stored&&stored!==b)Object.assign(stored,b);
-    if(current&&(current.id===b.id||current.janitorUuid===b.janitorUuid)){current=b;renderModalPanel()}
+    if(current&&(current.id===b.id||current.janitorUuid===b.janitorUuid)){current=b;renderModalHead();renderModalPanel()}
   }catch(error){
     b.detailLoading=false;
     b.detailError=true;
@@ -841,109 +842,124 @@ async function hydrateModalDetail(b){
   }
 }
 
+/* Record card (modal). One renderer owns the whole right column:
+   head (title, author, universe · setting · POV) → hook → files → tabs (About / Intros / Scenario / Creator notes) → tags.
+   The text itself is split on the server (src/description-sections.js → character.sections). */
+// Author profile links come from the catalog (Janitor profile per author); only absolute http(s) URLs are used.
+function externalUrl(raw){const s=String(raw||'').trim();if(!s)return'';try{const u=new URL(/^[a-z][a-z0-9+.-]*:/i.test(s)?s:`https://${s}`);return /^https?:$/.test(u.protocol)&&u.origin!==location.origin?u.href:''}catch{return''}}
+function pngUrl(b){if(b?.downloadPng)return b.downloadPng;const raw=String(b?.download||'');return raw?raw.replace(/\/card(?=$|[?#])/,'/card.png'):''}
+// Plain text → paragraphs; single line breaks inside a paragraph stay line breaks.
+function textHtml(text){return String(text||'').trim().split(/\n{2,}/).filter(Boolean).map(p=>`<p>${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('')}
+function sectionsHtml(list){return (list||[]).map(s=>`<section class="cm-section">${s.title?`<h3>${esc(s.title)}</h3>`:''}${textHtml(s.text)}</section>`).join('')}
+function modalIntros(b){return (Array.isArray(b?.intros)?b.intros:[]).map(x=>String(x||'').trim()).filter(Boolean)}
+function modalTabsFor(b){
+  const tabs=[{id:'about',label:'About'}];
+  const intros=modalIntros(b).length;
+  if(intros||!b.detailLoaded)tabs.push({id:'intros',label:intros?`Intros · ${intros}`:'Intros'});
+  if(String(b.scenario||'').trim())tabs.push({id:'scenario',label:'Scenario'});
+  if(b.sections?.extra?.length||String(b.full||'').trim()||!b.detailLoaded)tabs.push({id:'notes',label:'Creator notes'});
+  return tabs;
+}
+function renderModalHead(){
+  const b=current;if(!b)return;
+  const universes=botUniverses(b).map(canonicalUniverse);
+  const settings=[...new Set((b.settingIds||[]).flatMap(id=>cleanTag(id).split(/\s*\/\s*/)).map(canonicalSettingId).filter(id=>SETTING_BY_ID.has(id)))];
+  const facts=[
+    ...universes.map(u=>`<button type="button" class="cm-fact cm-fact-universe" data-quick-universe="${esc(u)}" title="Show universe: ${esc(u)}">${globeSvg}<span>${esc(u)}</span></button>`),
+    ...settings.map(id=>`<button type="button" class="cm-fact" data-quick-setting="${esc(id)}" title="Show setting: ${esc(settingLabel(id))}">${esc(settingLabel(id))}</button>`),
+    `<span class="cm-fact cm-fact-pov">${esc(povLabel(botPov(b)))}</span>`
+  ];
+  $("#modalFacts").innerHTML=facts.join('<span class="cm-dot" aria-hidden="true">·</span>');
+  $("#modalHook").innerHTML=textHtml(b.short);
+  $("#modalHook").hidden=!String(b.short||'').trim();
+  const png=pngUrl(b),json=String(b.download||''),lore=String(b.lorebook||''),profile=externalUrl(b.authorUrl);
+  const loreCount=Number(b.lorebookCount||1);
+  $("#modalFiles").innerHTML=[
+    png?`<a id="downloadPng" class="cm-btn cm-btn-primary" href="${esc(png)}" download>PNG card ↓</a>`:'',
+    json?`<a id="downloadBot" class="cm-btn" href="${esc(json)}" download>JSON ↓</a>`:'',
+    lore?`<a id="downloadLore" class="cm-btn" href="${esc(lore)}" download title="${loreCount} attached lorebook${loreCount===1?'':'s'}">${bookSvg}<span>Lorebook${loreCount>1?` · ${loreCount}`:''} ↓</span></a>`:'',
+    `<span class="cm-files-gap"></span>`,
+    b.url?`<a id="openBot" class="cm-link" href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.platform==='JANITOR'?'JanitorAI':b.platform||'Source')} ↗</a>`:'',
+    profile?`<a id="openAuthor" class="cm-link" href="${esc(profile)}" target="_blank" rel="noopener noreferrer">@${esc(b.author)} ↗</a>`:''
+  ].join('');
+  const tags=visibleBotTags(b),hashtags=visibleBotHashtags(b);
+  $("#modalTags").innerHTML=`${tags.map(t=>`<button type="button" class="cm-tag" data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join('')}${hashtags.map(h=>`<button type="button" class="cm-hashtag" data-hashtag="${esc(h)}">#${esc(cleanHashtag(h))}</button>`).join('')}`;
+  $("#modalTags").hidden=!tags.length&&!hashtags.length;
+}
+function renderModalPanel(){
+  const panel=$("#modalPanel"),tabsBox=$("#modalTabs");
+  if(!current){panel.innerHTML="";return}
+  const b=current,tabs=modalTabsFor(b);
+  if(!tabs.some(t=>t.id===modalTab))modalTab='about';
+  tabsBox.innerHTML=tabs.map(t=>`<button type="button" role="tab" class="cm-tab${t.id===modalTab?' active':''}" data-modal-tab="${t.id}" aria-selected="${t.id===modalTab}">${esc(t.label)}</button>`).join('');
+  tabsBox.hidden=tabs.length<2;
+  panel.dataset.panel=modalTab;
+  if(!b.detailLoaded){
+    panel.innerHTML=b.detailError?`<p class="cm-state cm-error">Record data is temporarily unavailable. Try again in a moment.</p>`:`<div class="cm-state cm-loading"><i></i><i></i><i></i></div>`;
+    return;
+  }
+  if(modalTab==='about'){
+    const about=b.sections?.about||[];
+    // Nothing recognisable as a description: show the creator's text as written rather than an empty tab.
+    panel.innerHTML=about.length?sectionsHtml(about):`<section class="cm-section">${textHtml(b.full)||'<p class="cm-state">No description added.</p>'}</section>`;
+    return;
+  }
+  if(modalTab==='intros'){
+    const intros=modalIntros(b),notes=b.sections?.introNotes||[];
+    if(!intros.length){panel.innerHTML='<p class="cm-state">No intro message added.</p>';return}
+    if(openIntro<0||openIntro>=intros.length)openIntro=0;
+    const label=i=>notes[i]?.title?`${String(i+1).padStart(2,'0')} · ${notes[i].title}`:`Intro ${String(i+1).padStart(2,'0')}`;
+    const note=notes[openIntro];
+    panel.innerHTML=`${intros.length>1?`<div class="cm-intro-picker">${intros.map((_,i)=>`<button type="button" class="cm-intro-choice${i===openIntro?' active':''}" data-intro-index="${i}">${esc(label(i))}</button>`).join('')}</div>`:''}
+      ${note?.text?`<p class="cm-intro-note">${esc(note.text)}</p>`:''}
+      <div class="cm-intro-text">${textHtml(intros[openIntro])}</div>`;
+    return;
+  }
+  if(modalTab==='scenario'){panel.innerHTML=`<section class="cm-section">${textHtml(b.scenario)}</section>`;return}
+  const extra=b.sections?.extra||[];
+  panel.innerHTML=`${sectionsHtml(extra)}${String(b.full||'').trim()?`<details class="cm-original"><summary>Original description as written by the creator</summary>${textHtml(b.full)}</details>`:''}`;
+}
 function openModal(b,keepOpen=false){
+  if(!b)return;
   const modalRoot=$("#modal");
   modalRoot.setAttribute('role','dialog');
   modalRoot.setAttribute('aria-modal','true');
   modalRoot.setAttribute('aria-labelledby','modalTitle');
-  const oldUniverseNode=$("#modalUniverse");
-  if(oldUniverseNode?.tagName==="BUTTON"){
-    const container=document.createElement("div");
-    container.id="modalUniverse";
-    container.className="modal-universe-under-title";
-    oldUniverseNode.replaceWith(container);
-  }
   current=b;
-  modalTab="description";
+  modalTab="about";
   openIntro=0;
   $("#modalImage").src=b.image;
+  $("#modalImage").alt=b.nameEn;
   $(".modal-cover").style.setProperty("--record-cover-image",`url(${JSON.stringify(b.image)})`);
   $("#modalTitle").textContent=b.nameEn;
-  $("#modalTitle").classList.toggle("is-long-title",b.nameEn.length>32);
-  $("#modalTitle").classList.toggle("is-very-long-title",b.nameEn.length>64);
+  $("#modalTitle").classList.toggle("is-long-title",b.nameEn.length>40);
   $("#modalAuthor").textContent=`@${b.author}`;
   $("#modalAuthor").dataset.author=b.author;
   $("#modalAuthor").title=`Show all bots by @${b.author}`;
-  $("#modalAuthor").setAttribute("aria-label",`Show all bots by @${b.author}`);
-  $("#modalAuthorBadge").textContent=`@${b.author}`;
-  $("#modalAuthorBadge").dataset.author=b.author;
-  const settings=[...new Set((b.settingIds||[]).flatMap(id=>cleanTag(id).split(/\s*\/\s*/)).map(canonicalSettingId).filter(id=>SETTING_BY_ID.has(id)))];
-  $("#modalSettingRow").hidden=false;
-  $("#modalSettingRow").classList.toggle("is-empty",!settings.length);
-  $("#modalSetting").innerHTML=settings.length?settings.map(id=>`<button data-quick-setting="${esc(id)}">${esc(settingLabel(id))}</button>`).join(""):`<span class="modal-setting-empty">NOT YET CLASSIFIED</span>`;
-  const universes=botUniverses(b).map(canonicalUniverse);
-  $(".modal-universe-row").hidden=!universes.length;
-  $("#modalUniverse").hidden=!universes.length;
-  $("#modalUniverse").innerHTML=universes.map(universe=>`<button class="universe-link" data-quick-universe="${esc(universe)}" title="Show universe: ${esc(universe)}">${globeSvg}<span>${esc(universe)}</span></button>`).join("");
-  $("#modalLoreFlag").innerHTML="";
-  $("#modalLoreFlag").title="";
-  $("#modalPov").textContent=povLabel(botPov(b));
-  const modalTags=visibleBotTags(b);
-  const modalHashtags=visibleBotHashtags(b);
-  $("#modalTags").innerHTML=`<div class="modal-primary-tags">${modalTags.map(t=>`<button data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join("")}</div>${modalHashtags.length?`<div class="modal-hashtags">${modalHashtags.map(h=>`<button data-hashtag="${esc(h)}">#${esc(cleanHashtag(h))}</button>`).join("")}</div>`:''}`;
-  $("#openBot").href=b.url;
-  $("#openBot").textContent=`OPEN ON ${b.platform} ↗`;
-  $("#openBot").dataset.mobileLabel=`${b.platform} PAGE ↗`;
-  $("#openAuthor").href=b.authorUrl||b.url;
-  $("#openAuthor").textContent=`@${b.author} ↗`;
-  $("#openAuthor").dataset.mobileLabel="AUTHOR PROFILE ↗";
-  $("#downloadBot").href=b.download;
-  const l=$("#downloadLore");
-  if(b.lorebook){
-    l.href=b.lorebook;
-    l.classList.remove("disabled");
-    l.textContent="DOWNLOAD LOREBOOK ↓";
-  }else{
-    l.removeAttribute("href");
-    l.classList.add("disabled");
-    l.textContent="LOREBOOK — NOT AVAILABLE";
-  }
-  $("#downloadBot").textContent="DOWNLOAD BOT CARD ↓";
-  $$(".modal-action-group.mobile-open").forEach(x=>x.classList.remove("mobile-open"));
-  $$(".mobile-action-toggle").forEach(x=>x.setAttribute("aria-expanded","false"));
-  $$('.modal-tab').forEach(t=>t.classList.toggle('active',t.dataset.modalTab==='description'));
+  renderModalHead();
   renderModalPanel();
+  $(".cm-content").scrollTop=0;
+  $(".modal-card").scrollTop=0;
   if(!keepOpen){
     modalReturnFocus=document.activeElement;
     $("#modal").hidden=false;
     document.body.style.overflow="hidden";
     requestAnimationFrame(()=>document.querySelector('#modal .modal-close')?.focus());
   }
-  if(!window.archiveDefinitionLoaderActive)hydrateModalDetail(b);
+  hydrateModalDetail(b);
+  window.dispatchEvent(new CustomEvent('archive:modal-public-ready',{detail:{bot:b}}));
 }
 function closeModal(){const modal=$("#modal");if(modal.hidden)return;modal.hidden=true;document.body.style.overflow="";const target=modalReturnFocus;modalReturnFocus=null;target?.focus?.()}
-function renderModalPanel(){
-  const panel=$("#modalPanel");
-  panel.dataset.panel=modalTab;
-  if(!current){panel.innerHTML="";return}
-  if(modalTab==="description"){
-    panel.innerHTML=`<p class="modal-copy">${esc(current.short)}</p>`;
-    return;
+$("#modal").addEventListener("click",e=>{
+  const intro=e.target.closest("[data-intro-index]");
+  if(intro){openIntro=Number(intro.dataset.introIndex);renderModalPanel();return}
+  const tab=e.target.closest("[data-modal-tab]");
+  if(tab&&current){
+    modalTab=tab.dataset.modalTab;
+    renderModalPanel();
+    // Keep the tab row in view when switching from far down a long text.
+    $("#modalTabs")?.scrollIntoView({block:"nearest"});
   }
-  if(current.detailLoading){panel.innerHTML=`<div class="intro-display intro-empty">LOADING RECORD DATA…</div>`;return}
-  if(current.detailError){panel.innerHTML=`<div class="intro-display intro-empty">RECORD DATA TEMPORARILY UNAVAILABLE</div>`;return}
-  if(modalTab==="scenario"){
-    panel.innerHTML=`<p class="modal-copy">${esc(current.full)}</p>`;
-    return;
-  }
-  const intros=(current.intros&&current.intros.length?current.intros:["No intro message added."]);
-  const buttons=intros.map((_,i)=>`<button class="intro-choice ${openIntro===i?'active':''}" data-intro-index="${i}">INTRO ${String(i+1).padStart(2,'0')}</button>`).join("");
-  const body=openIntro>=0?`<div class="intro-display show">${esc(intros[openIntro])}</div>`:`<div class="intro-display intro-empty">SELECT AN INTRO</div>`;
-  panel.innerHTML=`<div class="modal-intros"><div class="intro-choices">${buttons}</div>${body}</div>`;
-}
-$("#modalPanel").addEventListener("click",e=>{
-  const b=e.target.closest("[data-intro-index]");
-  if(!b)return;
-  const i=Number(b.dataset.introIndex);
-  openIntro=openIntro===i?-1:i;
-  renderModalPanel();
-});
-$$('.modal-tab').forEach(t=>t.onclick=()=>{
-  if(!current)return;
-  modalTab=t.dataset.modalTab;
-  if(modalTab==="intro" && openIntro<0) openIntro=0;
-  $$('.modal-tab').forEach(x=>x.classList.toggle('active',x===t));
-  renderModalPanel();
 });
 
 // Small archive anomalies: decorative only, never block interaction.

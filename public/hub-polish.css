@@ -222,8 +222,9 @@ body{min-height:100vh;overflow-x:hidden}
   /* Open resource: the overlay scrolls as one page (no scroll box inside a scroll box), close stays reachable,
      arrows give way to swipe. */
   /* backdrop-filter on the overlay would turn the fixed Close button into a scrolling one */
-  .hub-modal.open{display:block!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(1,4,2,.86)!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:44px 0 0!important}
-  .hub-modal .hub-modal-panel{height:auto!important;min-height:calc(100dvh - 44px)!important;overflow:visible!important;border-radius:16px 16px 0 0!important;border-bottom:0!important}
+  /* Floating card as tall as its content; margin:auto centres a short one, a long one scrolls with the overlay. */
+  .hub-modal.open{display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(1,4,2,.86)!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:48px 10px calc(14px + env(safe-area-inset-bottom))!important}
+  .hub-modal .hub-modal-panel{flex:0 0 auto!important;margin:auto 0!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;border-radius:16px!important}
   .hub-modal #hubModalContent{height:auto!important;display:block!important}
   .hub-modal .hub-modal-body{overflow:visible!important;display:block!important;padding-bottom:calc(28px + env(safe-area-inset-bottom))!important}
   .hub-modal .hub-tab-pane.active{overflow:visible!important;padding-right:0!important}
@@ -246,3 +247,13 @@ body{min-height:100vh;overflow-x:hidden}
 
 /* Background pinned to the large viewport height: it no longer re-scales when the phone address bar hides on scroll. */
 .hub .scene,.hub .shade{inset:auto;top:0;left:0;right:0;height:100vh;height:100lvh}
+
+/* Resource window: as tall as its content (was a fixed 720px / 93% of the phone screen, half empty for a short post).
+   The panel is a flex column capped by max-height; the description tab scrolls inside when the text is long. */
+#hubResourceModal .hub-modal-panel{height:auto!important;max-height:min(760px,calc(100dvh - 48px))!important;display:flex!important;flex-direction:column!important}
+#hubResourceModal #hubModalContent{height:auto!important;flex:1 1 auto;min-height:0}
+#hubResourceModal .hub-modal-body{flex:1 1 auto;min-height:0}
+@media(max-width:700px){
+  /* Phone: the overlay scrolls instead (block above), so no height cap on the card. */
+  #hubResourceModal .hub-modal-panel{max-height:none!important;display:block!important}
+}

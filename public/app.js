@@ -463,6 +463,7 @@ function renderCounts(){
   $$('.filter-trigger[data-filter="author"]').forEach(b=>b.classList.toggle("active",state.authors.size>0));
   $("#loreToggle").classList.toggle("active",state.lorebook);
   $("#loreToggle").setAttribute("aria-pressed",state.lorebook?"true":"false");
+  $("#loreToggle").title=state.lorebook?"Lorebook filter: only bots with a lorebook":"Lorebook filter: off";
   const ht=$(".hashtag-trigger"); if(ht) ht.classList.toggle("active",state.hashtags.size>0);
   const set=$(".setting-trigger"); if(set) set.classList.toggle("active",state.settings.size>0);
   const ut=$(".universe-trigger"); if(ut) ut.classList.toggle("active",state.universes.size>0);

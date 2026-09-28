@@ -277,3 +277,7 @@ body{min-height:100vh;overflow-x:hidden}
 /* Resource cover and title are real links to the resource's own page (#resource=<id>): no link colour, layout unchanged. */
 .resource-card a.thumb-link{display:contents}
 .resource-card a.card-link{color:inherit;text-decoration:none}
+
+/* Main action of a resource: take it from the author's post (the HUB no longer hosts downloads). */
+#hubResourceModal .hub-modal-link.hub-post-btn{border-color:rgba(205,184,138,.55)!important;background:rgba(205,184,138,.12)!important;color:#f0e4c4!important;font-weight:600}
+#hubResourceModal .hub-modal-link.hub-post-btn:hover{background:rgba(205,184,138,.2)!important}

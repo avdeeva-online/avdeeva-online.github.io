@@ -19,6 +19,16 @@
   <div id="status" class="status">Проверяю хранилище…</div>
   <div class="group"><b>Картинки HUB</b><span>Переносит картинки ресурсов в своё хранилище и заново скачивает протухшие картинки из исходных постов Telegram.</span><div class="actions"><button class="btn" id="tgCheck" type="button">Проверить</button><button class="btn primary" id="tgRepair" type="button">Починить</button></div></div>
 <div class="group"><b>Ссылки на авторов</b><span>Заполняет пустые ссылки на профили авторов ботов по данным JanitorAI.</span><div class="actions"><button class="btn" id="authorCheck" type="button">Проверить</button><button class="btn primary" id="authorFill" type="button">Заполнить</button></div></div>
+<div class="group"><b>Старые файлы для скачивания</b><span>HUB больше не раздаёт пресеты, темы и плагины — их берут по ссылке на пост автора. Здесь можно удалить старые файлы (JSON, ZIP, TPG, THM…) из хранилища. Картинки — обложки и галерея — не трогаются. Удаление необратимо.</span><div class="actions"><button class="btn" id="dlCheck" type="button">Показать список</button><button class="btn primary" id="dlDelete" type="button" disabled>Удалить все</button></div></div>
+<script>
+(()=>{
+  const log=t=>{const el=document.getElementById('log');if(el)el.textContent=t};
+  const kb=n=>n>1048576?`${(n/1048576).toFixed(1)} МБ`:`${Math.round(n/1024)} КБ`;
+  let listed=null;
+  document.getElementById('dlCheck').addEventListener('click',async()=>{log('Собираю список…');try{const r=await fetch('/api/admin/hub-downloads-cleanup',{cache:'no-store'}),d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);listed=d;document.getElementById('dlDelete').disabled=!d.count;log(d.count?`${d.count} файлов · ${kb(d.bytes)}\n\n`+d.files.map(f=>`${f.resource} — ${f.name} (${kb(f.size)})`).join('\n'):'Файлов для скачивания не осталось.')}catch(e){log('Не получилось: '+e.message)}});
+  document.getElementById('dlDelete').addEventListener('click',async()=>{if(!listed?.count)return;if(!confirm(`Удалить ${listed.count} файлов (${kb(listed.bytes)}) навсегда? Картинки не удаляются.`))return;log('Удаляю…');try{const r=await fetch('/api/admin/hub-downloads-cleanup',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({confirm:true})}),d=await r.json();log(`Удалено: ${d.deleted||0}${d.failed?.length?`\nНе удалось: ${d.failed.map(f=>`${f.name} (${f.error})`).join(', ')}`:''}`);listed=null;document.getElementById('dlDelete').disabled=true}catch(e){log('Не получилось: '+e.message)}});
+})();
+</script>
 <details class="group archive"><summary><b>Перенос файлов D1 → R2</b> <span>завершён · открыть, если понадобится</span></summary>
 <div class="grid"> <div class="stat"><b id="d1">—</b><span>файлов в D1 (старое)</span></div> <div class="stat"><b id="r2">—</b><span>файлов в R2</span></div> <div class="stat"><b id="remote">—</b><span>внешних ссылок</span></div> </div>
 <div class="actions"><button class="btn" id="refresh" type="button">Обновить</button><button class="btn" id="schema" type="button">Проверить схему базы</button><button class="btn" id="dry" type="button">Пробный перенос · 10</button><button class="btn primary" id="batch" type="button">Перенести · 10</button><button class="btn primary" id="all" type="button">Перенести всё</button></div>

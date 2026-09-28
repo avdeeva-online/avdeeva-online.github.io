@@ -55,16 +55,19 @@ async function parsePublishRequest(request){
     if(resourcePart instanceof File||resourcePart instanceof Blob)raw=await resourcePart.text();else if(resourcePart!=null)raw=String(resourcePart);
     let draft={};try{draft=JSON.parse(raw||'{}')}catch{throw new Error('INVALID_RESOURCE_JSON')}
     const files=[],extraImages=[],remoteFiles=[];
+    // TAVO HUB no longer hosts downloads (presets, themes, plugins are taken from the author's post):
+    // only images are stored — covers and the extras gallery.
     for(const [key,value] of form.entries()){
-      if(key==='files'&&value instanceof File)files.push(value);
+      if(key==='files'&&value instanceof File&&isImageUpload(value.name,value.type))files.push(value);
       if(key==='extraImages'&&value instanceof File)extraImages.push(value);
-      if(key==='remoteFiles'&&typeof value==='string'){try{const x=JSON.parse(value);if(x?.url)remoteFiles.push(x)}catch{}}
+      if(key==='remoteFiles'&&typeof value==='string'){try{const x=JSON.parse(value);if(x?.url&&isImageUpload(x.name,x.mime||x.type))remoteFiles.push(x)}catch{}}
     }
     return{draft,files,extraImages,remoteFiles};
   }
   let draft;try{draft=await request.json()}catch{throw new Error('INVALID_JSON')}
-  return{draft,files:[],extraImages:[],remoteFiles:arr(draft?.files).filter(x=>x?.source==='telegram'&&x?.url)};
+  return{draft,files:[],extraImages:[],remoteFiles:arr(draft?.files).filter(x=>x?.source==='telegram'&&x?.url&&isImageUpload(x.name,x.mime||x.type))};
 }
+function isImageUpload(name,mime){return /^image\//i.test(clean(mime))||/\.(png|jpe?g|webp|gif|avif)$/i.test(clean(name))}
 
 
 async function deleteStoredFile(env,fileId,resourceId=''){
@@ -388,6 +391,21 @@ export async function publishHubResource(request,env){
     if(/SQLITE_TOOBIG|string or blob too big/i.test(msg))return json({ok:false,error:'D1_CHUNK_WRITE_FAILED',detail:'A storage chunk exceeded D1 limits.'},500);
     return json({ok:false,error:'HUB_RESOURCE_UPDATE_FAILED',detail:msg},500);
   }
+}
+
+// The HUB no longer hosts downloads (presets, themes, plugins come from the author's post). This lists the
+// stored non-image files (GET) and, only when the admin presses the button (POST {confirm:true}), deletes them.
+// Images — covers and the extras gallery — are never touched.
+export async function hubDownloadsCleanup(request,env){
+  await ensureSchema(env);
+  const rows=(await env.DB.prepare(`SELECT f.id,f.resource_id,f.name,f.mime,f.size,r.title FROM hub_resource_files f JOIN hub_resources r ON r.id=f.resource_id WHERE f.name NOT LIKE '__extra__%' AND NOT EXISTS(SELECT 1 FROM hub_resource_publish_files sf WHERE sf.file_id=f.id) ORDER BY r.title,f.name`).all()).results||[];
+  const files=rows.filter(f=>!isImageUpload(f.name,f.mime)).map(f=>({id:f.id,resource_id:f.resource_id,resource:f.title,name:f.name,size:Number(f.size||0)}));
+  if(request.method==='GET')return json({ok:true,count:files.length,bytes:files.reduce((n,f)=>n+f.size,0),files});
+  let body={};try{body=await request.json()}catch{}
+  if(body?.confirm!==true)return json({ok:false,error:'CONFIRM_REQUIRED'},400);
+  let deleted=0;const failed=[];
+  for(const f of files){const res=await deleteHubResourceFile(env,f.resource_id,f.id);if(res.ok)deleted++;else failed.push({id:f.id,name:f.name,error:(await res.json().catch(()=>({})))?.error||res.status})}
+  return json({ok:failed.length===0,deleted,failed});
 }
 
 export async function deleteHubResourceFile(env,resourceId,fileId){

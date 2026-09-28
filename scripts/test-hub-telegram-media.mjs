@@ -66,9 +66,12 @@ assert.equal((await (await repairHubMedia(new Request('https://x.test/api/admin/
 // 5b. A publish abandoned >30 min ago is rolled back (staged file removed, draft never published) when the next one begins.
 const beginBody=url=>JSON.stringify({source:{type:'telegram',url},type:'preset',title:'Abandoned'});
 const abandoned=await (await publishHubResource(new Request('https://x.test/api/admin/hub-resource?action=begin',{method:'POST',headers:{'content-type':'application/json'},body:beginBody('https://t.me/CHAN/40')}),env)).json();
-const upForm=new FormData();upForm.append('resource',new Blob([JSON.stringify({_publish_session:abandoned.session_id})],{type:'application/json'}),'resource.json');upForm.append('files',new File([jpeg],'preset.json',{type:'application/json'}));
+const upForm=new FormData();upForm.append('resource',new Blob([JSON.stringify({_publish_session:abandoned.session_id})],{type:'application/json'}),'resource.json');upForm.append('files',new File([jpeg],'cover.jpg',{type:'image/jpeg'}));
+// Downloads (presets, themes, plugins) are no longer stored: only the image is kept.
+upForm.append('files',new File([jpeg],'preset.json',{type:'application/json'}));
 await publishHubResource(new Request('https://x.test/api/admin/hub-resource?action=upload',{method:'POST',body:upForm}),env);
-assert.equal(db.prepare('SELECT COUNT(*) AS n FROM hub_resource_files WHERE resource_id=?').get(abandoned.id).n,1);
+assert.equal(db.prepare('SELECT COUNT(*) AS n FROM hub_resource_files WHERE resource_id=?').get(abandoned.id).n,1,'only the image is stored, never a preset file');
+assert.equal(db.prepare("SELECT name FROM hub_resource_files WHERE resource_id=?").get(abandoned.id).name,'cover.jpg');
 db.prepare("UPDATE hub_resource_publish_sessions SET updated_at=datetime('now','-40 minutes') WHERE id=?").run(abandoned.session_id);
 await publishHubResource(new Request('https://x.test/api/admin/hub-resource?action=begin',{method:'POST',headers:{'content-type':'application/json'},body:beginBody('https://t.me/CHAN/41')}),env);
 assert.equal(db.prepare('SELECT COUNT(*) AS n FROM hub_resource_publish_sessions WHERE id=?').get(abandoned.session_id).n,0,'stale session must be cleaned up');

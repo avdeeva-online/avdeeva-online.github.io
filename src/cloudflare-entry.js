@@ -1,5 +1,5 @@
 import { analyzeTelegramPost } from './hub-telegram.js';
-import { publishHubResource, deleteHubResourceFile, setHubResourcePrimary, deleteHubResource } from './hub-resources.js';
+import { publishHubResource, deleteHubResourceFile, setHubResourcePrimary, deleteHubResource, hubDownloadsCleanup } from './hub-resources.js';
 import { listAdminCharacters, updateAdminCharacter, deleteAdminCharacter, backfillAuthorLinks } from './character-admin.js';
 import { submitHubSuggestion, listHubSuggestions, updateHubSuggestion } from './hub-suggestions.js';
 import { setupTelegramWebhooks, telegramWebhookStatus } from './telegram-webhooks.js';
@@ -35,6 +35,7 @@ export async function handleCloudflareRoute(request,env){
   if(url.pathname==='/api/admin/characters'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return listAdminCharacters(request,env)}
   const adminCharacterMatch=url.pathname.match(/^\/api\/admin\/characters\/([0-9a-f-]{36})$/i);if(adminCharacterMatch){const uuid=adminCharacterMatch[1].toLowerCase();if(request.method==='PATCH'||request.method==='POST')return updateAdminCharacter(request,env,uuid);if(request.method==='DELETE')return deleteAdminCharacter(request,env,uuid);return json({ok:false,error:'METHOD_NOT_ALLOWED'},405)}
   if(url.pathname==='/api/admin/hub-telegram-analyze'){if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return analyzeTelegramPost(request)}
+  if(url.pathname==='/api/admin/hub-downloads-cleanup'){if(request.method!=='GET'&&request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return hubDownloadsCleanup(request,env)}
   if(url.pathname==='/api/admin/hub-resource'){if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return publishHubResource(request,env)}
   const adminResourceMatch=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)$/);if(adminResourceMatch){const resourceId=decodeURIComponent(adminResourceMatch[1]);if(request.method==='DELETE')return deleteHubResource(env,resourceId);return json({ok:false,error:'METHOD_NOT_ALLOWED'},405)}
   const primaryMatch=url.pathname.match(/^\/api\/admin\/hub-resource\/([^/]+)\/files\/([^/]+)\/primary$/);if(primaryMatch){if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return setHubResourcePrimary(env,decodeURIComponent(primaryMatch[1]),decodeURIComponent(primaryMatch[2]))}

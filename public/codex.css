@@ -141,14 +141,15 @@ body.codex-lock{overflow:hidden}
   .codex-bot span{font-size:10.5px}
   /* Open card: a bottom sheet as tall as its content (short cards stay short); long ones scroll inside.
      The dimmed page above it is the tap-to-close area. */
-  .codex-modal{align-items:flex-end;padding:0}
+  /* A floating card in the middle of the screen with a gap on every side (not glued to the bottom edge);
+     short content → short card, long content scrolls inside it. */
+  .codex-modal{align-items:center;padding:calc(14px + env(safe-area-inset-top)) 10px calc(14px + env(safe-area-inset-bottom))}
   /* Light dim, no blur: the page stays visible above the sheet (a black blurred void looked broken). */
   .codex-modal-backdrop{background:rgba(2,3,2,.5);-webkit-backdrop-filter:none;backdrop-filter:none}
-  .codex-modal-card{width:100%;max-height:calc(100dvh - 56px);overscroll-behavior:contain;border-radius:16px 16px 0 0;border:0;border-top:1px solid var(--cx-line-strong);background:#121510;box-shadow:0 -18px 50px rgba(0,0,0,.55);padding:0 16px calc(22px + env(safe-area-inset-bottom))}
+  .codex-modal-card{width:100%;max-height:100%;overscroll-behavior:contain;border-radius:14px;border:1px solid var(--cx-line-strong);background:#121510;box-shadow:0 20px 60px rgba(0,0,0,.6);padding:0 16px 20px}
   /* Lorebook: title, bots, then the download link under them — no far-away button. */
   .codex-lore{display:block}
   .codex-download{height:auto;margin-top:6px;padding:0;border:0;color:var(--cx-sand);font-size:12px}
-  .codex-modal-card::before{content:"";display:block;width:36px;height:4px;margin:8px auto 0;border-radius:2px;background:rgba(235,227,211,.2)}
   /* Close stays in view while the sheet scrolls. */
   /* Quiet round ×, stays in view while the sheet scrolls; tapping the dimmed page also closes. */
   .codex-close{position:sticky;top:8px;float:right;z-index:2;width:30px;height:30px;margin:6px -6px 0 8px;padding:0;border:0;border-radius:50%;background:rgba(235,227,211,.08);color:#d8d2c2;font-size:17px}

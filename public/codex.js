@@ -42,7 +42,10 @@
     universes=[...uni.values()].map(u=>{
       const author=[...u.authors].sort((a,b)=>b[1]-a[1])[0]?.[0]||u.otherAuthor||'';
       const settings=new Map();u.bots.forEach(b=>(b.settings||[]).forEach(s=>settings.set(s,(settings.get(s)||0)+1)));
-      return{...u,author,settings:[...settings].sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]),bots:[...new Map(u.bots.map(b=>[b.id,b])).values()]};
+      // Only bots whose MAIN (first) universe is this one — crossovers stay with their home universe.
+      // A universe that is never first (the "Next Gen" ones always come after their parent) keeps all its bots.
+      const all=[...new Map(u.bots.map(b=>[b.id,b])).values()],main=all.filter(b=>key((b.universes||[])[0])===key(u.name));
+      return{...u,author,settings:[...settings].sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]),bots:main.length?main:all};
     }).sort((a,b)=>Number(a.other)-Number(b.other)||b.bots.length-a.bots.length||a.name.localeCompare(b.name));
     const au=new Map();
     for(const b of bots){if(!au.has(b.author))au.set(b.author,{name:b.author,url:b.authorUrl||'',bots:0,list:[],universes:new Set(),lorebooks:0});const a=au.get(b.author);a.bots++;a.list.push(b);if(!a.url&&b.authorUrl)a.url=b.authorUrl;(b.universes||[]).forEach(n=>a.universes.add(n))}

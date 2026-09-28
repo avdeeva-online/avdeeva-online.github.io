@@ -6,7 +6,15 @@
   const key=s=>String(s||'').trim().toLocaleLowerCase();
   const plural=(n,one,many)=>`${n} ${n===1?one:many}`;
   const catalogUrl=params=>`characters.html?${new URLSearchParams(params)}`;
-  let universes=[],authors=[],tab='universes',authorFilter='all',query='';
+  let universes=[],authors=[],tab='universes',authorFilter='all',sizeFilter='all',query='';
+  // Filter by how many bots a universe / author has.
+  const SIZES=[['all','All'],['big','10+'],['mid','3–9'],['small','1–2']];
+  const inSize=n=>sizeFilter==='all'||(sizeFilter==='big'?n>=10:sizeFilter==='mid'?n>=3&&n<10:n<3);
+  // Small stacked portraits of the bots — a quick look at who lives there, instead of a cover.
+  const faces=(bots,max=5)=>bots.length?`<div class="codex-faces" aria-hidden="true">${bots.slice(0,max).map(b=>`<img src="${esc(b.image)}" alt="" loading="lazy" decoding="async">`).join('')}${bots.length>max?`<span>+${bots.length-max}</span>`:''}</div>`:'';
+  const botGrid=bots=>`<div class="codex-bots">${bots.map(b=>`<a class="codex-bot" href="${esc(catalogUrl({bot:b.id}))}"><img src="${esc(b.image)}" alt="" loading="lazy" decoding="async"><span>${esc(shortName(b))}</span></a>`).join('')}</div>`;
+  const uniqueBots=list=>[...new Map(list.map(b=>[b.id,b])).values()];
+  const cardBots=u=>u.other?uniqueBots(u.lorebooks.flatMap(l=>l.bots||[])):u.bots;
 
   // ---- data ----
   function build(bots,lorebooks){
@@ -37,47 +45,54 @@
       return{...u,author,settings:[...settings].sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]),bots:[...new Map(u.bots.map(b=>[b.id,b])).values()]};
     }).sort((a,b)=>Number(a.other)-Number(b.other)||b.bots.length-a.bots.length||a.name.localeCompare(b.name));
     const au=new Map();
-    for(const b of bots){if(!au.has(b.author))au.set(b.author,{name:b.author,url:b.authorUrl||'',bots:0,universes:new Set(),lorebooks:0});const a=au.get(b.author);a.bots++;if(!a.url&&b.authorUrl)a.url=b.authorUrl;(b.universes||[]).forEach(n=>a.universes.add(n))}
+    for(const b of bots){if(!au.has(b.author))au.set(b.author,{name:b.author,url:b.authorUrl||'',bots:0,list:[],universes:new Set(),lorebooks:0});const a=au.get(b.author);a.bots++;a.list.push(b);if(!a.url&&b.authorUrl)a.url=b.authorUrl;(b.universes||[]).forEach(n=>a.universes.add(n))}
     for(const l of lorebooks){const a=au.get(l.author);if(a)a.lorebooks++}
     authors=[...au.values()].sort((a,b)=>b.bots-a.bots||a.name.localeCompare(b.name));
   }
 
   // ---- list ----
   const matchesQuery=text=>!query||key(text).includes(query);
+  // Counts without zeros: "0 lorebooks" is noise.
+  const counts=parts=>parts.filter(([n])=>n>0).map(([n,one,many])=>plural(n,one,many)).join(' · ');
   function universeCard(u){
-    const lb=u.lorebooks.length;
     return `<article class="codex-card" tabindex="0" role="button" data-universe="${esc(u.name)}">
       <div class="codex-kicker">// ${u.other?'lorebooks':'universe'}</div>
       <h3>${esc(u.other?'Other lorebooks':u.name)}</h3>
       <div class="codex-by">by <b>@${esc(u.author)}</b></div>
-      <div class="codex-counts">${[u.other?'':plural(u.bots.length,'bot','bots'),lb?plural(lb,'lorebook','lorebooks'):''].filter(Boolean).join(' · ')}</div>
-      <div class="codex-chips">${u.settings.map(s=>`<span>${esc(s)}</span>`).join('')}</div>
+      <div class="codex-counts">${counts([[u.other?0:u.bots.length,'bot','bots'],[u.lorebooks.length,'lorebook','lorebooks']])}</div>
+      ${u.settings.length?`<div class="codex-chips">${u.settings.map(s=>`<span>${esc(s)}</span>`).join('')}</div>`:''}
+      ${faces(cardBots(u))}
     </article>`;
   }
   function authorCard(a){
     return `<article class="codex-card codex-author" tabindex="0" role="button" data-author="${esc(a.name)}">
       <div class="codex-kicker">// author</div>
       <h3>@${esc(a.name)}</h3>
-      <div class="codex-counts">${plural(a.bots,'bot','bots')} · ${plural(a.universes.size,'universe','universes')} · ${plural(a.lorebooks,'lorebook','lorebooks')}</div>
-      <div class="codex-links">${a.url?`<a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" data-stop>JanitorAI ↗</a>`:''}</div>
+      <div class="codex-counts">${counts([[a.bots,'bot','bots'],[a.universes.size,'universe','universes'],[a.lorebooks,'lorebook','lorebooks']])}</div>
+      ${a.url?`<div class="codex-links"><a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" data-stop>JanitorAI ↗</a></div>`:''}
+      ${faces(a.list)}
     </article>`;
   }
   function renderFilters(){
     const box=$('#codexFilters');const names=[...new Set(universes.map(u=>u.author))].filter(Boolean);
-    box.hidden=tab!=='universes'||names.length<2;
-    if(box.hidden){box.innerHTML='';return}
-    box.innerHTML=`<span>AUTHOR</span>${['all',...names].map(n=>`<button type="button" data-author-filter="${esc(n)}" class="${n===authorFilter?'active':''}">${n==='all'?'ALL':'@'+esc(n)}</button>`).join('')}`;
+    const row=(label,items,attr,current)=>`<div class="codex-frow"><span>${label}</span>${items.map(([v,t])=>`<button type="button" ${attr}="${esc(v)}" class="${v===current?'active':''}">${esc(t)}</button>`).join('')}</div>`;
+    box.hidden=false;
+    box.innerHTML=row('Bots',SIZES,'data-size-filter',sizeFilter)+(tab==='universes'&&names.length>1?row('Author',[['all','All'],...names.map(n=>[n,'@'+n])],'data-author-filter',authorFilter):'');
   }
+  const nothing='<div class="codex-state">Nothing found.</div>';
   function render(){
     document.querySelectorAll('.codex-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
     renderFilters();
     const grid=$('#codexGrid');
     if(tab==='universes'){
-      const list=universes.filter(u=>(authorFilter==='all'||u.author===authorFilter)&&matchesQuery([u.name,u.author,...u.settings,...u.bots.map(b=>b.nameEn),...u.lorebooks.map(l=>l.title)].join(' ')));
-      grid.innerHTML=list.length?list.map(universeCard).join(''):'<div class="codex-state">Nothing found.</div>';
+      const list=universes.filter(u=>(authorFilter==='all'||u.author===authorFilter)&&inSize(cardBots(u).length)&&matchesQuery([u.name,u.author,...u.settings,...u.bots.map(b=>b.nameEn),...u.lorebooks.map(l=>l.title)].join(' ')));
+      grid.innerHTML=list.length?list.map(universeCard).join(''):nothing;
     }else{
-      const list=authors.filter(a=>matchesQuery([a.name,...a.universes].join(' ')));
-      grid.innerHTML=list.length?list.map(authorCard).join(''):'<div class="codex-state">Nothing found.</div>';
+      const list=authors.filter(a=>inSize(a.bots)&&matchesQuery([a.name,...a.universes,...a.list.map(b=>b.nameEn)].join(' ')));
+      // Authors with 1–2 bots go into one compact line below instead of near-empty cards (unless the user filters for them).
+      const minor=sizeFilter==='all'&&!query?list.filter(a=>a.bots<3):[];
+      const major=list.filter(a=>!minor.includes(a));
+      grid.innerHTML=list.length?major.map(authorCard).join('')+(minor.length?`<div class="codex-minor"><h3 class="codex-section">More authors · ${minor.length}</h3><div class="codex-botlist">${minor.map(a=>`<button type="button" data-open-author="${esc(a.name)}">@${esc(a.name)} <small>${a.bots}</small></button>`).join('')}</div></div>`:''):nothing;
     }
   }
 
@@ -101,7 +116,7 @@
       ${u.settings.length?`<div class="codex-chips">${u.settings.map(s=>`<span>${esc(s)}</span>`).join('')}</div>`:''}
       ${u.other?'':`<div class="codex-actions"><a class="codex-btn" href="${esc(catalogUrl({universe:u.name}))}">Open ${plural(bots.length,'bot','bots')} in the catalog →</a></div>`}
       ${u.lorebooks.length?`<h3 class="codex-section">Lorebooks · ${u.lorebooks.length}</h3><ul class="codex-lores">${u.lorebooks.map(lorebookRow).join('')}</ul>`:''}
-      ${bots.length&&!u.other?`<h3 class="codex-section">Bots · ${bots.length}</h3><div class="codex-botlist">${bots.map(b=>`<a href="${esc(catalogUrl({bot:b.id}))}">${esc(shortName(b))}</a>`).join('')}</div>`:''}`);
+      ${bots.length&&!u.other?`<h3 class="codex-section">Bots · ${bots.length}</h3>${botGrid(bots)}`:''}`);
     setHash({universe:u.name});
   }
   function openAuthor(name){
@@ -109,9 +124,10 @@
     const own=universes.filter(u=>u.author===a.name);
     show(`<div class="codex-kicker">// author</div>
       <h2 id="codexModalTitle">@${esc(a.name)}</h2>
-      <div class="codex-counts">${plural(a.bots,'bot','bots')} · ${plural(a.universes.size,'universe','universes')} · ${plural(a.lorebooks,'lorebook','lorebooks')}</div>
+      <div class="codex-counts">${counts([[a.bots,'bot','bots'],[a.universes.size,'universe','universes'],[a.lorebooks,'lorebook','lorebooks']])}</div>
       <div class="codex-actions">${a.url?`<a class="codex-btn ghost" href="${esc(a.url)}" target="_blank" rel="noopener noreferrer">JanitorAI ↗</a>`:''}<a class="codex-btn" href="${esc(catalogUrl({author:a.name}))}">All bots in the catalog →</a></div>
-      ${own.length?`<h3 class="codex-section">Universes · ${own.filter(u=>!u.other).length}</h3><div class="codex-botlist">${own.map(u=>`<button type="button" data-open-universe="${esc(u.name)}">${esc(u.other?'Other lorebooks':u.name)} <small>${u.other?plural(u.lorebooks.length,'lorebook','lorebooks'):u.bots.length}</small></button>`).join('')}</div>`:''}`);
+      ${own.length?`<h3 class="codex-section">Universes · ${own.filter(u=>!u.other).length}</h3><div class="codex-botlist">${own.map(u=>`<button type="button" data-open-universe="${esc(u.name)}">${esc(u.other?'Other lorebooks':u.name)} <small>${u.other?plural(u.lorebooks.length,'lorebook','lorebooks'):u.bots.length}</small></button>`).join('')}</div>`:''}
+      <h3 class="codex-section">Bots · ${a.bots}</h3>${botGrid(a.list.slice().sort((x,y)=>shortName(x).localeCompare(shortName(y))))}`);
     setHash({author:a.name});
   }
   let lastFocus=null;
@@ -124,6 +140,7 @@
     if(e.target.closest('[data-stop]'))return;
     const t=e.target.closest('.codex-tab');if(t){tab=t.dataset.tab;setHash({tab});render();return}
     const f=e.target.closest('[data-author-filter]');if(f){authorFilter=f.dataset.authorFilter;render();return}
+    const sf=e.target.closest('[data-size-filter]');if(sf){sizeFilter=sf.dataset.sizeFilter;render();return}
     const more=e.target.closest('[data-more]');if(more){more.nextElementSibling.hidden=false;more.remove();return}
     const ou=e.target.closest('[data-open-universe]');if(ou){openUniverse(ou.dataset.openUniverse);return}
     const oa=e.target.closest('[data-open-author]');if(oa){openAuthor(oa.dataset.openAuthor);return}

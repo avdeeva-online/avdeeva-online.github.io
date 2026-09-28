@@ -151,7 +151,7 @@ body{min-height:100vh;overflow-x:hidden}
 
 .side-nav{gap:3px}.side-link.active .nav-icon{background:rgba(168,153,96,.055);box-shadow:none}.side-quote{margin-top:9px;padding-top:10px;color:#8b958b;opacity:.78}
 .toolbar{padding:0 11px;}.toolbar-left{font-weight:600}.toolbar-right{gap:7px}.toolbar select{padding-left:11px;padding-right:30px;}.view-btn{color:#9da69c}
-.free{color:#cedd9f}
+.free{color:#d9c79a}
 .statusbar{color:#c2c9bd}
 .search input::placeholder{color:#9aa399}
 @media(max-width:860px){}

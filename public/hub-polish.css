@@ -273,3 +273,7 @@ body{min-height:100vh;overflow-x:hidden}
   #hubResourceModal .hub-modal-links{grid-column:2;grid-row:1;align-self:start}
   #hubResourceModal .hub-file-list{grid-column:1/-1;justify-content:flex-start!important}
 }
+
+/* Resource cover and title are real links to the resource's own page (#resource=<id>): no link colour, layout unchanged. */
+.resource-card a.thumb-link{display:contents}
+.resource-card a.card-link{color:inherit;text-decoration:none}

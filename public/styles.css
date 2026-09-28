@@ -5023,3 +5023,7 @@ main{max-width:1540px;margin:auto;padding:0 26px 70px}
   
   
 }
+
+/* Bot photo and name are real links to the bot's own page (?bot=<id>): no link colour, layout unchanged. */
+.card .card-media>a.card-link{display:contents}
+.card a.card-link{color:inherit;text-decoration:none}

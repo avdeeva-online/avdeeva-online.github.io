@@ -400,9 +400,9 @@ function cardHtml(b,i){
   const universes=botUniverses(b).map(canonicalUniverse);
   const settings=[...new Set((b.settingIds||[]).flatMap(id=>cleanTag(id).split(/\s*\/\s*/)).map(canonicalSettingId).filter(id=>SETTING_BY_ID.has(id)))];
   return `<article class="card" data-id="${esc(b.id)}" role="button" tabindex="0" aria-label="Open ${esc(b.nameEn)}" style="animation-delay:${Math.min(i,12)*18}ms">
-    <div class="card-media"><img src="${esc(b.image)}" alt="${esc(b.nameEn)}" loading="${i<6?'eager':'lazy'}" decoding="async"${i<2?' fetchpriority="high"':''}>${b.isNew?'<span class="new-badge">NEW</span>':''}${b.lorebook?`<span class="card-lore-overlay" title="Lorebook available" aria-label="Lorebook available">${bookSvg}</span>`:''}<a class="download-hover" href="${esc(b.download)}" download data-stop>BOT CARD ↓</a></div>
+    <div class="card-media"><a class="card-link" href="${esc(botLink(b.id))}" tabindex="-1" draggable="false"><img src="${esc(b.image)}" alt="${esc(b.nameEn)}" loading="${i<6?'eager':'lazy'}" decoding="async"${i<2?' fetchpriority="high"':''} draggable="false"></a>${b.isNew?'<span class="new-badge">NEW</span>':''}${b.lorebook?`<span class="card-lore-overlay" title="Lorebook available" aria-label="Lorebook available">${bookSvg}</span>`:''}<a class="download-hover" href="${esc(b.download)}" download data-stop>BOT CARD ↓</a></div>
     <div class="card-body">
-      <h3 class="card-title">${esc(b.nameEn)}<span>${esc(b.nameRu)}</span></h3>
+      <h3 class="card-title"><a class="card-link" href="${esc(botLink(b.id))}" tabindex="-1">${esc(b.nameEn)}</a><span>${esc(b.nameRu)}</span></h3>
       <div class="card-author">BY <button data-author="${esc(b.author)}">@${esc(b.author)}</button></div>
       <div class="card-meta card-system-line">
         <span class="card-status-icon card-pov-icon pov-${esc(pov.toLowerCase())}" title="${esc(povLabel(pov))}" aria-label="${esc(povLabel(pov))}"><span>${esc(povSymbol(pov))}</span></span>
@@ -757,8 +757,9 @@ document.addEventListener("click",e=>{
   }
   const card=e.target.closest(".card");
   // Ctrl / Cmd / Shift + click: this bot's own link in a new tab (plain click opens the card here).
-  if(card&&(e.ctrlKey||e.metaKey||e.shiftKey)){window.open(botLink(card.dataset.id),"_blank","noopener");return}
-  if(card)openModal(B.find(b=>b.id===card.dataset.id));
+  // On the photo and the name (real links) the browser does that itself; elsewhere on the card we open it.
+  if(card&&(e.ctrlKey||e.metaKey||e.shiftKey)){if(!e.target.closest("a.card-link"))window.open(botLink(card.dataset.id),"_blank","noopener");return}
+  if(card){if(e.target.closest("a.card-link"))e.preventDefault();openModal(B.find(b=>b.id===card.dataset.id))}
   if(e.target.matches("[data-close]"))closeModal();
 });
 document.addEventListener("keydown",e=>{
@@ -946,8 +947,10 @@ function renderModalPanel(){
 }
 // Every bot has its own link (characters.html?bot=<id>, opened by catalog-api.js). While a card is open the
 // address bar shows that link, so it can be copied; the mouse wheel (middle click) on a card opens it in a new tab.
-const botLink=id=>{const p=new URLSearchParams(location.search);p.set("bot",id);return `${location.pathname}?${p}`};
+function botLink(id){const p=new URLSearchParams(location.search);p.set("bot",id);return `${location.pathname}?${p}`}
 function setBotInUrl(id){const p=new URLSearchParams(location.search);if(id)p.set("bot",id);else p.delete("bot");history.replaceState(history.state,"",`${location.pathname}${p.toString()?`?${p}`:""}${location.hash}`)}
+// The photo and the name are real links (middle click / right click "open in new tab" handled by the browser);
+// a middle click on the rest of the card (text, tags) opens the same link.
 document.addEventListener("mousedown",e=>{if(e.button===1&&e.target.closest(".card")&&!e.target.closest("a"))e.preventDefault()});
 document.addEventListener("auxclick",e=>{if(e.button!==1)return;const card=e.target.closest(".card");if(!card||e.target.closest("a"))return;e.preventDefault();window.open(botLink(card.dataset.id),"_blank","noopener")});
 function openModal(b,keepOpen=false){

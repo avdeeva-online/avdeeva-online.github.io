@@ -178,8 +178,15 @@
   function setHash(params){history.replaceState(null,'',`${location.pathname}${location.search}#${new URLSearchParams(params)}`)}
 
   // ---- events ----
+  // A universe / author card or name has its own link (codex.html#universe=… / #author=…):
+  // middle click or Ctrl / Cmd / Shift + click opens it in a new tab; a plain click opens it here.
+  const ownLink=el=>{const u=el?.dataset.universe||el?.dataset.openUniverse,a=el?.dataset.author||el?.dataset.openAuthor;return u?`${location.pathname}#${new URLSearchParams({universe:u})}`:a?`${location.pathname}#${new URLSearchParams({author:a})}`:''};
+  const linkTarget=e=>e.target.closest('a')?null:e.target.closest('.codex-card,[data-open-universe],[data-open-author]');
+  document.addEventListener('mousedown',e=>{if(e.button===1&&linkTarget(e))e.preventDefault()});
+  document.addEventListener('auxclick',e=>{const t=e.button===1&&linkTarget(e);if(!t)return;e.preventDefault();window.open(ownLink(t),'_blank','noopener')});
   document.addEventListener('click',e=>{
     if(e.target.closest('[data-stop]'))return;
+    const lt=(e.ctrlKey||e.metaKey||e.shiftKey)&&linkTarget(e);if(lt&&ownLink(lt)){window.open(ownLink(lt),'_blank','noopener');return}
     const t=e.target.closest('.codex-tab');if(t){tab=t.dataset.tab;setHash({tab});render();return}
     const f=e.target.closest('[data-author-filter]');if(f){authorFilter=f.dataset.authorFilter;render();return}
     const sf=e.target.closest('[data-size-filter]');if(sf){sizeFilter=sf.dataset.sizeFilter;render();return}

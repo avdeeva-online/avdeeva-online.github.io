@@ -755,7 +755,10 @@ document.addEventListener("click",e=>{
     actionToggle.setAttribute("aria-expanded",willOpen?"true":"false");
     return;
   }
-  const card=e.target.closest(".card");if(card)openModal(B.find(b=>b.id===card.dataset.id));
+  const card=e.target.closest(".card");
+  // Ctrl / Cmd / Shift + click: this bot's own link in a new tab (plain click opens the card here).
+  if(card&&(e.ctrlKey||e.metaKey||e.shiftKey)){window.open(botLink(card.dataset.id),"_blank","noopener");return}
+  if(card)openModal(B.find(b=>b.id===card.dataset.id));
   if(e.target.matches("[data-close]"))closeModal();
 });
 document.addEventListener("keydown",e=>{
@@ -941,8 +944,15 @@ function renderModalPanel(){
   const extra=b.sections?.extra||[];
   panel.innerHTML=`${sectionsHtml(extra)}${String(b.full||'').trim()?`<details class="cm-original"><summary>Original description as written by the creator</summary>${textHtml(b.full)}</details>`:''}`;
 }
+// Every bot has its own link (characters.html?bot=<id>, opened by catalog-api.js). While a card is open the
+// address bar shows that link, so it can be copied; the mouse wheel (middle click) on a card opens it in a new tab.
+const botLink=id=>{const p=new URLSearchParams(location.search);p.set("bot",id);return `${location.pathname}?${p}`};
+function setBotInUrl(id){const p=new URLSearchParams(location.search);if(id)p.set("bot",id);else p.delete("bot");history.replaceState(history.state,"",`${location.pathname}${p.toString()?`?${p}`:""}${location.hash}`)}
+document.addEventListener("mousedown",e=>{if(e.button===1&&e.target.closest(".card")&&!e.target.closest("a"))e.preventDefault()});
+document.addEventListener("auxclick",e=>{if(e.button!==1)return;const card=e.target.closest(".card");if(!card||e.target.closest("a"))return;e.preventDefault();window.open(botLink(card.dataset.id),"_blank","noopener")});
 function openModal(b,keepOpen=false){
   if(!b)return;
+  setBotInUrl(b.id);
   const modalRoot=$("#modal");
   modalRoot.setAttribute('role','dialog');
   modalRoot.setAttribute('aria-modal','true');
@@ -972,7 +982,7 @@ function openModal(b,keepOpen=false){
   hydrateModalDetail(b);
   window.dispatchEvent(new CustomEvent('archive:modal-public-ready',{detail:{bot:b}}));
 }
-function closeModal(){const modal=$("#modal");if(modal.hidden)return;modal.hidden=true;document.body.style.overflow="";const target=modalReturnFocus;modalReturnFocus=null;target?.focus?.()}
+function closeModal(){const modal=$("#modal");if(modal.hidden)return;modal.hidden=true;setBotInUrl("");document.body.style.overflow="";const target=modalReturnFocus;modalReturnFocus=null;target?.focus?.()}
 $("#modal").addEventListener("click",e=>{
   const intro=e.target.closest("[data-intro-index]");
   if(intro){openIntro=Number(intro.dataset.introIndex);renderModalPanel();return}

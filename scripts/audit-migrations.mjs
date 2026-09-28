@@ -13,7 +13,8 @@ const migrationFiles=[
   'migrations/0009_manual_pov_marker.sql',
   'migrations/0010_suggestion_rate_limit.sql',
   'migrations/0011_public_text_overrides.sql',
-  'migrations/0012_codex_profiles.sql'
+  'migrations/0012_codex_profiles.sql',
+  'migrations/0013_canonical_labels.sql'
 ];
 for(const file of migrationFiles)fail(fs.existsSync(file),`${file}: required migration missing`);
 

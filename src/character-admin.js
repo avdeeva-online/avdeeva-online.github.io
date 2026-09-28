@@ -1,7 +1,7 @@
 import { detachedLorebookCleanupStatements, linkedLorebooksForCharacter, planDetachedLorebookCleanup } from './lorebook-cleanup.js';
 import { lorebookUniverseChangeStatements, planAffectedLorebookUniverseChanges } from './lorebook-universe-repair.js';
 import { normalizeSettingIds, normalizeUniverses, settingDefinitions } from './discovery.js';
-import { normalizeHashtags, normalizeTags } from './filter-normalization.js';
+import { normalizeHashtags, normalizeTags, canonicalAuthor } from './filter-normalization.js';
 import { clearCatalogCache } from './catalog-cache.js';
 import { buildCharacterBundle } from './worker.js';
 import { describeSections, sectionsToText } from './description-sections.js';
@@ -23,7 +23,7 @@ function autoPublicText(r){const s=describeSections(r.description||'',{introCoun
 function normalizeRow(r){
   return{
     uuid:r.janitor_uuid,
-    name:r.name||'',author:r.author||'',author_url:r.author_url||'',
+    name:r.name||'',author:canonicalAuthor(r.author),author_url:r.author_url||'',
     short_description:r.short_description||'',description:r.description||'',scenario:r.scenario||'',
     tags:normalizeTags(parse(r.tags)),hashtags:normalizeHashtags(parse(r.hashtags)),
     universe:r.universe||'',universes:parse(r.universes),universe_source_field:r.universe_source_field||'',
@@ -64,7 +64,7 @@ export async function updateAdminCharacter(request,env,uuid){
   const publicHook=b.public_hook===undefined?String(current.public_hook||''):String(b.public_hook??'').trim();
   const publicAbout=b.public_about===undefined?String(current.public_about||''):String(b.public_about??'').replace(/\r/g,'').trim();
   await env.DB.prepare(`UPDATE characters SET name=?,author=?,author_url=?,short_description=?,description=?,scenario=?,tags=?,hashtags=?,universe=?,universes=?,universe_source_field=?,setting_ids=?,setting_source=?,pov=?,pov_source=?,image_url=?,janitor_url=?,datacat_url=?,status=?,public_hook=?,public_about=?,updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?`).bind(
-    clean(b.name)||'UNKNOWN CHARACTER',clean(b.author)||'Unknown',clean(b.author_url),clean(b.short_description),String(b.description??'').trim(),String(b.scenario??'').trim(),JSON.stringify(tags),JSON.stringify(hashtags),universes[0]||'',JSON.stringify(universes),universeSource,JSON.stringify(settingIds),settingSource,pov,povSource,clean(b.image_url),clean(b.janitor_url),clean(b.datacat_url),status,publicHook,publicAbout,uuid
+    clean(b.name)||'UNKNOWN CHARACTER',canonicalAuthor(b.author)||'Unknown',clean(b.author_url),clean(b.short_description),String(b.description??'').trim(),String(b.scenario??'').trim(),JSON.stringify(tags),JSON.stringify(hashtags),universes[0]||'',JSON.stringify(universes),universeSource,JSON.stringify(settingIds),settingSource,pov,povSource,clean(b.image_url),clean(b.janitor_url),clean(b.datacat_url),status,publicHook,publicAbout,uuid
   ).run();
   await clearCatalogCache(request);
   return json({ok:true,uuid,universeOverrideChanged:universesChanged,universeSourceField:universeSource||null,settingSource,povSource:povSource||null});

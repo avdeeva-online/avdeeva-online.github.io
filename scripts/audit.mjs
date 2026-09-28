@@ -137,7 +137,7 @@ if(exists('src/lorebook-cleanup.js')){
 fail(exists('src/filter-normalization.js'),'src/filter-normalization.js: shared filter normalizer missing');
 if(exists('src/filter-normalization.js')){const n=read('src/filter-normalization.js');for(const marker of ['export function normalizeHashtags','export function semanticTagKey','export function normalizeTags','enemy to lovers','enemies to lovers','replace(/^#+\\s*/','toLocaleLowerCase()','seen.has(key)'])fail(n.includes(marker),`src/filter-normalization.js: filter normalization missing ${marker}`)}
 const baseWorker=read('src/worker.js');
-for(const marker of ["import { normalizeHashtags, normalizeTags } from './filter-normalization.js'","return normalizeHashtags(Array.isArray(c?.custom_tags)?c.custom_tags:[])","return normalizePovTags(normalizeTags((Array.isArray(c?.tags)?c.tags:[])"])fail(baseWorker.includes(marker),`src/worker.js: imported filter normalization missing ${marker}`);
+for(const marker of ["import { normalizeHashtags, normalizeTags, canonicalAuthor } from './filter-normalization.js'","author:canonicalAuthor(c.creator_name||c.creatorName||\"\")","return normalizeHashtags(Array.isArray(c?.custom_tags)?c.custom_tags:[])","return normalizePovTags(normalizeTags((Array.isArray(c?.tags)?c.tags:[])"])fail(baseWorker.includes(marker),`src/worker.js: imported filter normalization missing ${marker}`);
 
 const discovery=read('src/discovery.js');
 for(const marker of ['export function canonicalSettingId','export function normalizeSettingIds',"['high-school','school','university','college'].includes(id)?'college':id"])fail(discovery.includes(marker),`src/discovery.js: canonical setting normalizer missing ${marker}`);

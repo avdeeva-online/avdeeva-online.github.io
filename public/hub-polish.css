@@ -257,3 +257,19 @@ body{min-height:100vh;overflow-x:hidden}
   /* Phone: the overlay scrolls instead (block above), so no height cap on the card. */
   #hubResourceModal .hub-modal-panel{max-height:none!important;display:block!important}
 }
+
+/* Section filters (themes: tone / style / color / motifs): their own full-width block under the section title,
+   left-aligned, instead of a column squeezed into the middle of the title row. */
+@media(min-width:701px){
+  .hub-control-line{flex-wrap:wrap!important;row-gap:10px!important}
+  .hub-category-filters:not([hidden]){order:10;flex:1 1 100%!important;width:100%;gap:6px!important;padding-top:10px;border-top:1px solid rgba(160,150,120,.12)}
+  .hub-category-row .hub-category-label{min-width:64px!important}
+}
+/* Resource window: download buttons get their own full-width row under the title (a post with 9 files
+   squeezed the title into a narrow column); AUTHOR / ORIGINAL POST stay at the top right. */
+@media(min-width:701px){
+  #hubResourceModal .hub-modal-head{grid-template-columns:minmax(0,1fr) auto!important;row-gap:14px!important}
+  #hubResourceModal .hub-modal-actions{display:contents!important}
+  #hubResourceModal .hub-modal-links{grid-column:2;grid-row:1;align-self:start}
+  #hubResourceModal .hub-file-list{grid-column:1/-1;justify-content:flex-start!important}
+}

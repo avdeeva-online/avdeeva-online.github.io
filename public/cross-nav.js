@@ -1,6 +1,6 @@
 (()=>{
   'use strict';
-  if(!document.querySelector('link[data-archive-cross-nav]')){const link=document.createElement('link');link.rel='stylesheet';link.href='cross-nav.css?v=20260926-fonts1';link.dataset.archiveCrossNav='1';document.head.appendChild(link)}
+  if(!document.querySelector('link[data-archive-cross-nav]')){const link=document.createElement('link');link.rel='stylesheet';link.href='cross-nav.css?v=20260928-nav4';link.dataset.archiveCrossNav='1';document.head.appendChild(link)}
   const path=location.pathname.replace(/\/+$/,'')||'/',isHub=path==='/hub'||path==='/hub.html',isCatalog=path==='/characters'||path==='/characters.html',isCodex=path==='/codex'||path==='/codex.html';if(!isHub&&!isCatalog&&!isCodex)return;if(document.querySelector('.archive-cross-nav'))return;
   const iconCatalog='<svg class="cross-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="2.2"/><circle cx="16" cy="8" r="2.2"/><path d="M4.5 17c.8-2.4 2-3.6 3.5-3.6S10.7 14.6 11.5 17M12.5 17c.8-2.4 2-3.6 3.5-3.6s2.7 1.2 3.5 3.6"/></svg>',iconHub='<svg class="cross-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4.5" width="14" height="15" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>',iconCodex='<svg class="cross-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5c2.6-1 4.8-.7 7 .8v12.2c-2.2-1.5-4.4-1.8-7-.8zM19 5.5c-2.6-1-4.8-.7-7 .8v12.2c2.2-1.5 4.4-1.8 7-.8z"/><path d="M8 9.5h1.8M8 12.5h1.8M14.2 9.5H16M14.2 12.5H16"/></svg>';
   // Three site sections: bot catalog, CODEX (universes, lorebooks, authors), TAVO HUB.

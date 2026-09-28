@@ -82,6 +82,14 @@ body.codex-lock{overflow:hidden}
 .codex-unis li:last-child button{border-bottom:0}
 .codex-unis em{margin-left:auto;font:normal 11px var(--font-text);color:var(--cx-muted);white-space:nowrap}
 .codex-unis button:hover span{color:#fff;text-decoration:underline;text-underline-offset:3px}
+/* Author's TAVO HUB resources: a list with a small cover. */
+.codex-res{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.codex-res a{display:flex;align-items:center;gap:11px;padding:6px 2px;border-radius:6px;color:var(--cx-text);text-decoration:none}
+.codex-res a:hover{background:rgba(205,184,138,.06)}.codex-res a:hover b{color:#fff}
+.codex-res img,.codex-res i{flex:0 0 auto;width:54px;height:36px;border-radius:5px;object-fit:cover;border:1px solid var(--cx-line);background:#151814}
+.codex-res span{min-width:0;display:grid;gap:2px}
+.codex-res b{font:500 13px/1.3 var(--font-text);color:var(--cx-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.codex-res em{font:normal 10px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--cx-dim)}
 .codex-minor{grid-column:1/-1}.codex-minor .codex-section{margin-top:8px}
 .codex-links a{font-size:8.5px;letter-spacing:.06em;color:var(--cx-text);text-decoration:none}.codex-links a:hover{color:#fff;text-decoration:underline}
 

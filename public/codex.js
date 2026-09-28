@@ -6,18 +6,18 @@
   const key=s=>String(s||'').trim().toLocaleLowerCase();
   const plural=(n,one,many)=>`${n} ${n===1?one:many}`;
   const catalogUrl=params=>`characters.html?${new URLSearchParams(params)}`;
-  let universes=[],authors=[],profiles=new Map(),tab='universes',authorFilter='all',sizeFilter='all',query='';
+  let universes=[],authors=[],profiles=new Map(),tab='universes',authorFilter='all',sizeFilter='all',kindFilter='all',query='';
   // Filter by how many bots a universe / author has.
   const SIZES=[['all','All'],['big','10+'],['mid','3–9'],['small','1–2']];
   const inSize=n=>sizeFilter==='all'||(sizeFilter==='big'?n>=10:sizeFilter==='mid'?n>=3&&n<10:n<3);
   // Small stacked portraits of the bots — a quick look at who lives there, instead of a cover.
-  const faces=(bots,max=5)=>bots.length?`<div class="codex-faces" aria-hidden="true">${bots.slice(0,max).map(b=>`<img src="${esc(b.image)}" alt="" loading="lazy" decoding="async">`).join('')}${bots.length>max?`<span>+${bots.length-max}</span>`:''}</div>`:'';
+  const faces=(images,max=5)=>images.length?`<div class="codex-faces" aria-hidden="true">${images.slice(0,max).map(src=>`<img src="${esc(src)}" alt="" loading="lazy" decoding="async">`).join('')}${images.length>max?`<span>+${images.length-max}</span>`:''}</div>`:'';
   const botGrid=bots=>`<div class="codex-bots">${bots.map(b=>`<a class="codex-bot" href="${esc(catalogUrl({bot:b.id}))}"><img src="${esc(b.image)}" alt="" loading="lazy" decoding="async"><span>${esc(shortName(b))}</span></a>`).join('')}</div>`;
   const uniqueBots=list=>[...new Map(list.map(b=>[b.id,b])).values()];
   const cardBots=u=>u.other?uniqueBots(u.lorebooks.flatMap(l=>l.bots||[])):u.bots;
 
   // ---- data ----
-  function build(bots,lorebooks){
+  function build(bots,lorebooks,resources){
     const botByUuid=new Map(bots.map(b=>[b.janitorUuid,b]));
     const uni=new Map();const ensure=(name,author)=>{const k=key(name);if(!uni.has(k))uni.set(k,{name,authors:new Map(),bots:[],lorebooks:[],other:false});const u=uni.get(k);if(author)u.authors.set(author,(u.authors.get(author)||0)+1);return u};
     for(const b of bots)for(const name of b.universes||[])ensure(name,b.author).bots.push(b);
@@ -47,11 +47,16 @@
       const all=[...new Map(u.bots.map(b=>[b.id,b])).values()],main=all.filter(b=>key((b.universes||[])[0])===key(u.name));
       return{...u,author,settings:[...settings].sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]),bots:main.length?main:all};
     }).sort((a,b)=>Number(a.other)-Number(b.other)||b.bots.length-a.bots.length||a.name.localeCompare(b.name));
+    // Authors = bot authors + TAVO HUB resource creators; one person = one name (case and "@" ignored).
     const au=new Map();
-    for(const b of bots){if(!au.has(b.author))au.set(b.author,{name:b.author,url:b.authorUrl||'',bots:0,list:[],universes:new Set(),lorebooks:0});const a=au.get(b.author);a.bots++;a.list.push(b);if(!a.url&&b.authorUrl)a.url=b.authorUrl;(b.universes||[]).forEach(n=>a.universes.add(n))}
-    for(const l of lorebooks){const a=au.get(l.author);if(a)a.lorebooks++}
-    authors=[...au.values()].sort((a,b)=>b.bots-a.bots||a.name.localeCompare(b.name));
+    const author=name=>{const n=authorName(name),k=key(n);if(!n)return null;if(!au.has(k))au.set(k,{name:n,url:'',bots:0,list:[],universes:new Set(),lorebooks:0,resources:[]});return au.get(k)};
+    for(const b of bots){const a=author(b.author);if(!a)continue;a.bots++;a.list.push(b);if(!a.url&&b.authorUrl)a.url=b.authorUrl;(b.universes||[]).forEach(n=>a.universes.add(n))}
+    for(const l of lorebooks){const a=au.get(key(authorName(l.author)));if(a)a.lorebooks++}
+    for(const r of resources){const a=author(r.creator?.name);if(a)a.resources.push(r)}
+    authors=[...au.values()].sort((a,b)=>works(b)-works(a)||a.name.localeCompare(b.name));
   }
+  const authorName=v=>String(v||'').trim().replace(/^@+/,'').trim();
+  const works=a=>a.bots+a.resources.length;
 
   // ---- list ----
   const matchesQuery=text=>!query||key(text).includes(query);
@@ -64,23 +69,29 @@
       <div class="codex-by">by <b>@${esc(u.author)}</b></div>
       <div class="codex-counts">${counts([[u.other?0:u.bots.length,'bot','bots'],[u.lorebooks.length,'lorebook','lorebooks']])}</div>
       ${u.settings.length?`<div class="codex-chips">${u.settings.map(s=>`<span>${esc(s)}</span>`).join('')}</div>`:''}
-      ${faces(cardBots(u))}
+      ${faces(cardBots(u).map(b=>b.image))}
     </article>`;
   }
   function authorCard(a){
     return `<article class="codex-card codex-author" tabindex="0" role="button" data-author="${esc(a.name)}">
       <div class="codex-kicker">// author</div>
       <h3>@${esc(a.name)}</h3>
-      <div class="codex-counts">${counts([[a.bots,'bot','bots'],[a.universes.size,'universe','universes'],[a.lorebooks,'lorebook','lorebooks']])}</div>
+      <div class="codex-counts">${counts([[a.bots,'bot','bots'],[a.resources.length,'resource','resources'],[a.universes.size,'universe','universes'],[a.lorebooks,'lorebook','lorebooks']])}</div>
       ${a.url?`<div class="codex-links"><a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" data-stop>JanitorAI ↗</a></div>`:''}
-      ${faces(a.list)}
+      ${faces(authorImages(a))}
     </article>`;
   }
+  const authorImages=a=>[...a.list.map(b=>b.image),...a.resources.map(r=>r.cover_url)].filter(Boolean);
+  // Authors tab: who makes what — bots (catalog), resources (TAVO HUB) or both.
+  const KINDS=[['all','All'],['bots','Bots'],['resources','TAVO HUB']];
+  const inKind=a=>kindFilter==='all'||(kindFilter==='bots'?a.bots>0:a.resources.length>0);
   function renderFilters(){
     const box=$('#codexFilters');const names=[...new Set(universes.map(u=>u.author))].filter(Boolean);
     const row=(label,items,attr,current)=>`<div class="codex-frow"><span>${label}</span>${items.map(([v,t])=>`<button type="button" ${attr}="${esc(v)}" class="${v===current?'active':''}">${esc(t)}</button>`).join('')}</div>`;
     box.hidden=false;
-    box.innerHTML=row('Bots',SIZES,'data-size-filter',sizeFilter)+(tab==='universes'&&names.length>1?row('Author',[['all','All'],...names.map(n=>[n,'@'+n])],'data-author-filter',authorFilter):'');
+    box.innerHTML=tab==='universes'
+      ?row('Bots',SIZES,'data-size-filter',sizeFilter)+(names.length>1?row('Author',[['all','All'],...names.map(n=>[n,'@'+n])],'data-author-filter',authorFilter):'')
+      :row('Makes',KINDS,'data-kind-filter',kindFilter)+row('Works',SIZES,'data-size-filter',sizeFilter);
   }
   const nothing='<div class="codex-state">Nothing found.</div>';
   function render(){
@@ -91,11 +102,12 @@
       const list=universes.filter(u=>(authorFilter==='all'||u.author===authorFilter)&&inSize(cardBots(u).length)&&matchesQuery([u.name,u.author,...u.settings,...u.bots.map(b=>b.nameEn),...u.lorebooks.map(l=>l.title)].join(' ')));
       grid.innerHTML=list.length?list.map(universeCard).join(''):nothing;
     }else{
-      const list=authors.filter(a=>inSize(a.bots)&&matchesQuery([a.name,...a.universes,...a.list.map(b=>b.nameEn)].join(' ')));
-      // Authors with 1–2 bots go into one compact line below instead of near-empty cards (unless the user filters for them).
-      const minor=sizeFilter==='all'&&!query?list.filter(a=>a.bots<3):[];
+      const list=authors.filter(a=>inKind(a)&&inSize(works(a))&&matchesQuery([a.name,...a.universes,...a.list.map(b=>b.nameEn),...a.resources.map(r=>r.title)].join(' ')));
+      // Authors with 1–2 works go into one compact line below instead of near-empty cards (unless the user filters for them).
+      const minor=sizeFilter==='all'&&!query?list.filter(a=>works(a)<3):[];
       const major=list.filter(a=>!minor.includes(a));
-      grid.innerHTML=list.length?major.map(authorCard).join('')+(minor.length?`<div class="codex-minor"><h3 class="codex-section">More authors · ${minor.length}</h3><div class="codex-botlist">${minor.map(a=>`<button type="button" data-open-author="${esc(a.name)}">@${esc(a.name)} <small>${plural(a.bots,'bot','bots')}</small></button>`).join('')}</div></div>`:''):nothing;
+      const what=a=>counts([[a.bots,'bot','bots'],[a.resources.length,'resource','resources']]);
+      grid.innerHTML=list.length?major.map(authorCard).join('')+(minor.length?`<div class="codex-minor"><h3 class="codex-section">More authors · ${minor.length}</h3><div class="codex-botlist">${minor.map(a=>`<button type="button" data-open-author="${esc(a.name)}">@${esc(a.name)} <small>${what(a)}</small></button>`).join('')}</div></div>`:''):nothing;
     }
   }
 
@@ -133,6 +145,9 @@
       </div>`);
     setHash({universe:u.name});
   }
+  // Author's TAVO HUB resources: cover, title, type; opens that resource in the HUB.
+  const TYPE_ORDER=['preset','theme','plugin','guide','tool','link'];
+  const resourceList=list=>`<ul class="codex-res">${list.slice().sort((x,y)=>(TYPE_ORDER.indexOf(x.type)+1||99)-(TYPE_ORDER.indexOf(y.type)+1||99)||String(x.title).localeCompare(String(y.title))).map(r=>`<li><a href="hub.html#resource=${encodeURIComponent(r.id)}">${r.cover_url?`<img src="${esc(r.cover_url)}" alt="" loading="lazy" decoding="async">`:'<i></i>'}<span><b>${esc(r.title||'Untitled')}</b><em>${esc(r.type||'resource')}</em></span></a></li>`).join('')}</ul>`;
   function openAuthor(name){
     const a=authors.find(x=>x.name===name);if(!a)return;
     const own=universes.filter(u=>u.author===a.name&&!u.other),p=profileOf('author',a.name);
@@ -146,13 +161,14 @@
     const lores=[...new Map(universes.filter(u=>u.author===a.name).flatMap(u=>u.lorebooks).map(l=>[l.contentHash||l.id,l])).values()];
     show(`<div class="codex-kicker">// author</div>
       <h2 id="codexModalTitle">@${esc(a.name)}</h2>
-      <div class="codex-counts">${counts([[a.bots,'bot','bots'],[own.length,'universe','universes'],[lores.length,'lorebook','lorebooks']])}</div>
+      <div class="codex-counts">${counts([[a.bots,'bot','bots'],[a.resources.length,'resource','resources'],[own.length,'universe','universes'],[lores.length,'lorebook','lorebooks']])}</div>
       ${aboutBlock(p)}${linksBlock(links)}
-      <div class="codex-actions"><a class="codex-btn" href="${esc(catalogUrl({author:a.name}))}">All bots in the catalog →</a></div>
+      ${a.bots?`<div class="codex-actions"><a class="codex-btn" href="${esc(catalogUrl({author:a.name}))}">All bots in the catalog →</a></div>`:''}
       <div class="codex-folds">
         ${fold('Universes',own.length,`<ul class="codex-unis">${own.map(u=>`<li><button type="button" data-open-universe="${esc(u.name)}"><span>${esc(u.name)}</span><em>${plural(u.bots.length,'bot','bots')}${u.lorebooks.length?` · ${plural(u.lorebooks.length,'lorebook','lorebooks')}`:''}</em></button></li>`).join('')}</ul>`)}
         ${fold('Bots',a.bots,botsBody)}
         ${fold('Lorebooks',lores.length,`<ul class="codex-lores">${lores.map(lorebookRow).join('')}</ul>`)}
+        ${fold('TAVO HUB resources',a.resources.length,resourceList(a.resources),!a.bots)}
       </div>`);
     setHash({author:a.name});
   }
@@ -167,6 +183,7 @@
     const t=e.target.closest('.codex-tab');if(t){tab=t.dataset.tab;setHash({tab});render();return}
     const f=e.target.closest('[data-author-filter]');if(f){authorFilter=f.dataset.authorFilter;render();return}
     const sf=e.target.closest('[data-size-filter]');if(sf){sizeFilter=sf.dataset.sizeFilter;render();return}
+    const kf=e.target.closest('[data-kind-filter]');if(kf){kindFilter=kf.dataset.kindFilter;render();return}
     const more=e.target.closest('[data-more]');if(more){more.nextElementSibling.hidden=false;more.remove();return}
     const ou=e.target.closest('[data-open-universe]');if(ou){openUniverse(ou.dataset.openUniverse);return}
     const oa=e.target.closest('[data-open-author]');if(oa){openAuthor(oa.dataset.openAuthor);return}
@@ -184,9 +201,9 @@
     try{
       const get=u=>fetch(u).then(r=>r.ok?r.json():Promise.reject(new Error(`HTTP ${r.status}`)));
       // Profiles are optional: without them the page still works, just without descriptions and links.
-      const [cat,lb,pr]=await Promise.all([get('/api/catalog?limit=1000'),get('/api/lorebooks'),get('/api/codex-profiles').catch(()=>({}))]);
+      const [cat,lb,pr,hub]=await Promise.all([get('/api/catalog?limit=1000'),get('/api/lorebooks'),get('/api/codex-profiles').catch(()=>({})),get('/api/hub-resources?summary=1').catch(()=>({}))]);
       for(const p of Array.isArray(pr.profiles)?pr.profiles:[])profiles.set(`${p.kind}\u0000${key(p.name)}`,p);
-      build(Array.isArray(cat.characters)?cat.characters:[],Array.isArray(lb.lorebooks)?lb.lorebooks:[]);
+      build(Array.isArray(cat.characters)?cat.characters:[],Array.isArray(lb.lorebooks)?lb.lorebooks:[],Array.isArray(hub.resources)?hub.resources:[]);
       $('#countUniverses').textContent=universes.filter(u=>!u.other).length;$('#countAuthors').textContent=authors.length;
       const h=new URLSearchParams(location.hash.slice(1));
       if(h.get('tab')==='authors'||h.get('author'))tab='authors';

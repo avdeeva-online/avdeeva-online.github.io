@@ -13,6 +13,7 @@
       {id:'bot-cards',label:'Карточки',href:'/admin/import/edit.html'},
       {id:'bot-import',label:'Импорт',href:'/admin/import/'},
       {id:'bot-universes',label:'Вселенные',href:'/admin/import/?tool=universes'},
+      {id:'bot-codex',label:'CODEX: описания и ссылки',href:'/admin/codex.html'},
       {id:'bot-audit',label:'Проверка',href:'/admin/import/?tool=audit'}]},
     {id:'hub',label:'TAVO HUB',tabs:[
       {id:'hub-resources',label:'Ресурсы',href:'/admin/hub/edit.html'},
@@ -33,6 +34,7 @@
       :tool==='audit'
       ?{tab:'bot-audit',title:'Проверка архива',sub:'Перепроверка всех ботов по источнику: теги, сеттинги, вселенные, лорбуки.',hide:['#authorPanel','#linksPanel','#recordsPanel','#universePanel','.tabs'],show:['#auditPanel']}
       :{tab:'bot-import',title:'Импорт ботов',sub:'Все боты автора по ссылке на его профиль DataCat — или список ссылок JanitorAI.',hide:['#auditPanel','#universePanel','[data-mode="universes"]','[data-bot-editor-link]','.tabs a']},
+    '/admin/codex.html':{tab:'bot-codex',title:'CODEX: описания и ссылки',sub:'Описание, ссылки (сайт, соцсети) и хэштеги для вселенных и авторов. Показываются в окнах CODEX на сайте.'},
     '/admin/hub/edit.html':{tab:'hub-resources',title:'Ресурсы HUB',sub:'Опубликованные ресурсы. «Изменить» открывает обычную форму и обновляет ресурс на месте.',hide:['.tabs']},
     '/admin/hub/':{tab:'hub-new',title:'Новый ресурс',sub:'Ссылка на пост в Telegram → черновик → проверка → публикация. Автоматически ничего не публикуется.',hide:['.tabs','#jsonPreview','.json-preview']},
     '/admin/drafts.html':{tab:'hub-drafts',title:'Черновики',sub:'Незаконченные ресурсы из Telegram-бота. Открой черновик в форме нового ресурса, допиши и опубликуй.',hide:['.system-note']},

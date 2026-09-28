@@ -1,0 +1,90 @@
+<!doctype html><html lang="ru"><head><link rel="icon" href="/favicon.svg" type="image/svg+xml"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta http-equiv="Cache-Control" content="no-store"><title>CODEX · ARCHIVE ADMIN</title>
+<style>
+:root{--bg:#0b0e0b;--panel:#11150f;--line:#2f382b;--text:#cbd4c2;--muted:#6f7a69;--sand:#cdb88a;--mono:Consolas,ui-monospace,monospace}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 30% 0,#161d14 0,#0b0e0b 42%);color:var(--text);font-family:var(--mono)}
+.shell{width:min(1180px,calc(100% - 28px));margin:28px auto 60px}
+.head{padding-bottom:14px;border-bottom:1px solid var(--line)}h1{margin:7px 0 0;font-size:25px}
+.grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:12px;margin-top:14px;align-items:start}
+.panel{border:1px solid var(--line);background:rgba(17,21,15,.92);padding:13px}
+.side input{width:100%;height:32px;padding:0 9px;border:1px solid var(--line);background:#0c100b;color:var(--text);font:12px var(--mono)}
+.kinds{display:flex;gap:6px;margin:9px 0}
+.btn{border:1px solid var(--line);background:#10140e;color:#aeb9a5;padding:8px 12px;font:11px var(--mono);cursor:pointer;border-radius:4px}
+.btn.primary{background:#262618;color:#efe4bd;border-color:#8f8558}.btn.danger{border-color:#68463e;color:#d2a091}.btn.small{padding:5px 8px;font-size:10px}
+.list{display:grid;gap:2px;max-height:62vh;overflow:auto}
+.row{display:flex;justify-content:space-between;gap:8px;padding:7px 8px;border:1px solid transparent;border-radius:4px;background:none;color:var(--text);font:12px var(--mono);text-align:left;cursor:pointer}
+.row:hover{background:#141911}.row.active{border-color:#8f8558;background:#1c2016;color:#efe4bd}
+.row small{color:var(--muted)}.row .done{color:var(--sand)}
+label{display:block;margin:14px 0 5px;color:var(--muted);font-size:11px}
+textarea,.link input,.tags{width:100%;border:1px solid var(--line);background:#0c100b;color:var(--text);font:13px/1.5 var(--mono);padding:8px 9px}
+textarea{min-height:150px;resize:vertical}
+.link{display:grid;grid-template-columns:160px minmax(0,1fr) auto;gap:6px;margin-bottom:6px}
+.hint{margin-top:4px;color:var(--muted);font-size:10.5px;line-height:1.5}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.status{margin-top:10px;font-size:11px;color:#899583}
+.empty{padding:40px 10px;text-align:center;color:var(--muted);font-size:12px}
+h2{margin:0;font-size:18px;color:#efe4bd}.sub{margin-top:4px;color:var(--muted);font-size:11px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.list{max-height:40vh}.link{grid-template-columns:1fr}}
+</style></head><body><main class="shell">
+<header class="head"><h1>CODEX</h1></header>
+<div class="grid">
+  <section class="panel side">
+    <input id="q" type="search" placeholder="Поиск…">
+    <div class="kinds"><button class="btn primary" data-kind="universe">Вселенные</button><button class="btn" data-kind="author">Авторы</button></div>
+    <div id="list" class="list"></div>
+  </section>
+  <section class="panel" id="editor"><div class="empty">Выбери вселенную или автора слева.</div></section>
+</div>
+</main>
+<script>
+(()=>{
+  const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const key=s=>String(s||'').trim().toLocaleLowerCase();
+  let kind='universe',current=null,names={universe:new Map(),author:new Map()},profiles=new Map();
+  const pkey=(k,n)=>k+'\u0000'+key(n);
+  const api=async(body)=>{const r=await fetch('/api/admin/codex-profiles',body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);return d};
+  function renderList(){
+    const q=key($('#q').value);
+    const rows=[...names[kind]].filter(([n])=>!q||key(n).includes(q)).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+    $('#list').innerHTML=rows.map(([n,c])=>`<button class="row${current&&current.kind===kind&&key(current.name)===key(n)?' active':''}" data-name="${esc(n)}"><span>${profiles.has(pkey(kind,n))?'<span class="done">● </span>':''}${kind==='author'?'@':''}${esc(n)}</span><small>${c} бот.</small></button>`).join('')||'<div class="empty">Ничего</div>';
+  }
+  const linkRow=(l={})=>`<div class="link"><input data-l="label" placeholder="Название (Сайт, Telegram…)" value="${esc(l.label||'')}"><input data-l="url" placeholder="https://…" value="${esc(l.url||'')}"><button class="btn small" data-remove-link>✕</button></div>`;
+  function openEditor(name){
+    current={kind,name};const p=profiles.get(pkey(kind,name))||{};
+    $('#editor').innerHTML=`<h2>${kind==='author'?'@':''}${esc(name)}</h2><div class="sub">${kind==='author'?'Автор':'Вселенная'} · ${names[kind].get(name)||0} бот.</div>
+      <label>Описание</label><textarea id="desc" placeholder="${kind==='author'?'Пара слов об авторе…':'О чём вселенная, где происходит…'}">${esc(p.description||'')}</textarea>
+      <div class="hint">Пустая строка — новый абзац.</div>
+      <label>Ссылки</label><div id="links">${(p.links||[]).map(linkRow).join('')||linkRow()}</div>
+      <button class="btn small" id="addLink">+ ссылка</button>
+      <div class="hint">${kind==='author'?'JanitorAI, Telegram, Tumblr, Ko-fi, Discord…':'Сайт вселенной, пост с лором, карта…'} Пустые строки не сохраняются.</div>
+      ${kind==='universe'?`<label>Хэштеги</label><input class="tags" id="tags" placeholder="через запятую" value="${esc((p.hashtags||[]).join(', '))}">`:''}
+      <div class="actions"><button class="btn primary" id="save">Сохранить</button>${profiles.has(pkey(kind,name))?'<button class="btn danger" id="del">Очистить</button>':''}<a class="btn" href="/codex.html#${kind}=${encodeURIComponent(name)}" target="_blank" rel="noopener">Открыть на сайте ↗</a></div>
+      <div class="status" id="st"></div>`;
+    renderList();
+  }
+  async function save(){
+    const st=$('#st');st.textContent='Сохраняю…';
+    const links=[...document.querySelectorAll('#links .link')].map(r=>({label:r.querySelector('[data-l=label]').value,url:r.querySelector('[data-l=url]').value})).filter(l=>l.url.trim());
+    try{const d=await api({action:'set',kind:current.kind,name:current.name,description:$('#desc').value,links,hashtags:$('#tags')?.value||''});profiles.set(pkey(current.kind,current.name),d.profile);openEditor(current.name);$('#st').textContent='Сохранено. На сайте появится в течение минуты.'}catch(e){st.textContent='Не получилось: '+e.message}
+  }
+  async function del(){
+    if(!confirm('Очистить описание и ссылки?'))return;
+    try{await api({action:'delete',kind:current.kind,name:current.name});profiles.delete(pkey(current.kind,current.name));openEditor(current.name);$('#st').textContent='Очищено.'}catch(e){$('#st').textContent='Не получилось: '+e.message}
+  }
+  document.addEventListener('click',e=>{
+    const k=e.target.closest('[data-kind]');if(k){kind=k.dataset.kind;document.querySelectorAll('[data-kind]').forEach(b=>b.classList.toggle('primary',b===k));renderList();return}
+    const r=e.target.closest('.row');if(r){openEditor(r.dataset.name);return}
+    if(e.target.id==='addLink'){$('#links').insertAdjacentHTML('beforeend',linkRow());return}
+    if(e.target.closest('[data-remove-link]')){e.target.closest('.link').remove();return}
+    if(e.target.id==='save')save();if(e.target.id==='del')del();
+  });
+  $('#q').addEventListener('input',renderList);
+  (async()=>{
+    try{
+      const [cat,pr]=await Promise.all([fetch('/api/catalog?limit=1000',{cache:'no-store'}).then(r=>r.json()),api()]);
+      for(const b of cat.characters||[]){const a=String(b.author||'').trim();if(a)names.author.set(a,(names.author.get(a)||0)+1);for(const u of b.universes||[])names.universe.set(u,(names.universe.get(u)||0)+1)}
+      for(const p of pr.profiles||[])profiles.set(pkey(p.kind,p.name),p);
+      renderList();
+    }catch(e){$('#list').innerHTML=`<div class="empty">Не удалось загрузить: ${esc(e.message)}</div>`}
+  })();
+})();
+</script></body></html>

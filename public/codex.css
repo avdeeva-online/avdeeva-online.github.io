@@ -55,6 +55,33 @@ body.codex-lock{overflow:hidden}
 .codex-bot img{display:block;width:100%;aspect-ratio:3/4;border-radius:7px;object-fit:cover;object-position:center 20%;border:1px solid var(--cx-line);background:#151814;transition:border-color .15s}
 .codex-bot span{display:block;margin-top:4px;font:11px/1.25 var(--font-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .codex-bot:hover img{border-color:var(--cx-line-strong)}.codex-bot:hover span{color:#fff}
+/* Open card: description, links, foldable sections. */
+.codex-about{margin-top:12px;max-width:62ch;font:13px/1.6 var(--font-text);color:var(--cx-text)}
+.codex-about p{margin:0 0 8px}.codex-about p:last-child{margin:0}
+.codex-weblinks{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.codex-weblinks a{display:inline-flex;align-items:center;height:26px;padding:0 10px;border:1px solid var(--cx-line);border-radius:999px;color:var(--cx-text);font:11.5px var(--font-text);text-decoration:none}
+.codex-weblinks a:hover{border-color:var(--cx-line-strong);color:#fff}
+.codex-folds{margin-top:16px;border-top:1px solid var(--cx-line)}
+.codex-fold{border-bottom:1px solid var(--cx-line)}
+.codex-fold summary{display:flex;align-items:center;gap:8px;padding:13px 2px;list-style:none;cursor:pointer;font:600 13px/1 var(--font-text);color:var(--cx-ink)}
+.codex-fold summary::-webkit-details-marker{display:none}
+.codex-fold summary em{font:normal 11px var(--font-mono);color:var(--cx-dim)}
+.codex-fold summary::after{content:'';width:7px;height:7px;margin-left:auto;border-right:1.5px solid var(--cx-muted);border-bottom:1.5px solid var(--cx-muted);transform:rotate(45deg) translateY(-3px);transition:transform .15s}
+.codex-fold[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
+.codex-fold summary:hover{color:#fff}
+.codex-fold-body{padding:2px 0 16px}
+/* Author's bots: one strip per universe. */
+.codex-group+.codex-group{margin-top:16px}
+.codex-strip{display:flex;align-items:baseline;gap:8px;margin-bottom:9px;padding:6px 10px;border-left:2px solid var(--cx-sand);background:rgba(205,184,138,.06);border-radius:0 5px 5px 0}
+.codex-strip button,.codex-strip span{padding:0;border:0;background:none;color:#efe4c8;font:600 12.5px var(--font-text);cursor:pointer}
+.codex-strip button:hover{text-decoration:underline;text-underline-offset:3px}
+.codex-strip em{font:normal 10.5px var(--font-text);color:var(--cx-muted)}
+/* Author's universes: a plain list, name left, "37 bots" right. */
+.codex-unis{list-style:none;margin:0;padding:0}
+.codex-unis button{display:flex;width:100%;align-items:baseline;gap:10px;padding:8px 2px;border:0;border-bottom:1px solid rgba(160,150,120,.08);background:none;color:var(--cx-text);font:13px var(--font-text);text-align:left;cursor:pointer}
+.codex-unis li:last-child button{border-bottom:0}
+.codex-unis em{margin-left:auto;font:normal 11px var(--font-text);color:var(--cx-muted);white-space:nowrap}
+.codex-unis button:hover span{color:#fff;text-decoration:underline;text-underline-offset:3px}
 .codex-minor{grid-column:1/-1}.codex-minor .codex-section{margin-top:8px}
 .codex-links a{font-size:8.5px;letter-spacing:.06em;color:var(--cx-text);text-decoration:none}.codex-links a:hover{color:#fff;text-decoration:underline}
 
@@ -115,11 +142,16 @@ body.codex-lock{overflow:hidden}
   /* Open card: a bottom sheet as tall as its content (short cards stay short); long ones scroll inside.
      The dimmed page above it is the tap-to-close area. */
   .codex-modal{align-items:flex-end;padding:0}
-  .codex-modal-card{width:100%;max-height:calc(100dvh - 56px);overscroll-behavior:contain;border-radius:16px 16px 0 0;border-bottom:0;padding:0 14px calc(22px + env(safe-area-inset-bottom))}
+  /* Light dim, no blur: the page stays visible above the sheet (a black blurred void looked broken). */
+  .codex-modal-backdrop{background:rgba(2,3,2,.5);-webkit-backdrop-filter:none;backdrop-filter:none}
+  .codex-modal-card{width:100%;max-height:calc(100dvh - 56px);overscroll-behavior:contain;border-radius:16px 16px 0 0;border:0;border-top:1px solid var(--cx-line-strong);background:#121510;box-shadow:0 -18px 50px rgba(0,0,0,.55);padding:0 16px calc(22px + env(safe-area-inset-bottom))}
+  /* Lorebook: title, bots, then the download link under them — no far-away button. */
+  .codex-lore{display:block}
+  .codex-download{height:auto;margin-top:6px;padding:0;border:0;color:var(--cx-sand);font-size:12px}
   .codex-modal-card::before{content:"";display:block;width:36px;height:4px;margin:8px auto 0;border-radius:2px;background:rgba(235,227,211,.2)}
   /* Close stays in view while the sheet scrolls. */
-  .codex-close{position:sticky;top:6px;float:right;z-index:2;width:auto;height:28px;margin:4px -4px 0 8px;padding:0 11px;border-radius:14px;border-color:rgba(255,255,255,.12);background:rgba(10,12,10,.92);color:#eee;font-size:14px}
-  .codex-close::before{content:"Close";margin-right:5px;font:500 11px/1 var(--font-text)}
+  /* Quiet round ×, stays in view while the sheet scrolls; tapping the dimmed page also closes. */
+  .codex-close{position:sticky;top:8px;float:right;z-index:2;width:30px;height:30px;margin:6px -6px 0 8px;padding:0;border:0;border-radius:50%;background:rgba(235,227,211,.08);color:#d8d2c2;font-size:17px}
   #codexModalBody{padding-top:14px}
   .codex-modal-card h2{font-size:24px;margin-right:0}
   .codex-lore-main b{font-size:12px}

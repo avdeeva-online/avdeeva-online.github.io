@@ -6,7 +6,7 @@
   const key=s=>String(s||'').trim().toLocaleLowerCase();
   const plural=(n,one,many)=>`${n} ${n===1?one:many}`;
   const catalogUrl=params=>`characters.html?${new URLSearchParams(params)}`;
-  let universes=[],authors=[],tab='universes',authorFilter='all',sizeFilter='all',query='';
+  let universes=[],authors=[],profiles=new Map(),tab='universes',authorFilter='all',sizeFilter='all',query='';
   // Filter by how many bots a universe / author has.
   const SIZES=[['all','All'],['big','10+'],['mid','3–9'],['small','1–2']];
   const inSize=n=>sizeFilter==='all'||(sizeFilter==='big'?n>=10:sizeFilter==='mid'?n>=3&&n<10:n<3);
@@ -92,7 +92,7 @@
       // Authors with 1–2 bots go into one compact line below instead of near-empty cards (unless the user filters for them).
       const minor=sizeFilter==='all'&&!query?list.filter(a=>a.bots<3):[];
       const major=list.filter(a=>!minor.includes(a));
-      grid.innerHTML=list.length?major.map(authorCard).join('')+(minor.length?`<div class="codex-minor"><h3 class="codex-section">More authors · ${minor.length}</h3><div class="codex-botlist">${minor.map(a=>`<button type="button" data-open-author="${esc(a.name)}">@${esc(a.name)} <small>${a.bots}</small></button>`).join('')}</div></div>`:''):nothing;
+      grid.innerHTML=list.length?major.map(authorCard).join('')+(minor.length?`<div class="codex-minor"><h3 class="codex-section">More authors · ${minor.length}</h3><div class="codex-botlist">${minor.map(a=>`<button type="button" data-open-author="${esc(a.name)}">@${esc(a.name)} <small>${plural(a.bots,'bot','bots')}</small></button>`).join('')}</div></div>`:''):nothing;
     }
   }
 
@@ -107,27 +107,50 @@
   }
   // "ALDEN | 🏀 HALE UNIVERSITY" → "ALDEN": the universe is already the context here.
   const shortName=b=>String(b.nameEn||'').split('|')[0].trim()||b.nameEn;
+  const byName=list=>list.slice().sort((a,b)=>shortName(a).localeCompare(shortName(b)));
+  // A section that opens on tap: long lists (157 bots, 23 lorebooks) stay folded until needed.
+  const fold=(title,count,body,open=false)=>count?`<details class="codex-fold"${open?' open':''}><summary><span>${title}</span><em>${count}</em></summary><div class="codex-fold-body">${body}</div></details>`:'';
+  // Admin-written description, links and hashtags (/admin/codex.html). Nothing is shown while they are empty.
+  const profileOf=(kind,name)=>profiles.get(`${kind}\u0000${key(name)}`)||{};
+  const paragraphs=text=>String(text||'').split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean).map(p=>`<p>${esc(p).replace(/\n/g,'<br>')}</p>`).join('');
+  const aboutBlock=p=>p.description?`<div class="codex-about">${paragraphs(p.description)}</div>`:'';
+  const linksBlock=links=>links.length?`<div class="codex-weblinks">${links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.label)} ↗</a>`).join('')}</div>`:'';
   function openUniverse(name){
     const u=universes.find(x=>x.name===name);if(!u)return;
-    const bots=u.bots.slice().sort((a,b)=>shortName(a).localeCompare(shortName(b)));
+    const bots=byName(u.bots),p=profileOf('universe',u.name),tags=[...u.settings.map(esc),...(p.hashtags||[]).map(h=>`#${esc(h)}`)];
     show(`<div class="codex-kicker">// ${u.other?'lorebooks':'universe'}</div>
       <h2 id="codexModalTitle">${esc(u.other?'Other lorebooks':u.name)}</h2>
       <div class="codex-by">by <button type="button" class="codex-link" data-open-author="${esc(u.author)}">@${esc(u.author)}</button></div>
-      ${u.settings.length?`<div class="codex-chips">${u.settings.map(s=>`<span>${esc(s)}</span>`).join('')}</div>`:''}
-      ${u.other?'':`<div class="codex-actions"><a class="codex-btn" href="${esc(catalogUrl({universe:u.name}))}">Open ${plural(bots.length,'bot','bots')} in the catalog →</a></div>`}
-      ${u.lorebooks.length?`<h3 class="codex-section">Lorebooks · ${u.lorebooks.length}</h3><ul class="codex-lores">${u.lorebooks.map(lorebookRow).join('')}</ul>`:''}
-      ${bots.length&&!u.other?`<h3 class="codex-section">Bots · ${bots.length}</h3>${botGrid(bots)}`:''}`);
+      ${tags.length?`<div class="codex-chips">${tags.map(t=>`<span>${t}</span>`).join('')}</div>`:''}
+      ${aboutBlock(p)}${linksBlock(p.links||[])}
+      ${u.other?'':`<div class="codex-actions"><a class="codex-btn" href="${esc(catalogUrl({universe:u.name}))}">Open in the catalog →</a></div>`}
+      <div class="codex-folds">
+        ${u.other?'':fold('Bots',bots.length,botGrid(bots),true)}
+        ${fold('Lorebooks',u.lorebooks.length,`<ul class="codex-lores">${u.lorebooks.map(lorebookRow).join('')}</ul>`,u.other)}
+      </div>`);
     setHash({universe:u.name});
   }
   function openAuthor(name){
     const a=authors.find(x=>x.name===name);if(!a)return;
-    const own=universes.filter(u=>u.author===a.name);
+    const own=universes.filter(u=>u.author===a.name&&!u.other),p=profileOf('author',a.name);
+    // Their links from the admin, plus the JanitorAI profile if it isn't already among them.
+    const links=[...(p.links||[])];if(a.url&&!links.some(l=>l.url.replace(/\/$/,'')===a.url.replace(/\/$/,'')))links.unshift({label:'JanitorAI',url:a.url});
+    // Bots grouped by universe (largest first), each group under its own strip; bots without a universe last.
+    const groups=new Map();
+    for(const b of a.list){const home=(b.universes||[])[0]||'';if(!groups.has(home))groups.set(home,[]);groups.get(home).push(b)}
+    const order=[...groups].sort((x,y)=>Number(!x[0])-Number(!y[0])||y[1].length-x[1].length||x[0].localeCompare(y[0]));
+    const botsBody=order.map(([u,list])=>`<div class="codex-group"><div class="codex-strip">${u?`<button type="button" data-open-universe="${esc(u)}">${esc(u)}</button>`:'<span>No universe</span>'}<em>${plural(list.length,'bot','bots')}</em></div>${botGrid(byName(list))}</div>`).join('');
+    const lores=[...new Map(universes.filter(u=>u.author===a.name).flatMap(u=>u.lorebooks).map(l=>[l.contentHash||l.id,l])).values()];
     show(`<div class="codex-kicker">// author</div>
       <h2 id="codexModalTitle">@${esc(a.name)}</h2>
-      <div class="codex-counts">${counts([[a.bots,'bot','bots'],[a.universes.size,'universe','universes'],[a.lorebooks,'lorebook','lorebooks']])}</div>
-      <div class="codex-actions">${a.url?`<a class="codex-btn ghost" href="${esc(a.url)}" target="_blank" rel="noopener noreferrer">JanitorAI ↗</a>`:''}<a class="codex-btn" href="${esc(catalogUrl({author:a.name}))}">All bots in the catalog →</a></div>
-      ${own.length?`<h3 class="codex-section">Universes · ${own.filter(u=>!u.other).length}</h3><div class="codex-botlist">${own.map(u=>`<button type="button" data-open-universe="${esc(u.name)}">${esc(u.other?'Other lorebooks':u.name)} <small>${u.other?plural(u.lorebooks.length,'lorebook','lorebooks'):u.bots.length}</small></button>`).join('')}</div>`:''}
-      <h3 class="codex-section">Bots · ${a.bots}</h3>${botGrid(a.list.slice().sort((x,y)=>shortName(x).localeCompare(shortName(y))))}`);
+      <div class="codex-counts">${counts([[a.bots,'bot','bots'],[own.length,'universe','universes'],[lores.length,'lorebook','lorebooks']])}</div>
+      ${aboutBlock(p)}${linksBlock(links)}
+      <div class="codex-actions"><a class="codex-btn" href="${esc(catalogUrl({author:a.name}))}">All bots in the catalog →</a></div>
+      <div class="codex-folds">
+        ${fold('Universes',own.length,`<ul class="codex-unis">${own.map(u=>`<li><button type="button" data-open-universe="${esc(u.name)}"><span>${esc(u.name)}</span><em>${plural(u.bots.length,'bot','bots')}${u.lorebooks.length?` · ${plural(u.lorebooks.length,'lorebook','lorebooks')}`:''}</em></button></li>`).join('')}</ul>`)}
+        ${fold('Bots',a.bots,botsBody)}
+        ${fold('Lorebooks',lores.length,`<ul class="codex-lores">${lores.map(lorebookRow).join('')}</ul>`)}
+      </div>`);
     setHash({author:a.name});
   }
   let lastFocus=null;
@@ -157,7 +180,9 @@
   (async()=>{
     try{
       const get=u=>fetch(u).then(r=>r.ok?r.json():Promise.reject(new Error(`HTTP ${r.status}`)));
-      const [cat,lb]=await Promise.all([get('/api/catalog?limit=1000'),get('/api/lorebooks')]);
+      // Profiles are optional: without them the page still works, just without descriptions and links.
+      const [cat,lb,pr]=await Promise.all([get('/api/catalog?limit=1000'),get('/api/lorebooks'),get('/api/codex-profiles').catch(()=>({}))]);
+      for(const p of Array.isArray(pr.profiles)?pr.profiles:[])profiles.set(`${p.kind}\u0000${key(p.name)}`,p);
       build(Array.isArray(cat.characters)?cat.characters:[],Array.isArray(lb.lorebooks)?lb.lorebooks:[]);
       $('#countUniverses').textContent=universes.filter(u=>!u.other).length;$('#countAuthors').textContent=authors.length;
       const h=new URLSearchParams(location.hash.slice(1));

@@ -10,9 +10,10 @@ import { deleteLegacyMediaExtra } from './hub-admin-media.js';
 import { guardAdminApi } from './admin-auth.js';
 import { d1SchemaStatus } from './d1-schema-status.js';
 import { repairHubMedia } from './hub-resources.js';
+import { handleCodexProfilesRoute } from './codex-profiles.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
-const BUILD_INFO={build:'codex-v3-faces',deployed_from:'main'};
+const BUILD_INFO={build:'codex-v4-profiles',deployed_from:'main'};
 const CONTENT_SECURITY_POLICY=["default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","form-action 'self'","img-src 'self' https: data: blob:","media-src 'self' https: blob:","style-src 'self' 'unsafe-inline'","script-src 'self' 'unsafe-inline'","connect-src 'self'","font-src 'self' data:"].join('; ');
 function withSecurityHeaders(response){
   const headers=new Headers(response.headers);
@@ -86,6 +87,7 @@ async function routeRequest(request,env,ctx){
   if(url.pathname==='/api/import'||url.pathname==='/api/import/status')return publicImport(request,env,ctx,url);
   const cloudflareResponse=await handleCloudflareRoute(request,env);if(cloudflareResponse)return cloudflareResponse;
   const curationResponse=await handleUniverseCurationRoute(request,env);if(curationResponse)return curationResponse;
+  const codexResponse=await handleCodexProfilesRoute(request,env);if(codexResponse)return codexResponse;
   let response=await sourceTruth.fetch(request,env,ctx);response=await transformUniversePublicResponse(request,response,env);return transformAdminHtmlResponse(request,response);
 }
 export default {async fetch(request,env,ctx){return withSecurityHeaders(await routeRequest(request,env,ctx))}};

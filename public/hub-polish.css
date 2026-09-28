@@ -179,6 +179,9 @@ body{min-height:100vh;overflow-x:hidden}
    meta are pinned to the bottom, so tags line up across cards. */
 .resource-grid{grid-auto-rows:1fr!important}
 .resource-grid .resource-card{display:flex!important;flex-direction:column!important}
+/* ...but a card hidden by the section switch (inline display:none) or by a filter must stay hidden:
+   the !important flex above used to override them, so sections and filters showed every card. */
+.resource-grid .resource-card[style*="display: none"],.resource-grid .resource-card.category-filter-hidden{display:none!important}
 .resource-grid .resource-card .thumb{height:auto!important;aspect-ratio:2/1!important;flex:0 0 auto!important;background-size:cover!important;background-position:center top!important}
 .resource-grid .resource-card .card-body{display:flex!important;flex-direction:column!important;flex:1 1 auto!important;min-height:0!important;padding:12px 13px 11px!important}
 .resource-grid .resource-card .card-title-row{margin:6px 0 0!important}

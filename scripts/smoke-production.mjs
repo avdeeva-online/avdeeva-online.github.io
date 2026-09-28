@@ -16,7 +16,7 @@ async function request(path,{json=false,attempts=5}={}){
   throw lastError;
 }
 
-for(const path of ['/','/characters','/hub']){
+for(const path of ['/','/characters','/hub','/codex']){
   const {response,bytes}=await request(path);
   assert.match(response.headers.get('content-type')||'',/text\/html/i,`${path}: HTML content type missing`);
   assert.ok(bytes.byteLength>1_000,`${path}: response is unexpectedly small`);

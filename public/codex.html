@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080a08">
+  <meta name="description" content="CODEX — universes, lorebooks and authors of the ARCHIVE.EXE bot catalog.">
+  <title>CODEX // ARCHIVE.EXE</title>
+  <link rel="stylesheet" href="fonts/fonts.css?v=20260926-archive1">
+  <link rel="stylesheet" href="codex.css?v=20260928-codex2">
+</head>
+<body>
+<div class="codex-scene" aria-hidden="true"></div><div class="codex-shade" aria-hidden="true"></div>
+<main class="codex-page">
+  <header class="codex-head">
+    <a class="codex-brand" href="/">ARCHIVE.EXE</a>
+    <div class="codex-brand-sub">UNIVERSES · LOREBOOKS · AUTHORS</div>
+  </header>
+  <section class="codex-panel">
+    <div class="codex-title-row">
+      <div><h1>CODEX</h1><p class="codex-desc">Where the bots come from: their universes, shared lorebooks and the people who write them.</p></div>
+      <label class="codex-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input id="codexSearch" type="search" placeholder="Search universes, lorebooks, bots, authors…" autocomplete="off"></label>
+    </div>
+    <nav class="codex-tabs" role="tablist">
+      <button type="button" role="tab" class="codex-tab active" data-tab="universes">Universes &amp; lorebooks <span id="countUniverses"></span></button>
+      <button type="button" role="tab" class="codex-tab" data-tab="authors">Authors <span id="countAuthors"></span></button>
+    </nav>
+    <div id="codexFilters" class="codex-filters" hidden></div>
+    <div id="codexGrid" class="codex-grid" aria-live="polite"><div class="codex-state">Loading the codex…</div></div>
+  </section>
+</main>
+<div id="codexModal" class="codex-modal" hidden>
+  <div class="codex-modal-backdrop" data-close></div>
+  <article class="codex-modal-card" role="dialog" aria-modal="true" aria-labelledby="codexModalTitle">
+    <button type="button" class="codex-close" data-close aria-label="Close">×</button>
+    <div id="codexModalBody"></div>
+  </article>
+</div>
+<script src="codex.js?v=20260928-codex2"></script>
+<script src="cross-nav.js?v=20260928-codex1"></script>
+</body>
+</html>

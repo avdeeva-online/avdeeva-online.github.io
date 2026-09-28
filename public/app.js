@@ -885,7 +885,8 @@ function renderModalHead(){
   const universes=botUniverses(b).map(canonicalUniverse);
   const settings=[...new Set((b.settingIds||[]).flatMap(id=>cleanTag(id).split(/\s*\/\s*/)).map(canonicalSettingId).filter(id=>SETTING_BY_ID.has(id)))];
   const facts=[
-    ...universes.map(u=>`<button type="button" class="cm-fact cm-fact-universe" data-quick-universe="${esc(u)}" title="Show universe: ${esc(u)}">${globeSvg}<span>${esc(u)}</span></button>`),
+    // The universe opens its CODEX card (shared lorebooks, other bots of that universe).
+    ...universes.map(u=>`<a class="cm-fact cm-fact-universe" href="codex.html#${esc(new URLSearchParams({universe:u}))}" title="Open ${esc(u)} in the CODEX">${globeSvg}<span>${esc(u)}</span></a>`),
     ...settings.map(id=>`<button type="button" class="cm-fact" data-quick-setting="${esc(id)}" title="Show setting: ${esc(settingLabel(id))}">${esc(settingLabel(id))}</button>`),
     `<span class="cm-fact cm-fact-pov">${esc(povLabel(botPov(b)))}</span>`
   ];

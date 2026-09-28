@@ -15,6 +15,15 @@
   window.archiveReloadCatalog=()=>loadLive(true);
   function loadAddon(src,key){if(document.querySelector(`script[data-${key}]`))return;const s=document.createElement('script');s.src=src;s.setAttribute(`data-${key}`,'1');document.body.appendChild(s)}
   function openGatewayRandom(){const params=new URLSearchParams(location.search);if(params.get('gatewayRandom')!=='1')return;params.delete('gatewayRandom');const next=`${location.pathname}${params.toString()?`?${params}`:''}${location.hash||''}`;history.replaceState(null,'',next);setTimeout(()=>$('#randomBtn')?.click(),180)}
-  const start=()=>{baseBots=normalizeCatalog(Array.isArray(window.BOTS)?[...window.BOTS]:baseBots);loadAddon('ui-fixes.js?v=20260926-modal1','archive-ui-fixes');loadLive().then(openGatewayRandom).finally(()=>loadAddon('lorebooks.js?v=20260926-fonts1','archive-lorebooks'))};
+  // Links from CODEX: ?bot=<id|uuid> opens that bot, ?universe=<name> / ?author=<name> apply the filter.
+  function openFromQuery(){
+    const params=new URLSearchParams(location.search),bot=params.get('bot'),universe=params.get('universe'),author=params.get('author');
+    if(!bot&&!universe&&!author)return;
+    ['bot','universe','author'].forEach(k=>params.delete(k));history.replaceState(null,'',`${location.pathname}${params.toString()?`?${params}`:''}${location.hash||''}`);
+    const list=Array.isArray(window.BOTS)?window.BOTS:[];
+    if(typeof state!=='undefined'&&(universe||author)){if(universe)state.universes.add(universe);if(author)state.authors.add(author);window.render?.()}
+    if(bot){const b=list.find(x=>x.id===bot||x.janitorUuid===bot);if(b)setTimeout(()=>window.openModal?.(b),60)}
+  }
+  const start=()=>{baseBots=normalizeCatalog(Array.isArray(window.BOTS)?[...window.BOTS]:baseBots);loadAddon('ui-fixes.js?v=20260926-modal1','archive-ui-fixes');loadLive().then(()=>{openGatewayRandom();openFromQuery()}).finally(()=>loadAddon('lorebooks.js?v=20260926-fonts1','archive-lorebooks'))};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

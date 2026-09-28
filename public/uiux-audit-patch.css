@@ -393,3 +393,7 @@
 /* Typography (Overgrown archive): bot names are titles in the old-book serif. Cormorant has a small x-height, so it runs a few px larger than the old Arial. */
 #grid .card-title{font-family:var(--font-title)!important;font-weight:700!important;font-size:17px!important;line-height:1.05!important;letter-spacing:0!important}
 @media(max-width:760px){#grid .card-title{font-size:15.5px!important}}
+
+/* The ☰ catalog drawer duplicated the toolbar filters; its lorebooks / universes moved to the CODEX page. */
+#catalogOpen,#catalogDrawer,#drawerShade{display:none!important}
+@media(max-width:760px){.toolbar-row>#importOpen{grid-column:1 / 12!important;margin-right:6px!important}}

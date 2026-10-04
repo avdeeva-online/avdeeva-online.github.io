@@ -15,7 +15,7 @@
   <aside class="panel"><input class="search" id="search" placeholder="Поиск: бот, автор, тег…"><div id="list" class="list"><div class="editor-empty">Загружаю ботов…</div></div><div id="listStatus" class="status">Загрузка…</div></aside>
   <section class="panel"><div id="empty" class="editor-empty">Выбери бота слева</div><form id="form" class="fields" hidden>
     <div class="field-grid"><div class="field"><label>Имя</label><input id="name"></div><div class="field"><label>Автор</label><input id="author"></div></div>
-    <div class="field-grid"><div class="field"><label>Ссылка на автора</label><input id="authorUrl"></div><div class="field"><label>Статус</label><select id="status"><option value="published">На сайте</option><option value="hidden">Скрыт</option></select></div></div>
+    <div class="field-grid"><div class="field"><label>Ссылка на автора</label><input id="authorUrl"></div><div class="field"><label>Статус</label><select id="status"><option value="published">На сайте</option><option value="hidden">Скрыт</option></select></div></div><label class="service-flag" style="display:flex;gap:8px;align-items:center;margin:10px 0 2px;font-size:12px;color:#cbd4c2;cursor:pointer"><input type="checkbox" id="service"> Служебная карточка — анонс, FAQ, инфо (на сайте получит тег «📢 Service»)</label>
     <div class="field public-text"><label>Слоган — под карточкой и вверху открытого бота</label><textarea id="publicHook" rows="3" style="min-height:70px"></textarea><div class="hint">Пусто = автоматически (показано серым). Твой текст не затрётся при переимпорте. <button type="button" class="btn" data-public-fill="hook">Взять автоматический</button> <button type="button" class="btn" data-public-clear="hook">Вернуть автоматический</button></div></div>
     <div class="field public-text"><label>Описание — вкладка About</label><textarea id="publicAbout" class="big" style="min-height:240px"></textarea><div class="hint">Пусто = автоматически. Строка с «## » в начале — заголовок раздела (## THE KINGDOM). Твой текст не затрётся при переимпорте. <button type="button" class="btn" data-public-fill="about">Взять автоматический</button> <button type="button" class="btn" data-public-clear="about">Вернуть автоматический</button></div></div>
     <details class="field source-text"><summary>Исходный текст с JanitorAI — только для справки, обновляется при каждом переимпорте</summary>
@@ -32,5 +32,5 @@
   </form></section>
 </div>
 </main>
-<script src="character-editor.js?v=20261004-light1"></script>
+<script src="character-editor.js?v=20261005-service1"></script>
 </body></html>

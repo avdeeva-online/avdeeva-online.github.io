@@ -16,7 +16,8 @@ const migrationFiles=[
   'migrations/0012_codex_profiles.sql',
   'migrations/0013_canonical_labels.sql',
   'migrations/0014_hub_extra_links.sql',
-  'migrations/0015_codex_styles_avatars.sql'
+  'migrations/0015_codex_styles_avatars.sql',
+  'migrations/0016_service_cards.sql'
 ];
 for(const file of migrationFiles)fail(fs.existsSync(file),`${file}: required migration missing`);
 

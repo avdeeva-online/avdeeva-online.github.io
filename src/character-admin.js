@@ -29,7 +29,7 @@ function normalizeRow(r){
     universe:r.universe||'',universes:parse(r.universes),universe_source_field:r.universe_source_field||'',
     setting_ids:parse(r.setting_ids),pov:r.pov||'',
     image_url:r.image_url||'',janitor_url:r.janitor_url||'',datacat_url:r.datacat_url||'',
-    status:r.status||'',updated_at:r.updated_at||null,
+    status:r.status||'',updated_at:r.updated_at||null,service:Number(r.service)===1,
     // Public tagline / description: manual override (empty = automatic) and the automatic split to start from.
     public_hook:r.public_hook||'',public_about:r.public_about||'',
     ...autoPublicText(r)
@@ -39,18 +39,18 @@ function normalizeRow(r){
 // Light list (?light=1): what the admin list, pickers, dashboard and import need — no descriptions, scenarios
 // or greetings (those made the full list 12+ MB for ~1000 bots). One bot in full: GET /api/admin/characters/<uuid>.
 function lightRow(r){
-  return{uuid:r.janitor_uuid,name:r.name||'',author:canonicalAuthor(r.author),tags:normalizeTags(parse(r.tags)),hashtags:normalizeHashtags(parse(r.hashtags)),universe:r.universe||'',universes:parse(r.universes),universe_source_field:r.universe_source_field||'',setting_ids:parse(r.setting_ids),pov:r.pov||'',status:r.status||'',updated_at:r.updated_at||null,has_manual_text:Boolean(r.has_manual_text)};
+  return{uuid:r.janitor_uuid,name:r.name||'',author:canonicalAuthor(r.author),tags:normalizeTags(parse(r.tags)),hashtags:normalizeHashtags(parse(r.hashtags)),universe:r.universe||'',universes:parse(r.universes),universe_source_field:r.universe_source_field||'',setting_ids:parse(r.setting_ids),pov:r.pov||'',status:r.status||'',updated_at:r.updated_at||null,has_manual_text:Boolean(r.has_manual_text),service:Number(r.service)===1};
 }
 export async function getAdminCharacter(env,uuid){
   if(!UUID_RE.test(uuid))return json({ok:false,error:'INVALID_UUID'},400);
-  const r=await env.DB.prepare(`SELECT janitor_uuid,name,author,author_url,short_description,description,scenario,intros,public_hook,public_about,tags,hashtags,universe,universes,universe_source_field,setting_ids,pov,image_url,janitor_url,datacat_url,status,updated_at FROM characters WHERE janitor_uuid=? LIMIT 1`).bind(uuid).first();
+  const r=await env.DB.prepare(`SELECT janitor_uuid,name,author,author_url,short_description,description,scenario,intros,public_hook,public_about,tags,hashtags,universe,universes,universe_source_field,setting_ids,pov,image_url,janitor_url,datacat_url,status,service,updated_at FROM characters WHERE janitor_uuid=? LIMIT 1`).bind(uuid).first();
   if(!r)return json({ok:false,error:'CHARACTER_NOT_FOUND'},404);
   return json({ok:true,character:normalizeRow(r)});
 }
 export async function listAdminCharacters(request,env){
   const u=new URL(request.url),q=clean(u.searchParams.get('q')).toLocaleLowerCase(),limit=Math.min(Math.max(Number(u.searchParams.get('limit')||500),1),10000);
   if(u.searchParams.get('light')==='1'){
-    const res=await env.DB.prepare(`SELECT janitor_uuid,name,author,tags,hashtags,universe,universes,universe_source_field,setting_ids,pov,status,updated_at,(public_hook<>'' OR public_about<>'') AS has_manual_text FROM characters ORDER BY author COLLATE NOCASE,name COLLATE NOCASE LIMIT ?`).bind(limit).all();
+    const res=await env.DB.prepare(`SELECT janitor_uuid,name,author,tags,hashtags,universe,universes,universe_source_field,setting_ids,pov,status,service,updated_at,(public_hook<>'' OR public_about<>'') AS has_manual_text FROM characters ORDER BY author COLLATE NOCASE,name COLLATE NOCASE LIMIT ?`).bind(limit).all();
     let rows=(res.results||[]).map(lightRow);
     if(q)rows=rows.filter(r=>[r.name,r.author,r.uuid,...r.tags,...r.hashtags,...r.universes,...r.setting_ids].join(' ').toLocaleLowerCase().includes(q));
     return json({ok:true,count:rows.length,light:true,characters:rows,settingDefinitions:settingDefinitions()});
@@ -64,7 +64,7 @@ export async function listAdminCharacters(request,env){
 export async function updateAdminCharacter(request,env,uuid){
   if(!UUID_RE.test(uuid))return json({ok:false,error:'INVALID_UUID'},400);
   let b;try{b=await request.json()}catch{return json({ok:false,error:'INVALID_JSON'},400)}
-  const current=await env.DB.prepare('SELECT janitor_uuid,universe,universes,universe_source_field,setting_ids,setting_source,pov,pov_source,public_hook,public_about FROM characters WHERE janitor_uuid=? LIMIT 1').bind(uuid).first();
+  const current=await env.DB.prepare('SELECT janitor_uuid,universe,universes,universe_source_field,setting_ids,setting_source,pov,pov_source,public_hook,public_about,service FROM characters WHERE janitor_uuid=? LIMIT 1').bind(uuid).first();
   if(!current)return json({ok:false,error:'CHARACTER_NOT_FOUND'},404);
   const universes=normalizeUniverses(b.universes),hashtags=normalizeHashtags(b.hashtags),settingIds=normalizeSettingIds(b.setting_ids);
   const currentUniverses=normalizeUniverses(parse(current.universes).length?parse(current.universes):[current.universe]);
@@ -77,11 +77,13 @@ export async function updateAdminCharacter(request,env,uuid){
   const povTag=pov==='FemPOV'?'👩 FemPov':pov==='MalePOV'?'👨 MalePov':'👤 AnyPOV';
   const tags=normalizeTags([...arr(b.tags).filter(x=>!isPovTag(x)),povTag]);
   const status=['published','hidden'].includes(clean(b.status))?clean(b.status):'published';
+  // Service card (announcement / FAQ / info): omitted = keep.
+  const service=b.service===undefined?Number(current.service||0):(b.service?1:0);
   // Omitted = keep; empty string = back to the automatic split.
   const publicHook=b.public_hook===undefined?String(current.public_hook||''):String(b.public_hook??'').trim();
   const publicAbout=b.public_about===undefined?String(current.public_about||''):String(b.public_about??'').replace(/\r/g,'').trim();
-  await env.DB.prepare(`UPDATE characters SET name=?,author=?,author_url=?,short_description=?,description=?,scenario=?,tags=?,hashtags=?,universe=?,universes=?,universe_source_field=?,setting_ids=?,setting_source=?,pov=?,pov_source=?,image_url=?,janitor_url=?,datacat_url=?,status=?,public_hook=?,public_about=?,updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?`).bind(
-    clean(b.name)||'UNKNOWN CHARACTER',canonicalAuthor(b.author)||'Unknown',clean(b.author_url),clean(b.short_description),String(b.description??'').trim(),String(b.scenario??'').trim(),JSON.stringify(tags),JSON.stringify(hashtags),universes[0]||'',JSON.stringify(universes),universeSource,JSON.stringify(settingIds),settingSource,pov,povSource,clean(b.image_url),clean(b.janitor_url),clean(b.datacat_url),status,publicHook,publicAbout,uuid
+  await env.DB.prepare(`UPDATE characters SET name=?,author=?,author_url=?,short_description=?,description=?,scenario=?,tags=?,hashtags=?,universe=?,universes=?,universe_source_field=?,setting_ids=?,setting_source=?,pov=?,pov_source=?,image_url=?,janitor_url=?,datacat_url=?,status=?,public_hook=?,public_about=?,service=?,updated_at=CURRENT_TIMESTAMP WHERE janitor_uuid=?`).bind(
+    clean(b.name)||'UNKNOWN CHARACTER',canonicalAuthor(b.author)||'Unknown',clean(b.author_url),clean(b.short_description),String(b.description??'').trim(),String(b.scenario??'').trim(),JSON.stringify(tags),JSON.stringify(hashtags),universes[0]||'',JSON.stringify(universes),universeSource,JSON.stringify(settingIds),settingSource,pov,povSource,clean(b.image_url),clean(b.janitor_url),clean(b.datacat_url),status,publicHook,publicAbout,service,uuid
   ).run();
   await clearCatalogCache(request);
   return json({ok:true,uuid,universeOverrideChanged:universesChanged,universeSourceField:universeSource||null,settingSource,povSource:povSource||null});

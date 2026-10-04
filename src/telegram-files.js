@@ -44,10 +44,10 @@ export async function sendCardFile(token,chatId,env,origin,uuid,kind,retryMarkup
   await typing(token,chatId);
   const f=await buildCardFile(env,origin,uuid,kind),label=kind==='png'?'PNG':'JSON';
   if(!f.ok){
-    const text=f.waiting?`<b>КАРТОЧКА ГОТОВИТСЯ…</b>\nНажми ${label} ещё раз секунд через 10.`:`<b>НЕ ПОЛУЧИЛОСЬ СОБРАТЬ ${label}</b>\nКод: ${esc(f.state)}\nПопробуй позже или скачай на сайте.`;
+    const text=f.waiting?`⏳ Карточка ещё готовится — нажми кнопку ниже секунд через 10.`:`Не получилось собрать ${label}-карточку (${esc(f.state)}). Попробуй позже или скачай на сайте.`;
     return tgJson(token,'sendMessage',{chat_id:chatId,text,parse_mode:'HTML',disable_web_page_preview:true,...(retryMarkup?{reply_markup:retryMarkup}:{})});
   }
-  const caption=`<b>${esc(f.name)}</b> · CHARACTER CARD · ${label}${f.partial?'\n⚠ Неполная карточка: у источника нет описания персонажа.':''}`;
+  const caption=`<b>${esc(f.name)}</b> · карточка ${label}${f.partial?'\n⚠ Неполная: у источника нет описания персонажа.':''}`;
   return uploadDocument(token,chatId,{bytes:f.bytes,filename:f.filename,type:f.type,caption});
 }
 
@@ -67,6 +67,6 @@ export async function sendLorebookFiles(token,chatId,env,uuid){
   const files=await lorebookFiles(env,uuid);
   if(!files.length)return tgJson(token,'sendMessage',{chat_id:chatId,text:'У этого бота нет лорбуков.'});
   const failed=[];
-  for(const f of files){try{await uploadDocument(token,chatId,{bytes:f.bytes,filename:f.filename,type:'application/json',caption:`📖 <b>${esc(f.title)}</b> · LOREBOOK`})}catch(e){failed.push(`${f.title}: ${clean(e?.message||e)}`)}}
+  for(const f of files){try{await uploadDocument(token,chatId,{bytes:f.bytes,filename:f.filename,type:'application/json',caption:`📖 <b>${esc(f.title)}</b> · лорбук`})}catch(e){failed.push(`${f.title}: ${clean(e?.message||e)}`)}}
   if(failed.length)await tgJson(token,'sendMessage',{chat_id:chatId,text:`Не получилось отправить:\n${failed.join('\n')}`}).catch(()=>{});
 }

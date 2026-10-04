@@ -9,9 +9,9 @@ const env={PUBLICnode00bot:'public-token',DB:{prepare:sql=>stmt(sql)}};
 db.exec(`CREATE TABLE lorebooks(id TEXT PRIMARY KEY,title TEXT,script TEXT,content_hash TEXT);
 CREATE TABLE lorebook_blobs(content_hash TEXT PRIMARY KEY,script TEXT);
 CREATE TABLE character_lorebooks(character_uuid TEXT,lorebook_id TEXT,ordinal INTEGER);
-CREATE TABLE characters(janitor_uuid TEXT PRIMARY KEY,name TEXT,author TEXT,author_url TEXT,janitor_url TEXT,lorebook_url TEXT,short_description TEXT,universe TEXT,status TEXT);`);
+CREATE TABLE characters(janitor_uuid TEXT PRIMARY KEY,name TEXT,author TEXT,author_url TEXT,janitor_url TEXT,lorebook_url TEXT,short_description TEXT,universe TEXT,status TEXT,pov TEXT,image_url TEXT,description TEXT,public_about TEXT,scenario TEXT,updated_at TEXT);`);
 const uuid='11111111-2222-3333-4444-555555555555';
-db.prepare("INSERT INTO characters VALUES(?,?,?,?,?,?,?,?,?)").run(uuid,'Vance','Author','','https://janitorai.com/characters/'+uuid,'https://x/api/characters/'+uuid+'/lorebooks','Short','','published');
+db.prepare("INSERT INTO characters(janitor_uuid,name,author,author_url,janitor_url,lorebook_url,short_description,universe,status) VALUES(?,?,?,?,?,?,?,?,?)").run(uuid,'Vance','Author','','https://janitorai.com/characters/'+uuid,'https://x/api/characters/'+uuid+'/lorebooks','Short','','published');
 db.prepare("INSERT INTO lorebooks VALUES(?,?,?,?)").run('a'.repeat(32),'Hale University','', 'h1');
 db.prepare("INSERT INTO lorebook_blobs VALUES(?,?)").run('h1',JSON.stringify({entries:{'0':{uid:0,key:['campus'],keysecondary:[],content:'Campus.'}}}));
 db.prepare("INSERT INTO lorebooks VALUES(?,?,?,?)").run('b'.repeat(32),'Hale University',JSON.stringify({entries:[{keys:['dean'],secondary_keys:[],content:'The dean.',enabled:true}]}),'h2');
@@ -37,7 +37,7 @@ async function press(data,fetchMock){
 
 // The character page offers lorebooks as a bot button, not a link to the JSON API.
 {
-  const calls=await press(`p:c:${uuid}`),kb=calls.find(c=>c.method==='editMessageText').payload.reply_markup.inline_keyboard.flat();
+  const calls=await press(`p:c:${uuid}`),kb=calls.find(c=>c.method==='sendMessage').payload.reply_markup.inline_keyboard.flat();
   assert.ok(kb.some(b=>b.callback_data===`p:lb:${uuid}`),'lorebook button sends files');
   assert.ok(!kb.some(b=>/\/lorebooks/.test(b.url||'')),'no link to the lorebook API');
 }

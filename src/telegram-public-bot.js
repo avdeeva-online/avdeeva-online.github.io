@@ -21,13 +21,15 @@ async function answer(token,id,text=''){try{await tg(token,'answerCallbackQuery'
 async function homeView(env,origin,catalog){
   const [items,hub]=await Promise.all([loadCatalog(catalog).catch(()=>null),resourceCount(env).catch(()=>null)]);
   const text=`<b>NODE_00</b> · бот сайта ARCHIVE.EXE\n\nКаталог ботов для SillyTavern и Tavo — карточки PNG/JSON и лорбуки — и ресурсы TAVO HUB.\n\nВыбери раздел или просто напиши в чат имя бота, автора или вселенную.`;
-  return{text,keyboard:keyboard([[cb(`🤖 Боты${items?` · ${items.length}`:''}`,'p:fm'),cb(`📚 TAVO HUB${hub!=null?` · ${hub}`:''}`,'p:hubm')],[cb('🆕 Новые боты','p:new:0'),cb('🎲 Случайный','p:random')],[cb('🔎 Поиск','p:search'),cb('📥 Предложить','p:sg')],[cb('🌐 Сайт','p:site'),cb('❓ Помощь','p:help')]])};
+  return{text,keyboard:keyboard([[cb(`🤖 Боты${items?` · ${items.length}`:''}`,'p:fm'),cb(`📚 HUB${hub!=null?` · ${hub}`:''}`,'p:hubm'),cb('🆕 Новые','p:new:0')],[cb('🎲 Случайный','p:random'),cb('🔎 Поиск','p:search'),cb('📥 Предложить','p:sg')],[cb('🌐 Сайт','p:site'),cb('🔤 LoreKey','p:lk'),cb('❓ Помощь','p:help')]])};
 }
 // /site — the website's sections as links.
-function siteView(origin){return{text:`<b>🌐 ARCHIVE.EXE</b>\n\nСайт, где живёт всё, что есть в боте: каталог ботов с фильтрами, TAVO HUB и CODEX с авторами, вселенными, стилями и переводчиком лорбуков LoreKey.`,keyboard:keyboard([[url('🤖 Каталог ботов ↗',origin+'/characters.html'),url('📚 TAVO HUB ↗',origin+'/hub.html')],[url('📖 CODEX ↗',origin+'/codex.html'),url('🏠 Главная ↗',origin+'/')],[MENU]])}}
+function siteView(origin){return{text:`<b>🌐 ARCHIVE.EXE</b>\n\nСайт, где живёт всё, что есть в боте: каталог ботов с фильтрами, TAVO HUB и CODEX с авторами, вселенными, стилями и переводчиком лорбуков LoreKey.`,keyboard:keyboard([[url('🤖 Боты ↗',origin+'/characters.html'),url('📚 HUB ↗',origin+'/hub.html'),url('📖 CODEX ↗',origin+'/codex.html')],[url('🔤 LoreKey ↗',origin+'/codex#tab=lorekey'),url('🏠 Главная ↗',origin+'/')],[MENU]])}}
 // /suggest — the two ways to add something: import a JanitorAI bot, or suggest a HUB resource.
-function suggestView(origin){return{text:`<b>📥 Предложить</b>\n\n<b>Бот с JanitorAI</b> — вставь ссылку на него в окне импорта, и он появится в каталоге с карточками и лорбуками.\n\n<b>Пресет, тема, плагин или гайд</b> — пришли ссылку на пост в TAVO HUB. После проверки ресурс появится на сайте и в боте.`,keyboard:keyboard([[url('➕ Импорт бота ↗',origin+'/characters.html#import')],[url('📚 Предложить в HUB ↗',origin+'/hub.html#suggest')],[MENU]])}}
-function helpView(){return{text:`<b>❓ Что умеет Node_00</b>\n\n🤖 /bots — боты с фильтрами: автор, вселенная, сеттинг, POV, тег\n🆕 /new — новые боты\n🎲 /random — случайный бот\n📚 /hub — TAVO HUB: пресеты, темы, гайды\n🧩 /plugins — плагины\n🔎 /search Marvel — поиск (или просто напиши слово в чат)\n📥 /suggest — предложить ресурс или импортировать бота\n🌐 /site — сайт ARCHIVE.EXE\n\nВ карточке бота: ⬇ PNG / JSON и 📖 лорбук приходят файлами, ‹ › листают список, 🔗 даёт ссылку, по которой бот откроется сразу.`,keyboard:keyboard([[cb('🤖 Боты','p:fm'),MENU]])}}
+function suggestView(origin){return{text:`<b>📥 Предложить</b>\n\n<b>Бот с JanitorAI</b> — вставь ссылку на него в окне импорта, и он появится в каталоге с карточками и лорбуками.\n\n<b>Пресет, тема, плагин или гайд</b> — пришли ссылку на пост в TAVO HUB. После проверки ресурс появится на сайте и в боте.`,keyboard:keyboard([[url('➕ Импорт бота ↗',origin+'/characters.html#import'),url('📚 В HUB ↗',origin+'/hub.html#suggest')],[MENU]])}}
+// /lorekey — the lorebook key translator on the site (CODEX tab).
+function lorekeyView(origin){return{text:`<b>🔤 LoreKey</b> — переводчик лорбуков\n\nПереводит ключи (и по желанию текст) лорбуков SillyTavern / Tavo с английского на русский: все падежи или основы слов, до 5 лорбуков за раз. Работает в браузере с твоим ключом ИИ — лорбук никуда не загружается.\n\nЛорбук бота можно скачать здесь же: кнопка 📖 в карточке.`,keyboard:keyboard([[url('🔤 Открыть LoreKey ↗',origin+'/codex#tab=lorekey')],[MENU]])}}
+function helpView(){return{text:`<b>❓ Что умеет Node_00</b>\n\n🤖 /bots — боты с фильтрами: автор, вселенная, сеттинг, POV, тег\n🆕 /new — новые боты\n🎲 /random — случайный бот\n📚 /hub — TAVO HUB: пресеты, темы, гайды\n🧩 /plugins — плагины\n🔎 /search Marvel — поиск (или просто напиши слово в чат)\n📥 /suggest — предложить ресурс или импортировать бота\n🔤 /lorekey — переводчик лорбуков\n🌐 /site — сайт ARCHIVE.EXE\n\nВ карточке бота: ⬇ PNG / JSON и 📖 лорбук приходят файлами, ‹ › листают список, 🔗 даёт ссылку, по которой бот откроется сразу.`,keyboard:keyboard([[cb('🤖 Боты','p:fm'),MENU]])}}
 // 🔗 in a card: a t.me link that opens this very bot in Node_00 (/start b_<uuid>).
 let botUsername='';
 async function shareBot(token,chatId,env,catalog,uuid){
@@ -50,8 +52,8 @@ async function resourceCount(env,type=''){const q=type?"SELECT COUNT(*) n FROM h
 async function resourceRows(env,{type='',page=0,limit=8}={}){const offset=Math.max(0,page)*limit;if(type)return(await env.DB.prepare("SELECT id,title,type,creator_name,description_short,updated_at FROM hub_resources WHERE status='published' AND type=? ORDER BY updated_at DESC LIMIT ? OFFSET ?").bind(type,limit,offset).all()).results||[];return(await env.DB.prepare("SELECT id,title,type,creator_name,description_short,updated_at FROM hub_resources WHERE status='published' ORDER BY updated_at DESC LIMIT ? OFFSET ?").bind(limit,offset).all()).results||[]}
 async function hubMenu(token,chatId,messageId,env){
   const [total,types]=await Promise.all([resourceCount(env),env.DB.prepare("SELECT type,COUNT(*) n FROM hub_resources WHERE status='published' GROUP BY type ORDER BY n DESC").all().then(r=>r.results||[]).catch(()=>[])]);
-  const typeButtons=types.filter(t=>clean(t.type)).map(t=>cb(`${typeLabel(t.type)} · ${t.n}`,`p:type:${clean(t.type).slice(0,40)}:0`)),rows=[[cb(`Все ресурсы · ${total}`,'p:hub:0'),cb('🆕 Новое','p:latest:0')]];
-  for(let i=0;i<typeButtons.length;i+=2)rows.push(typeButtons.slice(i,i+2));
+  const typeButtons=types.filter(t=>clean(t.type)).map(t=>cb(`${typeLabel(t.type)} · ${t.n}`,`p:type:${clean(t.type).slice(0,40)}:0`)),rows=[[cb(`Все · ${total}`,'p:hub:0'),cb('🆕 Новое','p:latest:0')]];
+  for(let i=0;i<typeButtons.length;i+=3)rows.push(typeButtons.slice(i,i+3));
   rows.push([MENU]);
   return edit(token,chatId,messageId,`<b>📚 TAVO HUB</b> · ${resources(total)}\n\nПресеты, темы, плагины и гайды для SillyTavern и Tavo. Выбери раздел.`,keyboard(rows));
 }
@@ -110,6 +112,7 @@ async function handleMessage(token,message,env,origin,catalog){
   if(name==='site')return sendView(siteView(origin));
   if(name==='suggest'||name==='import')return sendView(suggestView(origin));
   if(name==='help')return sendView(helpView());
+  if(name==='lorekey')return sendView(lorekeyView(origin));
   if(name==='bots')return sendView(filterMenu(await loadCatalog(catalog)));
   if(name==='new')return handleCatalogCallback(token,chatId,null,env,origin,'p:new:0',catalog);
   if(name==='hub')return hubMenu(token,chatId,null,env);
@@ -141,7 +144,7 @@ async function handleCallback(token,q,env,origin,catalog=dbCatalog(env)){
   if(data==='p:search')return edit(token,chatId,messageId,`<b>🔎 Поиск</b>\n\n${SEARCH_HINT}`,keyboard([[cb('🤖 Фильтры','p:fm'),MENU]]));
   if(data==='p:random')return sendRandom(token,chatId,env,origin,catalog);
   if(data==='p:hubm')return hubMenu(token,chatId,messageId,env);
-  const view=data==='p:site'?siteView(origin):data==='p:sg'?suggestView(origin):data==='p:help'?helpView():null;if(view)return edit(token,chatId,messageId,view.text,view.keyboard);
+  const view=data==='p:site'?siteView(origin):data==='p:sg'?suggestView(origin):data==='p:help'?helpView():data==='p:lk'?lorekeyView(origin):null;if(view)return edit(token,chatId,messageId,view.text,view.keyboard);
   if(/^p:s:[0-9a-f-]{36}$/i.test(data))return shareBot(token,chatId,env,catalog,data.slice(4).toLowerCase());
   let m=data.match(/^p:hub:(\d+)$/);if(m)return showResources(token,chatId,messageId,env,origin,{page:Number(m[1]),title:'📚 Все ресурсы',key:'p:hub'});
   m=data.match(/^p:latest:(\d+)$/);if(m)return showResources(token,chatId,messageId,env,origin,{page:Number(m[1]),title:'🆕 Новое в HUB',key:'p:latest'});

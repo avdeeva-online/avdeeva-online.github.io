@@ -36,8 +36,25 @@ function normalizeRow(r){
   };
 }
 
+// Light list (?light=1): what the admin list, pickers, dashboard and import need — no descriptions, scenarios
+// or greetings (those made the full list 12+ MB for ~1000 bots). One bot in full: GET /api/admin/characters/<uuid>.
+function lightRow(r){
+  return{uuid:r.janitor_uuid,name:r.name||'',author:canonicalAuthor(r.author),tags:normalizeTags(parse(r.tags)),hashtags:normalizeHashtags(parse(r.hashtags)),universe:r.universe||'',universes:parse(r.universes),universe_source_field:r.universe_source_field||'',setting_ids:parse(r.setting_ids),pov:r.pov||'',status:r.status||'',updated_at:r.updated_at||null,has_manual_text:Boolean(r.has_manual_text)};
+}
+export async function getAdminCharacter(env,uuid){
+  if(!UUID_RE.test(uuid))return json({ok:false,error:'INVALID_UUID'},400);
+  const r=await env.DB.prepare(`SELECT janitor_uuid,name,author,author_url,short_description,description,scenario,intros,public_hook,public_about,tags,hashtags,universe,universes,universe_source_field,setting_ids,pov,image_url,janitor_url,datacat_url,status,updated_at FROM characters WHERE janitor_uuid=? LIMIT 1`).bind(uuid).first();
+  if(!r)return json({ok:false,error:'CHARACTER_NOT_FOUND'},404);
+  return json({ok:true,character:normalizeRow(r)});
+}
 export async function listAdminCharacters(request,env){
   const u=new URL(request.url),q=clean(u.searchParams.get('q')).toLocaleLowerCase(),limit=Math.min(Math.max(Number(u.searchParams.get('limit')||500),1),10000);
+  if(u.searchParams.get('light')==='1'){
+    const res=await env.DB.prepare(`SELECT janitor_uuid,name,author,tags,hashtags,universe,universes,universe_source_field,setting_ids,pov,status,updated_at,(public_hook<>'' OR public_about<>'') AS has_manual_text FROM characters ORDER BY author COLLATE NOCASE,name COLLATE NOCASE LIMIT ?`).bind(limit).all();
+    let rows=(res.results||[]).map(lightRow);
+    if(q)rows=rows.filter(r=>[r.name,r.author,r.uuid,...r.tags,...r.hashtags,...r.universes,...r.setting_ids].join(' ').toLocaleLowerCase().includes(q));
+    return json({ok:true,count:rows.length,light:true,characters:rows,settingDefinitions:settingDefinitions()});
+  }
   const res=await env.DB.prepare(`SELECT janitor_uuid,name,author,author_url,short_description,description,scenario,intros,public_hook,public_about,tags,hashtags,universe,universes,universe_source_field,setting_ids,pov,image_url,janitor_url,datacat_url,status,updated_at FROM characters ORDER BY author COLLATE NOCASE,name COLLATE NOCASE LIMIT ?`).bind(limit).all();
   let rows=(res.results||[]).map(normalizeRow);
   if(q)rows=rows.filter(r=>[r.name,r.author,r.uuid,...r.tags,...r.hashtags,...r.universes,...r.setting_ids].join(' ').toLocaleLowerCase().includes(q));

@@ -1,6 +1,6 @@
 import { analyzeTelegramPost } from './hub-telegram.js';
 import { publishHubResource, deleteHubResourceFile, setHubResourcePrimary, deleteHubResource, hubDownloadsCleanup } from './hub-resources.js';
-import { listAdminCharacters, updateAdminCharacter, deleteAdminCharacter, backfillAuthorLinks } from './character-admin.js';
+import { listAdminCharacters, getAdminCharacter, updateAdminCharacter, deleteAdminCharacter, backfillAuthorLinks } from './character-admin.js';
 import { submitHubSuggestion, listHubSuggestions, updateHubSuggestion } from './hub-suggestions.js';
 import { setupTelegramWebhooks, telegramWebhookStatus } from './telegram-webhooks.js';
 import { telegramDraftsAdmin } from './telegram-drafts-admin.js';
@@ -33,7 +33,7 @@ export async function handleCloudflareRoute(request,env){
   if(url.pathname==='/api/admin/health'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return adminHealth(env)}
   if(url.pathname==='/api/admin/author-links'){if(request.method!=='GET'&&request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return backfillAuthorLinks(request,env)}
   if(url.pathname==='/api/admin/characters'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return listAdminCharacters(request,env)}
-  const adminCharacterMatch=url.pathname.match(/^\/api\/admin\/characters\/([0-9a-f-]{36})$/i);if(adminCharacterMatch){const uuid=adminCharacterMatch[1].toLowerCase();if(request.method==='PATCH'||request.method==='POST')return updateAdminCharacter(request,env,uuid);if(request.method==='DELETE')return deleteAdminCharacter(request,env,uuid);return json({ok:false,error:'METHOD_NOT_ALLOWED'},405)}
+  const adminCharacterMatch=url.pathname.match(/^\/api\/admin\/characters\/([0-9a-f-]{36})$/i);if(adminCharacterMatch){const uuid=adminCharacterMatch[1].toLowerCase();if(request.method==='PATCH'||request.method==='POST')return updateAdminCharacter(request,env,uuid);if(request.method==='DELETE')return deleteAdminCharacter(request,env,uuid);if(request.method==='GET')return getAdminCharacter(env,uuid);return json({ok:false,error:'METHOD_NOT_ALLOWED'},405)}
   if(url.pathname==='/api/admin/hub-telegram-analyze'){if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return analyzeTelegramPost(request)}
   if(url.pathname==='/api/admin/hub-downloads-cleanup'){if(request.method!=='GET'&&request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return hubDownloadsCleanup(request,env)}
   if(url.pathname==='/api/admin/hub-resource'){if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return publishHubResource(request,env)}

@@ -37,7 +37,7 @@ function normalizeRow(r){
 }
 
 export async function listAdminCharacters(request,env){
-  const u=new URL(request.url),q=clean(u.searchParams.get('q')).toLocaleLowerCase(),limit=Math.min(Math.max(Number(u.searchParams.get('limit')||500),1),1000);
+  const u=new URL(request.url),q=clean(u.searchParams.get('q')).toLocaleLowerCase(),limit=Math.min(Math.max(Number(u.searchParams.get('limit')||500),1),10000);
   const res=await env.DB.prepare(`SELECT janitor_uuid,name,author,author_url,short_description,description,scenario,intros,public_hook,public_about,tags,hashtags,universe,universes,universe_source_field,setting_ids,pov,image_url,janitor_url,datacat_url,status,updated_at FROM characters ORDER BY author COLLATE NOCASE,name COLLATE NOCASE LIMIT ?`).bind(limit).all();
   let rows=(res.results||[]).map(normalizeRow);
   if(q)rows=rows.filter(r=>[r.name,r.author,r.uuid,...r.tags,...r.hashtags,...r.universes,...r.setting_ids].join(' ').toLocaleLowerCase().includes(q));

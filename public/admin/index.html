@@ -64,7 +64,7 @@ h1{margin:0 0 4px;font-size:26px;letter-spacing:.04em}
   const plural=(n,one,few,many)=>{const m10=n%10,m100=n%100;return m10===1&&m100!==11?one:m10>=2&&m10<=4&&(m100<12||m100>14)?few:many};
   // Draft / suggestion counts come from the shell (admin-back.js) so both pages agree.
   window.addEventListener('adm:count',e=>{const {key,n}=e.detail||{};const b=$(`#${key}N`),a=$(`#${key}Alert`);if(!b)return;b.textContent=n;a.classList.toggle('quiet',!n)});
-  get('/api/admin/characters?limit=1000').then(d=>{const list=Array.isArray(d?.characters)?d.characters:[];if(!d){$('#botsStat').textContent='не удалось загрузить';return}const hidden=list.filter(x=>x.status==='hidden').length,manual=list.filter(x=>x.public_hook||x.public_about).length;$('#botsStat').innerHTML=`<b>${list.length-hidden}</b> на сайте${hidden?` · <b>${hidden}</b> ${plural(hidden,'скрыт','скрыто','скрыто')}`:''}${manual?` · <b>${manual}</b> с ручным описанием`:''}`});
+  get('/api/admin/characters?limit=10000').then(d=>{const list=Array.isArray(d?.characters)?d.characters:[];if(!d){$('#botsStat').textContent='не удалось загрузить';return}const hidden=list.filter(x=>x.status==='hidden').length,manual=list.filter(x=>x.public_hook||x.public_about).length;$('#botsStat').innerHTML=`<b>${list.length-hidden}</b> на сайте${hidden?` · <b>${hidden}</b> ${plural(hidden,'скрыт','скрыто','скрыто')}`:''}${manual?` · <b>${manual}</b> с ручным описанием`:''}`});
   get('/api/hub-resources?summary=1').then(d=>{const list=Array.isArray(d?.resources)?d.resources:[];if(!d){$('#hubStat').textContent='не удалось загрузить';return}$('#hubStat').innerHTML=`<b>${list.length}</b> ${plural(list.length,'ресурс','ресурса','ресурсов')} на сайте`});
 })();
 </script>

@@ -25,7 +25,7 @@ for(const path of ['/','/characters','/hub','/codex']){
   assert.equal(response.headers.get('x-content-type-options'),'nosniff',`${path}: nosniff header missing`);
 }
 
-const catalog=await request('/api/catalog?limit=1000',{json:true});
+const catalog=await request('/api/catalog?limit=10000',{json:true});
 assert.equal(catalog.data?.ok,true,'catalog API did not return ok');
 assert.ok(Array.isArray(catalog.data?.characters)&&catalog.data.characters.length>0,'catalog API returned no characters');
 

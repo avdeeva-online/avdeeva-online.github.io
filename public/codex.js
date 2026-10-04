@@ -208,7 +208,7 @@
     try{
       const get=u=>fetch(u).then(r=>r.ok?r.json():Promise.reject(new Error(`HTTP ${r.status}`)));
       // Profiles are optional: without them the page still works, just without descriptions and links.
-      const [cat,lb,pr,hub]=await Promise.all([get('/api/catalog?limit=1000'),get('/api/lorebooks'),get('/api/codex-profiles').catch(()=>({})),get('/api/hub-resources?summary=1').catch(()=>({}))]);
+      const [cat,lb,pr,hub]=await Promise.all([get('/api/catalog?limit=10000'),get('/api/lorebooks'),get('/api/codex-profiles').catch(()=>({})),get('/api/hub-resources?summary=1').catch(()=>({}))]);
       for(const p of Array.isArray(pr.profiles)?pr.profiles:[])profiles.set(`${p.kind}\u0000${key(p.name)}`,p);
       build(Array.isArray(cat.characters)?cat.characters:[],Array.isArray(lb.lorebooks)?lb.lorebooks:[],Array.isArray(hub.resources)?hub.resources:[]);
       $('#countUniverses').textContent=universes.filter(u=>!u.other).length;$('#countAuthors').textContent=authors.length;

@@ -80,7 +80,7 @@ h2{margin:0;font-size:18px;color:#efe4bd}.sub{margin-top:4px;color:var(--muted);
   $('#q').addEventListener('input',renderList);
   (async()=>{
     try{
-      const [cat,pr,hub]=await Promise.all([fetch('/api/catalog?limit=1000',{cache:'no-store'}).then(r=>r.json()),api(),fetch('/api/hub-resources?summary=1',{cache:'no-store'}).then(r=>r.json()).catch(()=>({}))]);
+      const [cat,pr,hub]=await Promise.all([fetch('/api/catalog?limit=10000',{cache:'no-store'}).then(r=>r.json()),api(),fetch('/api/hub-resources?summary=1',{cache:'no-store'}).then(r=>r.json()).catch(()=>({}))]);
       // Authors = bot authors + TAVO HUB resource creators (same person = same name, "@" and case ignored).
       const canon=new Map(),addAuthor=raw=>{const n=String(raw||'').trim().replace(/^@+/,'').trim();if(!n)return;const k=key(n);if(!canon.has(k))canon.set(k,n);const name=canon.get(k);names.author.set(name,(names.author.get(name)||0)+1)};
       for(const b of cat.characters||[]){addAuthor(b.author);for(const u of b.universes||[])names.universe.set(u,(names.universe.get(u)||0)+1)}

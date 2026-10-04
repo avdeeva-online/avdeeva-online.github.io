@@ -11,7 +11,7 @@
   root.innerHTML=`
   <div class="lk-intro">
     <span class="lk-badge">EN → RU</span>
-    <p>Загрузи World Info / Lorebook из SillyTavern или Tavo. LoreKey переведёт только триггер-ключи, сохранит все настройки записей и даст проверить результат перед скачиванием.</p>
+    <p>Загрузи World Info / Lorebook из SillyTavern или Tavo. LoreKey переведёт триггер-ключи (а по желанию — и текст записей), сохранит все настройки и даст проверить результат перед скачиванием.</p>
     <button type="button" class="lk-ghost" data-lk="settings" aria-expanded="false">⚙ Ключ ИИ</button>
   </div>
 
@@ -47,7 +47,7 @@
     <details class="lk-adv"><summary>Дополнительно</summary>
       <label class="lk-check"><input type="checkbox" data-lk="primary" checked><span>Переводить основные ключи (<code>key</code> / <code>keys</code>)</span></label>
       <label class="lk-check"><input type="checkbox" data-lk="secondary" checked><span>Переводить дополнительные ключи (<code>keysecondary</code> / <code>secondary_keys</code>)</span></label>
-      <label class="lk-check"><input type="checkbox" data-lk="regex"><span>Пробовать переводить Regex <b class="lk-warn">экспериментально</b></span></label>
+      <label class="lk-check"><input type="checkbox" data-lk="content"><span>Переводить и текст записей (<code>content</code>) <b class="lk-warn">дольше и тратит больше лимита ключа</b></span></label>
     </details>
     <button type="button" class="lk-main" data-lk="translate" disabled>Перевести ключи</button>
     <p class="lk-hint" data-lk="hint">Сначала выбери JSON-файл</p>
@@ -68,9 +68,9 @@
   </section>`;
 
   const el=name=>root.querySelector(`[data-lk="${name}"]`);
-  const els=Object.fromEntries(['settings','provider','model','baseUrlField','baseUrl','apiKey','remember','fileStatus','drop','file','fileBox','fileName','fileDetails','replace','badges','primary','secondary','regex','translate','hint','progressBox','progressText','pct','fill','stop','results','summary','collapse','entries','download','reset'].map(n=>[n,el(n)]));
+  const els=Object.fromEntries(['settings','provider','model','baseUrlField','baseUrl','apiKey','remember','fileStatus','drop','file','fileBox','fileName','fileDetails','replace','badges','primary','secondary','content','translate','hint','progressBox','progressText','pct','fill','stop','results','summary','collapse','entries','download','reset'].map(n=>[n,el(n)]));
   const settingsBox=root.querySelector('.lk-settings');
-  const state={filename:'',original:null,output:null,rows:[],translated:0,skippedRegex:0,stats:{},stopped:false};
+  const state={filename:'',original:null,output:null,rows:[],translated:0,skippedRegex:0,contentDone:0,stats:{},stopped:false};
 
   // ---- settings (kept only in this browser) ----
   function restore(){let s={};try{s=JSON.parse(localStorage.getItem(STORE)||'{}')}catch{}if(s.provider)els.provider.value=s.provider;if(s.baseUrl)els.baseUrl.value=s.baseUrl;if(s.model)els.model.value=s.model;if(s.apiKey){els.apiKey.value=s.apiKey;els.remember.checked=true}syncProvider()}
@@ -110,7 +110,7 @@
     const tasks=[];state.skippedRegex=0;
     for(const item of getEntries(state.original)){
       const e=item.value||{},title=e.comment||e.name||`Entry ${item.id}`,context=String(e.content||'').replace(/\s+/g,' ').slice(0,850);
-      for(const kind of kinds()){const field=fieldName(e,kind);for(const key of keysOf(e[field])){if(isRegex(key)&&!els.regex.checked){state.skippedRegex++;continue}tasks.push({entryId:item.id,field,key,title,context,regex:isRegex(key)})}}
+      for(const kind of kinds()){const field=fieldName(e,kind);for(const key of keysOf(e[field])){if(isRegex(key)){state.skippedRegex++;continue}/* regex keys stay as they are */tasks.push({entryId:item.id,field,key,title,context,regex:isRegex(key)})}}
     }
     return tasks;
   }
@@ -123,15 +123,18 @@
     if(els.provider.value==='openai'&&!/^https:\/\//i.test(els.baseUrl.value.trim())){toggleSettings(true);alert('Base URL должен начинаться с https://');return}
     persist();state.stopped=false;els.translate.disabled=true;els.progressBox.hidden=false;els.results.hidden=true;progress(0,'Собираю ключи…');
     state.rows=[];state.translated=0;const tasks=buildTasks();
-    if(!tasks.length){alert('В выбранных полях нет ключей для перевода.');els.translate.disabled=false;els.progressBox.hidden=true;return}
-    const output=structuredClone(state.original),map=new Map(),groups=batches(tasks);
+    if(!tasks.length&&!els.content.checked){alert('В выбранных полях нет ключей для перевода.');els.translate.disabled=false;els.progressBox.hidden=true;return}
+    const output=structuredClone(state.original),map=new Map(),groups=batches(tasks),withContent=els.content.checked,keysShare=withContent?40:92;
+    state.contentDone=0;
     try{
       for(let i=0;i<groups.length;i++){
         if(state.stopped)throw new Error('остановлено');
-        progress(Math.round(i/groups.length*92),`Перевожу пакет ${i+1} из ${groups.length}…`);
+        progress(Math.round(i/groups.length*keysShare),`Ключи: пакет ${i+1} из ${groups.length}…`);
         for(const item of await translateBatch(groups[i]))map.set(item.id,Array.isArray(item.translations)?item.translations:[]);
       }
-      apply(output,tasks,map);state.output=output;progress(100,'Готово');renderResults();
+      apply(output,tasks,map);
+      if(withContent)await translateContent(output,keysShare);
+      state.output=output;progress(100,'Готово');renderResults();
       setTimeout(()=>els.results.scrollIntoView({behavior:'smooth',block:'start'}),80);
     }catch(err){console.error(err);if(err.message!=='остановлено')alert(`Перевод остановлен: ${err.message}`);progress(0,err.message==='остановлено'?'Остановлено':'Ошибка перевода')}
     finally{els.translate.disabled=false}
@@ -147,6 +150,25 @@
     const raw=await withRetry(()=>els.provider.value==='gemini'?callGemini(prompt):callOpenAI(prompt));
     const parsed=parseJson(raw);if(!Array.isArray(parsed.items))throw new Error('ИИ вернул ответ без списка items');
     return parsed.items;
+  }
+  // Optional second pass: the lore text itself (entry content) EN → RU. Names follow the keys just translated
+  // (a small glossary goes with every batch), macros and formatting are kept. Long entries go one per request.
+  async function translateContent(output,startPct){
+    const glossary=[];const seen=new Set();
+    for(const r of state.rows){const ru=r.values.find(v=>/[а-яё]/i.test(v));if(ru&&!seen.has(r.oldKey)){seen.add(r.oldKey);glossary.push(`${r.oldKey} → ${ru}`)}if(glossary.length>=150)break}
+    const items=getEntries(output).filter(x=>typeof x.value?.content==='string'&&/[a-z]/i.test(x.value.content)).map(x=>({id:x.id,text:x.value.content}));
+    const groups=[];let batch=[],chars=0;
+    for(const it of items){const cost=it.text.length;if(batch.length&&chars+cost>6000){groups.push(batch);batch=[];chars=0}batch.push(it);chars+=cost}
+    if(batch.length)groups.push(batch);
+    const byId=new Map(getEntries(output).map(x=>[x.id,x.value]));
+    for(let i=0;i<groups.length;i++){
+      if(state.stopped)throw new Error('остановлено');
+      progress(Math.round(startPct+i/groups.length*(95-startPct)),`Текст записей: пакет ${i+1} из ${groups.length}…`);
+      const prompt=`You translate SillyTavern / Tavo lorebook entry texts from English to Russian for Russian-language roleplay.\n\nRules:\n- Output STRICT JSON only: {"items":[{"id":"...","text":"..."}]} — one item per input id.\n- Translate the whole text faithfully and naturally; do not summarize, shorten, add or explain anything.\n- Never translate or alter template macros and tokens: {{char}}, {{user}}, <START>, {{random::…}}, variables, code, URLs, IDs. Keep them exactly.\n- Keep the formatting exactly: line breaks, lists, brackets, quotes, markdown, W++ / PList / JSON-like structure (translate only the human-language values inside it).\n- Proper names: use the Russian forms from the glossary when given; otherwise transliterate into readable Russian Cyrillic.\n\nGLOSSARY (English key → Russian):\n${glossary.join('\n')||'(none)'}\n\nINPUT:\n${JSON.stringify(groups[i])}`;
+      const raw=await withRetry(()=>els.provider.value==='gemini'?callGemini(prompt):callOpenAI(prompt));
+      const parsed=parseJson(raw);
+      for(const it of Array.isArray(parsed.items)?parsed.items:[]){const entry=byId.get(String(it.id));if(entry&&typeof it.text==='string'&&it.text.trim()){entry.content=it.text;state.contentDone++}}
+    }
   }
   // "Too many requests" / temporary server errors: wait and retry (free Gemini keys hit per-minute limits).
   async function withRetry(fn){let last;for(let i=0;i<4;i++){if(state.stopped)throw new Error('остановлено');try{return await fn()}catch(e){last=e;if(!e.retry)throw e;progress(null,`ИИ просит подождать… повтор через ${8*(i+1)} сек`);await new Promise(r=>setTimeout(r,8000*(i+1)))}}throw last}
@@ -188,7 +210,7 @@
     els.entries.innerHTML=[...grouped].map(([id,rows])=>{const e=originals.get(id)||{};const list=f=>rows.filter(r=>f(r.field)).map(r=>`<div class="lk-key"><div class="lk-old">${esc(r.oldKey)}</div><div class="lk-arrow">→</div><textarea rows="2" data-entry="${esc(id)}" data-field="${esc(r.field)}" data-old="${esc(r.oldKey)}">${esc(r.values.join(', '))}</textarea></div>`).join('');
       const prim=list(f=>f==='key'||f==='keys'),sec=list(f=>f==='keysecondary'||f==='secondary_keys');
       return `<article class="lk-entry"><button type="button" class="lk-entry-head"><span>#${esc(id)}</span><b>${esc(e.comment||e.name||`Entry ${id}`)}</b><small>${rows.length} ключ.</small><i>⌃</i></button><div class="lk-entry-body">${prim?`<div class="lk-sec">ОСНОВНЫЕ</div>${prim}`:''}${sec?`<div class="lk-sec">ДОПОЛНИТЕЛЬНЫЕ</div>${sec}`:''}</div></article>`}).join('');
-    els.summary.innerHTML=[[state.stats.entries,'записей'],[state.translated,'ключей переведено'],[state.rows.length,'ключей проверено'],[state.skippedRegex,'regex пропущено']].map(([v,l])=>`<div><b>${v}</b><span>${l}</span></div>`).join('');
+    els.summary.innerHTML=[[state.stats.entries,'записей'],[state.translated,'ключей переведено'],[state.rows.length,'ключей проверено'],[state.skippedRegex,'regex оставлено как есть'],...(state.contentDone?[[state.contentDone,'текстов переведено']]:[])].map(([v,l])=>`<div><b>${v}</b><span>${l}</span></div>`).join('');
     els.results.hidden=false;
   }
   // Manual fix of one key: rebuild that field of the entry from all rows.

@@ -194,3 +194,29 @@ body.codex-lock{overflow:hidden}
 }
 
 @media(max-width:760px){.codex-cover{height:64px;margin:-10px -10px 8px}.codex-ava{width:34px;height:34px;font-size:16px}.codex-ava-lg{width:52px;height:52px;font-size:23px}.codex-grid.codex-styles-grid{grid-template-columns:1fr}.codex-prompt{font-size:12px}}
+
+/* Navigation: archive lists (Authors, Universes & lorebooks) as tabs on the left; the TOOLS (Styles, LoreKey)
+   set apart on the right as small cards with an icon and a caption — they are utilities, not lists. */
+.codex-nav{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 18px;margin-top:18px;border-bottom:1px solid var(--cx-line)}
+.codex-nav .codex-tabs{margin:0;border-bottom:0}
+.codex-tools{display:flex;align-items:center;gap:7px;padding-bottom:8px}
+.codex-tools-label{margin-right:3px;font:600 7.5px/1 var(--font-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--cx-dim)}
+.codex-tab.codex-tool{display:flex;align-items:center;gap:8px;margin:0;padding:6px 12px 6px 7px;border:1px solid var(--cx-line);border-radius:10px;background:rgba(12,15,12,.55);text-align:left;transition:border-color .15s,background .15s}
+.codex-tab.codex-tool:hover{border-color:var(--cx-line-strong)}
+.codex-tab.codex-tool.active{border-color:var(--cx-sand);background:rgba(205,184,138,.1)}
+.codex-tool i{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:rgba(205,184,138,.1);font-style:normal;font-size:14px;color:var(--cx-sand)}
+.codex-tool b{display:block;font:600 12.5px/1.2 var(--font-text);color:var(--cx-ink)}
+.codex-tool b em{font:normal 10px var(--font-mono);color:var(--cx-dim);margin-left:2px}
+.codex-tool small{display:block;margin-top:1px;font:10.5px/1.2 var(--font-text);color:var(--cx-muted);text-transform:none;letter-spacing:0}
+@media(max-width:760px){
+  .codex-nav{gap:8px}
+  .codex-tools{width:100%;display:grid;grid-template-columns:1fr 1fr;padding-bottom:10px}
+  .codex-tools-label{grid-column:1/-1}
+  .codex-tab.codex-tool{padding:6px 8px 6px 6px}
+  .codex-tool small{font-size:9.5px}
+}
+.codex-versions{margin-left:6px;font:normal 10.5px var(--font-mono);color:var(--cx-dim)}
+.codex-lore-versions{list-style:none;margin:6px 0 0;padding:0 0 0 10px;border-left:1px solid var(--cx-line);display:grid;gap:6px}
+.codex-lore-versions li{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.codex-lore-versions i{font:normal 10px var(--font-mono);color:var(--cx-sand);margin-right:4px}
+.codex-lore-multi .codex-lore-main{flex:1}

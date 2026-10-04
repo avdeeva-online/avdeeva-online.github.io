@@ -8,7 +8,7 @@
   <title>CODEX // ARCHIVE.EXE</title>
   <link rel="stylesheet" href="fonts/fonts.css?v=20260926-archive1">
   <link rel="stylesheet" href="lorekey.css?v=20261004-lk4">
-  <link rel="stylesheet" href="codex.css?v=20261004-styles1">
+  <link rel="stylesheet" href="codex.css?v=20261004-nav2">
 </head>
 <body>
 <div class="codex-scene" aria-hidden="true"></div><div class="codex-shade" aria-hidden="true"></div>
@@ -22,12 +22,18 @@
       <div><h1>CODEX</h1><p class="codex-desc">Where the bots come from: their universes, shared lorebooks and the people who write them.</p></div>
       <label class="codex-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input id="codexSearch" type="search" placeholder="Search universes, bots, authors, styles…" autocomplete="off"></label>
     </div>
-    <nav class="codex-tabs" role="tablist">
-      <button type="button" role="tab" class="codex-tab active" data-tab="universes">Universes &amp; lorebooks <span id="countUniverses"></span></button>
-      <button type="button" role="tab" class="codex-tab" data-tab="authors">Authors <span id="countAuthors"></span></button>
-      <button type="button" role="tab" class="codex-tab" data-tab="styles">Styles <span id="countStyles"></span></button>
-      <button type="button" role="tab" class="codex-tab" data-tab="lorekey">LoreKey <span>EN→RU</span></button>
-    </nav>
+    <div class="codex-nav">
+      <nav class="codex-tabs" role="tablist" aria-label="Archive">
+        <button type="button" role="tab" class="codex-tab active" data-tab="authors">Authors <span id="countAuthors"></span></button>
+        <button type="button" role="tab" class="codex-tab" data-tab="universes">Universes &amp; lorebooks <span id="countUniverses"></span></button>
+      </nav>
+      <!-- Tools: separate from the archive lists, and look different (cards with an icon and a caption). -->
+      <nav class="codex-tools" role="tablist" aria-label="Tools">
+        <span class="codex-tools-label">Tools</span>
+        <button type="button" role="tab" class="codex-tab codex-tool" data-tab="styles"><i aria-hidden="true">✦</i><span><b>Styles <em id="countStyles"></em></b><small>NovelAI · Nano Banana</small></span></button>
+        <button type="button" role="tab" class="codex-tab codex-tool" data-tab="lorekey"><i aria-hidden="true">⇄</i><span><b>LoreKey</b><small>перевод лорбуков EN→RU</small></span></button>
+      </nav>
+    </div>
     <div id="codexFilters" class="codex-filters" hidden></div>
     <div id="codexGrid" class="codex-grid" aria-live="polite"><div class="codex-state">Loading the codex…</div></div>
     <section id="lorekeyPanel" hidden aria-label="LoreKey — перевод ключей лорбука"></section>
@@ -40,7 +46,7 @@
     <div id="codexModalBody"></div>
   </article>
 </div>
-<script src="codex.js?v=20261004-lk1"></script>
+<script src="codex.js?v=20261004-nav2"></script>
 <script src="cross-nav.js?v=20261004-tidy1"></script>
 </body>
 </html>

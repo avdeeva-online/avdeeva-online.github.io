@@ -6,7 +6,7 @@
   const key=s=>String(s||'').trim().toLocaleLowerCase();
   const plural=(n,one,many)=>`${n} ${n===1?one:many}`;
   const catalogUrl=params=>`characters.html?${new URLSearchParams(params)}`;
-  let universes=[],authors=[],styles=[],profiles=new Map(),modelFilter='all',tab='universes',authorFilter='all',sizeFilter='all',kindFilter='all',query='';
+  let universes=[],authors=[],styles=[],profiles=new Map(),modelFilter='all',tab='authors',authorFilter='all',sizeFilter='all',kindFilter='all',query='';
   // Filter by how many bots a universe / author has.
   const SIZES=[['all','All'],['big','10+'],['mid','3–9'],['small','1–2']];
   const inSize=n=>sizeFilter==='all'||(sizeFilter==='big'?n>=10:sizeFilter==='mid'?n>=3&&n<10:n<3);
@@ -71,7 +71,7 @@
       <div class="codex-kicker">// ${u.other?'lorebooks':'universe'}</div>
       <h3>${esc(u.other?'Other lorebooks':u.name)}</h3>
       <div class="codex-by">by <b>@${esc(u.author)}</b></div>
-      <div class="codex-counts">${counts([[u.other?0:u.bots.length,'bot','bots'],[u.lorebooks.length,'lorebook','lorebooks']])}</div>
+      <div class="codex-counts">${counts([[u.other?0:u.bots.length,'bot','bots'],[lorebookGroups(u.lorebooks).length,'lorebook','lorebooks']])}</div>
       ${u.settings.length?`<div class="codex-chips">${u.settings.map(s=>`<span>${esc(s)}</span>`).join('')}</div>`:''}
     </article>`;
   }
@@ -104,7 +104,7 @@
     document.querySelectorAll('.codex-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
     // LoreKey: a tool, not a list — hide the grid, filters and search; load the translator on first open.
     const lk=tab==='lorekey',panel=$('#lorekeyPanel');$('#codexGrid').hidden=lk;$('.codex-search').style.visibility=lk?'hidden':'';if(panel)panel.hidden=!lk;
-    if(lk){$('#codexFilters').hidden=true;if(!document.querySelector('script[data-lorekey]')){const s=document.createElement('script');s.src='lorekey.js?v=20261004-lk1';s.dataset.lorekey='1';document.body.appendChild(s)}return}
+    if(lk){$('#codexFilters').hidden=true;if(!document.querySelector('script[data-lorekey]')){const s=document.createElement('script');s.src='lorekey.js?v=20261004-lk2';s.dataset.lorekey='1';document.body.appendChild(s)}return}
     renderFilters();
     const grid=$('#codexGrid');grid.classList.toggle('codex-styles-grid',tab==='styles');
     if(tab==='styles'){const list=styles.filter(s=>(modelFilter==='all'||s.model===modelFilter)&&matchesQuery([s.title,s.model,s.author,s.prompt].join(' ')));grid.innerHTML=list.length?list.map(styleCard).join(''):(styles.length?nothing:'<div class="codex-state">Styles are coming soon.</div>');return}
@@ -122,12 +122,20 @@
   }
 
   // ---- open card ----
-  function lorebookRow(l){
-    const bots=l.bots||[];const shown=bots.slice(0,4);
-    return `<li class="codex-lore">
+  const botLinks=bots=>{const shown=bots.slice(0,4);return bots.length?`for ${plural(bots.length,'bot','bots')}: ${shown.map(b=>`<a href="${esc(catalogUrl({bot:b.id}))}">${esc(shortName(b))}</a>`).join(', ')}${bots.length>shown.length?` <button type="button" class="codex-more" data-more>+${bots.length-shown.length}</button><span class="codex-rest" hidden>, ${bots.slice(4).map(b=>`<a href="${esc(catalogUrl({bot:b.id}))}">${esc(shortName(b))}</a>`).join(', ')}</span>`:''}`:''};
+  // Same title by the same author = versions of one lorebook (each bot carries its own copy). One row per title;
+  // the versions are listed inside it, each with its own bots and download — none of them is a duplicate file.
+  function lorebookGroups(list){const m=new Map();for(const l of list){const k=`${key(l.author)}|${key(l.title)}`;if(!m.has(k))m.set(k,[]);m.get(k).push(l)}return[...m.values()].map(v=>v.sort((a,b)=>(b.bots||[]).length-(a.bots||[]).length))}
+  function lorebookRow(versions){
+    const l=versions[0];
+    if(versions.length===1)return `<li class="codex-lore">
       <div class="codex-lore-main"><b>${esc(l.title||'Lorebook')}</b>
-        <span class="codex-lore-for">${bots.length?`for ${plural(bots.length,'bot','bots')}: ${shown.map(b=>`<a href="${esc(catalogUrl({bot:b.id}))}">${esc(shortName(b))}</a>`).join(', ')}${bots.length>shown.length?` <button type="button" class="codex-more" data-more>+${bots.length-shown.length}</button><span class="codex-rest" hidden>, ${bots.slice(4).map(b=>`<a href="${esc(catalogUrl({bot:b.id}))}">${esc(shortName(b))}</a>`).join(', ')}</span>`:''}`:''}</span></div>
+        <span class="codex-lore-for">${botLinks(l.bots||[])}</span></div>
       <a class="codex-download" href="${esc(l.download)}" download>↓ Download</a>
+    </li>`;
+    return `<li class="codex-lore codex-lore-multi">
+      <div class="codex-lore-main"><b>${esc(l.title||'Lorebook')} <em class="codex-versions">${versions.length} versions</em></b>
+        <ol class="codex-lore-versions">${versions.map((v,i)=>`<li><span class="codex-lore-for"><i>v${i+1}</i> ${botLinks(v.bots||[])}</span><a class="codex-download" href="${esc(v.download)}" download>↓ Download</a></li>`).join('')}</ol></div>
     </li>`;
   }
   // "ALDEN | 🏀 HALE UNIVERSITY" → "ALDEN": the universe is already the context here.
@@ -151,7 +159,7 @@
       ${u.other?'':`<div class="codex-actions"><a class="codex-btn" href="${esc(catalogUrl({universe:u.name}))}">Open in the catalog →</a></div>`}
       <div class="codex-folds">
         ${u.other?'':fold('Bots',bots.length,botGrid(bots),true)}
-        ${fold('Lorebooks',u.lorebooks.length,`<ul class="codex-lores">${u.lorebooks.map(lorebookRow).join('')}</ul>`,u.other)}
+        ${fold('Lorebooks',lorebookGroups(u.lorebooks).length,`<ul class="codex-lores">${lorebookGroups(u.lorebooks).map(lorebookRow).join('')}</ul>`,u.other)}
       </div>`);
     setHash({universe:u.name});
   }
@@ -171,13 +179,13 @@
     const lores=[...new Map(universes.filter(u=>u.author===a.name).flatMap(u=>u.lorebooks).map(l=>[l.contentHash||l.id,l])).values()];
     show(`<div class="codex-person codex-person-lg">${avatarHtml('author',a.name,'codex-ava-lg')}<div class="codex-person-text"><div class="codex-kicker">// author</div>
       <h2 id="codexModalTitle">@${esc(a.name)}</h2></div></div>
-      <div class="codex-counts">${counts([[a.bots,'bot','bots'],[a.resources.length,'resource','resources'],[own.length,'universe','universes'],[lores.length,'lorebook','lorebooks']])}</div>
+      <div class="codex-counts">${counts([[a.bots,'bot','bots'],[a.resources.length,'resource','resources'],[own.length,'universe','universes'],[lorebookGroups(lores).length,'lorebook','lorebooks']])}</div>
       ${aboutBlock(p)}${linksBlock(links)}
       ${a.bots?`<div class="codex-actions"><a class="codex-btn" href="${esc(catalogUrl({author:a.name}))}">All bots in the catalog →</a></div>`:''}
       <div class="codex-folds">
-        ${fold('Universes',own.length,`<ul class="codex-unis">${own.map(u=>`<li><button type="button" data-open-universe="${esc(u.name)}"><span>${esc(u.name)}</span><em>${plural(u.bots.length,'bot','bots')}${u.lorebooks.length?` · ${plural(u.lorebooks.length,'lorebook','lorebooks')}`:''}</em></button></li>`).join('')}</ul>`)}
+        ${fold('Universes',own.length,`<ul class="codex-unis">${own.map(u=>`<li><button type="button" data-open-universe="${esc(u.name)}"><span>${esc(u.name)}</span><em>${plural(u.bots.length,'bot','bots')}${u.lorebooks.length?` · ${plural(lorebookGroups(u.lorebooks).length,'lorebook','lorebooks')}`:''}</em></button></li>`).join('')}</ul>`)}
         ${fold('Bots',a.bots,botsBody)}
-        ${fold('Lorebooks',lores.length,`<ul class="codex-lores">${lores.map(lorebookRow).join('')}</ul>`)}
+        ${fold('Lorebooks',lorebookGroups(lores).length,`<ul class="codex-lores">${lorebookGroups(lores).map(lorebookRow).join('')}</ul>`)}
         ${fold('TAVO HUB resources',a.resources.length,resourceList(a.resources),!a.bots)}
       </div>`);
     setHash({author:a.name});
@@ -225,7 +233,7 @@
       build(Array.isArray(cat.characters)?cat.characters:[],Array.isArray(lb.lorebooks)?lb.lorebooks:[],Array.isArray(hub.resources)?hub.resources:[]);
       $('#countUniverses').textContent=universes.filter(u=>!u.other).length;$('#countAuthors').textContent=authors.length;const cs=$('#countStyles');if(cs)cs.textContent=styles.length||'';
       const h=new URLSearchParams(location.hash.slice(1));
-      if(h.get('tab')==='authors'||h.get('author'))tab='authors';if(h.get('tab')==='styles')tab='styles'; if(h.get('tab')==='lorekey')tab='lorekey';
+      /* Authors is the default tab; a universe link or #tab=universes opens the universes list. */if(h.get('tab')==='universes'||h.get('universe'))tab='universes';if(h.get('tab')==='styles')tab='styles'; if(h.get('tab')==='lorekey')tab='lorekey';
       render();
       if(h.get('universe'))openUniverse(h.get('universe'));else if(h.get('author'))openAuthor(h.get('author'));
     }catch(err){$('#codexGrid').innerHTML=`<div class="codex-state">The codex is temporarily unavailable. ${esc(err.message)}</div>`}

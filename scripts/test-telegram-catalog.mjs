@@ -33,7 +33,7 @@ resetCatalogMemo();
 
 // Facet values with counts, most bots first; universes count every universe a bot belongs to.
 {const p=shown(await press('p:fl:a:0'));assert.deepEqual(buttons(p).filter(b=>/^p:fv:/.test(b.callback_data)).map(b=>b.text),['Alice · 10','Bob · 1'])}
-{const p=shown(await press('p:fl:u:0'));assert.deepEqual(buttons(p).filter(b=>/^p:fv:/.test(b.callback_data)).map(b=>b.text),['Hale University · 10','Avengers · 1','Marvel · 1'])}
+{const p=shown(await press('p:fl:u:0'));assert.deepEqual(buttons(p).filter(b=>/^p:fv:/.test(b.callback_data)).map(b=>b.text),['Hale Unive… · 10','Avengers · 1','Marvel · 1'])}
 {const p=shown(await press('p:fl:s:0'));assert.deepEqual(buttons(p).filter(b=>/^p:fv:/.test(b.callback_data)).map(b=>b.text),['Modern · 11','Fantasy · 1'])}
 
 // Filtered list: only matching bots, paged by 8, every callback within Telegram's 64 bytes.
@@ -56,7 +56,8 @@ resetCatalogMemo();
   for(const s of ['Bot 11','от <a href="https://janitorai.com/profiles/alice">Bob</a>','Marvel, Avengers','Fantasy, Modern','AnyPOV','Action  Romance','2 лорбука','<i>xxx'])assert.ok(photo.caption.includes(s),s);
   assert.ok(photo.caption.length<=1024,`caption ${photo.caption.length}`);
   const cbs=photo.reply_markup.inline_keyboard.flat().map(b=>b.callback_data||b.url);
-  for(const k of [`p:cp:${U(11)}`,`p:cj:${U(11)}`,`p:lb:${U(11)}`,`p:d:${U(11)}`,`p:fv:a:${valueHash('Bob')}:0`,`p:fv:u:${valueHash('Marvel')}:0`,`https://janitorai.com/characters/${U(11)}`])assert.ok(cbs.includes(k),k);
+  for(const k of [`p:cp:${U(11)}`,`p:cj:${U(11)}`,`p:lb:${U(11)}`,`p:d:${U(11)}`,`p:fv:a:${valueHash('Bob')}:0`,`p:fv:u:${valueHash('Marvel')}:0`,`p:s:${U(11)}`])assert.ok(cbs.includes(k),k);
+  assert.ok(photo.caption.includes(`<a href="https://janitorai.com/characters/${U(11)}">Bot 11</a>`),'the name links to JanitorAI');
   assert.ok(photo.reply_markup.inline_keyboard.length<=4,'card keeps to three rows of buttons plus ‹ ›');
   assert.deepEqual(photo.reply_markup.inline_keyboard.at(-1).map(b=>b.text),['‹','11 / 11','›'],'opened from search/link: arrows walk the whole catalog');
 }
@@ -97,7 +98,7 @@ const sent=calls=>calls.find(c=>c.method==='sendMessage')?.payload;
 // Nothing found: a hint and a way to the filters, not a dead end.
 {const m=sent(await press(null,{text:'zzzz'}));assert.match(m.text,/Ничего не нашлось/);assert.ok(buttons(m).some(b=>b.callback_data==='p:fm'))}
 // Commands from the bot's menu button.
-{const m=sent(await press(null,{text:'/start'}));assert.match(m.text,/ARCHIVE\.EXE/);assert.ok(buttons(m).some(b=>b.text==='🤖 Боты · 11'))}
+{const m=sent(await press(null,{text:'/start'}));assert.match(m.text,/ARCHIVE\.EXE/);assert.ok(buttons(m).some(b=>b.text==='🤖 Боты'));assert.match(m.text,/11 ботов/)}
 {const m=sent(await press(null,{text:'/bots'}));assert.ok(buttons(m).some(b=>b.callback_data==='p:fl:a:0'))}
 {const m=sent(await press(null,{text:'/search Marvel'}));assert.match(m.text,/«Marvel»/);assert.match(m.text,/1 бот/)}
 {const calls=await press(null,{text:'/random'});assert.ok(calls.some(c=>c.method==='sendPhoto'),'random bot card')}
@@ -166,6 +167,20 @@ const sent=calls=>calls.find(c=>c.method==='sendMessage')?.payload;
 }
 // /suggest offers both inside the bot (no links to the website).
 {const m=sent(await press(null,{text:'/suggest'}));assert.deepEqual(buttons(m).filter(b=>b.callback_data!=='p:home').map(b=>b.callback_data),['p:imp','p:sug']);assert.ok(!buttons(m).some(b=>b.url))}
+
+// Every button label fits a phone: about 11 characters with three buttons in a row, 17 with two, 36 alone
+// (an emoji counts as two). Longer labels were cut to «Случай…», «Описа…» on an iPhone.
+{
+  const width=t=>[...t].reduce((n,ch)=>n+(ch.codePointAt(0)>0x2100?2:1),0),limit={1:36,2:17,3:11};
+  const keep={...characters[0]};Object.assign(characters[0],{nameEn:'Lady Morwen of the Ashen Court — Queen of Ravens',author:'NightOwlWritesBots',universes:['The Ashen Court Chronicles'],universe:'The Ashen Court Chronicles'});resetCatalogMemo();
+  const screens=['p:home','p:fm','p:fl:a:0','p:fl:u:0','p:fl:s:0','p:fl:t:0','p:chars:0',`p:fv:a:${valueHash('Alice')}:0`,`p:fv:u:${valueHash('Marvel')}:0`,`p:fv:a:${valueHash('NightOwlWritesBots')}:0`,`p:c:${U(11)}`,`p:c:${U(1)}`,'p:site','p:sg','p:help','p:lk','p:search'];
+  const kbs=[];for(const d of screens)for(const c of await press(d))if(c.payload?.reply_markup)kbs.push([d,c.payload.reply_markup]);
+  for(const t of ['/start','alice','Marvel','/suggest','lady'])for(const c of await press(null,{text:t}))if(c.payload?.reply_markup)kbs.push([t,c.payload.reply_markup]);
+  const tooLong=[];for(const [where,kb] of kbs)for(const row of kb.inline_keyboard||[])for(const b of row)if(width(b.text)>limit[Math.min(row.length,3)])tooLong.push(`${where}: «${b.text}» (${width(b.text)} > ${limit[Math.min(row.length,3)]})`);
+  Object.assign(characters[0],keep);resetCatalogMemo();
+  assert.deepEqual(tooLong,[],'labels that would be cut on a phone');
+  assert.ok(kbs.length>20);
+}
 
 // Everything a person reads is Russian sentence case: no leftover English caps labels.
 {

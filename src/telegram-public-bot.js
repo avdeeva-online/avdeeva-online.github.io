@@ -21,8 +21,9 @@ async function answer(token,id,text=''){try{await tg(token,'answerCallbackQuery'
 // Counts are a nice-to-have: if the catalog or HUB cannot be read, the menu still opens.
 async function homeView(env,origin,catalog){
   const [items,hub]=await Promise.all([loadCatalog(catalog).catch(()=>null),resourceCount(env).catch(()=>null)]);
-  const text=`<b>NODE_00</b> · бот сайта ARCHIVE.EXE\n\nКаталог ботов для SillyTavern и Tavo — карточки PNG/JSON и лорбуки — и ресурсы TAVO HUB.\n\nВыбери раздел или просто напиши в чат имя бота, автора или вселенную.`;
-  return{text,keyboard:keyboard([[cb(`🤖 Боты${items?` · ${items.length}`:''}`,'p:fm'),cb(`📚 HUB${hub!=null?` · ${hub}`:''}`,'p:hubm'),cb('🆕 Новые','p:new:0')],[cb('🎲 Случайный','p:random'),cb('🔎 Поиск','p:search'),cb('📥 Предложить','p:sg')],[cb('🌐 Сайт','p:site'),cb('🔤 LoreKey','p:lk'),cb('❓ Помощь','p:help')]])};
+  const counts=[items?bots(items.length):'',hub!=null?resources(hub):''].filter(Boolean).join(' · ');
+  const text=`<b>NODE_00</b> · бот сайта ARCHIVE.EXE\n\nБоты для SillyTavern и Tavo — карточки PNG/JSON и лорбуки — и ресурсы TAVO HUB.${counts?`\n${counts} в архиве.`:''}\n\nВыбери раздел или напиши в чат имя бота, автора или вселенную. Ссылку на бота JanitorAI — добавлю в каталог.`;
+  return{text,keyboard:keyboard([[cb('🤖 Боты','p:fm'),cb('📚 HUB','p:hubm'),cb('🆕 Новые','p:new:0')],[cb('🎲 Наугад','p:random'),cb('🔎 Поиск','p:search'),cb('📥 Добавить','p:sg')],[cb('🌐 Сайт','p:site'),cb('🔤 LoreKey','p:lk'),cb('❓ Помощь','p:help')]])};
 }
 // /site — the website's sections as links.
 function siteView(origin){return{text:`<b>🌐 ARCHIVE.EXE</b>\n\nСайт, где живёт всё, что есть в боте: каталог ботов с фильтрами, TAVO HUB и CODEX с авторами, вселенными, стилями и переводчиком лорбуков LoreKey.`,keyboard:keyboard([[url('🤖 Боты ↗',origin+'/characters.html'),url('📚 HUB ↗',origin+'/hub.html'),url('📖 CODEX ↗',origin+'/codex.html')],[url('🔤 LoreKey ↗',origin+'/codex#tab=lorekey'),url('🏠 Главная ↗',origin+'/')],[MENU]])}}
@@ -57,13 +58,13 @@ async function resourceRows(env,{type='',page=0,limit=8}={}){const offset=Math.m
 async function hubMenu(token,chatId,messageId,env){
   const [total,types]=await Promise.all([resourceCount(env),env.DB.prepare("SELECT type,COUNT(*) n FROM hub_resources WHERE status='published' GROUP BY type ORDER BY n DESC").all().then(r=>r.results||[]).catch(()=>[])]);
   const typeButtons=types.filter(t=>clean(t.type)).map(t=>cb(`${typeLabel(t.type)} · ${t.n}`,`p:type:${clean(t.type).slice(0,40)}:0`)),rows=[[cb(`Все · ${total}`,'p:hub:0'),cb('🆕 Новое','p:latest:0')]];
-  for(let i=0;i<typeButtons.length;i+=3)rows.push(typeButtons.slice(i,i+3));
+  for(let i=0;i<typeButtons.length;i+=2)rows.push(typeButtons.slice(i,i+2));
   rows.push([MENU]);
   return edit(token,chatId,messageId,`<b>📚 TAVO HUB</b> · ${resources(total)}\n\nПресеты, темы, плагины и гайды для SillyTavern и Tavo. Выбери раздел.`,keyboard(rows));
 }
 async function showResources(token,chatId,messageId,env,origin,{type='',page=0,title='📚 Все ресурсы',key='p:hub'}={}){
   const total=await resourceCount(env,type),pages=Math.max(1,Math.ceil(total/8)),p=Math.max(0,Math.min(page,pages-1)),rows=await resourceRows(env,{type,page:p});
-  const kb=rows.map(r=>[cb(type?short(r.title,48):`${short(r.title,34)} · ${typeOne(r.type)}`,`p:r:${r.id}`)]);
+  const kb=rows.map(r=>[cb(type?short(r.title,36):`${short(r.title,22)} · ${typeOne(r.type)}`,`p:r:${r.id}`)]);
   if(pages>1)kb.push([cb(p>0?'‹':'·',p>0?`${key}:${p-1}`:'p:noop'),cb(`${p+1} / ${pages}`,'p:noop'),cb(p+1<pages?'›':'·',p+1<pages?`${key}:${p+1}`:'p:noop')]);
   kb.push([cb('← HUB','p:hubm'),MENU]);
   return edit(token,chatId,messageId,`<b>${esc(title)}</b> · ${resources(total)}\n\n${total?'Нажми на ресурс — пришлю карточку со ссылками.':'Здесь пока пусто.'}`,keyboard(kb));
@@ -99,7 +100,7 @@ async function showSearch(token,chatId,env,origin,q,catalog){
   const items=await loadCatalog(catalog).catch(()=>[]),found=searchItems(items,q),like='%'+clean(q).replace(/[%_]/g,'')+'%';
   let res=[];if(clean(q).length>=2)try{res=(await env.DB.prepare("SELECT id,title,type FROM hub_resources WHERE status='published' AND (title LIKE ? OR creator_name LIKE ? OR description_short LIKE ?) ORDER BY updated_at DESC LIMIT 5").bind(like,like,like).all()).results||[]}catch{}
   if(!found.length&&!res.length)return send(token,chatId,`<b>🔎 «${esc(q)}»</b>\n\nНичего не нашлось. ${SEARCH_HINT}\n\nИли открой фильтры — там все авторы и вселенные списком.`,keyboard([[cb('🤖 Фильтры','p:fm'),MENU]]));
-  const rows=[...found.slice(0,8).map(c=>[cb(`🤖 ${short(c.name,30)}${c.author?` · ${short(c.author,14)}`:''}`,`p:c:${c.uuid}`)]),...res.map(r=>[cb(`📚 ${short(r.title,30)} · ${typeOne(r.type)}`,`p:r:${r.id}`)])];
+  const rows=[...found.slice(0,8).map(c=>[cb(`🤖 ${short(c.name,20)}${c.author?` · ${short(c.author,10)}`:''}`,`p:c:${c.uuid}`)]),...res.map(r=>[cb(`📚 ${short(r.title,19)} · ${typeOne(r.type)}`,`p:r:${r.id}`)])];
   rows.push([cb('🤖 Фильтры','p:fm'),MENU]);
   const more=found.length>8?`\nПоказаны первые 8 — уточни запрос или открой фильтры.`:'';
   return send(token,chatId,`<b>🔎 «${esc(q)}»</b>\n\nНашлось: ${[found.length?bots(found.length):'',res.length?resources(res.length):''].filter(Boolean).join(' · ')}.${more}`,keyboard(rows));

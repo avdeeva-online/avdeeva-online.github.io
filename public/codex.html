@@ -7,6 +7,7 @@
   <meta name="description" content="CODEX — universes, lorebooks and authors of the ARCHIVE.EXE bot catalog.">
   <title>CODEX // ARCHIVE.EXE</title>
   <link rel="stylesheet" href="fonts/fonts.css?v=20260926-archive1">
+  <link rel="stylesheet" href="lorekey.css?v=20261004-lk4">
   <link rel="stylesheet" href="codex.css?v=20261004-styles1">
 </head>
 <body>
@@ -25,9 +26,11 @@
       <button type="button" role="tab" class="codex-tab active" data-tab="universes">Universes &amp; lorebooks <span id="countUniverses"></span></button>
       <button type="button" role="tab" class="codex-tab" data-tab="authors">Authors <span id="countAuthors"></span></button>
       <button type="button" role="tab" class="codex-tab" data-tab="styles">Styles <span id="countStyles"></span></button>
+      <button type="button" role="tab" class="codex-tab" data-tab="lorekey">LoreKey <span>EN→RU</span></button>
     </nav>
     <div id="codexFilters" class="codex-filters" hidden></div>
     <div id="codexGrid" class="codex-grid" aria-live="polite"><div class="codex-state">Loading the codex…</div></div>
+    <section id="lorekeyPanel" hidden aria-label="LoreKey — перевод ключей лорбука"></section>
   </section>
 </main>
 <div id="codexModal" class="codex-modal" hidden>
@@ -37,7 +40,7 @@
     <div id="codexModalBody"></div>
   </article>
 </div>
-<script src="codex.js?v=20261004-styles1"></script>
+<script src="codex.js?v=20261004-lk1"></script>
 <script src="cross-nav.js?v=20261004-tidy1"></script>
 </body>
 </html>

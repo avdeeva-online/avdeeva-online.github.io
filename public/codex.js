@@ -102,6 +102,9 @@
   async function copyText(text){try{await navigator.clipboard.writeText(text);return true}catch{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch{}ta.remove();return ok}}
   function render(){
     document.querySelectorAll('.codex-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+    // LoreKey: a tool, not a list — hide the grid, filters and search; load the translator on first open.
+    const lk=tab==='lorekey',panel=$('#lorekeyPanel');$('#codexGrid').hidden=lk;$('.codex-search').style.visibility=lk?'hidden':'';if(panel)panel.hidden=!lk;
+    if(lk){$('#codexFilters').hidden=true;if(!document.querySelector('script[data-lorekey]')){const s=document.createElement('script');s.src='lorekey.js?v=20261004-lk1';s.dataset.lorekey='1';document.body.appendChild(s)}return}
     renderFilters();
     const grid=$('#codexGrid');grid.classList.toggle('codex-styles-grid',tab==='styles');
     if(tab==='styles'){const list=styles.filter(s=>(modelFilter==='all'||s.model===modelFilter)&&matchesQuery([s.title,s.model,s.author,s.prompt].join(' ')));grid.innerHTML=list.length?list.map(styleCard).join(''):(styles.length?nothing:'<div class="codex-state">Styles are coming soon.</div>');return}
@@ -222,7 +225,7 @@
       build(Array.isArray(cat.characters)?cat.characters:[],Array.isArray(lb.lorebooks)?lb.lorebooks:[],Array.isArray(hub.resources)?hub.resources:[]);
       $('#countUniverses').textContent=universes.filter(u=>!u.other).length;$('#countAuthors').textContent=authors.length;const cs=$('#countStyles');if(cs)cs.textContent=styles.length||'';
       const h=new URLSearchParams(location.hash.slice(1));
-      if(h.get('tab')==='authors'||h.get('author'))tab='authors';if(h.get('tab')==='styles')tab='styles';
+      if(h.get('tab')==='authors'||h.get('author'))tab='authors';if(h.get('tab')==='styles')tab='styles'; if(h.get('tab')==='lorekey')tab='lorekey';
       render();
       if(h.get('universe'))openUniverse(h.get('universe'));else if(h.get('author'))openAuthor(h.get('author'));
     }catch(err){$('#codexGrid').innerHTML=`<div class="codex-state">The codex is temporarily unavailable. ${esc(err.message)}</div>`}

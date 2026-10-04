@@ -13,11 +13,15 @@ import { repairHubMedia } from './hub-resources.js';
 import { handleCodexProfilesRoute } from './codex-profiles.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
-const BUILD_INFO={build:'catalog-fast',deployed_from:'main'};
+const BUILD_INFO={build:'lorekey',deployed_from:'main'};
 const CONTENT_SECURITY_POLICY=["default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","form-action 'self'","img-src 'self' https: data: blob:","media-src 'self' https: blob:","style-src 'self' 'unsafe-inline'","script-src 'self' 'unsafe-inline'","connect-src 'self'","font-src 'self' data:"].join('; ');
-function withSecurityHeaders(response){
+// CODEX hosts LoreKey, which calls the visitor's own AI provider (Gemini, OpenAI, OpenRouter… — any https API) straight
+// from the browser with the visitor's own key. Only that page may connect out; every other page stays 'self'.
+const CODEX_CSP=CONTENT_SECURITY_POLICY.replace("connect-src 'self'","connect-src 'self' https:");
+const CODEX_PATHS=new Set(['/codex','/codex.html']);
+function withSecurityHeaders(response,pathname=''){
   const headers=new Headers(response.headers);
-  headers.set('content-security-policy',CONTENT_SECURITY_POLICY);
+  headers.set('content-security-policy',CODEX_PATHS.has(pathname)?CODEX_CSP:CONTENT_SECURITY_POLICY);
   headers.set('cross-origin-opener-policy','same-origin');
   headers.set('permissions-policy','camera=(), microphone=(), geolocation=(), payment=(), usb=()');
   headers.set('referrer-policy','strict-origin-when-cross-origin');
@@ -90,4 +94,4 @@ async function routeRequest(request,env,ctx){
   const codexResponse=await handleCodexProfilesRoute(request,env);if(codexResponse)return codexResponse;
   let response=await sourceTruth.fetch(request,env,ctx);response=await transformUniversePublicResponse(request,response,env);return transformAdminHtmlResponse(request,response);
 }
-export default {async fetch(request,env,ctx){return withSecurityHeaders(await routeRequest(request,env,ctx))}};
+export default {async fetch(request,env,ctx){return withSecurityHeaders(await routeRequest(request,env,ctx),new URL(request.url).pathname)}};

@@ -11,15 +11,15 @@ const catalog=()=>Response.json({ok:true,characters});
 const env={PUBLICnode00bot:'public-token',DB:{prepare:()=>({first:async()=>({n:0}),all:async()=>({results:[]}),bind:()=>({first:async()=>({description:'Full description of Bob\'s bot.',public_about:'',scenario:''}),all:async()=>({results:[]})})})}};
 
 async function secret(token){const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(`public|${token}`));return[...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,48)}
-async function press(data,{photoFails=false,text=null}={}){
+async function press(data,{photoFails=false,text=null,route=null,cbMessage=null}={}){
   const calls=[],originalFetch=globalThis.fetch;
   globalThis.fetch=async(url,init={})=>{const u=String(url);if(u.startsWith('https://api.telegram.org/')){const method=u.split('/').pop(),payload=init.body instanceof FormData?Object.fromEntries(init.body):JSON.parse(init.body);calls.push({method,payload});
       if(photoFails&&method==='sendPhoto')return Response.json({ok:false,description:'Bad Request: wrong file identifier/HTTP URL specified'},{status:400});
       return Response.json({ok:true,result:method==='getMe'?{username:'Node00Bot'}:true})}
     return new Response('',{status:404})};
   try{
-    const update=text!=null?{message:{chat:{id:3},text}}:{callback_query:{id:'cb',data,from:{id:1},message:{message_id:2,chat:{id:3}}}};
-    const res=await handlePublicTelegramFull(new Request('https://archive.example/telegram/public',{method:'POST',headers:{'content-type':'application/json','x-telegram-bot-api-secret-token':await secret(env.PUBLICnode00bot)},body:JSON.stringify(update)}),env,{catalog});
+    const update=text!=null?{message:{message_id:7,chat:{id:3},from:{id:1,username:'reader'},text}}:{callback_query:{id:'cb',data,from:{id:1,username:'reader'},message:cbMessage||{message_id:2,chat:{id:3}}}};
+    const res=await handlePublicTelegramFull(new Request('https://archive.example/telegram/public',{method:'POST',headers:{'content-type':'application/json','x-telegram-bot-api-secret-token':await secret(env.PUBLICnode00bot)},body:JSON.stringify(update)}),env,{catalog,...(route?{route}:{})});
     assert.equal(res.status,200);
   }finally{globalThis.fetch=originalFetch}
   return calls;
@@ -104,7 +104,7 @@ const sent=calls=>calls.find(c=>c.method==='sendMessage')?.payload;
 {const m=sent(await press(null,{text:'/nope'}));assert.match(m.text,/Не знаю такой команды/)}
 // Commands added for Node_00: site, suggest/import, help, new, plugins.
 {const m=sent(await press(null,{text:'/site'})),u=buttons(m).map(b=>b.url).filter(Boolean);assert.match(m.text,/ARCHIVE\.EXE/);for(const x of ['/characters.html','/hub.html','/codex.html'])assert.ok(u.some(v=>v.endsWith(x)),x)}
-{const m=sent(await press(null,{text:'/suggest'})),u=buttons(m).map(b=>b.url).filter(Boolean);assert.ok(u.includes('https://archive.example/characters.html#import'));assert.ok(u.includes('https://archive.example/hub.html#suggest'))}
+
 {const m=sent(await press(null,{text:'/help'}));for(const c of ['/bots','/new','/random','/hub','/plugins','/search','/suggest','/site','/lorekey'])assert.ok(m.text.includes(c),c)}
 {const m=sent(await press(null,{text:'/new'}));assert.match(m.text,/Новые боты/);assert.equal(buttons(m).filter(b=>/^p:k:-:-:/.test(b.callback_data)).length,8)}
 {const m=sent(await press(null,{text:'/plugins'}));assert.match(m.text,/Плагины/)}
@@ -134,6 +134,38 @@ const sent=calls=>calls.find(c=>c.method==='sendMessage')?.payload;
 {const p=shown(await press('p:home'));assert.ok(buttons(p).some(b=>b.callback_data==='p:lk'));assert.ok(p.reply_markup.inline_keyboard.length<=3,'home in three rows')}
 {const p=shown(await press('p:fm'));assert.ok(p.reply_markup.inline_keyboard.length<=4)}
 {const p=shown(await press('p:fl:a:0'));assert.ok(p.reply_markup.inline_keyboard.some(r=>r.length===2),'values two per row')}
+
+// Import right in the chat: a JanitorAI link goes to the site's /api/import and the card comes back.
+{
+  const seen=[],route=async req=>{seen.push(`${req.method} ${new URL(req.url).pathname}${new URL(req.url).search}`);if(new URL(req.url).pathname==='/api/import'){const b=await req.json();seen.push(b.url);return Response.json({ok:true,state:'IMPORTED_FROM_DATACAT',janitorUuid:U(3)})}return Response.json({ok:false},{status:404})};
+  const calls=await press(null,{text:`глянь https://janitorai.com/characters/${U(3)}_vance-hale`,route});
+  assert.equal(seen[0],'POST /api/import');assert.ok(seen[1].includes(U(3)));
+  assert.match(calls.find(c=>c.method==='sendMessage').payload.text,/добавлен в каталог/);
+  assert.match(calls.find(c=>c.method==='sendPhoto').payload.caption,/Bot 3/);
+}
+{const route=async()=>Response.json({ok:true,state:'ALREADY_IN_ARCHIVE',janitorUuid:U(4)});const calls=await press(null,{text:`https://janitorai.com/characters/${U(4)}`,route});assert.match(calls.find(c=>c.method==='sendMessage').payload.text,/уже есть/);assert.ok(calls.some(c=>c.method==='sendPhoto'))}
+{const route=async()=>Response.json({ok:false,error:'NOT_AVAILABLE'},{status:404});const calls=await press(null,{text:`https://janitorai.com/characters/${U(4)}`,route});assert.match(calls.find(c=>c.method==='sendMessage').payload.text,/скрыт/);assert.ok(!calls.some(c=>c.method==='sendPhoto'))}
+// Still being fetched: a ⏳ message with a check button; the check sends the card once ready.
+{
+  let ready=false;const route=async req=>new URL(req.url).pathname==='/api/import'?Response.json({ok:true,state:'RETRIEVAL_QUEUED'},{status:202}):ready?Response.json({ok:true,ready:true}):Response.json({ok:true,state:'RETRIEVAL_QUEUED'},{status:202});
+  const calls=await press(null,{text:`https://janitorai.com/characters/${U(5)}`,route}),wait=calls.find(c=>c.method==='sendMessage').payload;
+  assert.match(wait.text,/Достаю данные/);assert.equal(wait.reply_markup.inline_keyboard[0][0].callback_data,`p:is:${U(5)}`);
+  let again=await press(`p:is:${U(5)}`,{route});assert.match(again.find(c=>c.method==='sendMessage').payload.text,/Ещё достаю/);
+  ready=true;again=await press(`p:is:${U(5)}`,{route});assert.match(again.find(c=>c.method==='sendPhoto').payload.caption,/Bot 5/);
+}
+// Any other link: asked first, as a reply to that message; "Да" sends it to the site's HUB suggestions.
+{
+  const ask=(await press(null,{text:'вот пресет https://t.me/saturic/123'})).find(c=>c.method==='sendMessage').payload;
+  assert.match(ask.text,/Предложить эту ссылку/);assert.equal(ask.reply_parameters.message_id,7);assert.deepEqual(ask.reply_markup.inline_keyboard[0].map(b=>b.callback_data),['p:sgy','p:sgn']);
+  const sent=[],route=async req=>{sent.push(await req.json());return Response.json({ok:true,id:1},{status:201})};
+  const calls=await press('p:sgy',{route,cbMessage:{message_id:9,chat:{id:3},reply_to_message:{message_id:7,text:'вот пресет https://t.me/saturic/123'}}});
+  assert.equal(sent[0].url,'https://t.me/saturic/123');assert.match(sent[0].note,/@reader/);
+  const done=calls.find(c=>c.method==='editMessageText').payload;assert.equal(done.message_id,9);assert.match(done.text,/отправлена на проверку/);
+  const dup=await press('p:sgy',{route:async()=>Response.json({ok:true,duplicate:true}),cbMessage:{message_id:9,chat:{id:3},reply_to_message:{text:'https://t.me/saturic/123'}}});
+  assert.match(dup.find(c=>c.method==='editMessageText').payload.text,/уже предлагали/);
+}
+// /suggest offers both inside the bot (no links to the website).
+{const m=sent(await press(null,{text:'/suggest'}));assert.deepEqual(buttons(m).filter(b=>b.callback_data!=='p:home').map(b=>b.callback_data),['p:imp','p:sug']);assert.ok(!buttons(m).some(b=>b.url))}
 
 // Everything a person reads is Russian sentence case: no leftover English caps labels.
 {

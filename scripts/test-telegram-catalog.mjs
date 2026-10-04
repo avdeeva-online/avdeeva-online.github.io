@@ -8,14 +8,14 @@ const U=i=>`00000000-0000-0000-0000-${String(i).padStart(12,'0')}`;
 const bot=(i,o={})=>({janitorUuid:U(i),nameEn:`Bot ${i}`,author:'Alice',authorUrl:'https://janitorai.com/profiles/alice',universe:'Hale University',universes:['Hale University'],settings:['Modern'],pov:'FemPOV',tags:['Romance'],short:`Hook of bot ${i}`,image:'https://media.datacat.run/a.webp',url:`https://janitorai.com/characters/${U(i)}`,lorebookCount:0,...o});
 const characters=[...Array.from({length:10},(_,i)=>bot(i+1)),bot(11,{author:'Bob',universe:'Marvel',universes:['Marvel','Avengers'],settings:['Fantasy','Modern'],pov:'AnyPOV',tags:['Action','Romance'],lorebookCount:2,short:'x'.repeat(2000)})];
 const catalog=()=>Response.json({ok:true,characters});
-const env={PUBLICnode00bot:'public-token',DB:{prepare:()=>({bind:()=>({first:async()=>({description:'Full description of Bob\'s bot.',public_about:'',scenario:''})})})}};
+const env={PUBLICnode00bot:'public-token',DB:{prepare:()=>({first:async()=>({n:0}),all:async()=>({results:[]}),bind:()=>({first:async()=>({description:'Full description of Bob\'s bot.',public_about:'',scenario:''}),all:async()=>({results:[]})})})}};
 
 async function secret(token){const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(`public|${token}`));return[...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,48)}
 async function press(data,{photoFails=false,text=null}={}){
   const calls=[],originalFetch=globalThis.fetch;
   globalThis.fetch=async(url,init={})=>{const u=String(url);if(u.startsWith('https://api.telegram.org/')){const method=u.split('/').pop(),payload=init.body instanceof FormData?Object.fromEntries(init.body):JSON.parse(init.body);calls.push({method,payload});
       if(photoFails&&method==='sendPhoto')return Response.json({ok:false,description:'Bad Request: wrong file identifier/HTTP URL specified'},{status:400});
-      return Response.json({ok:true,result:true})}
+      return Response.json({ok:true,result:method==='getMe'?{username:'Node00Bot'}:true})}
     return new Response('',{status:404})};
   try{
     const update=text!=null?{message:{chat:{id:3},text}}:{callback_query:{id:'cb',data,from:{id:1},message:{message_id:2,chat:{id:3}}}};
@@ -102,6 +102,32 @@ const sent=calls=>calls.find(c=>c.method==='sendMessage')?.payload;
 {const m=sent(await press(null,{text:'/search Marvel'}));assert.match(m.text,/«Marvel»/);assert.match(m.text,/1 бот/)}
 {const calls=await press(null,{text:'/random'});assert.ok(calls.some(c=>c.method==='sendPhoto'),'random bot card')}
 {const m=sent(await press(null,{text:'/nope'}));assert.match(m.text,/Не знаю такой команды/)}
+// Commands added for Node_00: site, suggest/import, help, new, plugins.
+{const m=sent(await press(null,{text:'/site'})),u=buttons(m).map(b=>b.url).filter(Boolean);assert.match(m.text,/ARCHIVE\.EXE/);for(const x of ['/characters.html','/hub.html','/codex.html'])assert.ok(u.some(v=>v.endsWith(x)),x)}
+{const m=sent(await press(null,{text:'/suggest'})),u=buttons(m).map(b=>b.url).filter(Boolean);assert.ok(u.includes('https://archive.example/characters.html#import'));assert.ok(u.includes('https://archive.example/hub.html#suggest'))}
+{const m=sent(await press(null,{text:'/help'}));for(const c of ['/bots','/new','/random','/hub','/plugins','/search','/suggest','/site'])assert.ok(m.text.includes(c),c)}
+{const m=sent(await press(null,{text:'/new'}));assert.match(m.text,/Новые боты/);assert.equal(buttons(m).filter(b=>/^p:k:-:-:/.test(b.callback_data)).length,8)}
+{const m=sent(await press(null,{text:'/plugins'}));assert.match(m.text,/Плагины/)}
+{const p=shown(await press('p:home'));assert.match(p.text,/NODE_00/);const cbs=buttons(p).map(b=>b.callback_data);for(const k of ['p:fm','p:hubm','p:new:0','p:random','p:search','p:sg','p:site','p:help'])assert.ok(cbs.includes(k),k)}
+// 🔗 in a card gives a t.me link that opens this bot directly; /start b_<id> opens it.
+{
+  const photo=(await press(`p:c:${U(11)}`)).find(c=>c.method==='sendPhoto').payload;assert.ok(photo.reply_markup.inline_keyboard.flat().some(b=>b.callback_data===`p:s:${U(11)}`));
+  const m=sent(await press(`p:s:${U(11)}`)),link=`https://t.me/Node00Bot?start=b_${U(11).replace(/-/g,'')}`;
+  assert.ok(m.text.includes(link));assert.ok(buttons(m)[0].url.startsWith('https://t.me/share/url?url='+encodeURIComponent(link)));
+  const opened=(await press(null,{text:`/start b_${U(11).replace(/-/g,'')}`})).find(c=>c.method==='sendPhoto')?.payload;assert.ok(opened,'deep link opens the card');assert.match(opened.caption,/Bot 11/);
+}
+// Webhook setup renames the bot to Node_00 and installs the Russian command menu.
+{
+  const { setupTelegramWebhooks, PUBLIC_COMMANDS } = await import('../src/telegram-webhooks.js');
+  const calls=[],og=globalThis.fetch;globalThis.fetch=async(u,i)=>{calls.push({method:String(u).split('/').pop(),payload:JSON.parse(i.body)});return Response.json({ok:true,result:true})};
+  try{await setupTelegramWebhooks(new Request('https://archive.example/api/admin/telegram/setup',{method:'POST'}),{Node00admin:'a',TELEGRAM_ADMIN_USER_ID:'1',PUBLICnode00bot:'p'})}finally{globalThis.fetch=og}
+  assert.equal(calls.find(c=>c.method==='setMyName')?.payload.name,'Node_00');
+  assert.ok(calls.some(c=>c.method==='setMyDescription')&&calls.some(c=>c.method==='setMyShortDescription'));
+  const cmds=calls.filter(c=>c.method==='setMyCommands').at(-1).payload.commands.map(c=>c.command);
+  for(const c of ['menu','site','bots','new','random','hub','plugins','suggest','search','help'])assert.ok(cmds.includes(c),c);
+  assert.ok(!cmds.includes('start'),'the site is /site, not /start');assert.equal(PUBLIC_COMMANDS.find(c=>c.command==='site').description,'Сайт ARCHIVE.EXE');
+}
+
 // Everything a person reads is Russian sentence case: no leftover English caps labels.
 {
   const all=[];for(const d of ['p:fm','p:fl:a:0','p:chars:0',`p:fv:u:${valueHash('Marvel')}:0`,`p:c:${U(11)}`])for(const c of await press(d))all.push(c.payload);

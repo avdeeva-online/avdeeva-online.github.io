@@ -40,12 +40,12 @@ resetCatalogMemo();
 {
   const p=shown(await press(`p:fv:a:${valueHash('Alice')}:0`)),b=buttons(p);
   assert.match(p.text,/👤 Alice/);assert.match(p.text,/10 ботов/);assert.ok(!/Bot 1\b/.test(p.text),'list is in the buttons, not repeated in the text');
-  assert.equal(b.filter(x=>/^p:c:/.test(x.callback_data)).length,8);
+  assert.equal(b.filter(x=>/^p:k:/.test(x.callback_data)).length,8);
   assert.ok(b.some(x=>x.callback_data===`p:fv:a:${valueHash('Alice')}:1`),'next page');
-  const p2=shown(await press(`p:fv:a:${valueHash('Alice')}:1`));assert.equal(buttons(p2).filter(x=>/^p:c:/.test(x.callback_data)).length,2);
+  const p2=shown(await press(`p:fv:a:${valueHash('Alice')}:1`));assert.equal(buttons(p2).filter(x=>/^p:k:/.test(x.callback_data)).length,2);
   for(const x of [...b,...buttons(p2)])if(x.callback_data)assert.ok(new TextEncoder().encode(x.callback_data).length<=64,x.callback_data);
 }
-{const p=shown(await press(`p:fv:u:${valueHash('Avengers')}:0`));assert.deepEqual(buttons(p).filter(x=>/^p:c:/.test(x.callback_data)).map(x=>x.text),['Bot 11 · Bob'])}
+{const p=shown(await press(`p:fv:u:${valueHash('Avengers')}:0`));assert.deepEqual(buttons(p).filter(x=>/^p:k:/.test(x.callback_data)).map(x=>x.text),['Bot 11 · Bob'])}
 {const p=shown(await press(`p:fv:t:${valueHash('Romance')}:0`));assert.match(p.text,/11 ботов/)}
 {const p=shown(await press(`p:fv:p:${valueHash('AnyPOV')}:0`));assert.match(p.text,/ 1 бот\n/)}
 
@@ -57,7 +57,8 @@ resetCatalogMemo();
   assert.ok(photo.caption.length<=1024,`caption ${photo.caption.length}`);
   const cbs=photo.reply_markup.inline_keyboard.flat().map(b=>b.callback_data||b.url);
   for(const k of [`p:cp:${U(11)}`,`p:cj:${U(11)}`,`p:lb:${U(11)}`,`p:d:${U(11)}`,`p:fv:a:${valueHash('Bob')}:0`,`p:fv:u:${valueHash('Marvel')}:0`,`https://janitorai.com/characters/${U(11)}`])assert.ok(cbs.includes(k),k);
-  assert.ok(photo.reply_markup.inline_keyboard.length<=3,'card keeps to three rows of buttons');
+  assert.ok(photo.reply_markup.inline_keyboard.length<=4,'card keeps to three rows of buttons plus ‹ ›');
+  assert.deepEqual(photo.reply_markup.inline_keyboard.at(-1).map(b=>b.text),['‹','11 / 11','›'],'opened from search/link: arrows walk the whole catalog');
 }
 // Bots without lorebooks get no lorebook button.
 {const photo=(await press(`p:c:${U(1)}`)).find(c=>c.method==='sendPhoto').payload;assert.ok(!photo.reply_markup.inline_keyboard.flat().some(b=>/^p:lb:/.test(b.callback_data||'')))}
@@ -67,6 +68,27 @@ resetCatalogMemo();
 {const msg=(await press(`p:d:${U(11)}`)).find(c=>c.method==='sendMessage').payload;assert.match(msg.text,/Bot 11/);assert.match(msg.text,/Full description of Bob/)}
 // Unknown bot: a clear message instead of an error.
 {const msg=(await press(`p:c:${U(99)}`)).find(c=>c.method==='sendMessage').payload;assert.match(msg.text,/не найден/)}
+
+// ‹ › inside a card: opened from a list, the arrows walk that list and replace the same message.
+{
+  const h=valueHash('Alice'),list=shown(await press(`p:fv:a:${h}:0`)),first=buttons(list).find(b=>/^p:k:/.test(b.callback_data));
+  assert.equal(first.callback_data,`p:k:a:${h}:0`);
+  const open=(await press(first.callback_data)).find(c=>c.method==='sendPhoto').payload,nav=open.reply_markup.inline_keyboard.at(-1);
+  assert.deepEqual(nav.map(b=>b.text),['‹','1 / 10','›']);
+  assert.equal(nav[0].callback_data,`p:n:a:${h}:9`,'‹ on the first bot wraps to the last');assert.equal(nav[2].callback_data,`p:n:a:${h}:1`);
+  const calls=await press(nav[2].callback_data),ed=calls.find(c=>c.method==='editMessageMedia')?.payload;
+  assert.ok(ed,'the same message is edited');assert.equal(ed.message_id,2);assert.ok(!calls.some(c=>c.method==='sendPhoto'),'no new message');
+  assert.equal(ed.media.type,'photo');assert.match(ed.media.caption,/Bot 2/);assert.deepEqual(ed.reply_markup.inline_keyboard.at(-1).map(b=>b.text),['‹','2 / 10','›']);
+  for(const b of ed.reply_markup.inline_keyboard.flat())if(b.callback_data)assert.ok(new TextEncoder().encode(b.callback_data).length<=64);
+}
+// Next bot without a picture: the photo card can't turn into text, so it is replaced by a new text card.
+{
+  const saved=characters[2].image;characters[2].image='';resetCatalogMemo();
+  try{const calls=await press(`p:n:-:-:2`);assert.ok(calls.some(c=>c.method==='deleteMessage'));const m=calls.find(c=>c.method==='sendMessage').payload;assert.match(m.text,/Bot 3/);assert.deepEqual(m.reply_markup.inline_keyboard.at(-1).map(b=>b.text),['‹','3 / 11','›'])}
+  finally{characters[2].image=saved;resetCatalogMemo()}
+}
+// The list shrank since the card was opened: the index is clamped instead of failing.
+{const ed=(await press(`p:n:a:${valueHash('Bob')}:5`)).find(c=>c.method==='editMessageMedia').payload;assert.match(ed.media.caption,/Bot 11/)}
 
 // Typing in the chat searches the site's catalog: name, author, universe, tag.
 const sent=calls=>calls.find(c=>c.method==='sendMessage')?.payload;
@@ -88,4 +110,4 @@ const sent=calls=>calls.find(c=>c.method==='sendMessage')?.payload;
   for(const bad of ['BOT CATALOG','HOME','BOTS','PAGE','OPEN BOT','LOREBOOK','ФИЛЬТРЫ','ВСЕ БОТЫ','ПОЛНОЕ ОПИСАНИЕ'])assert.ok(!strings.includes(bad),`leftover label: ${bad}`);
 }
 
-console.log('Telegram catalog OK · Russian menus, filters by author / universe / setting / POV / tag like the site, pages of 8, photo cards, catalog search with a hint when empty, menu commands');
+console.log('Telegram catalog OK · Russian menus, filters like the site, pages of 8, photo cards with ‹ › through the opened list (same message), catalog search, menu commands');

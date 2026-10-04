@@ -281,3 +281,26 @@ body{min-height:100vh;overflow-x:hidden}
 /* Main action of a resource: take it from the author's post (the HUB no longer hosts downloads). */
 #hubResourceModal .hub-modal-link.hub-post-btn{border-color:rgba(205,184,138,.55)!important;background:rgba(205,184,138,.12)!important;color:#f0e4c4!important;font-weight:600}
 #hubResourceModal .hub-modal-link.hub-post-btn:hover{background:rgba(205,184,138,.2)!important}
+
+/* Smaller resource cards (all sections except Themes, whose previews need room): as many ~190px columns as fit;
+   two per row on a phone instead of one huge card. */
+.resource-grid:not(.hub-theme-grid):not(.list-view){grid-template-columns:repeat(auto-fill,minmax(190px,1fr))!important;gap:9px!important}
+.resource-grid:not(.hub-theme-grid):not(.list-view) .resource-card p{-webkit-line-clamp:2!important;line-clamp:2}
+@media(max-width:700px){.resource-grid:not(.hub-theme-grid):not(.list-view){grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}.resource-grid:not(.list-view) .resource-card h3{font-size:14px!important}.resource-grid:not(.list-view) .resource-card .card-body{padding:8px 9px 8px!important}}
+
+/* LIST view (the second view button) — it was overridden by the card rules above (flex column, fixed thumb
+   height, theme grid), so the button did nothing. In every section, Themes included: one row per resource. */
+.resource-grid.list-view{grid-template-columns:1fr!important;grid-auto-rows:auto!important;gap:7px!important;justify-content:stretch!important}
+.resource-grid.list-view .resource-card{flex-direction:row!important;max-width:none!important;min-height:0!important;width:100%!important}
+.resource-grid.list-view .resource-card .thumb,.resource-grid.hub-theme-grid.list-view .resource-card .thumb{flex:0 0 190px!important;width:190px!important;height:auto!important;min-height:100px!important;aspect-ratio:auto!important;border-bottom:0!important;border-right:1px solid rgba(117,132,105,.22)}
+.resource-grid.list-view .resource-card .card-body{flex:1 1 auto!important;min-width:0}
+@media(max-width:700px){.resource-grid.list-view .resource-card .thumb,.resource-grid.hub-theme-grid.list-view .resource-card .thumb{flex-basis:108px!important;width:108px!important;min-height:84px!important}}
+
+/* Theme filters: label column + chips in one tidy block, smaller and quieter. */
+.hub-category-filters:not([hidden]){display:grid!important;grid-template-columns:max-content 1fr;column-gap:12px!important;row-gap:6px!important;align-items:center}
+.hub-category-filters .hub-category-row{display:contents!important}
+.hub-category-filters .hub-category-label{min-width:0!important;font:600 7.5px/1 var(--mono)!important;letter-spacing:.14em!important;color:#7d877c!important}
+.hub-category-filters .hub-category-tags{gap:4px!important;flex-wrap:wrap!important}
+.hub-category-filters .hub-category-filter{min-height:22px!important;padding:4px 9px!important;border-radius:999px!important;font:500 10.5px/1 var(--font-text)!important;letter-spacing:0!important;text-transform:capitalize}
+.hub-category-filters .hub-category-filter[data-value="all"]{text-transform:none}
+@media(max-width:700px){.hub-category-filters .hub-category-tags{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none}}

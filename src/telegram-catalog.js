@@ -58,9 +58,12 @@ export function valuesPage(items,f,page){
   return{text:`<b>${esc(facet.menu)}</b> · ${plural(values.length,['вариант','варианта','вариантов'])}\n\nЧисло рядом — сколько ботов.`,keyboard:{inline_keyboard:[...rows,...pager(p,values.length,`p:fl:${f}`),[cb('← Фильтры','p:fm'),MENU]]}};
 }
 // The list lives in the buttons only (no second copy in the text); the author is added unless it is the filter itself.
-export function botsPage(items,{title,page,key,back,hideAuthor=false}){
+// A list is addressed as f:h — '-:-' for all bots, otherwise a facet and the hash of its value. Cards opened from a
+// list remember it, so ‹ › inside the card walk through the same bots.
+export function listContext(items,f,h){if(f==='-')return{items,value:''};if(!FACETS[f])return{items:[],value:''};return filterItems(items,f,h)}
+export function botsPage(items,{title,page,key,back,hideAuthor=false,ctx=['-','-']}){
   const p=clampPage(page,items.length),slice=items.slice(p*PAGE,p*PAGE+PAGE);
-  const rows=slice.map(c=>[cb(hideAuthor||!c.author?short(c.name,48):`${short(c.name,32)} · ${short(c.author,16)}`,`p:c:${c.uuid}`)]);
+  const rows=slice.map((c,i)=>[cb(hideAuthor||!c.author?short(c.name,48):`${short(c.name,32)} · ${short(c.author,16)}`,`p:k:${ctx[0]}:${ctx[1]}:${p*PAGE+i}`)]);
   const text=`<b>${title}</b> · ${bots(items.length)}\n\n${items.length?'Нажми на бота — пришлю карточку с картинкой и файлами.':'Здесь пока пусто.'}`;
   return{text,keyboard:{inline_keyboard:[...rows,...pager(p,items.length,key),[back||cb('← Фильтры','p:fm'),MENU]]}};
 }
@@ -82,10 +85,13 @@ export function cardCaption(c){
   const room=1000-head.length-12;
   return room>60&&c.hook?`${head}\n\n<i>${esc(short(c.hook,Math.max(60,room)))}</i>`:head;
 }
-export function cardKeyboard(c){
+// ‹ 3 / 25 › under the card; the ends wrap around, so the arrows never dead-end.
+function navRow(nav){if(!nav||nav.total<2)return null;const at=i=>`p:n:${nav.f}:${nav.h}:${(i+nav.total)%nav.total}`;return[cb('‹',at(nav.i-1)),cb(`${nav.i+1} / ${nav.total}`,'p:noop'),cb('›',at(nav.i+1))]}
+export function cardKeyboard(c,nav=null){
   const files=[cb('⬇ PNG',`p:cp:${c.uuid}`),cb('⬇ JSON',`p:cj:${c.uuid}`)];if(c.lorebookCount)files.push(cb('📖 Лорбук',`p:lb:${c.uuid}`));
   const rows=[files,[cb('📄 Описание',`p:d:${c.uuid}`),...(c.url?[url('JanitorAI ↗',c.url)]:[])]];
   const more=[];if(c.author)more.push(cb(`👤 Ещё от ${short(c.author,18)}`,`p:fv:a:${valueHash(c.author)}:0`));if(c.universes[0])more.push(cb(`🌌 ${short(c.universes[0],20)}`,`p:fv:u:${valueHash(c.universes[0])}:0`));if(more.length)rows.push(more);
+  const n=navRow(nav);if(n)rows.push(n);
   return{inline_keyboard:rows};
 }
 
@@ -93,13 +99,25 @@ async function tg(token,method,init){const r=await fetch(`https://api.telegram.o
 const jsonInit=payload=>({method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
 // Photo first by link; if Telegram cannot take the image (format, size), the Worker converts it to PNG and uploads it;
 // without any picture the card still arrives as text.
-export async function sendCard(token,chatId,env,origin,c){
-  const caption=cardCaption(c),reply_markup=cardKeyboard(c);
+const avatarForm=async(env,c,fields)=>{const png=await fetchAvatarPng(c.image,env.IMAGES);if(!png.ok)throw new Error(png.state||'AVATAR');const form=new FormData();for(const[k,v]of Object.entries(fields))form.append(k,typeof v==='string'?v:JSON.stringify(v));form.append('photo',new Blob([png.bytes],{type:'image/png'}),'avatar.png');return form};
+export async function sendCard(token,chatId,env,origin,c,nav=null){
+  const caption=cardCaption(c),reply_markup=cardKeyboard(c,nav);
   if(c.image){
     try{return await tg(token,'sendPhoto',jsonInit({chat_id:chatId,photo:c.image,caption,parse_mode:'HTML',reply_markup}))}catch{}
-    try{const png=await fetchAvatarPng(c.image,env.IMAGES);if(png.ok){const form=new FormData();form.append('chat_id',String(chatId));form.append('photo',new Blob([png.bytes],{type:'image/png'}),'avatar.png');form.append('caption',caption);form.append('parse_mode','HTML');form.append('reply_markup',JSON.stringify(reply_markup));return await tg(token,'sendPhoto',{method:'POST',body:form})}}catch{}
+    try{return await tg(token,'sendPhoto',{method:'POST',body:await avatarForm(env,c,{chat_id:String(chatId),caption,parse_mode:'HTML',reply_markup})})}catch{}
   }
   return tg(token,'sendMessage',jsonInit({chat_id:chatId,text:caption,parse_mode:'HTML',disable_web_page_preview:true,reply_markup}));
+}
+// ‹ › in a card: the same message turns into the next bot (photo and caption replaced in place).
+// A photo can't become text or the other way round, so then the old card is removed and the new one sent.
+export async function editCard(token,chatId,messageId,env,origin,c,nav){
+  const caption=cardCaption(c),reply_markup=cardKeyboard(c,nav);
+  if(c.image&&messageId){
+    try{return await tg(token,'editMessageMedia',jsonInit({chat_id:chatId,message_id:messageId,media:{type:'photo',media:c.image,caption,parse_mode:'HTML'},reply_markup}))}catch(e){if(/message is not modified/i.test(String(e?.message||e)))return null}
+    try{const form=await avatarForm(env,c,{chat_id:String(chatId),message_id:String(messageId),reply_markup});form.append('media',JSON.stringify({type:'photo',media:'attach://photo',caption,parse_mode:'HTML'}));return await tg(token,'editMessageMedia',{method:'POST',body:form})}catch{}
+  }
+  if(messageId)await tg(token,'deleteMessage',jsonInit({chat_id:chatId,message_id:messageId})).catch(()=>{});
+  return sendCard(token,chatId,env,origin,c,nav);
 }
 
 // Full public description, split into Telegram-sized messages.

@@ -1,6 +1,6 @@
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 import { sendCardFile, sendLorebookFiles } from './telegram-files.js';
-import { FACETS, bots, botsPage, filterItems, filterMenu, loadCatalog, plural, searchItems, sendCard, sendDescription, valuesPage } from './telegram-catalog.js';
+import { FACETS, bots, botsPage, editCard, filterItems, filterMenu, listContext, loadCatalog, plural, searchItems, sendCard, sendDescription, valuesPage } from './telegram-catalog.js';
 import { getHubResourcePublic } from './hub-public-media.js';
 const clean=v=>String(v??'').trim();
 const esc=s=>clean(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -83,7 +83,7 @@ async function showSearch(token,chatId,env,origin,q,catalog){
   return send(token,chatId,`<b>🔎 «${esc(q)}»</b>\n\nНашлось: ${[found.length?bots(found.length):'',res.length?resources(res.length):''].filter(Boolean).join(' · ')}.${more}`,keyboard(rows));
 }
 
-async function sendRandom(token,chatId,env,origin,catalog){const items=await loadCatalog(catalog);if(!items.length)return send(token,chatId,'Каталог пока пуст.',keyboard([[MENU]]));return sendCard(token,chatId,env,origin,items[Math.floor(Math.random()*items.length)])}
+async function sendRandom(token,chatId,env,origin,catalog){const items=await loadCatalog(catalog);if(!items.length)return send(token,chatId,'Каталог пока пуст.',keyboard([[MENU]]));const i=Math.floor(Math.random()*items.length);return sendCard(token,chatId,env,origin,items[i],{f:'-',h:'-',i,total:items.length})}
 
 // Commands work both from the menu button (/bots …) and typed; any other text is a search.
 async function handleMessage(token,message,env,origin,catalog){
@@ -104,13 +104,16 @@ async function handleCatalogCallback(token,chatId,messageId,env,origin,data,cata
   if(data==='p:fm')return show(filterMenu(items));
   let m=data.match(/^p:chars:(\d+)$/);if(m)return show(botsPage(items,{title:'🤖 Все боты',page:Number(m[1]),key:'p:chars'}));
   m=data.match(/^p:fl:([a-z]):(\d+)$/);if(m&&FACETS[m[1]])return show(valuesPage(items,m[1],Number(m[2])));
-  m=data.match(/^p:fv:([a-z]):([0-9a-z]+):(\d+)$/);if(m&&FACETS[m[1]]){const f=m[1],x=filterItems(items,f,m[2]);return show(botsPage(x.items,{title:`${FACETS[f].title} ${esc(short(x.value||'—',40))}`,page:Number(m[3]),key:`p:fv:${f}:${m[2]}`,hideAuthor:f==='a',back:cb('← '+FACETS[f].menu.replace(/^\S+\s/,''),`p:fl:${f}:0`)}))}
-  m=data.match(/^p:(c|d):([0-9a-f-]{36})$/i);if(m){const c=items.find(x=>x.uuid===m[2].toLowerCase());if(!c)return send(token,chatId,'Бот не найден — возможно, его убрали из каталога.',keyboard([[cb('🤖 Фильтры','p:fm'),MENU]]));return m[1]==='c'?sendCard(token,chatId,env,origin,c):sendDescription(token,chatId,env,c)}
+  m=data.match(/^p:fv:([a-z]):([0-9a-z]+):(\d+)$/);if(m&&FACETS[m[1]]){const f=m[1],x=filterItems(items,f,m[2]);return show(botsPage(x.items,{title:`${FACETS[f].title} ${esc(short(x.value||'—',40))}`,page:Number(m[3]),key:`p:fv:${f}:${m[2]}`,hideAuthor:f==='a',ctx:[f,m[2]],back:cb('← '+FACETS[f].menu.replace(/^\S+\s/,''),`p:fl:${f}:0`)}))}
+  const gone=()=>send(token,chatId,'Бот не найден — возможно, его убрали из каталога.',keyboard([[cb('🤖 Фильтры','p:fm'),MENU]]));
+  // p:k — open a card from a list (new message); p:n — ‹ › inside a card (the same message is replaced).
+  m=data.match(/^p:([kn]):([a-z-]):([0-9a-z-]+):(\d+)$/);if(m){const list=listContext(items,m[2],m[3]).items;if(!list.length)return gone();const i=Math.min(Number(m[4]),list.length-1),nav={f:m[2],h:m[3],i,total:list.length};return m[1]==='k'?sendCard(token,chatId,env,origin,list[i],nav):editCard(token,chatId,messageId,env,origin,list[i],nav)}
+  m=data.match(/^p:(c|d):([0-9a-f-]{36})$/i);if(m){const i=items.findIndex(x=>x.uuid===m[2].toLowerCase());if(i<0)return gone();return m[1]==='c'?sendCard(token,chatId,env,origin,items[i],{f:'-',h:'-',i,total:items.length}):sendDescription(token,chatId,env,items[i])}
   return null;
 }
 async function handleCallback(token,q,env,origin,catalog=dbCatalog(env)){
   const chatId=q.message?.chat?.id,messageId=q.message?.message_id,data=clean(q.data);await answer(token,q.id);if(!chatId||data==='p:noop')return;
-  if(/^p:(fm|chars:|fl:|fv:|c:|d:)/.test(data))return handleCatalogCallback(token,chatId,messageId,env,origin,data,catalog);
+  if(/^p:(fm|chars:|fl:|fv:|c:|d:|k:|n:)/.test(data))return handleCatalogCallback(token,chatId,messageId,env,origin,data,catalog);
   if(data==='p:home'){const v=await homeView(env,origin,catalog);return edit(token,chatId,messageId,v.text,v.keyboard)}
   if(data==='p:search')return edit(token,chatId,messageId,`<b>🔎 Поиск</b>\n\n${SEARCH_HINT}`,keyboard([[cb('🤖 Фильтры','p:fm'),MENU]]));
   if(data==='p:random')return sendRandom(token,chatId,env,origin,catalog);

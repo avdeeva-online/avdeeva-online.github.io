@@ -282,9 +282,9 @@ body{min-height:100vh;overflow-x:hidden}
 #hubResourceModal .hub-modal-link.hub-post-btn{border-color:rgba(205,184,138,.55)!important;background:rgba(205,184,138,.12)!important;color:#f0e4c4!important;font-weight:600}
 #hubResourceModal .hub-modal-link.hub-post-btn:hover{background:rgba(205,184,138,.2)!important}
 
-/* Smaller resource cards (all sections except Themes, whose previews need room): as many ~190px columns as fit;
-   two per row on a phone instead of one huge card. */
-.resource-grid:not(.hub-theme-grid):not(.list-view){grid-template-columns:repeat(auto-fill,minmax(190px,1fr))!important;gap:9px!important}
+/* Resource cards (all sections except Themes, which have their own grid): columns of at least 300px, so a wide
+   screen gets 4 cards with wide covers instead of 6 narrow strips; two per row on a phone. */
+.resource-grid:not(.hub-theme-grid):not(.list-view){grid-template-columns:repeat(auto-fill,minmax(300px,1fr))!important;gap:10px!important}
 .resource-grid:not(.hub-theme-grid):not(.list-view) .resource-card p{-webkit-line-clamp:2!important;line-clamp:2}
 @media(max-width:700px){.resource-grid:not(.hub-theme-grid):not(.list-view){grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}.resource-grid:not(.list-view) .resource-card h3{font-size:14px!important}.resource-grid:not(.list-view) .resource-card .card-body{padding:8px 9px 8px!important}}
 

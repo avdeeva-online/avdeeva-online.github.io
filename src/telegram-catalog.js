@@ -10,12 +10,14 @@ const list=v=>(Array.isArray(v)?v:[v]).map(clean).filter(Boolean);
 export const PAGE=8;
 
 export const FACETS={
-  a:{menu:'👤 АВТОРЫ',title:'АВТОР',values:c=>list(c.author)},
-  u:{menu:'🌌 ВСЕЛЕННЫЕ',title:'ВСЕЛЕННАЯ',values:c=>list(c.universes?.length?c.universes:c.universe)},
-  s:{menu:'🏙 СЕТТИНГИ',title:'СЕТТИНГ',values:c=>list(c.settings)},
-  p:{menu:'👁 POV',title:'POV',values:c=>list(c.pov)},
-  t:{menu:'🏷 ТЕГИ',title:'ТЕГ',values:c=>list(c.tags)}
+  a:{menu:'👤 Авторы',title:'👤',values:c=>list(c.author)},
+  u:{menu:'🌌 Вселенные',title:'🌌',values:c=>list(c.universes?.length?c.universes:c.universe)},
+  s:{menu:'🏙 Сеттинги',title:'🏙',values:c=>list(c.settings)},
+  p:{menu:'👁 POV',title:'👁',values:c=>list(c.pov)},
+  t:{menu:'🏷 Теги',title:'🏷',values:c=>list(c.tags)}
 };
+export const plural=(n,[one,few,many])=>{const a=Math.abs(n)%100,b=a%10;return`${n} ${a>10&&a<20?many:b===1?one:b>=2&&b<=4?few:many}`};
+export const bots=n=>plural(n,['бот','бота','ботов']);
 export function valueHash(v){let h=0x811c9dc5;for(const ch of clean(v).toLowerCase()){h^=ch.codePointAt(0);h=Math.imul(h,0x01000193)>>>0}return h.toString(36)}
 
 // The parsed catalog is kept for a minute per Worker isolate: one bot conversation is many button presses.
@@ -41,39 +43,49 @@ export function filterItems(items,f,h){
 }
 
 const cb=(text,callback_data)=>({text,callback_data}),url=(text,u)=>({text,url:u});
-const pager=(page,total,key)=>{const pages=Math.ceil(total/PAGE);return pages>1?[[...(page>0?[cb('‹ PREV',`${key}:${page-1}`)]:[]),cb(`${page+1}/${pages}`,'p:noop'),...(page+1<pages?[cb('NEXT ›',`${key}:${page+1}`)]:[])]]:[]};
+const MENU=cb('← Меню','p:home');
+// ‹ 2/5 › — the middle button only shows where you are.
+const pager=(page,total,key)=>{const pages=Math.ceil(total/PAGE);return pages>1?[[cb(page>0?'‹':'·',page>0?`${key}:${page-1}`:'p:noop'),cb(`${page+1} / ${pages}`,'p:noop'),cb(page+1<pages?'›':'·',page+1<pages?`${key}:${page+1}`:'p:noop')]]:[]};
+const clampPage=(page,total)=>Math.max(0,Math.min(page,Math.max(0,Math.ceil(total/PAGE)-1)));
 
-export function filterMenu(items,origin){
-  const rows=[[cb(`🤖 ВСЕ БОТЫ · ${items.length}`,'p:chars:0')],[cb(FACETS.a.menu,'p:fl:a:0'),cb(FACETS.u.menu,'p:fl:u:0')],[cb(FACETS.s.menu,'p:fl:s:0'),cb(FACETS.p.menu,'p:fl:p:0')],[cb(FACETS.t.menu,'p:fl:t:0'),cb('🔎 ПОИСК','p:search')],[url('OPEN BOT CATALOG ↗',origin+'/characters.html'),cb('HOME','p:home')]];
-  return{text:`<b>BOT CATALOG</b>\n${items.length} BOTS\n\nВыбери, как искать: все боты подряд или по автору, вселенной, сеттингу, POV или тегу.`,keyboard:{inline_keyboard:rows}};
+export function filterMenu(items){
+  const rows=[[cb(`Все боты · ${items.length}`,'p:chars:0')],[cb(FACETS.a.menu,'p:fl:a:0'),cb(FACETS.u.menu,'p:fl:u:0')],[cb(FACETS.s.menu,'p:fl:s:0'),cb(FACETS.p.menu,'p:fl:p:0')],[cb(FACETS.t.menu,'p:fl:t:0'),cb('🔎 Поиск','p:search')],[MENU]];
+  return{text:`<b>🤖 Боты</b> · ${bots(items.length)}\n\nКак искать? Можно листать всех подряд или выбрать автора, вселенную, сеттинг, POV или тег.`,keyboard:{inline_keyboard:rows}};
 }
 export function valuesPage(items,f,page){
-  const facet=FACETS[f],values=facetValues(items,f),p=Math.max(0,Math.min(page,Math.max(0,Math.ceil(values.length/PAGE)-1))),slice=values.slice(p*PAGE,p*PAGE+PAGE);
-  const rows=slice.map(v=>[cb(`${short(v.value,40)} · ${v.count}`,`p:fv:${f}:${v.h}:0`)]);
-  return{text:`<b>${esc(facet.menu)}</b>\n${values.length} ВАРИАНТОВ\n\nВыбери, чтобы увидеть ботов.`,keyboard:{inline_keyboard:[...rows,...pager(p,values.length,`p:fl:${f}`),[cb('← ФИЛЬТРЫ','p:fm'),cb('HOME','p:home')]]}};
+  const facet=FACETS[f],values=facetValues(items,f),p=clampPage(page,values.length),slice=values.slice(p*PAGE,p*PAGE+PAGE);
+  const rows=slice.map(v=>[cb(`${short(v.value,38)} · ${v.count}`,`p:fv:${f}:${v.h}:0`)]);
+  return{text:`<b>${esc(facet.menu)}</b> · ${plural(values.length,['вариант','варианта','вариантов'])}\n\nЧисло рядом — сколько ботов.`,keyboard:{inline_keyboard:[...rows,...pager(p,values.length,`p:fl:${f}`),[cb('← Фильтры','p:fm'),MENU]]}};
 }
-export function botsPage(items,{title,page,key,back}){
-  const p=Math.max(0,Math.min(page,Math.max(0,Math.ceil(items.length/PAGE)-1))),slice=items.slice(p*PAGE,p*PAGE+PAGE);
-  const body=slice.length?slice.map(c=>`• <b>${esc(short(c.name,46))}</b>${c.author?`\n  BY ${esc(c.author)}`:''}`).join('\n\n'):'Ботов не найдено.';
-  const rows=slice.map(c=>[cb(short(c.name,42),`p:c:${c.uuid}`)]);
-  return{text:`<b>${title}</b>\n${items.length} BOTS · PAGE ${p+1}\n\n${body}`,keyboard:{inline_keyboard:[...rows,...pager(p,items.length,key),[back||cb('← ФИЛЬТРЫ','p:fm'),cb('HOME','p:home')]]}};
+// The list lives in the buttons only (no second copy in the text); the author is added unless it is the filter itself.
+export function botsPage(items,{title,page,key,back,hideAuthor=false}){
+  const p=clampPage(page,items.length),slice=items.slice(p*PAGE,p*PAGE+PAGE);
+  const rows=slice.map(c=>[cb(hideAuthor||!c.author?short(c.name,48):`${short(c.name,32)} · ${short(c.author,16)}`,`p:c:${c.uuid}`)]);
+  const text=`<b>${title}</b> · ${bots(items.length)}\n\n${items.length?'Нажми на бота — пришлю карточку с картинкой и файлами.':'Здесь пока пусто.'}`;
+  return{text,keyboard:{inline_keyboard:[...rows,...pager(p,items.length,key),[back||cb('← Фильтры','p:fm'),MENU]]}};
 }
 
-// Card message: avatar + caption (Telegram allows 1024 characters) + every action for this bot.
-export function cardCaption(c){
-  const facts=[c.universes.length?`🌌 ${c.universes.map(esc).join(', ')}`:'',c.settings.length?`🏙 ${c.settings.map(esc).join(', ')}`:'',c.pov?`👁 ${esc(c.pov)}`:'',c.lorebookCount?`📖 ${c.lorebookCount} LOREBOOK${c.lorebookCount===1?'':'S'}`:''].filter(Boolean);
-  const tags=c.tags.slice(0,8).map(t=>esc(t)).join(' · ');
-  const head=`<b>${esc(c.name)}</b>${c.author?`\nBY ${esc(c.author)}`:''}${facts.length?`\n\n${facts.join('\n')}`:''}${tags?`\n🏷 ${tags}`:''}`;
-  const room=1000-head.length-2;
-  return room>40&&c.hook?`${head}\n\n${esc(short(c.hook,Math.max(40,room-20)))}`:head;
+// Bots whose name, author, universe or tag contains the query (the site's catalog, so hidden bots never show up).
+export function searchItems(items,q){
+  const needle=clean(q).toLowerCase();if(needle.length<2)return[];
+  const score=c=>c.name.toLowerCase().startsWith(needle)?0:c.name.toLowerCase().includes(needle)?1:c.author.toLowerCase().includes(needle)?2:[...c.universes,...c.tags].some(v=>v.toLowerCase().includes(needle))?3:9;
+  return items.map(c=>[score(c),c]).filter(([s])=>s<9).sort((a,b)=>a[0]-b[0]).map(([,c])=>c);
 }
-export function cardKeyboard(c,origin){
-  const rows=[[cb('⬇ CARD PNG',`p:cp:${c.uuid}`),cb('⬇ CARD JSON',`p:cj:${c.uuid}`)]];
-  if(c.lorebookCount)rows.push([cb('📖 LOREBOOK .JSON',`p:lb:${c.uuid}`)]);
-  rows.push([cb('📄 ПОЛНОЕ ОПИСАНИЕ',`p:d:${c.uuid}`)]);
-  const more=[];if(c.author)more.push(cb('👤 ЕЩЁ ОТ АВТОРА',`p:fv:a:${valueHash(c.author)}:0`));if(c.universes[0])more.push(cb(`🌌 ${short(c.universes[0],24)}`,`p:fv:u:${valueHash(c.universes[0])}:0`));if(more.length)rows.push(more);
-  const links=[];if(c.url)links.push(url('OPEN BOT ↗',c.url));if(/^https?:\/\//i.test(c.authorUrl))links.push(url('AUTHOR ↗',c.authorUrl));if(links.length)rows.push(links);
-  rows.push([cb('🔎 ФИЛЬТРЫ','p:fm'),url('CATALOG ↗',origin+'/characters.html')]);
+
+// Card message: avatar + caption (Telegram allows 1024 characters). The name links to the bot, the author to the profile.
+const link=(text,href)=>/^https?:\/\//i.test(href||'')?`<a href="${esc(href)}">${esc(text)}</a>`:esc(text);
+const isPovTag=t=>/pov/i.test(t);
+export function cardCaption(c){
+  const facts=[c.universes.length?`🌌 ${c.universes.map(esc).join(', ')}`:'',c.settings.length?`🏙 ${c.settings.map(esc).join(', ')}`:'',c.pov?`👁 ${esc(c.pov)}`:''].filter(Boolean);
+  const tags=c.tags.filter(t=>!isPovTag(t)).slice(0,6).map(esc).join('  ');
+  const head=`<b>${link(c.name,c.url)}</b>${c.author?`\nот ${link(c.author,c.authorUrl)}`:''}${facts.length?`\n\n${facts.join('\n')}`:''}${c.lorebookCount?`\n📖 ${plural(c.lorebookCount,['лорбук','лорбука','лорбуков'])}`:''}${tags?`\n${tags}`:''}`;
+  const room=1000-head.length-12;
+  return room>60&&c.hook?`${head}\n\n<i>${esc(short(c.hook,Math.max(60,room)))}</i>`:head;
+}
+export function cardKeyboard(c){
+  const files=[cb('⬇ PNG',`p:cp:${c.uuid}`),cb('⬇ JSON',`p:cj:${c.uuid}`)];if(c.lorebookCount)files.push(cb('📖 Лорбук',`p:lb:${c.uuid}`));
+  const rows=[files,[cb('📄 Описание',`p:d:${c.uuid}`),...(c.url?[url('JanitorAI ↗',c.url)]:[])]];
+  const more=[];if(c.author)more.push(cb(`👤 Ещё от ${short(c.author,18)}`,`p:fv:a:${valueHash(c.author)}:0`));if(c.universes[0])more.push(cb(`🌌 ${short(c.universes[0],20)}`,`p:fv:u:${valueHash(c.universes[0])}:0`));if(more.length)rows.push(more);
   return{inline_keyboard:rows};
 }
 
@@ -82,7 +94,7 @@ const jsonInit=payload=>({method:'POST',headers:{'content-type':'application/jso
 // Photo first by link; if Telegram cannot take the image (format, size), the Worker converts it to PNG and uploads it;
 // without any picture the card still arrives as text.
 export async function sendCard(token,chatId,env,origin,c){
-  const caption=cardCaption(c),reply_markup=cardKeyboard(c,origin);
+  const caption=cardCaption(c),reply_markup=cardKeyboard(c);
   if(c.image){
     try{return await tg(token,'sendPhoto',jsonInit({chat_id:chatId,photo:c.image,caption,parse_mode:'HTML',reply_markup}))}catch{}
     try{const png=await fetchAvatarPng(c.image,env.IMAGES);if(png.ok){const form=new FormData();form.append('chat_id',String(chatId));form.append('photo',new Blob([png.bytes],{type:'image/png'}),'avatar.png');form.append('caption',caption);form.append('parse_mode','HTML');form.append('reply_markup',JSON.stringify(reply_markup));return await tg(token,'sendPhoto',{method:'POST',body:form})}}catch{}
@@ -93,7 +105,7 @@ export async function sendCard(token,chatId,env,origin,c){
 // Full public description, split into Telegram-sized messages.
 export async function sendDescription(token,chatId,env,c){
   const row=await env.DB.prepare("SELECT description,public_about,scenario FROM characters WHERE janitor_uuid=? AND status='published' LIMIT 1").bind(c.uuid).first().catch(()=>null);
-  const text=clean(row?.public_about)||clean(row?.description)||c.hook||'Описания нет.';
+  const text=clean(row?.public_about)||clean(row?.description)||c.hook||'У этого бота нет описания.';
   const parts=[];let rest=text;while(rest.length&&parts.length<4){let cut=rest.length<=3800?rest.length:rest.lastIndexOf('\n',3800);if(cut<1500)cut=3800;parts.push(rest.slice(0,cut));rest=rest.slice(cut).trimStart()}
-  for(let i=0;i<parts.length;i++)await tg(token,'sendMessage',jsonInit({chat_id:chatId,text:`${i===0?`<b>${esc(c.name)}</b> · ОПИСАНИЕ\n\n`:''}${esc(parts[i])}${i===parts.length-1&&rest.length?'\n\n… полностью — на сайте.':''}`,parse_mode:'HTML',disable_web_page_preview:true}));
+  for(let i=0;i<parts.length;i++)await tg(token,'sendMessage',jsonInit({chat_id:chatId,text:`${i===0?`<b>📄 ${esc(c.name)}</b>\n\n`:''}${esc(parts[i])}${i===parts.length-1&&rest.length?'\n\n… дальше — на сайте.':''}`,parse_mode:'HTML',disable_web_page_preview:true}));
 }

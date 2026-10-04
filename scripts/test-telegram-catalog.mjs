@@ -11,15 +11,15 @@ const catalog=()=>Response.json({ok:true,characters});
 const env={PUBLICnode00bot:'public-token',DB:{prepare:()=>({first:async()=>({n:0}),all:async()=>({results:[]}),bind:()=>({first:async()=>({description:'Full description of Bob\'s bot.',public_about:'',scenario:''}),all:async()=>({results:[]})})})}};
 
 async function secret(token){const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(`public|${token}`));return[...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,48)}
-async function press(data,{photoFails=false,text=null}={}){
+async function press(data,{photoFails=false,text=null,route=null,cbMessage=null}={}){
   const calls=[],originalFetch=globalThis.fetch;
   globalThis.fetch=async(url,init={})=>{const u=String(url);if(u.startsWith('https://api.telegram.org/')){const method=u.split('/').pop(),payload=init.body instanceof FormData?Object.fromEntries(init.body):JSON.parse(init.body);calls.push({method,payload});
       if(photoFails&&method==='sendPhoto')return Response.json({ok:false,description:'Bad Request: wrong file identifier/HTTP URL specified'},{status:400});
       return Response.json({ok:true,result:method==='getMe'?{username:'Node00Bot'}:true})}
     return new Response('',{status:404})};
   try{
-    const update=text!=null?{message:{chat:{id:3},text}}:{callback_query:{id:'cb',data,from:{id:1},message:{message_id:2,chat:{id:3}}}};
-    const res=await handlePublicTelegramFull(new Request('https://archive.example/telegram/public',{method:'POST',headers:{'content-type':'application/json','x-telegram-bot-api-secret-token':await secret(env.PUBLICnode00bot)},body:JSON.stringify(update)}),env,{catalog});
+    const update=text!=null?{message:{message_id:7,chat:{id:3},from:{id:1,username:'reader'},text}}:{callback_query:{id:'cb',data,from:{id:1,username:'reader'},message:cbMessage||{message_id:2,chat:{id:3}}}};
+    const res=await handlePublicTelegramFull(new Request('https://archive.example/telegram/public',{method:'POST',headers:{'content-type':'application/json','x-telegram-bot-api-secret-token':await secret(env.PUBLICnode00bot)},body:JSON.stringify(update)}),env,{catalog,...(route?{route}:{})});
     assert.equal(res.status,200);
   }finally{globalThis.fetch=originalFetch}
   return calls;
@@ -33,7 +33,7 @@ resetCatalogMemo();
 
 // Facet values with counts, most bots first; universes count every universe a bot belongs to.
 {const p=shown(await press('p:fl:a:0'));assert.deepEqual(buttons(p).filter(b=>/^p:fv:/.test(b.callback_data)).map(b=>b.text),['Alice · 10','Bob · 1'])}
-{const p=shown(await press('p:fl:u:0'));assert.deepEqual(buttons(p).filter(b=>/^p:fv:/.test(b.callback_data)).map(b=>b.text),['Hale University · 10','Avengers · 1','Marvel · 1'])}
+{const p=shown(await press('p:fl:u:0'));assert.deepEqual(buttons(p).filter(b=>/^p:fv:/.test(b.callback_data)).map(b=>b.text),['Hale Unive… · 10','Avengers · 1','Marvel · 1'])}
 {const p=shown(await press('p:fl:s:0'));assert.deepEqual(buttons(p).filter(b=>/^p:fv:/.test(b.callback_data)).map(b=>b.text),['Modern · 11','Fantasy · 1'])}
 
 // Filtered list: only matching bots, paged by 8, every callback within Telegram's 64 bytes.
@@ -56,7 +56,8 @@ resetCatalogMemo();
   for(const s of ['Bot 11','от <a href="https://janitorai.com/profiles/alice">Bob</a>','Marvel, Avengers','Fantasy, Modern','AnyPOV','Action  Romance','2 лорбука','<i>xxx'])assert.ok(photo.caption.includes(s),s);
   assert.ok(photo.caption.length<=1024,`caption ${photo.caption.length}`);
   const cbs=photo.reply_markup.inline_keyboard.flat().map(b=>b.callback_data||b.url);
-  for(const k of [`p:cp:${U(11)}`,`p:cj:${U(11)}`,`p:lb:${U(11)}`,`p:d:${U(11)}`,`p:fv:a:${valueHash('Bob')}:0`,`p:fv:u:${valueHash('Marvel')}:0`,`https://janitorai.com/characters/${U(11)}`])assert.ok(cbs.includes(k),k);
+  for(const k of [`p:cp:${U(11)}`,`p:cj:${U(11)}`,`p:lb:${U(11)}`,`p:d:${U(11)}`,`p:fv:a:${valueHash('Bob')}:0`,`p:fv:u:${valueHash('Marvel')}:0`,`p:s:${U(11)}`])assert.ok(cbs.includes(k),k);
+  assert.ok(photo.caption.includes(`<a href="https://janitorai.com/characters/${U(11)}">Bot 11</a>`),'the name links to JanitorAI');
   assert.ok(photo.reply_markup.inline_keyboard.length<=4,'card keeps to three rows of buttons plus ‹ ›');
   assert.deepEqual(photo.reply_markup.inline_keyboard.at(-1).map(b=>b.text),['‹','11 / 11','›'],'opened from search/link: arrows walk the whole catalog');
 }
@@ -97,14 +98,14 @@ const sent=calls=>calls.find(c=>c.method==='sendMessage')?.payload;
 // Nothing found: a hint and a way to the filters, not a dead end.
 {const m=sent(await press(null,{text:'zzzz'}));assert.match(m.text,/Ничего не нашлось/);assert.ok(buttons(m).some(b=>b.callback_data==='p:fm'))}
 // Commands from the bot's menu button.
-{const m=sent(await press(null,{text:'/start'}));assert.match(m.text,/ARCHIVE\.EXE/);assert.ok(buttons(m).some(b=>b.text==='🤖 Боты · 11'))}
+{const m=sent(await press(null,{text:'/start'}));assert.match(m.text,/ARCHIVE\.EXE/);assert.ok(buttons(m).some(b=>b.text==='🤖 Боты'));assert.match(m.text,/11 ботов/)}
 {const m=sent(await press(null,{text:'/bots'}));assert.ok(buttons(m).some(b=>b.callback_data==='p:fl:a:0'))}
 {const m=sent(await press(null,{text:'/search Marvel'}));assert.match(m.text,/«Marvel»/);assert.match(m.text,/1 бот/)}
 {const calls=await press(null,{text:'/random'});assert.ok(calls.some(c=>c.method==='sendPhoto'),'random bot card')}
 {const m=sent(await press(null,{text:'/nope'}));assert.match(m.text,/Не знаю такой команды/)}
 // Commands added for Node_00: site, suggest/import, help, new, plugins.
 {const m=sent(await press(null,{text:'/site'})),u=buttons(m).map(b=>b.url).filter(Boolean);assert.match(m.text,/ARCHIVE\.EXE/);for(const x of ['/characters.html','/hub.html','/codex.html'])assert.ok(u.some(v=>v.endsWith(x)),x)}
-{const m=sent(await press(null,{text:'/suggest'})),u=buttons(m).map(b=>b.url).filter(Boolean);assert.ok(u.includes('https://archive.example/characters.html#import'));assert.ok(u.includes('https://archive.example/hub.html#suggest'))}
+
 {const m=sent(await press(null,{text:'/help'}));for(const c of ['/bots','/new','/random','/hub','/plugins','/search','/suggest','/site','/lorekey'])assert.ok(m.text.includes(c),c)}
 {const m=sent(await press(null,{text:'/new'}));assert.match(m.text,/Новые боты/);assert.equal(buttons(m).filter(b=>/^p:k:-:-:/.test(b.callback_data)).length,8)}
 {const m=sent(await press(null,{text:'/plugins'}));assert.match(m.text,/Плагины/)}
@@ -134,6 +135,52 @@ const sent=calls=>calls.find(c=>c.method==='sendMessage')?.payload;
 {const p=shown(await press('p:home'));assert.ok(buttons(p).some(b=>b.callback_data==='p:lk'));assert.ok(p.reply_markup.inline_keyboard.length<=3,'home in three rows')}
 {const p=shown(await press('p:fm'));assert.ok(p.reply_markup.inline_keyboard.length<=4)}
 {const p=shown(await press('p:fl:a:0'));assert.ok(p.reply_markup.inline_keyboard.some(r=>r.length===2),'values two per row')}
+
+// Import right in the chat: a JanitorAI link goes to the site's /api/import and the card comes back.
+{
+  const seen=[],route=async req=>{seen.push(`${req.method} ${new URL(req.url).pathname}${new URL(req.url).search}`);if(new URL(req.url).pathname==='/api/import'){const b=await req.json();seen.push(b.url);return Response.json({ok:true,state:'IMPORTED_FROM_DATACAT',janitorUuid:U(3)})}return Response.json({ok:false},{status:404})};
+  const calls=await press(null,{text:`глянь https://janitorai.com/characters/${U(3)}_vance-hale`,route});
+  assert.equal(seen[0],'POST /api/import');assert.ok(seen[1].includes(U(3)));
+  assert.match(calls.find(c=>c.method==='sendMessage').payload.text,/добавлен в каталог/);
+  assert.match(calls.find(c=>c.method==='sendPhoto').payload.caption,/Bot 3/);
+}
+{const route=async()=>Response.json({ok:true,state:'ALREADY_IN_ARCHIVE',janitorUuid:U(4)});const calls=await press(null,{text:`https://janitorai.com/characters/${U(4)}`,route});assert.match(calls.find(c=>c.method==='sendMessage').payload.text,/уже есть/);assert.ok(calls.some(c=>c.method==='sendPhoto'))}
+{const route=async()=>Response.json({ok:false,error:'NOT_AVAILABLE'},{status:404});const calls=await press(null,{text:`https://janitorai.com/characters/${U(4)}`,route});assert.match(calls.find(c=>c.method==='sendMessage').payload.text,/скрыт/);assert.ok(!calls.some(c=>c.method==='sendPhoto'))}
+// Still being fetched: a ⏳ message with a check button; the check sends the card once ready.
+{
+  let ready=false;const route=async req=>new URL(req.url).pathname==='/api/import'?Response.json({ok:true,state:'RETRIEVAL_QUEUED'},{status:202}):ready?Response.json({ok:true,ready:true}):Response.json({ok:true,state:'RETRIEVAL_QUEUED'},{status:202});
+  const calls=await press(null,{text:`https://janitorai.com/characters/${U(5)}`,route}),wait=calls.find(c=>c.method==='sendMessage').payload;
+  assert.match(wait.text,/Достаю данные/);assert.equal(wait.reply_markup.inline_keyboard[0][0].callback_data,`p:is:${U(5)}`);
+  let again=await press(`p:is:${U(5)}`,{route});assert.match(again.find(c=>c.method==='sendMessage').payload.text,/Ещё достаю/);
+  ready=true;again=await press(`p:is:${U(5)}`,{route});assert.match(again.find(c=>c.method==='sendPhoto').payload.caption,/Bot 5/);
+}
+// Any other link: asked first, as a reply to that message; "Да" sends it to the site's HUB suggestions.
+{
+  const ask=(await press(null,{text:'вот пресет https://t.me/saturic/123'})).find(c=>c.method==='sendMessage').payload;
+  assert.match(ask.text,/Предложить эту ссылку/);assert.equal(ask.reply_parameters.message_id,7);assert.deepEqual(ask.reply_markup.inline_keyboard[0].map(b=>b.callback_data),['p:sgy','p:sgn']);
+  const sent=[],route=async req=>{sent.push(await req.json());return Response.json({ok:true,id:1},{status:201})};
+  const calls=await press('p:sgy',{route,cbMessage:{message_id:9,chat:{id:3},reply_to_message:{message_id:7,text:'вот пресет https://t.me/saturic/123'}}});
+  assert.equal(sent[0].url,'https://t.me/saturic/123');assert.match(sent[0].note,/@reader/);
+  const done=calls.find(c=>c.method==='editMessageText').payload;assert.equal(done.message_id,9);assert.match(done.text,/отправлена на проверку/);
+  const dup=await press('p:sgy',{route:async()=>Response.json({ok:true,duplicate:true}),cbMessage:{message_id:9,chat:{id:3},reply_to_message:{text:'https://t.me/saturic/123'}}});
+  assert.match(dup.find(c=>c.method==='editMessageText').payload.text,/уже предлагали/);
+}
+// /suggest offers both inside the bot (no links to the website).
+{const m=sent(await press(null,{text:'/suggest'}));assert.deepEqual(buttons(m).filter(b=>b.callback_data!=='p:home').map(b=>b.callback_data),['p:imp','p:sug']);assert.ok(!buttons(m).some(b=>b.url))}
+
+// Every button label fits a phone: about 11 characters with three buttons in a row, 17 with two, 36 alone
+// (an emoji counts as two). Longer labels were cut to «Случай…», «Описа…» on an iPhone.
+{
+  const width=t=>[...t].reduce((n,ch)=>n+(ch.codePointAt(0)>0x2100?2:1),0),limit={1:36,2:17,3:11};
+  const keep={...characters[0]};Object.assign(characters[0],{nameEn:'Lady Morwen of the Ashen Court — Queen of Ravens',author:'NightOwlWritesBots',universes:['The Ashen Court Chronicles'],universe:'The Ashen Court Chronicles'});resetCatalogMemo();
+  const screens=['p:home','p:fm','p:fl:a:0','p:fl:u:0','p:fl:s:0','p:fl:t:0','p:chars:0',`p:fv:a:${valueHash('Alice')}:0`,`p:fv:u:${valueHash('Marvel')}:0`,`p:fv:a:${valueHash('NightOwlWritesBots')}:0`,`p:c:${U(11)}`,`p:c:${U(1)}`,'p:site','p:sg','p:help','p:lk','p:search'];
+  const kbs=[];for(const d of screens)for(const c of await press(d))if(c.payload?.reply_markup)kbs.push([d,c.payload.reply_markup]);
+  for(const t of ['/start','alice','Marvel','/suggest','lady'])for(const c of await press(null,{text:t}))if(c.payload?.reply_markup)kbs.push([t,c.payload.reply_markup]);
+  const tooLong=[];for(const [where,kb] of kbs)for(const row of kb.inline_keyboard||[])for(const b of row)if(width(b.text)>limit[Math.min(row.length,3)])tooLong.push(`${where}: «${b.text}» (${width(b.text)} > ${limit[Math.min(row.length,3)]})`);
+  Object.assign(characters[0],keep);resetCatalogMemo();
+  assert.deepEqual(tooLong,[],'labels that would be cut on a phone');
+  assert.ok(kbs.length>20);
+}
 
 // Everything a person reads is Russian sentence case: no leftover English caps labels.
 {

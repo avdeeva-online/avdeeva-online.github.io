@@ -49,12 +49,12 @@ const pager=(page,total,key)=>{const pages=Math.ceil(total/PAGE);return pages>1?
 const clampPage=(page,total)=>Math.max(0,Math.min(page,Math.max(0,Math.ceil(total/PAGE)-1)));
 
 export function filterMenu(items){
-  const rows=[[cb(`Все боты · ${items.length}`,'p:chars:0'),cb('🆕 Новые','p:new:0')],[cb(FACETS.a.menu,'p:fl:a:0'),cb(FACETS.u.menu,'p:fl:u:0'),cb(FACETS.s.menu,'p:fl:s:0')],[cb(FACETS.p.menu,'p:fl:p:0'),cb(FACETS.t.menu,'p:fl:t:0'),cb('🔎 Поиск','p:search')],[MENU]];
+  const rows=[[cb(FACETS.a.menu,'p:fl:a:0'),cb(FACETS.u.menu,'p:fl:u:0')],[cb(FACETS.s.menu,'p:fl:s:0'),cb(FACETS.p.menu,'p:fl:p:0')],[cb(FACETS.t.menu,'p:fl:t:0'),cb('🔎 Поиск','p:search')],[cb(`Все · ${items.length}`,'p:chars:0'),cb('🆕 Новые','p:new:0'),MENU]];
   return{text:`<b>🤖 Боты</b> · ${bots(items.length)}\n\nКак искать? Можно листать всех подряд или выбрать автора, вселенную, сеттинг, POV или тег.`,keyboard:{inline_keyboard:rows}};
 }
 export function valuesPage(items,f,page){
   const facet=FACETS[f],values=facetValues(items,f),p=clampPage(page,values.length),slice=values.slice(p*PAGE,p*PAGE+PAGE);
-  const buttons=slice.map(v=>cb(`${short(v.value,20)} · ${v.count}`,`p:fv:${f}:${v.h}:0`)),rows=[];for(let i=0;i<buttons.length;i+=2)rows.push(buttons.slice(i,i+2));
+  const buttons=slice.map(v=>cb(`${short(v.value,11)} · ${v.count}`,`p:fv:${f}:${v.h}:0`)),rows=[];for(let i=0;i<buttons.length;i+=2)rows.push(buttons.slice(i,i+2));
   return{text:`<b>${esc(facet.menu)}</b> · ${plural(values.length,['вариант','варианта','вариантов'])}\n\nЧисло рядом — сколько ботов.`,keyboard:{inline_keyboard:[...rows,...pager(p,values.length,`p:fl:${f}`),[cb('← Фильтры','p:fm'),MENU]]}};
 }
 // The list lives in the buttons only (no second copy in the text); the author is added unless it is the filter itself.
@@ -63,7 +63,7 @@ export function valuesPage(items,f,page){
 export function listContext(items,f,h){if(f==='-')return{items,value:''};if(!FACETS[f])return{items:[],value:''};return filterItems(items,f,h)}
 export function botsPage(items,{title,page,key,back,hideAuthor=false,ctx=['-','-']}){
   const p=clampPage(page,items.length),slice=items.slice(p*PAGE,p*PAGE+PAGE);
-  const rows=slice.map((c,i)=>[cb(hideAuthor||!c.author?short(c.name,48):`${short(c.name,32)} · ${short(c.author,16)}`,`p:k:${ctx[0]}:${ctx[1]}:${p*PAGE+i}`)]);
+  const rows=slice.map((c,i)=>[cb(hideAuthor||!c.author?short(c.name,36):`${short(c.name,22)} · ${short(c.author,11)}`,`p:k:${ctx[0]}:${ctx[1]}:${p*PAGE+i}`)]);
   const text=`<b>${title}</b> · ${bots(items.length)}\n\n${items.length?'Нажми на бота — пришлю карточку с картинкой и файлами.':'Здесь пока пусто.'}`;
   return{text,keyboard:{inline_keyboard:[...rows,...pager(p,items.length,key),[back||cb('← Фильтры','p:fm'),MENU]]}};
 }
@@ -89,8 +89,9 @@ export function cardCaption(c){
 function navRow(nav){if(!nav||nav.total<2)return null;const at=i=>`p:n:${nav.f}:${nav.h}:${(i+nav.total)%nav.total}`;return[cb('‹',at(nav.i-1)),cb(`${nav.i+1} / ${nav.total}`,'p:noop'),cb('›',at(nav.i+1))]}
 export function cardKeyboard(c,nav=null){
   const files=[cb('⬇ PNG',`p:cp:${c.uuid}`),cb('⬇ JSON',`p:cj:${c.uuid}`)];if(c.lorebookCount)files.push(cb('📖 Лорбук',`p:lb:${c.uuid}`));
-  const rows=[files,[cb('📄 Описание',`p:d:${c.uuid}`),...(c.url?[url('JanitorAI ↗',c.url)]:[]),cb('🔗',`p:s:${c.uuid}`)]];
-  const more=[];if(c.author)more.push(cb(`👤 Ещё от ${short(c.author,18)}`,`p:fv:a:${valueHash(c.author)}:0`));if(c.universes[0])more.push(cb(`🌌 ${short(c.universes[0],20)}`,`p:fv:u:${valueHash(c.universes[0])}:0`));if(more.length)rows.push(more);
+  /* JanitorAI is the link on the bot's name in the caption, so it needs no button of its own. */
+  const rows=[files,[cb('📄 Описание',`p:d:${c.uuid}`),cb('🔗 Ссылка',`p:s:${c.uuid}`)]];
+  const more=[];if(c.author)more.push(cb(c.universes[0]?'👤 Ещё от автора':`👤 Ещё от ${short(c.author,20)}`,`p:fv:a:${valueHash(c.author)}:0`));if(c.universes[0])more.push(cb(`🌌 ${short(c.universes[0],13)}`,`p:fv:u:${valueHash(c.universes[0])}:0`));if(more.length)rows.push(more);
   const n=navRow(nav);if(n)rows.push(n);
   return{inline_keyboard:rows};
 }

@@ -61,7 +61,7 @@ async function publicImport(request,env,ctx,url){
 async function routeRequest(request,env,ctx){
   const url=new URL(request.url),blocked=await guardAdminApi(request,env,url);if(blocked)return blocked;
   if(url.pathname==='/telegram/admin')return handleAdminTelegramRoute(request,env);
-  if(url.pathname==='/telegram/public')return handlePublicTelegramFull(request,env,{catalog:()=>routeRequest(new Request(new URL('/api/catalog?limit=10000',request.url)),env,ctx)});
+  if(url.pathname==='/telegram/public')return handlePublicTelegramFull(request,env,{catalog:()=>routeRequest(new Request(new URL('/api/catalog?limit=10000',request.url)),env,ctx),route:r=>routeRequest(r,env,ctx),waitUntil:p=>ctx?.waitUntil?.(p)});
   const mediaMatch=url.pathname.match(/^\/api\/admin\/hub-telegram-media\/([^/]+)\/(\d+)$/);
   if(mediaMatch)return serveTelegramDraftMedia(request,env,decodeURIComponent(mediaMatch[1]),mediaMatch[2]);
   if(url.pathname==='/api/build-info'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return json({ok:true,...BUILD_INFO})}

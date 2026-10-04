@@ -24,6 +24,7 @@ export const PUBLIC_COMMANDS=[
   {command:'hub',description:'TAVO HUB: пресеты, темы, гайды'},
   {command:'plugins',description:'Плагины'},
   {command:'suggest',description:'Предложить ресурс или импортировать бота'},
+  {command:'lorekey',description:'Переводчик лорбуков LoreKey'},
   {command:'search',description:'Поиск: /search Marvel'},
   {command:'help',description:'Что умеет бот'}
 ];

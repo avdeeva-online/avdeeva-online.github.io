@@ -49,12 +49,12 @@ const pager=(page,total,key)=>{const pages=Math.ceil(total/PAGE);return pages>1?
 const clampPage=(page,total)=>Math.max(0,Math.min(page,Math.max(0,Math.ceil(total/PAGE)-1)));
 
 export function filterMenu(items){
-  const rows=[[cb(`Все боты · ${items.length}`,'p:chars:0')],[cb(FACETS.a.menu,'p:fl:a:0'),cb(FACETS.u.menu,'p:fl:u:0')],[cb(FACETS.s.menu,'p:fl:s:0'),cb(FACETS.p.menu,'p:fl:p:0')],[cb(FACETS.t.menu,'p:fl:t:0'),cb('🔎 Поиск','p:search')],[MENU]];
+  const rows=[[cb(`Все боты · ${items.length}`,'p:chars:0'),cb('🆕 Новые','p:new:0')],[cb(FACETS.a.menu,'p:fl:a:0'),cb(FACETS.u.menu,'p:fl:u:0'),cb(FACETS.s.menu,'p:fl:s:0')],[cb(FACETS.p.menu,'p:fl:p:0'),cb(FACETS.t.menu,'p:fl:t:0'),cb('🔎 Поиск','p:search')],[MENU]];
   return{text:`<b>🤖 Боты</b> · ${bots(items.length)}\n\nКак искать? Можно листать всех подряд или выбрать автора, вселенную, сеттинг, POV или тег.`,keyboard:{inline_keyboard:rows}};
 }
 export function valuesPage(items,f,page){
   const facet=FACETS[f],values=facetValues(items,f),p=clampPage(page,values.length),slice=values.slice(p*PAGE,p*PAGE+PAGE);
-  const rows=slice.map(v=>[cb(`${short(v.value,38)} · ${v.count}`,`p:fv:${f}:${v.h}:0`)]);
+  const buttons=slice.map(v=>cb(`${short(v.value,20)} · ${v.count}`,`p:fv:${f}:${v.h}:0`)),rows=[];for(let i=0;i<buttons.length;i+=2)rows.push(buttons.slice(i,i+2));
   return{text:`<b>${esc(facet.menu)}</b> · ${plural(values.length,['вариант','варианта','вариантов'])}\n\nЧисло рядом — сколько ботов.`,keyboard:{inline_keyboard:[...rows,...pager(p,values.length,`p:fl:${f}`),[cb('← Фильтры','p:fm'),MENU]]}};
 }
 // The list lives in the buttons only (no second copy in the text); the author is added unless it is the filter itself.

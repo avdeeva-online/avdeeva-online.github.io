@@ -105,7 +105,7 @@ const sent=calls=>calls.find(c=>c.method==='sendMessage')?.payload;
 // Commands added for Node_00: site, suggest/import, help, new, plugins.
 {const m=sent(await press(null,{text:'/site'})),u=buttons(m).map(b=>b.url).filter(Boolean);assert.match(m.text,/ARCHIVE\.EXE/);for(const x of ['/characters.html','/hub.html','/codex.html'])assert.ok(u.some(v=>v.endsWith(x)),x)}
 {const m=sent(await press(null,{text:'/suggest'})),u=buttons(m).map(b=>b.url).filter(Boolean);assert.ok(u.includes('https://archive.example/characters.html#import'));assert.ok(u.includes('https://archive.example/hub.html#suggest'))}
-{const m=sent(await press(null,{text:'/help'}));for(const c of ['/bots','/new','/random','/hub','/plugins','/search','/suggest','/site'])assert.ok(m.text.includes(c),c)}
+{const m=sent(await press(null,{text:'/help'}));for(const c of ['/bots','/new','/random','/hub','/plugins','/search','/suggest','/site','/lorekey'])assert.ok(m.text.includes(c),c)}
 {const m=sent(await press(null,{text:'/new'}));assert.match(m.text,/Новые боты/);assert.equal(buttons(m).filter(b=>/^p:k:-:-:/.test(b.callback_data)).length,8)}
 {const m=sent(await press(null,{text:'/plugins'}));assert.match(m.text,/Плагины/)}
 {const p=shown(await press('p:home'));assert.match(p.text,/NODE_00/);const cbs=buttons(p).map(b=>b.callback_data);for(const k of ['p:fm','p:hubm','p:new:0','p:random','p:search','p:sg','p:site','p:help'])assert.ok(cbs.includes(k),k)}
@@ -124,9 +124,16 @@ const sent=calls=>calls.find(c=>c.method==='sendMessage')?.payload;
   assert.equal(calls.find(c=>c.method==='setMyName')?.payload.name,'Node_00');
   assert.ok(calls.some(c=>c.method==='setMyDescription')&&calls.some(c=>c.method==='setMyShortDescription'));
   const cmds=calls.filter(c=>c.method==='setMyCommands').at(-1).payload.commands.map(c=>c.command);
-  for(const c of ['menu','site','bots','new','random','hub','plugins','suggest','search','help'])assert.ok(cmds.includes(c),c);
+  for(const c of ['menu','site','bots','new','random','hub','plugins','suggest','lorekey','search','help'])assert.ok(cmds.includes(c),c);
   assert.ok(!cmds.includes('start'),'the site is /site, not /start');assert.equal(PUBLIC_COMMANDS.find(c=>c.command==='site').description,'Сайт ARCHIVE.EXE');
 }
+
+// /lorekey links to the translator tab; menus are compact (up to 3 buttons per row, few rows).
+{const m=sent(await press(null,{text:'/lorekey'}));assert.ok(buttons(m).some(b=>b.url==='https://archive.example/codex#tab=lorekey'))}
+{const p=shown(await press('p:lk'));assert.match(p.text,/LoreKey/)}
+{const p=shown(await press('p:home'));assert.ok(buttons(p).some(b=>b.callback_data==='p:lk'));assert.ok(p.reply_markup.inline_keyboard.length<=3,'home in three rows')}
+{const p=shown(await press('p:fm'));assert.ok(p.reply_markup.inline_keyboard.length<=4)}
+{const p=shown(await press('p:fl:a:0'));assert.ok(p.reply_markup.inline_keyboard.some(r=>r.length===2),'values two per row')}
 
 // Everything a person reads is Russian sentence case: no leftover English caps labels.
 {

@@ -4,7 +4,7 @@ export const D1_EXPECTED_SCHEMA={
   lorebook_blobs:['content_hash','script','created_at','updated_at'],
   lorebook_sources:['source_identity','lorebook_id','updated_at'],
   character_lorebooks:['character_uuid','lorebook_id','ordinal'],
-  hub_resources:['id','source_url','source_type','type','title','creator_name','creator_link','description_short','description_full','additional_info','models','settings','tags','media','confidence','status','created_at','updated_at'],
+  hub_resources:['id','source_url','source_type','type','title','creator_name','creator_link','description_short','description_full','additional_info','models','settings','tags','media','confidence','status','created_at','updated_at','extra_links'],
   hub_resource_files:['id','resource_id','name','mime','size','is_primary','data','external_url','storage','r2_key','created_at'],
   hub_resource_file_chunks:['file_id','chunk_index','data'],
   hub_resource_publish_sessions:['id','resource_id','was_existing','backup','created_at','updated_at'],

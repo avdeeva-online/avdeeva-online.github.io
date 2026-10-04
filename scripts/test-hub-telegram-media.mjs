@@ -24,7 +24,7 @@ globalThis.fetch=async url=>{
   return new Response('gone',{status:404});
 };
 const media=async id=>(await (await getHubResourcePublic(env,id)).json()).resource.media;
-const storedOk=async(id,url)=>{const m=url.match(/files\/([^/?]+)/);assert.ok(m,`expected stored URL, got ${url}`);const r=await downloadHubFilePublic(new Request(`https://x.test${url}`),env,id,decodeURIComponent(m[1]));assert.equal(r.status,200);assert.deepEqual(new Uint8Array(await r.arrayBuffer()),jpeg)};
+const storedOk=async(id,url,bytes=jpeg)=>{const m=url.match(/files\/([^/?]+)/);assert.ok(m,`expected stored URL, got ${url}`);const r=await downloadHubFilePublic(new Request(`https://x.test${url}`),env,id,decodeURIComponent(m[1]));assert.equal(r.status,200);assert.deepEqual(new Uint8Array(await r.arrayBuffer()),bytes)};
 
 // 1. Publishing with a Telegram CDN cover stores the image instead of the expiring link.
 const pub=await (await publishHubResource(new Request('https://x.test/api/admin/hub-resource',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({source:{type:'telegram',url:'https://t.me/CHAN/4'},type:'preset',title:'New',creator:{name:'CHAN',link:'https://t.me/CHAN'},description_short:'Short text',description_full:'Full text',additional_info:'Extra text',media:[{url:`${CDN}live.jpg`,cover:true}]})}),env)).json();
@@ -33,6 +33,12 @@ const saved=db.prepare('SELECT * FROM hub_resources WHERE id=?').get(pub.id);
 assert.deepEqual([saved.source_url,saved.creator_name,saved.creator_link,saved.description_short,saved.description_full,saved.additional_info],['https://t.me/CHAN/4','CHAN','https://t.me/CHAN','Short text','Full text','Extra text'],'publish must keep source URL, creator and descriptions');
 let m=await media(pub.id);
 assert.equal(m.length,1);assert.equal(m[0].cover,true);await storedOk(pub.id,m[0].url);
+
+// 1b. Extra links: up to 5, http(s) only, duplicates dropped, shown by the public API.
+const linked=await (await publishHubResource(new Request('https://x.test/api/admin/hub-resource',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({source:{type:'telegram',url:'https://t.me/CHAN/30'},type:'preset',title:'Links',extra_links:[{label:'Regex',url:'https://t.me/CHAN/31'},{label:'',url:'example.com/guide'},{label:'bad',url:'javascript:alert(1)'},{label:'dup',url:'https://t.me/CHAN/31'},{url:'https://a.test/3'},{url:'https://a.test/4'},{url:'https://a.test/5'},{url:'https://a.test/6'}]})}),env)).json();
+assert.ok(linked.ok,JSON.stringify(linked));
+const links=(await (await getHubResourcePublic(env,linked.id)).json()).resource.extra_links;
+assert.deepEqual(links.map(x=>x.label),['Regex','example.com','a.test','a.test','a.test'],'max 5, http(s) only, no duplicates, hostname as default label');
 
 // 2. A manual cover (base64 data: URI) is stored as a file, not kept inside the D1 row.
 const dataUri=`data:image/jpeg;base64,${Buffer.from(jpeg).toString('base64')}`;
@@ -47,8 +53,9 @@ assert.ok(resaved.ok,JSON.stringify(resaved));
 m=JSON.parse(db.prepare("SELECT media FROM hub_resources WHERE id='legacy'").get().media);
 assert.equal(m[0].cover,true);await storedOk('legacy',m[0].url);
 
-// 4. Existing resource with expired links (cover + old avatar entry) next to an embedded image.
-db.prepare("INSERT INTO hub_resources(id,source_url,type,title,media,status) VALUES('old','https://t.me/CHAN/5','preset','Old',?,'published')").run(JSON.stringify([{url:`${CDN}expired-cover.jpg`,cover:true},{url:dataUri,cover:false},{url:`${CDN}expired-avatar.jpg`,cover:false}]));
+// 4. Existing resource with expired links (cover + old avatar entry) next to an embedded image (a different picture).
+const jpeg2=new Uint8Array([255,216,255,224,9,8,7,6]),dataUri2=`data:image/jpeg;base64,${Buffer.from(jpeg2).toString('base64')}`;
+db.prepare("INSERT INTO hub_resources(id,source_url,type,title,media,status) VALUES('old','https://t.me/CHAN/5','preset','Old',?,'published')").run(JSON.stringify([{url:`${CDN}expired-cover.jpg`,cover:true},{url:dataUri2,cover:false},{url:`${CDN}expired-avatar.jpg`,cover:false}]));
 const plan=await (await repairHubMedia(new Request('https://x.test/api/admin/hub-media-repair'),env)).json();
 const planned=plan.report.find(x=>x.id==='old');
 assert.equal(plan.mode,'dry-run');assert.equal(planned.result,'PLANNED');assert.equal(planned.replaced,1);assert.equal(planned.dropped,1);assert.equal(planned.embedded_entries,1);
@@ -58,7 +65,12 @@ const done=await (await repairHubMedia(new Request('https://x.test/api/admin/hub
 assert.equal(done.report.find(x=>x.id==='old').result,'REPAIRED');
 m=JSON.parse(db.prepare("SELECT media FROM hub_resources WHERE id='old'").get().media);
 assert.equal(m.length,2,'expired avatar entry dropped, embedded image kept');
-assert.equal(m[0].cover,true);await storedOk('old',m[0].url);await storedOk('old',m[1].url);
+assert.equal(m[0].cover,true);await storedOk('old',m[0].url);await storedOk('old',m[1].url,jpeg2);
+
+// 4b. Saving the same manual cover again (the editor used to re-send it on every save) reuses the stored file — no duplicate covers.
+const before=db.prepare('SELECT COUNT(*) AS n FROM hub_resource_files WHERE resource_id=?').get(manual.id).n;
+for(let i=0;i<2;i++)await publishHubResource(new Request('https://x.test/api/admin/hub-resource',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({editing_id:manual.id,source:{type:'telegram',url:'https://t.me/CHAN/6'},type:'theme',title:'Manual',media:[{url:dataUri,cover:true,manual_cover:true}]})}),env);
+assert.equal(db.prepare('SELECT COUNT(*) AS n FROM hub_resource_files WHERE resource_id=?').get(manual.id).n,before,'the same cover saved again must not add a copy');
 
 // 5. Running again finds nothing left to repair.
 assert.equal((await (await repairHubMedia(new Request('https://x.test/api/admin/hub-media-repair'),env)).json()).resources,0);

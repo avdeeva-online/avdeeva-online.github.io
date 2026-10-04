@@ -43,7 +43,9 @@ const ensureSchema=env=>requireD1Schema(env,'hub-resources',`SELECT
 
 // Session state stores the already-normalized draft; re-reading it must not run the raw-payload mapping again
 // (that dropped source URL, creator and descriptions on finalize).
-function normalizeDraft(d){if(d&&typeof d==='object'&&'sourceUrl'in d)return{...d,editingId:clean(d.editingId),sourceUrl:normalizeSourceUrl(d.sourceUrl),sourceType:clean(d.sourceType)||'telegram',models:arr(d.models),settings:normalizeSettings(d.settings),tags:arr(d.tags),media:arr(d.media),confidence:d.confidence&&typeof d.confidence==='object'?d.confidence:{}};const source=d?.source||{};return{editingId:clean(d?.editing_id),sourceUrl:normalizeSourceUrl(source.url),sourceType:clean(source.type)||'telegram',type:clean(d?.type).toLowerCase(),title:clean(d?.title),creatorName:clean(d?.creator?.name),creatorLink:clean(d?.creator?.link),short:clean(d?.description_short),full:clean(d?.description_full),additionalInfo:clean(d?.additional_info),models:arr(d?.models).map(clean).filter(Boolean),settings:normalizeSettings(d?.settings),tags:arr(d?.tags).map(clean).filter(Boolean),media:arr(d?.media),confidence:d?.confidence&&typeof d.confidence==='object'?d.confidence:{}}}
+// Up to 5 extra links (label + http/https URL) shown next to the author's post.
+function normalizeExtraLinks(v){const out=[],seen=new Set();for(const x of arr(v)){let url=clean(x?.url);if(!url)continue;if(!/^[a-z][a-z0-9+.-]*:/i.test(url))url=`https://${url}`;try{const u=new URL(url);if(u.protocol!=='https:'&&u.protocol!=='http:')continue;url=u.toString()}catch{continue}if(seen.has(url))continue;seen.add(url);out.push({label:clean(x?.label).slice(0,40)||new URL(url).hostname.replace(/^www\./,''),url});if(out.length>=5)break}return out}
+function normalizeDraft(d){if(d&&typeof d==='object'&&'sourceUrl'in d)return{...d,extraLinks:normalizeExtraLinks(d.extraLinks),editingId:clean(d.editingId),sourceUrl:normalizeSourceUrl(d.sourceUrl),sourceType:clean(d.sourceType)||'telegram',models:arr(d.models),settings:normalizeSettings(d.settings),tags:arr(d.tags),media:arr(d.media),confidence:d.confidence&&typeof d.confidence==='object'?d.confidence:{}};const source=d?.source||{};return{editingId:clean(d?.editing_id),sourceUrl:normalizeSourceUrl(source.url),sourceType:clean(source.type)||'telegram',type:clean(d?.type).toLowerCase(),title:clean(d?.title),creatorName:clean(d?.creator?.name),creatorLink:clean(d?.creator?.link),short:clean(d?.description_short),full:clean(d?.description_full),additionalInfo:clean(d?.additional_info),extraLinks:normalizeExtraLinks(d?.extra_links),models:arr(d?.models).map(clean).filter(Boolean),settings:normalizeSettings(d?.settings),tags:arr(d?.tags).map(clean).filter(Boolean),media:arr(d?.media),confidence:d?.confidence&&typeof d.confidence==='object'?d.confidence:{}}}
 function parseSessionState(session){let raw=null;try{raw=JSON.parse(session?.backup||'null')}catch{}if(raw&&raw.version===2&&raw.draft)return{version:2,old:raw.old||null,draft:normalizeDraft(raw.draft),oldPrimaryId:clean(raw.oldPrimaryId),phase:clean(raw.phase)||'editing'};return{version:1,old:raw&&typeof raw==='object'?raw:null,draft:null,oldPrimaryId:'',phase:'legacy'}}
 async function saveSessionState(env,session,state){await env.DB.prepare('UPDATE hub_resource_publish_sessions SET backup=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(JSON.stringify({version:2,old:state.old||null,draft:state.draft,oldPrimaryId:clean(state.oldPrimaryId),phase:clean(state.phase)||'editing'}),session.id).run()}
 
@@ -154,13 +156,18 @@ async function storeResourceMedia(env,resourceId,media,oldMedia=[]){
     try{
       const {type,buffer,origin}=await mediaBytes(url,resourceId,oldMedia);
       if(!buffer.byteLength||buffer.byteLength>EXTRA_FILE_LIMIT)throw new Error(`BAD_SIZE_${buffer.byteLength}`);
-      const name=`${SOURCE_PREFIX}${item?.cover?'cover__':''}${origin}_${crypto.randomUUID().slice(0,8)}${MEDIA_EXT[type]||'.jpg'}`;
-      const fileId=await storeBuffer(env,{resourceId,name,mime:type,size:buffer.byteLength,isPrimary:false,buffer});
+      // Named by a hash of the picture, so saving the same cover again reuses the stored file instead of adding a copy.
+      const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',buffer))].slice(0,8).map(b=>b.toString(16).padStart(2,'0')).join('');
+      const name=`${SOURCE_PREFIX}${item?.cover?'cover__':''}${origin}_${hash}${MEDIA_EXT[type]||'.jpg'}`;
+      const existing=await env.DB.prepare('SELECT id FROM hub_resource_files WHERE resource_id=? AND name LIKE ? LIMIT 1').bind(resourceId,`${SOURCE_PREFIX}%_${hash}.%`).first();
+      const fileId=existing?.id||await storeBuffer(env,{resourceId,name,mime:type,size:buffer.byteLength,isPrimary:false,buffer});
       const stored=`/api/hub-resources/${encodeURIComponent(resourceId)}/files/${encodeURIComponent(fileId)}?view=1`;
       out.push({...item,url:stored,...(item?.src!=null?{src:stored}:{}),file_id:fileId,source:`${origin}-r2`});
     }catch(e){console.error('hub media store failed',url.slice(0,80),String(e?.message||e));out.push(item)}
   }
-  return out;
+  // One entry per picture (the same stored file could be listed twice).
+  const seen=new Set();
+  return out.filter(item=>{const k=clean(mediaItemUrl(item)).replace(/^https?:\/\/[^/]+/,'');if(!k||seen.has(k))return false;seen.add(k);return true});
 }
 
 // One-off repair for resources published before media storage: embedded images are moved to R2; expired
@@ -217,6 +224,10 @@ async function assertSourceUrlAvailable(env,sourceUrl,resourceId=''){
 }
 
 async function writeResourceRow(env,id,old,d,status='published'){
+  await writeResourceRowCore(env,id,old,d,status);
+  await env.DB.prepare('UPDATE hub_resources SET extra_links=? WHERE id=?').bind(JSON.stringify(normalizeExtraLinks(d.extraLinks)),id).run();
+}
+async function writeResourceRowCore(env,id,old,d,status='published'){
   await assertSourceUrlAvailable(env,d.sourceUrl,old?.id||'');
   try{
     if(old?.id){

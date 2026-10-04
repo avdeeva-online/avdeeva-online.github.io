@@ -83,9 +83,14 @@
       return false;
     }finally{if(trigger){delete trigger.dataset.downloadBusy;if(old!=null)trigger.textContent=old}}
   }
+  const touchDevice=()=>{try{return matchMedia("(hover:none) and (pointer:coarse)").matches}catch{return false}};
   document.addEventListener("click",e=>{
     const a=e.target.closest?.('a[href*="/api/characters/"]');if(!a||a.dataset.downloadBusy)return;
     const href=String(a.href||"");
+    /* Phones (Safari, Telegram's in-app browser) do not treat a file built after a delay as the user's tap and show an
+       extra "open / download" page instead. There the link goes straight to the server, which sends the finished
+       card as an attachment; without the download attribute a failure shows a readable page instead of a saved file. */
+    if(touchDevice()&&/\/card(?:\.png)?(?:[?#]|$)/i.test(href)){a.removeAttribute("download");return}
     if(/\/card\.png(?:[?#]|$)/i.test(href)){e.preventDefault();e.stopPropagation();downloadPng(href,a);return}
     if(/\/card(?:[?#]|$)/i.test(href)){e.preventDefault();e.stopPropagation();downloadJson(href,a)}
   },true);

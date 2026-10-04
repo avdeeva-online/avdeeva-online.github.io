@@ -84,3 +84,13 @@
 .lk-download{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;margin-top:12px}.lk-download .lk-main{margin:0}.lk-download .lk-ghost{height:44px}
 @media(max-width:760px){.lk-row2,.lk-modes{grid-template-columns:1fr}.lk-summary{grid-template-columns:repeat(2,1fr)}.lk-key{grid-template-columns:1fr}.lk-arrow{display:none}.lk-step,.lk-settings{padding:13px}}
 @media(max-width:760px){.lk-head{flex-wrap:wrap}.lk-head .lk-status{order:3;margin-left:48px}}
+/* several lorebooks at once (up to 5) */
+.lk-files{display:grid;gap:8px}
+.lk-file-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.lk-file-actions [hidden]{display:none}
+.lk-x{width:30px;padding:0;font-size:16px;flex:none}
+.lk-book-head{display:flex;align-items:center;gap:8px;padding:10px 2px 4px;border-top:1px solid var(--cx-line)}
+.lk-book-head:first-child{border-top:0;padding-top:2px}
+.lk-book-head b{flex:1;min-width:0;font:600 13px var(--font-text);color:var(--cx-sand);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lk-book-head small{font:11px var(--font-text);color:var(--cx-muted);white-space:nowrap}
+@media (max-width:520px){.lk-book-head small{display:none}}

@@ -160,7 +160,12 @@ fail(entry.includes('images.input(source.body)'),'src/entry.js: server PNG conve
 fail(entry.includes("output({format:'image/png',anim:false})"),'src/entry.js: Images binding output must be a still PNG');
 fail(entry.includes('fetchAvatarPng(avatar,env.IMAGES)'),'src/entry.js: PNG route does not pass the Images binding');
 fail(/\[images\]\s+binding\s*=\s*"IMAGES"/m.test(wrangler),'wrangler.toml: IMAGES binding missing');
-for(const marker of ['canvasPngDataUrl','x-archive-png-fallback',"content-type':'text/html"])fail(!pngDownloadBodyEntry.includes(marker)&&!entry.includes(marker),`src/entry.js: retired PNG HTML fallback returned ${marker}`);
+for(const marker of ['canvasPngDataUrl','x-archive-png-fallback'])fail(!pngDownloadBodyEntry.includes(marker)&&!entry.includes(marker),`src/entry.js: retired PNG HTML fallback returned ${marker}`);
+fail(!pngDownloadBodyEntry.includes("content-type':'text/html"),'src/entry.js: retired PNG HTML fallback returned to the PNG route');
+// The only HTML allowed: a readable failure page for a phone opening the download link directly (never a PNG builder).
+{const htmlUses=entry.split("content-type':'text/html").length-1,failurePage=(entry.match(/export async function navigationFailure\(request,response\)\{[\s\S]*?\n\}/)||[''])[0];
+fail(htmlUses<=1&&(htmlUses===0||failurePage.includes("content-type':'text/html")),'src/entry.js: HTML is allowed only in the navigation failure page');
+fail(htmlUses===0||(failurePage.includes("if(response.status===200||!isNavigation(request))return response;")&&!/canvas|toDataURL|<script/i.test(failurePage)),'src/entry.js: navigation failure page must pass successful/API responses through and contain no script');}
 fail(pngDownloadBodyEntry.includes("state:'PNG_SOURCE_NOT_AVAILABLE'"),'src/entry.js: PNG endpoint must fail explicitly when no PNG source is available');
 
 const workerBase=read('src/worker.js');

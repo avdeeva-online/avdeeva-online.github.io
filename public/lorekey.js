@@ -44,6 +44,12 @@
       <label><input type="radio" name="lkMode" value="normal" checked><span><b>Нормальный</b><small>Перевод + полезные формы</small></span><em>по умолчанию</em></label>
       <label><input type="radio" name="lkMode" value="extended"><span><b>Расширенный</b><small>Формы + умеренные синонимы</small></span></label>
     </div>
+    <div class="lk-label">Окончания</div>
+    <div class="lk-modes">
+      <label><input type="radio" name="lkForms" value="auto" checked><span><b>Как в режиме</b><small>Формы, которые подберёт ИИ</small></span><em>по умолчанию</em></label>
+      <label><input type="radio" name="lkForms" value="cases"><span><b>Все падежи</b><small>Каждое слово во всех 6 падежах, ед. и мн. число</small></span></label>
+      <label><input type="radio" name="lkForms" value="stem"><span><b>Основа</b><small>«деньг» вместо «деньги», «деньгам»… — ловит любые окончания</small></span></label>
+    </div>
     <details class="lk-adv"><summary>Дополнительно</summary>
       <label class="lk-check"><input type="checkbox" data-lk="primary" checked><span>Переводить основные ключи (<code>key</code> / <code>keys</code>)</span></label>
       <label class="lk-check"><input type="checkbox" data-lk="secondary" checked><span>Переводить дополнительные ключи (<code>keysecondary</code> / <code>secondary_keys</code>)</span></label>
@@ -89,10 +95,11 @@
   const keysOf=v=>Array.isArray(v)?v.map(x=>String(x).trim()).filter(Boolean):typeof v==='string'?v.split(',').map(x=>x.trim()).filter(Boolean):[];
   const writeKeys=(entry,field,values)=>{entry[field]=typeof entry[field]==='string'?values.join(', '):values};
   const isRegex=v=>/^\/(?:[^/\\]|\\.)+\/[a-z]*$/i.test(String(v).trim());
-  const norm=v=>String(v).trim().replace(/\s+/g,' ').toLocaleLowerCase('ru').replaceAll('ё','е');
+  const norm=v=>String(v).trim().replace(/\s+/g,' ').toLocaleLowerCase('ru');
   const unique=list=>{const seen=new Set();return list.filter(v=>{const n=norm(v);if(!n||seen.has(n))return false;seen.add(n);return true})};
   const outputMode=()=>root.querySelector('input[name="lkOutput"]:checked')?.value||'both';
   const transMode=()=>root.querySelector('input[name="lkMode"]:checked')?.value||'normal';
+  const formMode=()=>root.querySelector('input[name="lkForms"]:checked')?.value||'auto';
   const kinds=()=>[...(els.primary.checked?['primary']:[]),...(els.secondary.checked?['secondary']:[])];
 
   function badge(text,good){const b=document.createElement('span');b.className='lk-mini'+(good?' good':'');b.textContent=text;els.badges.appendChild(b)}
@@ -135,7 +142,7 @@
     }
     return tasks;
   }
-  function batches(tasks){const groups=[],byEntry=new Map();for(const t of tasks){if(!byEntry.has(t.entryId))byEntry.set(t.entryId,[]);byEntry.get(t.entryId).push(t)}let batch=[],chars=0;for(const g of byEntry.values()){const cost=JSON.stringify(g).length;if(batch.length&&chars+cost>9000){groups.push(batch);batch=[];chars=0}batch.push(...g);chars+=cost}if(batch.length)groups.push(batch);return groups}
+  function batches(tasks){const groups=[],byEntry=new Map();for(const t of tasks){if(!byEntry.has(t.entryId))byEntry.set(t.entryId,[]);byEntry.get(t.entryId).push(t)}let batch=[],chars=0;for(const g of byEntry.values()){const cost=JSON.stringify(g).length;if(batch.length&&chars+cost>(formMode()==='auto'?9000:4000)){groups.push(batch);batch=[];chars=0}batch.push(...g);chars+=cost}if(batch.length)groups.push(batch);return groups}
   const taskId=t=>`${t.entryId}::${t.field}::${t.key}`;
 
   async function translateAll(){
@@ -169,16 +176,47 @@
     finally{els.translate.disabled=false}
   }
 
+  // ---- «Основа»: stems computed here from the full case forms the AI returns, so every ending is covered ----
+  // One stem when only endings differ (рыцарь… → «рыцар»), several when the stem itself changes (деньги / денег,
+  // друг / друзья). A stem is at least 4 letters unless it is a whole word; otherwise the full forms are kept.
+  const lowerRu=v=>String(v).trim().toLocaleLowerCase('ru');
+  const commonPrefix=ws=>{let p=ws[0]||'';for(const w of ws)while(!w.startsWith(p))p=p.slice(0,-1);return p};
+  function stemsOf(forms){
+    const ws=[...new Set(forms.map(lowerRu).filter(Boolean))];if(ws.length<2)return ws;
+    const p=commonPrefix(ws),min=Math.min(...ws.map(w=>w.length));
+    if((p.length>=3&&ws.includes(p))||(p.length>=4&&p.length>=min-3))return[p];
+    const groups=new Map();for(const w of ws){const k=w.length>p.length?w[p.length]:'';if(!groups.has(k))groups.set(k,[]);groups.get(k).push(w)}
+    if(groups.size===1)return ws;
+    return[...groups.values()].flatMap(g=>g.length===1?g:stemsOf(g));
+  }
+  const withYo=list=>list.flatMap(v=>/ё/.test(v)?[v,v.replaceAll('ё','е')]:[v]);
+  const reEsc=v=>v.replace(/[.*+?^${}()|[\]\\/]/g,'\\$&');
+  // One word → plain stems («деньг»). A phrase → a regex key, because «чёрн рыцар» never appears as such in text:
+  // /(?:чёрн|черн)[а-яё]*\s+рыцар[а-яё]*/i
+  function stemKeys(group){
+    const forms=group.map(f=>String(f).trim().replace(/\s+/g,' ')).filter(Boolean);if(!forms.length)return[];
+    const words=forms.map(f=>f.split(' ')),n=words[0].length;
+    if(n===1)return withYo(stemsOf(forms));
+    if(words.some(w=>w.length!==n))return forms;
+    const parts=[];for(let i=0;i<n;i++){const st=withYo(stemsOf(words.map(w=>w[i])));parts.push(`${st.length>1?`(?:${st.map(reEsc).join('|')})`:reEsc(st[0])}[а-яёa-z]*`)}
+    return[`/${parts.join('\\s+')}/i`];
+  }
+  const groupsOf=item=>Array.isArray(item?.groups)?item.groups.map(g=>(Array.isArray(g)?g:[g]).map(String).filter(Boolean)).filter(g=>g.length):[];
+
   async function translateBatch(tasks){
     const mode=transMode();
     const modeInstruction=mode==='exact'?'Return only the most natural Russian equivalent for each plaintext trigger. Do not generate declensions or synonyms.'
       :mode==='extended'?'Return the natural Russian translation plus useful Russian grammatical forms and a small number of high-value synonyms/aliases likely to literally appear in roleplay text. Avoid broad/noisy triggers.'
       :'Return the natural Russian translation plus useful grammatical forms likely to literally appear in Russian roleplay text. Add aliases only when clearly necessary. Avoid generic noisy triggers.';
     const payload=tasks.map(t=>({id:taskId(t),key:t.key,regex:t.regex,entry_title:t.title,context:t.context}));
-    const prompt=`You translate SillyTavern Lorebook trigger keys from English to Russian.\n\n${modeInstruction}\n\nRules:\n- Output STRICT JSON only: {"items":[{"id":"...","translations":["..."]}]}\n- Never translate or alter template macros such as {{char}}, {{user}}, <START>, variables, code-like tokens, IDs. Preserve them exactly inside phrases.\n- Proper names: transliterate/adapt into readable Russian Cyrillic when appropriate; do not semantically translate surnames unless context clearly shows they are titles/common nouns.\n- Key translations are literal trigger strings, never explanations.\n- For Russian inflection forms, include only natural forms useful as literal triggers. Do not invent impossible forms.\n- Do not duplicate forms differing only by letter case.\n- Preserve meaningful punctuation.\n- If regex=true, preserve valid JavaScript regex syntax and translate only literal English text inside it. If unsafe or ambiguous, return the original regex unchanged.\n- Use entry context only to disambiguate the key. Never rewrite the lore content.\n\nINPUT:\n${JSON.stringify(payload)}`;
+    const forms=formMode(),grouped=forms!=='auto';
+    const formsInstruction=grouped?`\n\nCASE FORMS (required): for EVERY Russian word or phrase you return, list ALL its case forms — nominative, genitive, dative, accusative, instrumental, prepositional — in singular and plural (skip forms that do not exist, e.g. plural of a personal name; keep ё where Russian spelling has it). For a phrase, inflect the whole phrase in agreement (\"чёрный рыцарь\", \"чёрного рыцаря\", …). Output {"items":[{"id":"...","groups":[["form",...],...]}]} — one group per Russian word or phrase, nominative singular first. Do not return "translations".`:'';
+    const prompt=`You translate SillyTavern Lorebook trigger keys from English to Russian.\n\n${modeInstruction}${formsInstruction}\n\nRules:\n- Output STRICT JSON only: {"items":[{"id":"...","translations":["..."]}]}\n- Never translate or alter template macros such as {{char}}, {{user}}, <START>, variables, code-like tokens, IDs. Preserve them exactly inside phrases.\n- Proper names: transliterate/adapt into readable Russian Cyrillic when appropriate; do not semantically translate surnames unless context clearly shows they are titles/common nouns.\n- Key translations are literal trigger strings, never explanations.\n- For Russian inflection forms, include only natural forms useful as literal triggers. Do not invent impossible forms.\n- Do not duplicate forms differing only by letter case.\n- Preserve meaningful punctuation.\n- If regex=true, preserve valid JavaScript regex syntax and translate only literal English text inside it. If unsafe or ambiguous, return the original regex unchanged.\n- Use entry context only to disambiguate the key. Never rewrite the lore content.\n\nINPUT:\n${JSON.stringify(payload)}`;
     const raw=await withRetry(()=>els.provider.value==='gemini'?callGemini(prompt):callOpenAI(prompt));
     const parsed=parseJson(raw);if(!Array.isArray(parsed.items))throw new Error('ИИ вернул ответ без списка items');
-    return parsed.items;
+    if(!grouped)return parsed.items;
+    return parsed.items.map(item=>{const gs=groupsOf(item),flat=gs.length?gs.flat():(Array.isArray(item.translations)?item.translations:[]);
+      return{id:item.id,translations:forms==='stem'&&gs.length?gs.flatMap(stemKeys):flat}});
   }
   // Optional second pass: the lore text itself (entry content) EN → RU. Names follow the keys just translated
   // (a small glossary goes with every batch), macros and formatting are kept. Long entries go one per request.
@@ -216,20 +254,23 @@
   }
   function parseJson(raw){const s=String(raw).trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');try{return JSON.parse(s)}catch{const a=s.indexOf('{'),b=s.lastIndexOf('}');if(a>=0&&b>a)return JSON.parse(s.slice(a,b+1));throw new Error('ИИ вернул невалидный JSON')}}
 
+  // «деньг» must match inside «деньгами»: switch off "match whole words" for the entry (World Info / character_book).
+  function wholeWordsOff(e){if(!e||typeof e!=='object')return;if('keys' in e&&!('key' in e)){e.extensions={...(e.extensions&&typeof e.extensions==='object'?e.extensions:{}),match_whole_words:false}}else e.matchWholeWords=false}
   function apply(book,output,tasks,map){
     const keepEnglish=outputMode()==='both',outEntries=getEntries(output);
     const byKey=new Map(tasks.map(t=>[taskId(t),t]));
     for(const item of getEntries(book.original)){
-      const out=outEntries.find(x=>x.id===item.id);if(!out)continue;
+      const out=outEntries.find(x=>x.id===item.id);if(!out)continue;let stemmed=false;
       for(const kind of kinds()){
         const field=fieldName(item.value,kind),merged=[];
         for(const oldKey of keysOf(item.value?.[field])){
           const t=byKey.get(`${item.id}::${field}::${oldKey}`);if(!t){merged.push(oldKey);continue}
           const ru=unique(map.get(taskId(t))||[]),values=unique(keepEnglish?[oldKey,...ru]:ru),safe=values.length?values:[oldKey];
-          merged.push(...safe);book.rows.push({entryId:item.id,field,oldKey,values:safe});if(ru.length)book.translated++;
+          merged.push(...safe);book.rows.push({entryId:item.id,field,oldKey,values:safe});if(ru.length){book.translated++;stemmed=true}
         }
         if(field in (item.value||{}))writeKeys(out.value,field,unique(merged));
       }
+      if(stemmed&&formMode()==='stem')wholeWordsOff(out.value);
     }
   }
 

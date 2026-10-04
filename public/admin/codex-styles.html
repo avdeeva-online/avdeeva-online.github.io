@@ -1,0 +1,65 @@
+<!doctype html><html lang="ru"><head><link rel="icon" href="/favicon.svg" type="image/svg+xml"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta http-equiv="Cache-Control" content="no-store"><title>Стили · ARCHIVE ADMIN</title>
+<style>
+:root{--bg:#0b0e0b;--line:#2f382b;--text:#cbd4c2;--muted:#6f7a69;--sand:#cdb88a;--mono:Consolas,ui-monospace,monospace}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 30% 0,#161d14 0,#0b0e0b 42%);color:var(--text);font-family:var(--mono)}
+.shell{width:min(1180px,calc(100% - 28px));margin:28px auto 60px}.head{padding-bottom:14px;border-bottom:1px solid var(--line)}h1{margin:7px 0 0;font-size:25px}
+.grid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:12px;margin-top:14px;align-items:start}
+.panel{border:1px solid var(--line);background:rgba(17,21,15,.92);padding:13px}
+.btn{border:1px solid var(--line);background:#10140e;color:#aeb9a5;padding:8px 12px;font:11px var(--mono);cursor:pointer;border-radius:4px}
+.btn.primary{background:#262618;color:#efe4bd;border-color:#8f8558}.btn.danger{border-color:#68463e;color:#d2a091}.btn.small{padding:4px 8px;font-size:11px}
+.list{display:grid;gap:4px;max-height:66vh;overflow:auto;margin-top:10px}
+.row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px;border:1px solid transparent;border-radius:5px;cursor:pointer}
+.row:hover{background:#141911}.row.active{border-color:#8f8558;background:#1c2016}
+.row img,.row i{width:44px;height:44px;border-radius:4px;object-fit:cover;background:#151814;border:1px solid var(--line);display:block}
+.row b{display:block;font-size:12px;color:#e6e0d2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.row small{color:var(--muted);font-size:10.5px}
+.row .moves{display:flex;flex-direction:column;gap:2px}
+label{display:block;margin:13px 0 5px;color:var(--muted);font-size:11px}
+input,textarea{width:100%;border:1px solid var(--line);background:#0c100b;color:var(--text);font:13px/1.5 var(--mono);padding:8px 9px}
+textarea{min-height:130px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pic{display:grid;grid-template-columns:180px minmax(0,1fr);gap:12px;align-items:start}
+.pic .preview{width:180px;aspect-ratio:4/5;border:1px dashed #465440;background:#080b08 center/cover no-repeat;display:grid;place-items:center;color:#657060;font-size:11px;text-align:center;padding:8px}
+.hint{color:var(--muted);font-size:11px;line-height:1.5;margin-top:5px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.status{margin-top:10px;font-size:11px;color:#899583}.status.bad{color:#d2a091}.status.ok{color:#cdb88a}
+.empty{padding:30px 10px;text-align:center;color:var(--muted);font-size:12px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.list{max-height:36vh}.two,.pic{grid-template-columns:1fr}.pic .preview{width:150px}}
+</style></head><body><main class="shell">
+<header class="head"><h1>Стили</h1></header>
+<div class="grid">
+  <section class="panel"><button class="btn primary" id="new" type="button">+ Новый стиль</button><div id="list" class="list"><div class="empty">Загрузка…</div></div></section>
+  <section class="panel">
+    <form id="form" autocomplete="off">
+      <div class="pic"><div class="preview" id="preview">Картинки нет</div><div><input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden><button class="btn" id="pick" type="button">Выбрать картинку</button> <button class="btn small" id="unpick" type="button">Убрать</button><div class="hint">Пример результата стиля. JPG / PNG / WEBP, сжимается автоматически.</div></div></div>
+      <label>Название</label><input id="title" maxlength="120" placeholder="Dressy Shorts">
+      <div class="two"><div><label>Модель</label><input id="model" list="models" maxlength="60" placeholder="NovelAI v4.5"><datalist id="models"><option>NovelAI v4.5</option><option>NovelAI v5</option><option>Nano Banana</option></datalist></div>
+      <div><label>Автор стиля (необязательно)</label><input id="author" maxlength="80" placeholder="ник"></div></div>
+      <label>Ссылка на автора или пост (необязательно)</label><input id="authorLink" placeholder="https://t.me/…">
+      <label>Текст стиля — копируется на сайте одним нажатием</label><textarea id="prompt" placeholder="clothes: tailored pinstripe bermuda shorts, …"></textarea>
+      <div class="actions"><button class="btn primary" type="submit" id="save">Сохранить</button><button class="btn danger" type="button" id="del" hidden>Удалить стиль</button><a class="btn" href="/codex.html#tab=styles" target="_blank" rel="noopener">Открыть на сайте ↗</a></div>
+      <div class="status" id="st"></div>
+    </form>
+  </section>
+</div>
+</main>
+<script>
+(()=>{
+  const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let styles=[],current=null,image;/* image: undefined = keep, '' = remove, data URL = new */
+  const st=(t,cls='')=>{const e=$('#st');e.textContent=t;e.className='status '+cls};
+  const api=async body=>{const r=await fetch('/api/admin/codex-styles',body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);return d};
+  const preview=url=>{const p=$('#preview');p.style.backgroundImage=url?`url("${url.replace(/"/g,'%22')}")`:'';p.textContent=url?'':'Картинки нет'};
+  // Downscale to ≤1200px and WEBP ≤ ~350 KB before upload.
+  async function compress(file){const bmp=await createImageBitmap(file),s=Math.min(1,1200/Math.max(bmp.width,bmp.height)),c=document.createElement('canvas');c.width=Math.round(bmp.width*s);c.height=Math.round(bmp.height*s);c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);let q=.86,blob;for(let i=0;i<6;i++){blob=await new Promise(r=>c.toBlob(r,'image/webp',q));if(blob&&blob.size<=350*1024)break;q-=.1}if(!blob||blob.size>650*1024)throw new Error('картинка слишком большая');return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result));fr.onerror=rej;fr.readAsDataURL(blob)})}
+  function renderList(){$('#list').innerHTML=styles.length?styles.map((s,i)=>`<div class="row${current?.id===s.id?' active':''}" data-id="${esc(s.id)}">${s.image_url?`<img src="${esc(s.image_url)}" alt="">`:'<i></i>'}<div><b>${esc(s.title)}</b><small>${esc(s.model||'без модели')}${s.author?' · @'+esc(s.author):''}</small></div><div class="moves"><button class="btn small" type="button" data-move="-1" ${i?'':'disabled'}>↑</button><button class="btn small" type="button" data-move="1" ${i<styles.length-1?'':'disabled'}>↓</button></div></div>`).join(''):'<div class="empty">Стилей пока нет</div>'}
+  function open(s){current=s||null;image=undefined;$('#title').value=s?.title||'';$('#model').value=s?.model||'';$('#author').value=s?.author||'';$('#authorLink').value=s?.author_link||'';$('#prompt').value=s?.prompt||'';preview(s?.image_url||'');$('#del').hidden=!s;st(s?'':'Новый стиль');renderList()}
+  async function load(selectId){styles=(await api()).styles||[];open(styles.find(s=>s.id===(selectId||current?.id))||null)}
+  $('#new').onclick=()=>open(null);
+  $('#pick').onclick=()=>$('#imageInput').click();
+  $('#unpick').onclick=()=>{image='';preview('')};
+  $('#imageInput').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;st('Сжимаю картинку…');try{image=await compress(f);preview(image);st(`Картинка готова · ~${Math.round(image.length*.75/1024)} КБ`)}catch(err){st('Не получилось: '+err.message,'bad')}e.target.value=''};
+  $('#list').addEventListener('click',async e=>{const row=e.target.closest('.row');if(!row)return;const mv=e.target.closest('[data-move]');if(mv){try{await api({action:'move',id:row.dataset.id,dir:Number(mv.dataset.move)});await load()}catch(err){st('Не получилось: '+err.message,'bad')}return}open(styles.find(s=>s.id===row.dataset.id))});
+  $('#form').addEventListener('submit',async e=>{e.preventDefault();st('Сохраняю…');try{const body={action:'set',id:current?.id||'',title:$('#title').value,model:$('#model').value,author:$('#author').value,author_link:$('#authorLink').value,prompt:$('#prompt').value};if(image!==undefined)body.image=image;const d=await api(body);await load(d.id);st('Сохранено. На сайте появится в течение минуты.','ok')}catch(err){st('Не получилось: '+({TITLE_AND_PROMPT_REQUIRED:'нужны название и текст стиля',IMAGE_SIZE:'картинка слишком большая',IMAGE_FORMAT:'это не картинка'}[err.message]||err.message),'bad')}});
+  $('#del').onclick=async()=>{if(!current||!confirm(`Удалить стиль «${current.title}» вместе с картинкой?`))return;try{await api({action:'delete',id:current.id});current=null;await load();st('Удалено.','ok')}catch(err){st('Не получилось: '+err.message,'bad')}};
+  load().catch(err=>{$('#list').innerHTML=`<div class="empty">Не удалось загрузить: ${esc(err.message)}</div>`});
+})();
+</script></body></html>

@@ -90,6 +90,31 @@ body.codex-lock{overflow:hidden}
 .codex-res span{min-width:0;display:grid;gap:2px}
 .codex-res b{font:500 13px/1.3 var(--font-text);color:var(--cx-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .codex-res em{font:normal 10px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--cx-dim)}
+/* Universe card: a strip of its bots' portraits along the top edge. */
+.codex-cover{display:flex;height:82px;margin:-12px -13px 9px;border-radius:9px 9px 0 0;overflow:hidden;border-bottom:1px solid var(--cx-line);background:#151814}
+.codex-cover img{flex:1 1 0;min-width:0;height:100%;object-fit:cover;object-position:center 22%;filter:saturate(.9) brightness(.9);transition:filter .2s}
+.codex-cover img+img{border-left:1px solid rgba(0,0,0,.45)}
+.codex-card:hover .codex-cover img{filter:none}
+/* Author: avatar next to the name (picture from the admin, or the first letter). */
+.codex-person{display:flex;align-items:center;gap:10px;min-width:0}
+.codex-person-text{min-width:0}.codex-person-text h3,.codex-person-text h2{overflow-wrap:anywhere}
+.codex-ava{flex:0 0 auto;width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid var(--cx-line-strong);background:#1a1d16}
+.codex-ava-letter{display:grid;place-items:center;font:700 19px/1 var(--font-title);color:var(--cx-sand);background:radial-gradient(circle at 35% 30%,rgba(205,184,138,.2),rgba(205,184,138,.05) 70%)}
+.codex-ava-lg{width:64px;height:64px;font-size:28px}
+.codex-person-lg{margin-right:36px}
+/* Styles tab: picture on top, title + model, the prompt below — one tap copies it. */
+.codex-grid.codex-styles-grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.codex-style{display:flex;flex-direction:column;border:1px solid var(--cx-line);border-radius:10px;background:rgba(12,15,12,.72);overflow:hidden}
+.codex-style-img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#151814;border-bottom:1px solid var(--cx-line)}
+.codex-style-body{display:flex;flex-direction:column;gap:7px;padding:11px 12px 12px;flex:1}
+.codex-style h3{margin:0;font:700 19px/1.1 var(--font-title);color:#f1eadb}
+.codex-style-meta{display:flex;flex-wrap:wrap;gap:5px}
+.codex-style-meta span,.codex-style-meta a{padding:2px 8px;border:1px solid var(--cx-line);border-radius:999px;font:10.5px/1.5 var(--font-text);color:var(--cx-muted);text-decoration:none}
+.codex-style-meta a:hover{color:#fff;border-color:var(--cx-line-strong)}
+.codex-prompt{position:relative;margin-top:auto;width:100%;max-height:220px;overflow:auto;padding:10px 11px;border:1px solid rgba(205,184,138,.35);border-radius:7px;background:rgba(5,7,5,.6);color:#e8e2d2;font:12.5px/1.55 var(--font-mono);text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;cursor:copy;transition:border-color .15s,background .15s}
+.codex-prompt:hover{border-color:rgba(205,184,138,.7);background:rgba(205,184,138,.06)}
+.codex-prompt.copied{border-color:var(--cx-sand)}
+.codex-prompt.copied::after{content:attr(data-copied);position:absolute;top:6px;right:7px;padding:2px 7px;border-radius:999px;background:var(--cx-sand);color:#14120c;font:600 10px/1.4 var(--font-text)}
 .codex-minor{grid-column:1/-1}.codex-minor .codex-section{margin-top:8px}
 .codex-links a{font-size:8.5px;letter-spacing:.06em;color:var(--cx-text);text-decoration:none}.codex-links a:hover{color:#fff;text-decoration:underline}
 
@@ -167,3 +192,5 @@ body.codex-lock{overflow:hidden}
   .codex-lore-for{font-size:11px}
   .codex-botlist{font-size:12px}
 }
+
+@media(max-width:760px){.codex-cover{height:64px;margin:-10px -10px 8px}.codex-ava{width:34px;height:34px;font-size:16px}.codex-ava-lg{width:52px;height:52px;font-size:23px}.codex-grid.codex-styles-grid{grid-template-columns:1fr}.codex-prompt{font-size:12px}}

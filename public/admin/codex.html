@@ -22,7 +22,7 @@ textarea{min-height:150px;resize:vertical}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
 .status{margin-top:10px;font-size:11px;color:#899583}
 .empty{padding:40px 10px;text-align:center;color:var(--muted);font-size:12px}
-h2{margin:0;font-size:18px;color:#efe4bd}.sub{margin-top:4px;color:var(--muted);font-size:11px}
+h2{margin:0;font-size:18px;color:#efe4bd}.ava{display:flex;gap:12px;align-items:center;margin-top:12px}.ava-img{flex:0 0 auto;width:64px;height:64px;border-radius:50%;border:1px solid #4c5540;background:#1a1d16 center/cover no-repeat;display:grid;place-items:center;font:600 24px/1 Georgia,serif;color:#cdb88a}.sub{margin-top:4px;color:var(--muted);font-size:11px}
 @media(max-width:800px){.grid{grid-template-columns:1fr}.list{max-height:40vh}.link{grid-template-columns:1fr}}
 </style></head><body><main class="shell">
 <header class="head"><h1>CODEX</h1></header>
@@ -41,16 +41,24 @@ h2{margin:0;font-size:18px;color:#efe4bd}.sub{margin-top:4px;color:var(--muted);
   const key=s=>String(s||'').trim().toLocaleLowerCase();
   let kind='universe',current=null,names={universe:new Map(),author:new Map()},profiles=new Map();
   const pkey=(k,n)=>k+'\u0000'+key(n);
+  // 1 работа / 3 работы / 5 работ.
+  const ru=(n,one,few,many)=>{const a=n%10,b=n%100;return `${n} ${a===1&&b!==11?one:a>=2&&a<=4&&(b<12||b>14)?few:many}`};
+  const countLabel=(k,n)=>k==='author'?ru(n,'работа','работы','работ'):ru(n,'бот','бота','ботов');
+  // Avatar: undefined = keep, '' = remove, data URL = new. Cropped to a 400×400 square WEBP before upload.
+  let avatar;
+  async function squareAvatar(file){const bmp=await createImageBitmap(file),side=Math.min(bmp.width,bmp.height),c=document.createElement('canvas');c.width=c.height=400;c.getContext('2d').drawImage(bmp,(bmp.width-side)/2,(bmp.height-side)/2,side,side,0,0,400,400);const blob=await new Promise(r=>c.toBlob(r,'image/webp',.86));return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result));fr.onerror=rej;fr.readAsDataURL(blob)})}
+  const avatarPreview=(url,name)=>{const el=$('#avaPrev');if(!el)return;el.style.backgroundImage=url?`url("${url}")`:'';el.textContent=url?'':String(name||'?').replace(/^@/,'').charAt(0).toUpperCase()};
   const api=async(body)=>{const r=await fetch('/api/admin/codex-profiles',body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);return d};
   function renderList(){
     const q=key($('#q').value);
     const rows=[...names[kind]].filter(([n])=>!q||key(n).includes(q)).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
-    $('#list').innerHTML=rows.map(([n,c])=>`<button class="row${current&&current.kind===kind&&key(current.name)===key(n)?' active':''}" data-name="${esc(n)}"><span>${profiles.has(pkey(kind,n))?'<span class="done">● </span>':''}${kind==='author'?'@':''}${esc(n)}</span><small>${c} ${kind==='author'?'работ':'бот.'}</small></button>`).join('')||'<div class="empty">Ничего</div>';
+    $('#list').innerHTML=rows.map(([n,c])=>`<button class="row${current&&current.kind===kind&&key(current.name)===key(n)?' active':''}" data-name="${esc(n)}"><span>${profiles.has(pkey(kind,n))?'<span class="done">● </span>':''}${kind==='author'?'@':''}${esc(n)}</span><small>${countLabel(kind,c)}</small></button>`).join('')||'<div class="empty">Ничего</div>';
   }
   const linkRow=(l={})=>`<div class="link"><input data-l="label" placeholder="Название (Сайт, Telegram…)" value="${esc(l.label||'')}"><input data-l="url" placeholder="https://…" value="${esc(l.url||'')}"><button class="btn small" data-remove-link>✕</button></div>`;
   function openEditor(name){
-    current={kind,name};const p=profiles.get(pkey(kind,name))||{};
-    $('#editor').innerHTML=`<h2>${kind==='author'?'@':''}${esc(name)}</h2><div class="sub">${kind==='author'?'Автор':'Вселенная'} · ${names[kind].get(name)||0} ${kind==='author'?'работ (боты + ресурсы)':'бот.'}</div>
+    current={kind,name};avatar=undefined;const p=profiles.get(pkey(kind,name))||{};
+    $('#editor').innerHTML=`<h2>${kind==='author'?'@':''}${esc(name)}</h2><div class="sub">${kind==='author'?'Автор':'Вселенная'} · ${countLabel(kind,names[kind].get(name)||0)}${kind==='author'?' (боты + ресурсы)':''}</div>
+      <div class="ava"><div class="ava-img" id="avaPrev"></div><div><input type="file" id="avaInput" accept="image/png,image/jpeg,image/webp" hidden><button class="btn small" id="avaPick" type="button">${kind==='author'?'Аватарка':'Значок вселенной'}</button> <button class="btn small" id="avaDel" type="button">Убрать</button><div class="hint">Обрежется до квадрата. Без картинки на сайте будет первая буква.</div></div></div>
       <label>Описание</label><textarea id="desc" placeholder="${kind==='author'?'Пара слов об авторе…':'О чём вселенная, где происходит…'}">${esc(p.description||'')}</textarea>
       <div class="hint">Пустая строка — новый абзац.</div>
       <label>Ссылки</label><div id="links">${(p.links||[]).map(linkRow).join('')||linkRow()}</div>
@@ -59,12 +67,15 @@ h2{margin:0;font-size:18px;color:#efe4bd}.sub{margin-top:4px;color:var(--muted);
       ${kind==='universe'?`<label>Хэштеги</label><input class="tags" id="tags" placeholder="через запятую" value="${esc((p.hashtags||[]).join(', '))}">`:''}
       <div class="actions"><button class="btn primary" id="save">Сохранить</button>${profiles.has(pkey(kind,name))?'<button class="btn danger" id="del">Очистить</button>':''}<a class="btn" href="/codex.html#${kind}=${encodeURIComponent(name)}" target="_blank" rel="noopener">Открыть на сайте ↗</a></div>
       <div class="status" id="st"></div>`;
+    avatarPreview(p.avatar_url,name);
     renderList();
+    // On a phone the editor sits under the long list: bring it into view.
+    if(innerWidth<800)$('#editor').scrollIntoView({behavior:'smooth',block:'start'});
   }
   async function save(){
     const st=$('#st');st.textContent='Сохраняю…';
     const links=[...document.querySelectorAll('#links .link')].map(r=>({label:r.querySelector('[data-l=label]').value,url:r.querySelector('[data-l=url]').value})).filter(l=>l.url.trim());
-    try{const d=await api({action:'set',kind:current.kind,name:current.name,description:$('#desc').value,links,hashtags:$('#tags')?.value||''});profiles.set(pkey(current.kind,current.name),d.profile);openEditor(current.name);$('#st').textContent='Сохранено. На сайте появится в течение минуты.'}catch(e){st.textContent='Не получилось: '+e.message}
+    try{const body={action:'set',kind:current.kind,name:current.name,description:$('#desc').value,links,hashtags:$('#tags')?.value||''};if(avatar!==undefined)body.avatar=avatar;const d=await api(body);profiles.set(pkey(current.kind,current.name),d.profile);openEditor(current.name);$('#st').textContent='Сохранено. На сайте появится в течение минуты.'}catch(e){st.textContent='Не получилось: '+e.message}
   }
   async function del(){
     if(!confirm('Очистить описание и ссылки?'))return;
@@ -76,7 +87,10 @@ h2{margin:0;font-size:18px;color:#efe4bd}.sub{margin-top:4px;color:var(--muted);
     if(e.target.id==='addLink'){$('#links').insertAdjacentHTML('beforeend',linkRow());return}
     if(e.target.closest('[data-remove-link]')){e.target.closest('.link').remove();return}
     if(e.target.id==='save')save();if(e.target.id==='del')del();
+    if(e.target.id==='avaPick'){$('#avaInput').click();return}
+    if(e.target.id==='avaDel'){avatar='';avatarPreview('',current?.name);$('#st').textContent='Аватарка уберётся после сохранения.';return}
   });
+  document.addEventListener('change',async e=>{if(e.target.id!=='avaInput')return;const f=e.target.files?.[0];if(!f)return;try{avatar=await squareAvatar(f);avatarPreview(avatar,current?.name);$('#st').textContent='Аватарка готова — нажми «Сохранить».'}catch(err){$('#st').textContent='Не получилось прочитать картинку: '+err.message}e.target.value=''});
   $('#q').addEventListener('input',renderList);
   (async()=>{
     try{

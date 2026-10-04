@@ -6,7 +6,7 @@
   const key=s=>String(s||'').trim().toLocaleLowerCase();
   const plural=(n,one,many)=>`${n} ${n===1?one:many}`;
   const catalogUrl=params=>`characters.html?${new URLSearchParams(params)}`;
-  let universes=[],authors=[],profiles=new Map(),tab='universes',authorFilter='all',sizeFilter='all',kindFilter='all',query='';
+  let universes=[],authors=[],styles=[],profiles=new Map(),modelFilter='all',tab='universes',authorFilter='all',sizeFilter='all',kindFilter='all',query='';
   // Filter by how many bots a universe / author has.
   const SIZES=[['all','All'],['big','10+'],['mid','3–9'],['small','1–2']];
   const inSize=n=>sizeFilter==='all'||(sizeFilter==='big'?n>=10:sizeFilter==='mid'?n>=3&&n<10:n<3);
@@ -62,20 +62,22 @@
   const matchesQuery=text=>!query||key(text).includes(query);
   // Counts without zeros: "0 lorebooks" is noise.
   const counts=parts=>parts.filter(([n])=>n>0).map(([n,one,many])=>plural(n,one,many)).join(' · ');
+  // Avatar from the admin (CODEX → Описания и ссылки) or the first letter of the name.
+  const avatarHtml=(kind,name,cls='')=>{const url=profileOf(kind,name).avatar_url;return url?`<img class="codex-ava ${cls}" src="${esc(url)}" alt="" loading="lazy" decoding="async">`:`<span class="codex-ava codex-ava-letter ${cls}" aria-hidden="true">${esc(String(name||'?').replace(/^@+/,'').charAt(0).toUpperCase())}</span>`};
+  // Universe card: a strip of its bots' portraits on top instead of a wall of text.
+  const cover=list=>list.length?`<div class="codex-cover" aria-hidden="true">${list.slice(0,4).map(b=>`<img src="${esc(b.image)}" alt="" loading="lazy" decoding="async">`).join('')}</div>`:'';
   function universeCard(u){
-    return `<article class="codex-card" tabindex="0" role="button" data-universe="${esc(u.name)}">
+    return `<article class="codex-card codex-universe" tabindex="0" role="button" data-universe="${esc(u.name)}">${cover(cardBots(u))}
       <div class="codex-kicker">// ${u.other?'lorebooks':'universe'}</div>
       <h3>${esc(u.other?'Other lorebooks':u.name)}</h3>
       <div class="codex-by">by <b>@${esc(u.author)}</b></div>
       <div class="codex-counts">${counts([[u.other?0:u.bots.length,'bot','bots'],[u.lorebooks.length,'lorebook','lorebooks']])}</div>
       ${u.settings.length?`<div class="codex-chips">${u.settings.map(s=>`<span>${esc(s)}</span>`).join('')}</div>`:''}
-      ${faces(cardBots(u).map(b=>b.image))}
     </article>`;
   }
   function authorCard(a){
     return `<article class="codex-card codex-author" tabindex="0" role="button" data-author="${esc(a.name)}">
-      <div class="codex-kicker">// author</div>
-      <h3>@${esc(a.name)}</h3>
+      <div class="codex-person">${avatarHtml('author',a.name)}<div class="codex-person-text"><div class="codex-kicker">// author</div><h3>@${esc(a.name)}</h3></div></div>
       <div class="codex-counts">${counts([[a.bots,'bot','bots'],[a.resources.length,'resource','resources'],[a.universes.size,'universe','universes'],[a.lorebooks,'lorebook','lorebooks']])}</div>
       ${a.url?`<div class="codex-links"><a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" data-stop>JanitorAI ↗</a></div>`:''}
       ${faces(authorImages(a))}
@@ -89,15 +91,20 @@
     const box=$('#codexFilters');const names=[...new Set(universes.map(u=>u.author))].filter(Boolean);
     const row=(label,items,attr,current)=>`<div class="codex-frow"><span>${label}</span>${items.map(([v,t])=>`<button type="button" ${attr}="${esc(v)}" class="${v===current?'active':''}">${esc(t)}</button>`).join('')}</div>`;
     box.hidden=false;
+    if(tab==='styles'){const models=[...new Set(styles.map(s=>s.model).filter(Boolean))];box.hidden=models.length<2;box.innerHTML=box.hidden?'':row('Model',[['all','All'],...models.map(m=>[m,m])],'data-model-filter',modelFilter);return}
     box.innerHTML=tab==='universes'
       ?row('Bots',SIZES,'data-size-filter',sizeFilter)+(names.length>1?row('Author',[['all','All'],...names.map(n=>[n,'@'+n])],'data-author-filter',authorFilter):'')
       :row('Makes',KINDS,'data-kind-filter',kindFilter)+row('Works',SIZES,'data-size-filter',sizeFilter);
   }
   const nothing='<div class="codex-state">Nothing found.</div>';
+  // Style: picture on top, title + model, and the prompt — one tap copies it.
+  const styleCard=s=>`<article class="codex-style">${s.image_url?`<img class="codex-style-img" src="${esc(s.image_url)}" alt="${esc(s.title)}" loading="lazy" decoding="async">`:''}<div class="codex-style-body"><h3>${esc(s.title)}</h3><div class="codex-style-meta">${[s.model?`<span>${esc(s.model)}</span>`:'',s.author?(s.author_link?`<a href="${esc(s.author_link)}" target="_blank" rel="noopener noreferrer">@${esc(s.author)}</a>`:`<span>@${esc(s.author)}</span>`):''].filter(Boolean).join('')}</div><button type="button" class="codex-prompt" data-copy="${esc(s.id)}" title="Tap to copy">${esc(s.prompt)}</button></div></article>`;
+  async function copyText(text){try{await navigator.clipboard.writeText(text);return true}catch{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch{}ta.remove();return ok}}
   function render(){
     document.querySelectorAll('.codex-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
     renderFilters();
-    const grid=$('#codexGrid');
+    const grid=$('#codexGrid');grid.classList.toggle('codex-styles-grid',tab==='styles');
+    if(tab==='styles'){const list=styles.filter(s=>(modelFilter==='all'||s.model===modelFilter)&&matchesQuery([s.title,s.model,s.author,s.prompt].join(' ')));grid.innerHTML=list.length?list.map(styleCard).join(''):(styles.length?nothing:'<div class="codex-state">Styles are coming soon.</div>');return}
     if(tab==='universes'){
       const list=universes.filter(u=>(authorFilter==='all'||u.author===authorFilter)&&inSize(cardBots(u).length)&&matchesQuery([u.name,u.author,...u.settings,...u.bots.map(b=>b.nameEn),...u.lorebooks.map(l=>l.title)].join(' ')));
       grid.innerHTML=list.length?list.map(universeCard).join(''):nothing;
@@ -159,8 +166,8 @@
     const order=[...groups].sort((x,y)=>Number(!x[0])-Number(!y[0])||y[1].length-x[1].length||x[0].localeCompare(y[0]));
     const botsBody=order.map(([u,list])=>`<div class="codex-group"><div class="codex-strip">${u?`<button type="button" data-open-universe="${esc(u)}">${esc(u)}</button>`:'<span>No universe</span>'}<em>${plural(list.length,'bot','bots')}</em></div>${botGrid(byName(list))}</div>`).join('');
     const lores=[...new Map(universes.filter(u=>u.author===a.name).flatMap(u=>u.lorebooks).map(l=>[l.contentHash||l.id,l])).values()];
-    show(`<div class="codex-kicker">// author</div>
-      <h2 id="codexModalTitle">@${esc(a.name)}</h2>
+    show(`<div class="codex-person codex-person-lg">${avatarHtml('author',a.name,'codex-ava-lg')}<div class="codex-person-text"><div class="codex-kicker">// author</div>
+      <h2 id="codexModalTitle">@${esc(a.name)}</h2></div></div>
       <div class="codex-counts">${counts([[a.bots,'bot','bots'],[a.resources.length,'resource','resources'],[own.length,'universe','universes'],[lores.length,'lorebook','lorebooks']])}</div>
       ${aboutBlock(p)}${linksBlock(links)}
       ${a.bots?`<div class="codex-actions"><a class="codex-btn" href="${esc(catalogUrl({author:a.name}))}">All bots in the catalog →</a></div>`:''}
@@ -190,6 +197,8 @@
     const t=e.target.closest('.codex-tab');if(t){tab=t.dataset.tab;setHash({tab});render();return}
     const f=e.target.closest('[data-author-filter]');if(f){authorFilter=f.dataset.authorFilter;render();return}
     const sf=e.target.closest('[data-size-filter]');if(sf){sizeFilter=sf.dataset.sizeFilter;render();return}
+    const mf=e.target.closest('[data-model-filter]');if(mf){modelFilter=mf.dataset.modelFilter;render();return}
+    const cp=e.target.closest('[data-copy]');if(cp){const s=styles.find(x=>x.id===cp.dataset.copy);if(s)copyText(s.prompt).then(ok=>{cp.dataset.copied=ok?'Copied ✓':'Copy failed';cp.classList.add('copied');clearTimeout(cp._t);cp._t=setTimeout(()=>cp.classList.remove('copied'),1400)});return}
     const kf=e.target.closest('[data-kind-filter]');if(kf){kindFilter=kf.dataset.kindFilter;render();return}
     const more=e.target.closest('[data-more]');if(more){more.nextElementSibling.hidden=false;more.remove();return}
     const ou=e.target.closest('[data-open-universe]');if(ou){openUniverse(ou.dataset.openUniverse);return}
@@ -208,12 +217,12 @@
     try{
       const get=u=>fetch(u).then(r=>r.ok?r.json():Promise.reject(new Error(`HTTP ${r.status}`)));
       // Profiles are optional: without them the page still works, just without descriptions and links.
-      const [cat,lb,pr,hub]=await Promise.all([get('/api/catalog?limit=10000'),get('/api/lorebooks'),get('/api/codex-profiles').catch(()=>({})),get('/api/hub-resources?summary=1').catch(()=>({}))]);
+      const [cat,lb,pr,hub,st]=await Promise.all([get('/api/catalog?limit=10000'),get('/api/lorebooks'),get('/api/codex-profiles').catch(()=>({})),get('/api/hub-resources?summary=1').catch(()=>({})),get('/api/codex-styles').catch(()=>({}))]);styles=Array.isArray(st.styles)?st.styles:[];
       for(const p of Array.isArray(pr.profiles)?pr.profiles:[])profiles.set(`${p.kind}\u0000${key(p.name)}`,p);
       build(Array.isArray(cat.characters)?cat.characters:[],Array.isArray(lb.lorebooks)?lb.lorebooks:[],Array.isArray(hub.resources)?hub.resources:[]);
-      $('#countUniverses').textContent=universes.filter(u=>!u.other).length;$('#countAuthors').textContent=authors.length;
+      $('#countUniverses').textContent=universes.filter(u=>!u.other).length;$('#countAuthors').textContent=authors.length;const cs=$('#countStyles');if(cs)cs.textContent=styles.length||'';
       const h=new URLSearchParams(location.hash.slice(1));
-      if(h.get('tab')==='authors'||h.get('author'))tab='authors';
+      if(h.get('tab')==='authors'||h.get('author'))tab='authors';if(h.get('tab')==='styles')tab='styles';
       render();
       if(h.get('universe'))openUniverse(h.get('universe'));else if(h.get('author'))openAuthor(h.get('author'));
     }catch(err){$('#codexGrid').innerHTML=`<div class="codex-state">The codex is temporarily unavailable. ${esc(err.message)}</div>`}

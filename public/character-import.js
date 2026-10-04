@@ -82,6 +82,7 @@
     }finally{setBusy(false)}
   }
 
-  const start=()=>{const btn=$('#importOpen');if(btn)btn.addEventListener('click',openImport)};
+  /* characters.html#import opens the import window directly (the Telegram bot links here). */
+  const start=()=>{const btn=$('#importOpen');if(btn)btn.addEventListener('click',openImport);if(location.hash==='#import')openImport()};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

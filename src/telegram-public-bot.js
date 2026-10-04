@@ -12,16 +12,32 @@ const cb=(text,callback_data)=>({text,callback_data});
 const url=(text,u)=>({text,url:u});
 const keyboard=rows=>({inline_keyboard:rows.filter(r=>r?.length)});
 async function send(token,chatId,text,reply_markup){return tg(token,'sendMessage',{chat_id:chatId,text,parse_mode:'HTML',disable_web_page_preview:true,...(reply_markup?{reply_markup}:{})})}
-async function edit(token,chatId,messageId,text,reply_markup){try{return await tg(token,'editMessageText',{chat_id:chatId,message_id:messageId,text,parse_mode:'HTML',disable_web_page_preview:true,...(reply_markup?{reply_markup}:{})})}catch(e){if(/message is not modified/i.test(String(e?.message||e)))return null;return send(token,chatId,text,reply_markup)}}
+/* A command has no message to edit: the view is sent as a new message. */
+async function edit(token,chatId,messageId,text,reply_markup){if(!messageId)return send(token,chatId,text,reply_markup);try{return await tg(token,'editMessageText',{chat_id:chatId,message_id:messageId,text,parse_mode:'HTML',disable_web_page_preview:true,...(reply_markup?{reply_markup}:{})})}catch(e){if(/message is not modified/i.test(String(e?.message||e)))return null;return send(token,chatId,text,reply_markup)}}
 async function answer(token,id,text=''){try{await tg(token,'answerCallbackQuery',{callback_query_id:id,...(text?{text}:{})})}catch{}}
 
 // ---- home ----
 // Counts are a nice-to-have: if the catalog or HUB cannot be read, the menu still opens.
 async function homeView(env,origin,catalog){
   const [items,hub]=await Promise.all([loadCatalog(catalog).catch(()=>null),resourceCount(env).catch(()=>null)]);
-  const text=`<b>ARCHIVE.EXE</b>\n\nКаталог ботов для SillyTavern и Tavo — карточки PNG/JSON и лорбуки — и ресурсы TAVO HUB.\n\nВыбери раздел или просто напиши в чат имя бота, автора или вселенную.`;
-  return{text,keyboard:keyboard([[cb(`🤖 Боты${items?` · ${items.length}`:''}`,'p:fm'),cb(`📚 TAVO HUB${hub!=null?` · ${hub}`:''}`,'p:hubm')],[cb('🎲 Случайный бот','p:random'),cb('🔎 Поиск','p:search')],[url('🌐 Открыть сайт ↗',origin+'/')]])};
+  const text=`<b>NODE_00</b> · бот сайта ARCHIVE.EXE\n\nКаталог ботов для SillyTavern и Tavo — карточки PNG/JSON и лорбуки — и ресурсы TAVO HUB.\n\nВыбери раздел или просто напиши в чат имя бота, автора или вселенную.`;
+  return{text,keyboard:keyboard([[cb(`🤖 Боты${items?` · ${items.length}`:''}`,'p:fm'),cb(`📚 TAVO HUB${hub!=null?` · ${hub}`:''}`,'p:hubm')],[cb('🆕 Новые боты','p:new:0'),cb('🎲 Случайный','p:random')],[cb('🔎 Поиск','p:search'),cb('📥 Предложить','p:sg')],[cb('🌐 Сайт','p:site'),cb('❓ Помощь','p:help')]])};
 }
+// /site — the website's sections as links.
+function siteView(origin){return{text:`<b>🌐 ARCHIVE.EXE</b>\n\nСайт, где живёт всё, что есть в боте: каталог ботов с фильтрами, TAVO HUB и CODEX с авторами, вселенными, стилями и переводчиком лорбуков LoreKey.`,keyboard:keyboard([[url('🤖 Каталог ботов ↗',origin+'/characters.html'),url('📚 TAVO HUB ↗',origin+'/hub.html')],[url('📖 CODEX ↗',origin+'/codex.html'),url('🏠 Главная ↗',origin+'/')],[MENU]])}}
+// /suggest — the two ways to add something: import a JanitorAI bot, or suggest a HUB resource.
+function suggestView(origin){return{text:`<b>📥 Предложить</b>\n\n<b>Бот с JanitorAI</b> — вставь ссылку на него в окне импорта, и он появится в каталоге с карточками и лорбуками.\n\n<b>Пресет, тема, плагин или гайд</b> — пришли ссылку на пост в TAVO HUB. После проверки ресурс появится на сайте и в боте.`,keyboard:keyboard([[url('➕ Импорт бота ↗',origin+'/characters.html#import')],[url('📚 Предложить в HUB ↗',origin+'/hub.html#suggest')],[MENU]])}}
+function helpView(){return{text:`<b>❓ Что умеет Node_00</b>\n\n🤖 /bots — боты с фильтрами: автор, вселенная, сеттинг, POV, тег\n🆕 /new — новые боты\n🎲 /random — случайный бот\n📚 /hub — TAVO HUB: пресеты, темы, гайды\n🧩 /plugins — плагины\n🔎 /search Marvel — поиск (или просто напиши слово в чат)\n📥 /suggest — предложить ресурс или импортировать бота\n🌐 /site — сайт ARCHIVE.EXE\n\nВ карточке бота: ⬇ PNG / JSON и 📖 лорбук приходят файлами, ‹ › листают список, 🔗 даёт ссылку, по которой бот откроется сразу.`,keyboard:keyboard([[cb('🤖 Боты','p:fm'),MENU]])}}
+// 🔗 in a card: a t.me link that opens this very bot in Node_00 (/start b_<uuid>).
+let botUsername='';
+async function shareBot(token,chatId,env,catalog,uuid){
+  const items=await loadCatalog(catalog),c=items.find(x=>x.uuid===uuid);if(!c)return send(token,chatId,'Бот не найден — возможно, его убрали из каталога.',keyboard([[MENU]]));
+  if(!botUsername){try{botUsername=clean((await tg(token,'getMe')).username)}catch{}}
+  if(!botUsername)return send(token,chatId,'Не получилось сделать ссылку — попробуй позже.');
+  const link=`https://t.me/${botUsername}?start=b_${uuid.replace(/-/g,'')}`;
+  return send(token,chatId,`🔗 <b>${esc(c.name)}</b>\n${link}\n\nПо этой ссылке бот откроется сразу в Node_00.`,keyboard([[url('📤 Отправить другу',`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(c.name)}`)]]));
+}
+const uuidFromStart=v=>{const m=clean(v).match(/^b_([0-9a-f]{32})$/i);return m?m[1].toLowerCase().replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/,'$1-$2-$3-$4-$5'):''};
 const MENU=cb('← Меню','p:home');
 
 // ---- TAVO HUB ----
@@ -88,13 +104,19 @@ async function sendRandom(token,chatId,env,origin,catalog){const items=await loa
 // Commands work both from the menu button (/bots …) and typed; any other text is a search.
 async function handleMessage(token,message,env,origin,catalog){
   const chatId=message.chat?.id,text=clean(message.text);if(!chatId||!text)return;
-  const cmd=text.match(/^\/([a-z]+)(?:@[A-Za-z0-9_]+)?(?:\s+([\s\S]*))?$/i),name=cmd?.[1]?.toLowerCase(),arg=clean(cmd?.[2]);
-  if(name==='start'||name==='menu'){const v=await homeView(env,origin,catalog);return send(token,chatId,v.text,v.keyboard)}
-  if(name==='bots'){const v=filterMenu(await loadCatalog(catalog));return send(token,chatId,v.text,v.keyboard)}
+  const cmd=text.match(/^\/([a-z]+)(?:@[A-Za-z0-9_]+)?(?:\s+([\s\S]*))?$/i),name=cmd?.[1]?.toLowerCase(),arg=clean(cmd?.[2]),sendView=v=>send(token,chatId,v.text,v.keyboard);
+  if(name==='start'&&uuidFromStart(arg))return handleCatalogCallback(token,chatId,null,env,origin,`p:c:${uuidFromStart(arg)}`,catalog);
+  if(name==='start'||name==='menu')return sendView(await homeView(env,origin,catalog));
+  if(name==='site')return sendView(siteView(origin));
+  if(name==='suggest'||name==='import')return sendView(suggestView(origin));
+  if(name==='help')return sendView(helpView());
+  if(name==='bots')return sendView(filterMenu(await loadCatalog(catalog)));
+  if(name==='new')return handleCatalogCallback(token,chatId,null,env,origin,'p:new:0',catalog);
   if(name==='hub')return hubMenu(token,chatId,null,env);
+  if(name==='plugins')return showResources(token,chatId,null,env,origin,{type:'plugin',page:0,title:'🧩 Плагины',key:'p:type:plugin'});
   if(name==='random')return sendRandom(token,chatId,env,origin,catalog);
   if(name==='search')return arg?showSearch(token,chatId,env,origin,arg,catalog):send(token,chatId,`<b>🔎 Поиск</b>\n\n${SEARCH_HINT}`,keyboard([[MENU]]));
-  if(cmd)return send(token,chatId,'Не знаю такой команды. Вот меню:',(await homeView(env,origin,catalog)).keyboard);
+  if(cmd)return send(token,chatId,'Не знаю такой команды — вот меню. Все команды: /help',(await homeView(env,origin,catalog)).keyboard);
   return showSearch(token,chatId,env,origin,text,catalog);
 }
 /* Without the site pipeline (tests, old callers) the catalog falls back to the published rows. */
@@ -103,6 +125,7 @@ async function handleCatalogCallback(token,chatId,messageId,env,origin,data,cata
   const items=await loadCatalog(catalog),show=v=>edit(token,chatId,messageId,v.text,v.keyboard);
   if(data==='p:fm')return show(filterMenu(items));
   let m=data.match(/^p:chars:(\d+)$/);if(m)return show(botsPage(items,{title:'🤖 Все боты',page:Number(m[1]),key:'p:chars'}));
+  m=data.match(/^p:new:(\d+)$/);if(m)return show(botsPage(items,{title:'🆕 Новые боты',page:Number(m[1]),key:'p:new',back:cb('🤖 Фильтры','p:fm')}));
   m=data.match(/^p:fl:([a-z]):(\d+)$/);if(m&&FACETS[m[1]])return show(valuesPage(items,m[1],Number(m[2])));
   m=data.match(/^p:fv:([a-z]):([0-9a-z]+):(\d+)$/);if(m&&FACETS[m[1]]){const f=m[1],x=filterItems(items,f,m[2]);return show(botsPage(x.items,{title:`${FACETS[f].title} ${esc(short(x.value||'—',40))}`,page:Number(m[3]),key:`p:fv:${f}:${m[2]}`,hideAuthor:f==='a',ctx:[f,m[2]],back:cb('← '+FACETS[f].menu.replace(/^\S+\s/,''),`p:fl:${f}:0`)}))}
   const gone=()=>send(token,chatId,'Бот не найден — возможно, его убрали из каталога.',keyboard([[cb('🤖 Фильтры','p:fm'),MENU]]));
@@ -113,11 +136,13 @@ async function handleCatalogCallback(token,chatId,messageId,env,origin,data,cata
 }
 async function handleCallback(token,q,env,origin,catalog=dbCatalog(env)){
   const chatId=q.message?.chat?.id,messageId=q.message?.message_id,data=clean(q.data);await answer(token,q.id);if(!chatId||data==='p:noop')return;
-  if(/^p:(fm|chars:|fl:|fv:|c:|d:|k:|n:)/.test(data))return handleCatalogCallback(token,chatId,messageId,env,origin,data,catalog);
+  if(/^p:(fm|chars:|new:|fl:|fv:|c:|d:|k:|n:)/.test(data))return handleCatalogCallback(token,chatId,messageId,env,origin,data,catalog);
   if(data==='p:home'){const v=await homeView(env,origin,catalog);return edit(token,chatId,messageId,v.text,v.keyboard)}
   if(data==='p:search')return edit(token,chatId,messageId,`<b>🔎 Поиск</b>\n\n${SEARCH_HINT}`,keyboard([[cb('🤖 Фильтры','p:fm'),MENU]]));
   if(data==='p:random')return sendRandom(token,chatId,env,origin,catalog);
   if(data==='p:hubm')return hubMenu(token,chatId,messageId,env);
+  const view=data==='p:site'?siteView(origin):data==='p:sg'?suggestView(origin):data==='p:help'?helpView():null;if(view)return edit(token,chatId,messageId,view.text,view.keyboard);
+  if(/^p:s:[0-9a-f-]{36}$/i.test(data))return shareBot(token,chatId,env,catalog,data.slice(4).toLowerCase());
   let m=data.match(/^p:hub:(\d+)$/);if(m)return showResources(token,chatId,messageId,env,origin,{page:Number(m[1]),title:'📚 Все ресурсы',key:'p:hub'});
   m=data.match(/^p:latest:(\d+)$/);if(m)return showResources(token,chatId,messageId,env,origin,{page:Number(m[1]),title:'🆕 Новое в HUB',key:'p:latest'});
   m=data.match(/^p:type:([^:]+):(\d+)$/);if(m)return showResources(token,chatId,messageId,env,origin,{type:m[1],page:Number(m[2]),title:`📚 ${typeLabel(m[1])}`,key:`p:type:${m[1]}`});

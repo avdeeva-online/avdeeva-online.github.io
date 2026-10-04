@@ -89,7 +89,7 @@ export function cardCaption(c){
 function navRow(nav){if(!nav||nav.total<2)return null;const at=i=>`p:n:${nav.f}:${nav.h}:${(i+nav.total)%nav.total}`;return[cb('‹',at(nav.i-1)),cb(`${nav.i+1} / ${nav.total}`,'p:noop'),cb('›',at(nav.i+1))]}
 export function cardKeyboard(c,nav=null){
   const files=[cb('⬇ PNG',`p:cp:${c.uuid}`),cb('⬇ JSON',`p:cj:${c.uuid}`)];if(c.lorebookCount)files.push(cb('📖 Лорбук',`p:lb:${c.uuid}`));
-  const rows=[files,[cb('📄 Описание',`p:d:${c.uuid}`),...(c.url?[url('JanitorAI ↗',c.url)]:[])]];
+  const rows=[files,[cb('📄 Описание',`p:d:${c.uuid}`),...(c.url?[url('JanitorAI ↗',c.url)]:[]),cb('🔗',`p:s:${c.uuid}`)]];
   const more=[];if(c.author)more.push(cb(`👤 Ещё от ${short(c.author,18)}`,`p:fv:a:${valueHash(c.author)}:0`));if(c.universes[0])more.push(cb(`🌌 ${short(c.universes[0],20)}`,`p:fv:u:${valueHash(c.universes[0])}:0`));if(more.length)rows.push(more);
   const n=navRow(nav);if(n)rows.push(n);
   return{inline_keyboard:rows};

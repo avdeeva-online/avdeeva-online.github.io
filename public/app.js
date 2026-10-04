@@ -168,20 +168,24 @@ function selectionCoversAll(set, values){
   return values.length > 0 && values.every(v => set.has(v));
 }
 
+// How many bots have a setting / tag / hashtag / universe / author / POV.
+// All counts of one kind are built in a single pass over the bots: counting each value separately re-scanned every
+// bot for each of ~700 hashtags (millions of checks, ~1.5 s frozen page on first open with ~1200 bots).
+const COUNT_KEYS={
+  setting:b=>(b.settingIds||[]).flatMap(rawId=>cleanTag(rawId).split(/\s*\/\s*/)).map(canonicalSettingId),
+  tag:b=>(b.tags||[]).map(tagKey),
+  hashtag:b=>(b.hashtags||[]).map(hashtagKey),
+  universe:b=>botUniverses(b).map(universeKey),
+  author:b=>[b.author],
+  pov:b=>[botPov(b)]
+};
 function count(kind, val){
   if(countCacheSource!==B){countCacheSource=B;countCache=new Map()}
-  const normalized=kind==="setting"?canonicalSettingId(val):kind==="tag"?tagKey(val):kind==="hashtag"?hashtagKey(val):kind==="universe"?universeKey(val):String(val);
-  const cacheKey=`${kind}\u0000${normalized}`;
-  if(countCache.has(cacheKey))return countCache.get(cacheKey);
-  let result=0;
-  if(kind === "setting") result=B.filter(b => botHasSetting(b,val)).length;
-  if(kind === "tag") result=B.filter(b => botHasTag(b,val)).length;
-  if(kind === "author") result=B.filter(b => b.author === val).length;
-  if(kind === "universe") result=B.filter(b => botHasUniverse(b,val)).length;
-  if(kind === "pov") result=B.filter(b => botPov(b) === val).length;
-  if(kind === "hashtag") result=B.filter(b => botHasHashtag(b,val)).length;
-  countCache.set(cacheKey,result);
-  return result;
+  const keysOf=COUNT_KEYS[kind];if(!keysOf)return 0;
+  let index=countCache.get(kind);
+  if(!index){index=new Map();for(const b of B)for(const k of new Set(keysOf(b)))if(k)index.set(k,(index.get(k)||0)+1);countCache.set(kind,index)}
+  const normalized=kind==="setting"?canonicalSettingId(val):kind==="tag"?tagKey(val):kind==="hashtag"?hashtagKey(val):kind==="universe"?universeKey(val):val;
+  return index.get(normalized)||0;
 }
 
 function applyFilters(){

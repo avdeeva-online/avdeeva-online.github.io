@@ -37,6 +37,15 @@ await call('/api/admin/codex-styles',{action:'delete',id:a.data.id});
 assert.deepEqual((await call('/api/codex-styles')).data.styles.map(s=>s.title),['Soft light']);
 assert.equal([...r2.keys()].filter(k=>k.startsWith('codex/styles/')).length,0);
 
+// Imported from a Telegram post: source link kept, the picked photo fetched from the Telegram CDN only.
+globalThis.fetch=async url=>{url=String(url);if(url.startsWith('https://cdn4.telesco.pe/'))return new Response(new Uint8Array([255,216,255,224,5,5]),{headers:{'content-type':'image/jpeg'}});return new Response('no',{status:404})};
+const imp=await call('/api/admin/codex-styles',{action:'set',title:'From post',prompt:'pastel, soft light',model:'Nano Banana',author:'floryhibi',author_link:'https://t.me/floryhibi',source_url:'https://t.me/floryhibi/400',image_url:'https://cdn4.telesco.pe/file/abc.jpg'});
+assert.equal(imp.status,200,JSON.stringify(imp.data));
+const got=(await call('/api/codex-styles')).data.styles.find(s=>s.id===imp.data.id);
+assert.equal(got.source_url,'https://t.me/floryhibi/400');assert.ok(got.image_url,'Telegram photo stored');
+assert.equal((await call(got.image_url)).res.headers.get('content-type'),'image/jpeg');
+assert.equal((await call('/api/admin/codex-styles',{action:'set',title:'Bad host',prompt:'x',image_url:'https://evil.example/a.jpg'})).status,400,'only the Telegram CDN is fetched');
+
 // Author avatar: set, kept when omitted on a later save, removed with ''.
 await call('/api/admin/codex-profiles',{action:'set',kind:'author',name:'floryhibi',description:'Hi',avatar:png});
 let p=(await call('/api/codex-profiles')).data.profiles.find(x=>x.name==='floryhibi');assert.ok(p.avatar_url);

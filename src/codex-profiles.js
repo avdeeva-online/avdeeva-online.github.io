@@ -17,7 +17,7 @@ const key=v=>clean(v).toLocaleLowerCase();
 const parse=v=>{try{const x=JSON.parse(v||'[]');return Array.isArray(x)?x:[]}catch{return[]}};
 const json=(data,status=200,cache='no-store')=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':cache}});
 const ensureProfiles=env=>requireD1Schema(env,'codex-profiles','SELECT kind,name_key,name,description,links,hashtags,avatar_key,updated_at FROM codex_profiles LIMIT 1');
-const ensureStyles=env=>requireD1Schema(env,'codex-styles','SELECT id,title,prompt,model,author,author_link,image_key,image_type,sort FROM codex_styles LIMIT 1');
+const ensureStyles=env=>requireD1Schema(env,'codex-styles','SELECT id,title,prompt,model,author,author_link,image_key,image_type,sort,source_url FROM codex_styles LIMIT 1');
 
 // ---- shared helpers ----
 function normalizeUrl(raw){
@@ -51,6 +51,16 @@ function decodeImage(dataUrl){
   if(!m)throw new Error('IMAGE_FORMAT');
   const bin=atob(m[2].replace(/\s+/g,''));if(!bin.length||bin.length>IMAGE_LIMIT)throw new Error('IMAGE_SIZE');
   return{type:m[1].toLowerCase(),bytes:Uint8Array.from(bin,c=>c.charCodeAt(0))};
+}
+// Only the Telegram CDN (where post photos live), https, an image, ≤ 3 MB.
+const TELEGRAM_CDN=/(^|\.)(telesco\.pe|telegram-cdn\.org|cdn\d*\.telegram-cdn\.org)$/i;
+async function fetchTelegramImage(url){
+  let u;try{u=new URL(url)}catch{throw new Error('IMAGE_URL')}
+  if(u.protocol!=='https:'||!TELEGRAM_CDN.test(u.hostname))throw new Error('IMAGE_URL');
+  const r=await fetch(u.toString(),{redirect:'follow'}),type=String(r.headers.get('content-type')||'').split(';')[0].toLowerCase();
+  if(!r.ok||!/^image\/(webp|png|jpeg|gif)$/.test(type))throw new Error('IMAGE_FETCH');
+  const bytes=new Uint8Array(await r.arrayBuffer());if(!bytes.length||bytes.length>3*1024*1024)throw new Error('IMAGE_SIZE');
+  return{type,bytes};
 }
 async function shortHash(text){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)))].slice(0,8).map(b=>b.toString(16).padStart(2,'0')).join('')}
 async function putImage(env,objectKey,img){if(!hasR2(env))throw new Error('R2_BINDING_REQUIRED');await env.HUB_FILES.put(objectKey,img.bytes,{httpMetadata:{contentType:img.type}})}
@@ -103,10 +113,10 @@ async function mutateProfile(request,env){
 }
 
 // ---- styles ----
-const toStyle=r=>({id:r.id,title:r.title||'',prompt:r.prompt||'',model:r.model||'',author:r.author||'',author_link:r.author_link||'',image_url:imageUrl(r.image_key,r.updated_at),sort:Number(r.sort||0)});
+const toStyle=r=>({id:r.id,title:r.title||'',prompt:r.prompt||'',model:r.model||'',author:r.author||'',author_link:r.author_link||'',source_url:r.source_url||'',image_url:imageUrl(r.image_key,r.updated_at),sort:Number(r.sort||0)});
 async function listStyles(env){
   await ensureStyles(env);
-  const res=await env.DB.prepare('SELECT id,title,prompt,model,author,author_link,image_key,sort,updated_at FROM codex_styles ORDER BY sort,created_at').all();
+  const res=await env.DB.prepare('SELECT id,title,prompt,model,author,author_link,image_key,sort,updated_at,source_url FROM codex_styles ORDER BY sort,created_at').all();
   return (res?.results||[]).map(toStyle);
 }
 async function mutateStyle(request,env){
@@ -130,7 +140,7 @@ async function mutateStyle(request,env){
   if(action!=='set')return json({ok:false,error:'UNKNOWN_ACTION'},400);
   const title=clean(b?.title).slice(0,120),prompt=String(b?.prompt??'').replace(/\r/g,'').trim().slice(0,6000);
   if(!title||!prompt)return json({ok:false,error:'TITLE_AND_PROMPT_REQUIRED'},400);
-  const model=clean(b?.model).slice(0,60),author=clean(b?.author).replace(/^@+/,'').slice(0,80),authorLink=normalizeUrl(b?.author_link);
+  const model=clean(b?.model).slice(0,60),author=clean(b?.author).replace(/^@+/,'').slice(0,80),authorLink=normalizeUrl(b?.author_link),sourceUrl=normalizeUrl(b?.source_url);
   const styleId=current?.id||crypto.randomUUID().replace(/-/g,'').slice(0,12);
   let imageKey=current?.image_key||'',imageType='';
   if(typeof b?.image==='string'&&b.image){
@@ -138,14 +148,20 @@ async function mutateStyle(request,env){
     const next=`codex/styles/${styleId}-${(await shortHash(b.image)).slice(0,8)}`;
     try{await putImage(env,next,img)}catch(e){return json({ok:false,error:e.message},503)}
     if(imageKey&&imageKey!==next)await dropImage(env,imageKey);imageKey=next;imageType=img.type;
+  }else if(typeof b?.image_url==='string'&&b.image_url){
+    // Picture picked from an imported Telegram post: fetched here (the admin page cannot read the Telegram CDN).
+    let img;try{img=await fetchTelegramImage(b.image_url)}catch(e){return json({ok:false,error:e.message},400)}
+    const next=`codex/styles/${styleId}-${(await shortHash(b.image_url)).slice(0,8)}`;
+    try{await putImage(env,next,img)}catch(e){return json({ok:false,error:e.message},503)}
+    if(imageKey&&imageKey!==next)await dropImage(env,imageKey);imageKey=next;imageType=img.type;
   }else if(b?.image===''&&imageKey){await dropImage(env,imageKey);imageKey=''}
   if(current){
-    await env.DB.prepare('UPDATE codex_styles SET title=?,prompt=?,model=?,author=?,author_link=?,image_key=?,image_type=CASE WHEN ?<>\'\' THEN ? ELSE image_type END,updated_at=CURRENT_TIMESTAMP WHERE id=?')
-      .bind(title,prompt,model,author,authorLink,imageKey,imageType,imageType,styleId).run();
+    await env.DB.prepare('UPDATE codex_styles SET title=?,prompt=?,model=?,author=?,author_link=?,source_url=?,image_key=?,image_type=CASE WHEN ?<>\'\' THEN ? ELSE image_type END,updated_at=CURRENT_TIMESTAMP WHERE id=?')
+      .bind(title,prompt,model,author,authorLink,sourceUrl,imageKey,imageType,imageType,styleId).run();
   }else{
     const last=await env.DB.prepare('SELECT COALESCE(MAX(sort),-1)+1 AS n FROM codex_styles').first();
-    await env.DB.prepare('INSERT INTO codex_styles(id,title,prompt,model,author,author_link,image_key,image_type,sort) VALUES(?,?,?,?,?,?,?,?,?)')
-      .bind(styleId,title,prompt,model,author,authorLink,imageKey,imageType,Number(last?.n||0)).run();
+    await env.DB.prepare('INSERT INTO codex_styles(id,title,prompt,model,author,author_link,source_url,image_key,image_type,sort) VALUES(?,?,?,?,?,?,?,?,?,?)')
+      .bind(styleId,title,prompt,model,author,authorLink,sourceUrl,imageKey,imageType,Number(last?.n||0)).run();
   }
   return json({ok:true,action,id:styleId});
 }

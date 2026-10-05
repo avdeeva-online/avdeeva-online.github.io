@@ -98,7 +98,9 @@
   }
   const nothing='<div class="codex-state">Nothing found.</div>';
   // Style: picture on top, title + model, and the prompt — one tap copies it.
-  const styleCard=s=>`<article class="codex-style">${s.image_url?`<img class="codex-style-img" src="${esc(s.image_url)}" alt="${esc(s.title)}" loading="lazy" decoding="async">`:''}<div class="codex-style-body"><h3>${esc(s.title)}</h3><div class="codex-style-meta">${[s.model?`<span>${esc(s.model)}</span>`:'',s.author?(s.author_link?`<a href="${esc(s.author_link)}" target="_blank" rel="noopener noreferrer">@${esc(s.author)}</a>`:`<span>@${esc(s.author)}</span>`):'',s.source_url?`<a href="${esc(s.source_url)}" target="_blank" rel="noopener noreferrer">Post ↗</a>`:''].filter(Boolean).join('')}</div><button type="button" class="codex-prompt" data-copy="${esc(s.id)}" title="Tap to copy">${esc(s.prompt)}</button></div></article>`;
+  // Several pictures: hover across the picture (desktop) or swipe (phone) to flip through them; dots show where you are.
+  const styleGallery=s=>{const urls=(s.image_urls&&s.image_urls.length?s.image_urls:[s.image_url]).filter(Boolean);if(!urls.length)return'';if(urls.length===1)return`<img class="codex-style-img" src="${esc(urls[0])}" alt="${esc(s.title)}" loading="lazy" decoding="async">`;return`<div class="codex-style-gallery" data-gallery>${urls.map((u,i)=>`<img class="codex-style-img${i?'':' on'}" src="${esc(u)}" alt="${esc(s.title)} ${i+1}" loading="lazy" decoding="async">`).join('')}<div class="codex-dots">${urls.map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div></div>`};
+  const styleCard=s=>`<article class="codex-style">${styleGallery(s)}<div class="codex-style-body"><h3>${esc(s.title)}</h3><div class="codex-style-meta">${[s.model?`<span>${esc(s.model)}</span>`:'',s.author?(s.author_link?`<a href="${esc(s.author_link)}" target="_blank" rel="noopener noreferrer">@${esc(s.author)}</a>`:`<span>@${esc(s.author)}</span>`):'',s.source_url?`<a href="${esc(s.source_url)}" target="_blank" rel="noopener noreferrer">Post ↗</a>`:''].filter(Boolean).join('')}</div><button type="button" class="codex-prompt" data-copy="${esc(s.id)}" title="Tap to copy">${esc(s.prompt)}</button></div></article>`;
   async function copyText(text){try{await navigator.clipboard.writeText(text);return true}catch{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch{}ta.remove();return ok}}
   function render(){
     document.querySelectorAll('.codex-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
@@ -217,6 +219,13 @@
     if(e.target.closest('[data-close]')){close();return}
     const card=e.target.closest('.codex-card');if(card){card.dataset.universe?openUniverse(card.dataset.universe):openAuthor(card.dataset.author)}
   });
+  // Style galleries: pointer position picks the picture; leaving goes back to the cover; a horizontal swipe flips on touch.
+  const showPic=(g,i)=>{const imgs=g.querySelectorAll('img'),dots=g.querySelectorAll('.codex-dots i');i=Math.max(0,Math.min(imgs.length-1,i));if(g._i===i)return;g._i=i;imgs.forEach((im,k)=>im.classList.toggle('on',k===i));dots.forEach((d,k)=>d.classList.toggle('on',k===i))};
+  document.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;const g=e.target.closest?.('[data-gallery]');if(!g)return;const r=g.getBoundingClientRect(),n=g.querySelectorAll('img').length;showPic(g,Math.floor((e.clientX-r.left)/r.width*n))});
+  document.addEventListener('pointerout',e=>{if(e.pointerType!=='mouse')return;const g=e.target.closest?.('[data-gallery]');if(g&&!g.contains(e.relatedTarget))showPic(g,0)});
+  let swipe=null;
+  document.addEventListener('touchstart',e=>{const g=e.target.closest?.('[data-gallery]');swipe=g&&e.touches.length===1?{g,x:e.touches[0].clientX,y:e.touches[0].clientY}:null},{passive:true});
+  document.addEventListener('touchend',e=>{if(!swipe)return;const t=e.changedTouches[0],dx=t.clientX-swipe.x,dy=t.clientY-swipe.y,g=swipe.g;swipe=null;if(Math.abs(dx)>35&&Math.abs(dx)>Math.abs(dy)*1.5)showPic(g,(g._i||0)+(dx<0?1:-1))},{passive:true});
   document.addEventListener('keydown',e=>{
     if(e.key==='Escape')close();
     if((e.key==='Enter'||e.key===' ')&&e.target.matches?.('.codex-card')){e.preventDefault();e.target.click()}

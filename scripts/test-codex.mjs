@@ -46,6 +46,20 @@ assert.equal(got.source_url,'https://t.me/floryhibi/400');assert.ok(got.image_ur
 assert.equal((await call(got.image_url)).res.headers.get('content-type'),'image/jpeg');
 assert.equal((await call('/api/admin/codex-styles',{action:'set',title:'Bad host',prompt:'x',image_url:'https://evil.example/a.jpg'})).status,400,'only the Telegram CDN is fetched');
 
+// Gallery: several pictures in order (upload + post photo), reorder / drop one keeps the rest, removed objects deleted.
+const g1=`data:image/png;base64,${Buffer.from([137,80,78,71,1,1]).toString('base64')}`,g2=`data:image/png;base64,${Buffer.from([137,80,78,71,2,2]).toString('base64')}`;
+const gal=await call('/api/admin/codex-styles',{action:'set',title:'Gallery',prompt:'p',images:[{data:g1},{url:'https://cdn4.telesco.pe/file/x.jpg'},{data:g2}]});
+assert.equal(gal.data.images,3,JSON.stringify(gal.data));
+let adminStyle=(await call('/api/admin/codex-styles')).data.styles.find(s=>s.id===gal.data.id);
+assert.equal(adminStyle.image_urls.length,3);
+const [k1,k2,k3]=adminStyle.image_keys;
+await call('/api/admin/codex-styles',{action:'set',id:gal.data.id,title:'Gallery',prompt:'p',images:[{key:k3},{key:k1}]});
+adminStyle=(await call('/api/admin/codex-styles')).data.styles.find(s=>s.id===gal.data.id);
+assert.deepEqual(adminStyle.image_keys,[k3,k1],'order follows the list');assert.equal(r2.has(k2),false,'dropped picture removed from storage');
+const pub=(await call('/api/codex-styles')).data.styles.find(s=>s.id===gal.data.id);
+assert.equal(pub.image_urls.length,2);assert.equal('image_keys' in pub,false,'storage keys stay private');
+assert.equal((await call('/api/admin/codex-styles',{action:'set',id:gal.data.id,title:'Gallery',prompt:'p',images:[{key:'codex/styles/someone-else'}]})).status,400,'only own pictures can be kept');
+
 // Author avatar: set, kept when omitted on a later save, removed with ''.
 await call('/api/admin/codex-profiles',{action:'set',kind:'author',name:'floryhibi',description:'Hi',avatar:png});
 let p=(await call('/api/codex-profiles')).data.profiles.find(x=>x.name==='floryhibi');assert.ok(p.avatar_url);

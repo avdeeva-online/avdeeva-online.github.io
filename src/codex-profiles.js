@@ -17,7 +17,7 @@ const key=v=>clean(v).toLocaleLowerCase();
 const parse=v=>{try{const x=JSON.parse(v||'[]');return Array.isArray(x)?x:[]}catch{return[]}};
 const json=(data,status=200,cache='no-store')=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':cache}});
 const ensureProfiles=env=>requireD1Schema(env,'codex-profiles','SELECT kind,name_key,name,description,links,hashtags,avatar_key,updated_at FROM codex_profiles LIMIT 1');
-const ensureStyles=env=>requireD1Schema(env,'codex-styles','SELECT id,title,prompt,model,author,author_link,image_key,image_type,sort,source_url FROM codex_styles LIMIT 1');
+const ensureStyles=env=>requireD1Schema(env,'codex-styles','SELECT id,title,prompt,model,author,author_link,image_key,image_type,sort,source_url,image_keys FROM codex_styles LIMIT 1');
 
 // ---- shared helpers ----
 function normalizeUrl(raw){
@@ -113,21 +113,34 @@ async function mutateProfile(request,env){
 }
 
 // ---- styles ----
-const toStyle=r=>({id:r.id,title:r.title||'',prompt:r.prompt||'',model:r.model||'',author:r.author||'',author_link:r.author_link||'',source_url:r.source_url||'',image_url:imageUrl(r.image_key,r.updated_at),sort:Number(r.sort||0)});
+// A style has up to 8 pictures (image_keys, first = cover); image_key mirrors the first one for older code.
+const MAX_STYLE_IMAGES=8;
+const styleKeys=r=>{let k=[];try{k=JSON.parse(r?.image_keys||'[]')}catch{}k=Array.isArray(k)?k.filter(x=>typeof x==='string'&&x):[];if(!k.length&&r?.image_key)k=[r.image_key];return k};
+const toStyle=r=>{const keys=styleKeys(r),urls=keys.map(k=>imageUrl(k,r.updated_at));return{id:r.id,title:r.title||'',prompt:r.prompt||'',model:r.model||'',author:r.author||'',author_link:r.author_link||'',source_url:r.source_url||'',image_url:urls[0]||'',image_urls:urls,image_keys:keys,sort:Number(r.sort||0)}};
 async function listStyles(env){
   await ensureStyles(env);
-  const res=await env.DB.prepare('SELECT id,title,prompt,model,author,author_link,image_key,sort,updated_at,source_url FROM codex_styles ORDER BY sort,created_at').all();
+  const res=await env.DB.prepare('SELECT id,title,prompt,model,author,author_link,image_key,image_keys,sort,updated_at,source_url FROM codex_styles ORDER BY sort,created_at').all();
   return (res?.results||[]).map(toStyle);
+}
+// One picture of the new list: an already stored key (kept), a data: URL (uploaded) or a Telegram CDN URL (from a post).
+async function resolveStyleImage(env,styleId,item,currentKeys){
+  if(typeof item?.key==='string'){if(!currentKeys.includes(item.key))throw new Error('IMAGE_KEY');return item.key}
+  const src=typeof item?.data==='string'&&item.data?item.data:typeof item?.url==='string'&&item.url?item.url:'';
+  if(!src)throw new Error('IMAGE_FORMAT');
+  const img=item.data?decodeImage(src):await fetchTelegramImage(src);
+  const next=`codex/styles/${styleId}-${(await shortHash(src)).slice(0,10)}`;
+  await putImage(env,next,img);return next;
 }
 async function mutateStyle(request,env){
   await ensureStyles(env);
   let b;try{b=await request.json()}catch{return json({ok:false,error:'INVALID_JSON'},400)}
   const action=clean(b?.action),id=clean(b?.id).replace(/[^a-z0-9-]/gi,'').slice(0,40);
-  const current=id?await env.DB.prepare('SELECT id,image_key,sort FROM codex_styles WHERE id=?').bind(id).first():null;
+  const current=id?await env.DB.prepare('SELECT id,image_key,image_keys,sort FROM codex_styles WHERE id=?').bind(id).first():null;
+  const currentKeys=styleKeys(current);
   if(action==='delete'){
     if(!current)return json({ok:false,error:'STYLE_NOT_FOUND'},404);
     await env.DB.prepare('DELETE FROM codex_styles WHERE id=?').bind(id).run();
-    await dropImage(env,current.image_key);
+    for(const k of currentKeys)await dropImage(env,k);
     return json({ok:true,action,id});
   }
   if(action==='move'){
@@ -142,30 +155,30 @@ async function mutateStyle(request,env){
   if(!title||!prompt)return json({ok:false,error:'TITLE_AND_PROMPT_REQUIRED'},400);
   const model=clean(b?.model).slice(0,60),author=clean(b?.author).replace(/^@+/,'').slice(0,80),authorLink=normalizeUrl(b?.author_link),sourceUrl=normalizeUrl(b?.source_url);
   const styleId=current?.id||crypto.randomUUID().replace(/-/g,'').slice(0,12);
-  let imageKey=current?.image_key||'',imageType='';
-  if(typeof b?.image==='string'&&b.image){
-    let img;try{img=decodeImage(b.image)}catch(e){return json({ok:false,error:e.message},400)}
-    const next=`codex/styles/${styleId}-${(await shortHash(b.image)).slice(0,8)}`;
-    try{await putImage(env,next,img)}catch(e){return json({ok:false,error:e.message},503)}
-    if(imageKey&&imageKey!==next)await dropImage(env,imageKey);imageKey=next;imageType=img.type;
-  }else if(typeof b?.image_url==='string'&&b.image_url){
-    // Picture picked from an imported Telegram post: fetched here (the admin page cannot read the Telegram CDN).
-    let img;try{img=await fetchTelegramImage(b.image_url)}catch(e){return json({ok:false,error:e.message},400)}
-    const next=`codex/styles/${styleId}-${(await shortHash(b.image_url)).slice(0,8)}`;
-    try{await putImage(env,next,img)}catch(e){return json({ok:false,error:e.message},503)}
-    if(imageKey&&imageKey!==next)await dropImage(env,imageKey);imageKey=next;imageType=img.type;
-  }else if(b?.image===''&&imageKey){await dropImage(env,imageKey);imageKey=''}
+  // The new picture list: b.images (gallery editor) or the older single-picture fields.
+  let plan=null;
+  if(Array.isArray(b?.images))plan=b.images.slice(0,MAX_STYLE_IMAGES);
+  else if(typeof b?.image==='string'&&b.image)plan=[{data:b.image}];
+  else if(typeof b?.image_url==='string'&&b.image_url)plan=[{url:b.image_url}];
+  else if(b?.image==='')plan=[];
+  let keys=currentKeys;
+  if(plan){
+    const out=[];
+    try{for(const item of plan){const k=await resolveStyleImage(env,styleId,item,currentKeys);if(!out.includes(k))out.push(k)}}
+    catch(e){for(const k of out)if(!currentKeys.includes(k))await dropImage(env,k);const m=String(e?.message||e);return json({ok:false,error:m},m==='R2_BINDING_REQUIRED'?503:400)}
+    for(const k of currentKeys)if(!out.includes(k))await dropImage(env,k);
+    keys=out;
+  }
   if(current){
-    await env.DB.prepare('UPDATE codex_styles SET title=?,prompt=?,model=?,author=?,author_link=?,source_url=?,image_key=?,image_type=CASE WHEN ?<>\'\' THEN ? ELSE image_type END,updated_at=CURRENT_TIMESTAMP WHERE id=?')
-      .bind(title,prompt,model,author,authorLink,sourceUrl,imageKey,imageType,imageType,styleId).run();
+    await env.DB.prepare('UPDATE codex_styles SET title=?,prompt=?,model=?,author=?,author_link=?,source_url=?,image_key=?,image_keys=?,updated_at=CURRENT_TIMESTAMP WHERE id=?')
+      .bind(title,prompt,model,author,authorLink,sourceUrl,keys[0]||'',JSON.stringify(keys),styleId).run();
   }else{
     const last=await env.DB.prepare('SELECT COALESCE(MAX(sort),-1)+1 AS n FROM codex_styles').first();
-    await env.DB.prepare('INSERT INTO codex_styles(id,title,prompt,model,author,author_link,source_url,image_key,image_type,sort) VALUES(?,?,?,?,?,?,?,?,?,?)')
-      .bind(styleId,title,prompt,model,author,authorLink,sourceUrl,imageKey,imageType,Number(last?.n||0)).run();
+    await env.DB.prepare('INSERT INTO codex_styles(id,title,prompt,model,author,author_link,source_url,image_key,image_keys,sort) VALUES(?,?,?,?,?,?,?,?,?,?)')
+      .bind(styleId,title,prompt,model,author,authorLink,sourceUrl,keys[0]||'',JSON.stringify(keys),Number(last?.n||0)).run();
   }
-  return json({ok:true,action,id:styleId});
+  return json({ok:true,action,id:styleId,images:keys.length});
 }
-
 export async function handleCodexProfilesRoute(request,env){
   const path=new URL(request.url).pathname;
   if(path==='/api/codex-image'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return serveImage(request,env)}
@@ -177,7 +190,7 @@ export async function handleCodexProfilesRoute(request,env){
   }
   if(path==='/api/codex-styles'){
     if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
-    let styles=[];try{styles=(await listStyles(env)).map(({sort,...s})=>s)}catch{}
+    let styles=[];try{styles=(await listStyles(env)).map(({sort,image_keys,...s})=>s)}catch{}
     return json({ok:true,styles},200,'public, max-age=60');
   }
   if(path==='/api/admin/codex-profiles'){

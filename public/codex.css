@@ -220,3 +220,11 @@ body.codex-lock{overflow:hidden}
 .codex-lore-versions li{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .codex-lore-versions i{font:normal 10px var(--font-mono);color:var(--cx-sand);margin-right:4px}
 .codex-lore-multi .codex-lore-main{flex:1}
+
+/* Style gallery: pictures stacked, the active one shown; dots below. */
+.codex-style-gallery{position:relative;aspect-ratio:4/3;border-bottom:1px solid var(--cx-line);background:#151814;touch-action:pan-y;cursor:ew-resize}
+.codex-style-gallery .codex-style-img{position:absolute;inset:0;height:100%;border-bottom:0;opacity:0;transition:opacity .18s}
+.codex-style-gallery .codex-style-img.on{opacity:1}
+.codex-dots{position:absolute;left:0;right:0;bottom:7px;display:flex;justify-content:center;gap:5px;pointer-events:none}
+.codex-dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35);box-shadow:0 0 3px rgba(0,0,0,.6)}
+.codex-dots i.on{background:#cdb88a}

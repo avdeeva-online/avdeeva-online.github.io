@@ -104,7 +104,7 @@
     document.querySelectorAll('.codex-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
     // LoreKey: a tool, not a list — hide the grid, filters and search; load the translator on first open.
     const lk=tab==='lorekey',panel=$('#lorekeyPanel');$('#codexGrid').hidden=lk;$('.codex-search').style.visibility=lk?'hidden':'';if(panel)panel.hidden=!lk;
-    if(lk){$('#codexFilters').hidden=true;if(!document.querySelector('script[data-lorekey]')){const s=document.createElement('script');s.src='lorekey.js?v=20261004-lk6';s.dataset.lorekey='1';document.body.appendChild(s)}return}
+    if(lk){$('#codexFilters').hidden=true;if(!document.querySelector('script[data-lorekey]')){const s=document.createElement('script');s.src='lorekey.js?v=20261005-lk8';s.dataset.lorekey='1';document.body.appendChild(s)}return}
     renderFilters();
     const grid=$('#codexGrid');grid.classList.toggle('codex-styles-grid',tab==='styles');
     if(tab==='styles'){const list=styles.filter(s=>(modelFilter==='all'||s.model===modelFilter)&&matchesQuery([s.title,s.model,s.author,s.prompt].join(' ')));grid.innerHTML=list.length?list.map(styleCard).join(''):(styles.length?nothing:'<div class="codex-state">Styles are coming soon.</div>');return}

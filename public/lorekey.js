@@ -145,9 +145,9 @@
     return tasks;
   }
   // One request carries many entries: an entry's context goes once (not once per key), and a batch holds up to
-  // 60 keys (30 when every key comes back in ~12 case forms) and ~14k characters. Earlier a 850-character context was
+  // 60 keys (15 when every key comes back in ~12 case forms, so each answer stays short) and ~14k characters. Earlier a 850-character context was
   // repeated for every key, so a batch held one entry and a lorebook took a request per entry or so.
-  function batches(tasks){const groups=[],byEntry=new Map();for(const t of tasks){if(!byEntry.has(t.entryId))byEntry.set(t.entryId,[]);byEntry.get(t.entryId).push(t)}const maxKeys=formMode()==='auto'?60:30;let batch=[],chars=0;for(const g of byEntry.values()){for(let i=0;i<g.length;i+=maxKeys){const part=g.slice(i,i+maxKeys),cost=g[0].context.length+g[0].title.length+60+part.reduce((n,t)=>n+t.key.length+40,0);if(batch.length&&(chars+cost>14000||batch.length+part.length>maxKeys)){groups.push(batch);batch=[];chars=0}batch.push(...part);chars+=cost}}if(batch.length)groups.push(batch);return groups}
+  function batches(tasks){const groups=[],byEntry=new Map();for(const t of tasks){if(!byEntry.has(t.entryId))byEntry.set(t.entryId,[]);byEntry.get(t.entryId).push(t)}const maxKeys=formMode()==='auto'?60:15;let batch=[],chars=0;for(const g of byEntry.values()){for(let i=0;i<g.length;i+=maxKeys){const part=g.slice(i,i+maxKeys),cost=g[0].context.length+g[0].title.length+60+part.reduce((n,t)=>n+t.key.length+40,0);if(batch.length&&(chars+cost>14000||batch.length+part.length>maxKeys)){groups.push(batch);batch=[];chars=0}batch.push(...part);chars+=cost}}if(batch.length)groups.push(batch);return groups}
   const taskId=t=>`${t.entryId}::${t.field}::${t.key}`;
 
   async function translateAll(){
@@ -240,7 +240,7 @@
     for(const it of all)if(state.cache.has(ck(it))){byIdAll.get(it.id).content=state.cache.get(ck(it));book.contentDone++}
     const items=all.filter(it=>!state.cache.has(ck(it))),source=new Map(items.map(it=>[it.id,it]));
     const groups=[];let batch=[],chars=0;
-    for(const it of items){const cost=it.text.length;if(batch.length&&chars+cost>6000){groups.push(batch);batch=[];chars=0}batch.push(it);chars+=cost}
+    for(const it of items){const cost=it.text.length;if(batch.length&&chars+cost>4000){groups.push(batch);batch=[];chars=0}batch.push(it);chars+=cost}
     if(batch.length)groups.push(batch);
     const byId=new Map(getEntries(output).map(x=>[x.id,x.value]));
     for(let i=0;i<groups.length;i++){
@@ -256,9 +256,10 @@
   // Retries: "too many requests" (waits as long as the AI asks, when it says), server errors and dropped connections
   // («Load failed» on a phone) — five tries with growing pauses before giving up.
   async function withRetry(fn){let last;for(let i=0;i<5;i++){if(state.stopped)throw new Error('остановлено');try{return await fn()}catch(e){last=e;if(!e.retry||i===4)throw e;const wait=Math.min(90,Math.max(e.waitSec||0,[10,20,30,45,60][i]));for(let s=wait;s>0;s--){if(state.stopped)throw new Error('остановлено');progress(null,`${e.network?'Связь с ИИ оборвалась':'ИИ просит подождать'}… повтор через ${s} сек`);await new Promise(r=>setTimeout(r,1000))}}}throw last}
-  async function failure(name,res){const body=(await res.text().catch(()=>'')).slice(0,600);const e=new Error(`${name}: ${res.status}${res.status===400||res.status===401||res.status===403?' — проверь ключ и модель':res.status===429?' — лимит запросов ключа ИИ':''} ${body.slice(0,300)}`);e.retry=res.status===429||res.status>=500;const sec=Number((body.match(/"retryDelay"\s*:\s*"(\d+)/)||[])[1]||res.headers.get('retry-after')||0);if(sec)e.waitSec=sec;return e}
+  async function failure(name,res){const body=(await res.text().catch(()=>'')).slice(0,600);const e=new Error(`${name}: ${res.status}${res.status===400||res.status===401||res.status===403?' — проверь ключ и модель':res.status===429?' — лимит запросов ключа ИИ':''} ${body.slice(0,300)}`);e.retry=res.status===408||res.status===429||res.status>=500;const sec=Number((body.match(/"retryDelay"\s*:\s*"(\d+)/)||[])[1]||res.headers.get('retry-after')||0);if(sec)e.waitSec=sec;return e}
   // fetch itself throws (TypeError) when the connection drops: that is worth retrying, unlike a refused key.
-  async function request(url,init){try{return await fetch(url,init)}catch(err){const e=new Error('связь с ИИ оборвалась');e.retry=true;e.network=true;throw e}}
+  // A request that hangs for 90 s is dropped and retried (on a phone a stalled connection otherwise waits forever).
+  async function request(url,init){const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),90000);try{return await fetch(url,{...init,signal:ctl.signal})}catch(err){const e=new Error('связь с ИИ оборвалась');e.retry=true;e.network=true;throw e}finally{clearTimeout(timer)}}
   // Keeps the phone screen on during a translation where the browser allows it (a locked screen drops requests).
   async function keepAwake(){try{return await navigator.wakeLock?.request('screen')}catch{return null}}
   async function callGemini(prompt){

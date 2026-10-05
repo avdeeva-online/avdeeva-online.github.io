@@ -57,6 +57,7 @@ h1{margin:0 0 4px;font-size:26px;letter-spacing:.04em}
       </div></section>
     <section class="section"><h2>Система</h2><p class="stat">служебное, нужно редко</p>
       <div class="links">
+        <a href="/admin/activity.html">Журнал <small id="activityStat">действия за 24 часа</small></a>
         <a href="/admin/storage.html">Обслуживание <small>картинки HUB, ссылки авторов</small></a>
         <a href="/admin/telegram.html">Telegram-боты <small>состояние и подключение</small></a>
       </div></section>
@@ -73,5 +74,5 @@ h1{margin:0 0 4px;font-size:26px;letter-spacing:.04em}
   get('/api/hub-resources?summary=1').then(d=>{const list=Array.isArray(d?.resources)?d.resources:[];if(!d){$('#hubStat').textContent='не удалось загрузить';return}$('#hubStat').innerHTML=`<b>${list.length}</b> ${plural(list.length,'ресурс','ресурса','ресурсов')} на сайте`});
 })();
 </script>
-</body>
+<script>fetch('/api/admin/activity?hours=24',{cache:'no-store'}).then(r=>r.json()).then(d=>{const el=document.getElementById('activityStat');if(!el||!d?.ok)return;const n=(d.log||[]).length,many=(d.actors||[]).length>1,refused=(d.log||[]).some(x=>x.status===401||x.status===403);el.textContent=`за 24 ч: ${n} действий`+(many?' · несколько адресов!':'')+(refused?' · были попытки без доступа!':'');if(many||refused)el.style.color='#d2a091'}).catch(()=>{});</script></body>
 </html>

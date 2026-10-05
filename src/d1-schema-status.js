@@ -16,6 +16,7 @@ export const D1_EXPECTED_SCHEMA={
   codex_profiles:['kind','name_key','name','description','links','hashtags','updated_at','avatar_key'],
   codex_styles:['id','title','prompt','model','author','author_link','image_key','image_type','sort','created_at','updated_at','source_url','image_keys'],
   admin_universe_review:['review_key','status','note','updated_at'],
+  admin_audit_log:['id','at','actor','ip','country','method','path','status','detail'],
   archive_schema:['version','applied_at']
 };
 

@@ -23,6 +23,7 @@
       {id:'codex-profiles',label:'Описания и ссылки',href:'/admin/codex.html'},
       {id:'codex-styles',label:'Стили',href:'/admin/codex-styles.html'}]},
     {id:'system',label:'Система',tabs:[
+      {id:'sys-activity',label:'Журнал',href:'/admin/activity.html'},
       {id:'sys-maintenance',label:'Обслуживание',href:'/admin/storage.html'},
       {id:'sys-telegram',label:'Telegram-боты',href:'/admin/telegram.html'}]}
   ];
@@ -42,6 +43,7 @@
     '/admin/hub/':{tab:'hub-new',title:'Новый ресурс',sub:'Ссылка на пост в Telegram → черновик → проверка → публикация. Автоматически ничего не публикуется.',hide:['.tabs','#jsonPreview','.json-preview']},
     '/admin/drafts.html':{tab:'hub-drafts',title:'Черновики',sub:'Незаконченные ресурсы из Telegram-бота. Открой черновик в форме нового ресурса, допиши и опубликуй.',hide:['.system-note']},
     '/admin/hub/suggestions.html':{tab:'hub-suggestions',title:'Предложения',sub:'Ссылки, которые прислали посетители через «Suggest resource».'},
+    '/admin/activity.html':{tab:'sys-activity',title:'Журнал',sub:'Кто, когда и откуда что-то менял в админке, и что изменилось в данных. Несколько адресов или попытки без доступа подсвечиваются красным.'},
     '/admin/storage.html':{tab:'sys-maintenance',title:'Обслуживание',sub:'Починка картинок HUB и ссылок на авторов. Перенос файлов в R2 завершён — его кнопки свёрнуты ниже.',hide:['.top .back']},
     '/admin/telegram.html':{tab:'sys-telegram',title:'Telegram-боты',sub:'Состояние админ-бота и публичного бота.',hide:['.head .back']}
   };

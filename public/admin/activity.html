@@ -1,0 +1,51 @@
+<!doctype html><html lang="ru"><head><link rel="icon" href="/favicon.svg" type="image/svg+xml"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta http-equiv="Cache-Control" content="no-store"><title>Журнал · ARCHIVE ADMIN</title>
+<style>
+:root{--line:#2f382b;--text:#cbd4c2;--muted:#6f7a69;--sand:#cdb88a;--bad:#d2a091;--mono:Consolas,ui-monospace,monospace}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 30% 0,#161d14 0,#0b0e0b 42%);color:var(--text);font-family:var(--mono)}
+.shell{width:min(1180px,calc(100% - 28px));margin:28px auto 60px}.head{padding-bottom:14px;border-bottom:1px solid var(--line)}h1{margin:7px 0 0;font-size:25px}
+.panel{border:1px solid var(--line);background:rgba(17,21,15,.92);padding:13px;margin-top:12px}
+.panel h2{margin:0 0 10px;font-size:14px;color:#efe4bd}
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.btn{border:1px solid var(--line);background:#10140e;color:#aeb9a5;padding:7px 11px;font:11px var(--mono);cursor:pointer;border-radius:4px}.btn.on{background:#262618;color:#efe4bd;border-color:#8f8558}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.stat{padding:10px;border:1px solid var(--line);border-radius:6px}.stat b{display:block;font-size:20px;color:#efe4bd}.stat span{font-size:11px;color:var(--muted)}
+.warn{margin-top:10px;padding:10px 12px;border-left:3px solid var(--bad);background:#1a1210;color:#e6c2b6;font-size:12px;line-height:1.5}
+.ok{margin-top:10px;padding:8px 12px;border-left:3px solid #7d9a6e;background:#101610;color:#b6c9aa;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:6px 8px;border-bottom:1px solid #1f261d;text-align:left;vertical-align:top}th{color:var(--muted);font-weight:400;font-size:11px}
+td.st-bad{color:var(--bad)}td small{color:var(--muted)}
+.list{display:grid;gap:3px;font-size:12px}.list div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid #1a2018}.list small{color:var(--muted);white-space:nowrap}
+.empty{color:var(--muted);font-size:12px;padding:8px 0}
+.scroll{overflow:auto;max-height:60vh}
+@media(max-width:700px){th:nth-child(3),td:nth-child(3){display:none}}
+</style></head><body><main class="shell">
+<header class="head"><h1>Журнал</h1></header>
+<section class="panel"><div class="bar"><span style="color:var(--muted);font-size:11px;margin-right:4px">ПЕРИОД</span><button class="btn on" data-h="24">24 часа</button><button class="btn" data-h="72">3 дня</button><button class="btn" data-h="168">7 дней</button><button class="btn" data-h="720">30 дней</button></div><div id="who"></div></section>
+<section class="panel"><h2>Что изменилось в данных</h2><div class="stats" id="stats"></div><div id="changes" style="margin-top:12px"></div></section>
+<section class="panel"><h2>Действия в админке</h2><div class="scroll"><table><thead><tr><th>Когда</th><th>Кто</th><th>Откуда</th><th>Что</th><th>Итог</th></tr></thead><tbody id="log"><tr><td colspan="5" class="empty">Загрузка…</td></tr></tbody></table></div></section>
+</main>
+<script>
+(()=>{
+  const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const time=v=>{try{return new Date(String(v).replace(' ','T')+'Z').toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}catch{return v}};
+  // Human names for admin endpoints.
+  const WHAT=[[/codex-styles/,'Стили'],[/codex-profiles/,'CODEX: описания'],[/characters\//,'Бот (карточка)'],[/hub-resource/,'Ресурс HUB'],[/hub-downloads-cleanup/,'Удаление старых файлов HUB'],[/hub-suggestions/,'Предложения'],[/telegram-drafts/,'Черновики Telegram'],[/telegram/,'Telegram-боты'],[/universe-curation/,'Вселенные'],[/import/,'Импорт ботов'],[/reindex-source-truth/,'Проверка ботов'],[/hub-media-repair|hub-storage/,'Обслуживание HUB'],[/author-links/,'Ссылки авторов']];
+  const what=p=>(WHAT.find(([re])=>re.test(p))||[0,p])[1];
+  const verb={POST:'сохранение',PATCH:'правка',PUT:'правка',DELETE:'удаление'};
+  async function load(h){
+    document.querySelectorAll('[data-h]').forEach(b=>b.classList.toggle('on',b.dataset.h===String(h)));
+    try{
+      const r=await fetch('/api/admin/activity?hours='+h,{cache:'no-store'}),d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||'HTTP_'+r.status);
+      // Who wrote in this period. More than one email, or a refused attempt, is shown as a warning.
+      const actors=d.actors||[],refused=(d.log||[]).filter(x=>x.status===401||x.status===403);
+      $('#who').innerHTML=(actors.length>1||refused.length?`<div class="warn">${actors.length>1?`Действия от нескольких адресов: ${actors.map(a=>`<b>${esc(a.actor)}</b> (${a.n}, ${esc(a.countries||'?')})`).join(', ')}. Если какой-то адрес не твой — сразу смени доступ в Cloudflare Zero Trust.<br>`:''}${refused.length?`Отклонённых попыток без доступа: <b>${refused.length}</b> (последняя ${esc(time(refused[0].at))}, ${esc(refused[0].country||'?')}).`:''}</div>`:actors.length?`<div class="ok">Все действия — от <b>${esc(actors[0].actor)}</b> (${esc(actors[0].countries||'?')}).</div>`:'')+(d.logReady?'':'<div class="warn">Журнал ещё не создан в базе — появится после деплоя с миграцией.</div>');
+      const c=d.changes||{};
+      $('#stats').innerHTML=[[d.log?.length||0,'действий в админке'],[c.charactersNew??'—','новых ботов'],[c.charactersCount??'—','ботов изменено'],[(c.hub||[]).length,'ресурсов HUB'],[(c.styles||[]).length,'стилей'],[(c.profiles||[]).length,'профилей CODEX'],[(c.universes||[]).length,'правил вселенных']].map(([n,l])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('');
+      const block=(title,list,fmt)=>list&&list.length?`<details${list.length<=6?' open':''}><summary style="cursor:pointer;margin:8px 0 4px">${title} · ${list.length}</summary><div class="list">${list.map(fmt).join('')}</div></details>`:'';
+      $('#changes').innerHTML=[block('Ресурсы HUB',c.hub,x=>`<div><span>${esc(x.title)} <small>${esc(x.type)}${x.status!=='published'?' · '+esc(x.status):''}</small></span><small>${time(x.updated_at)}</small></div>`),block('Стили',c.styles,x=>`<div><span>${esc(x.title)} <small>${esc(x.model)}</small></span><small>${time(x.updated_at)}</small></div>`),block('Профили CODEX',c.profiles,x=>`<div><span>${x.kind==='author'?'@':''}${esc(x.name)}</span><small>${time(x.updated_at)}</small></div>`),block('Правила вселенных',c.universes,x=>`<div><span>${esc(x.source_value)} → ${esc(x.public_universes)}${x.active?'':' (выкл.)'}</span><small>${time(x.updated_at)}</small></div>`),block('Боты (последние 50)',c.characters,x=>`<div><span>${esc(x.name)} <small>@${esc(x.author)}${x.status==='hidden'?' · скрыт':''}</small></span><small>${time(x.updated_at)}</small></div>`)].join('')||'<div class="empty">За этот период ничего не менялось.</div>';
+      $('#log').innerHTML=(d.log||[]).length?d.log.map(x=>`<tr><td>${time(x.at)}</td><td>${esc(x.actor)}</td><td>${esc(x.country||'?')} <small>${esc(x.ip)}</small></td><td><b>${esc(what(x.path))}</b> · ${verb[x.method]||esc(x.method)}<br><small>${esc(x.detail||x.path)}</small></td><td class="${x.status>=400?'st-bad':''}">${x.status>=400?'ошибка '+x.status:'ок'}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">За этот период действий не было.</td></tr>';
+    }catch(e){$('#log').innerHTML=`<tr><td colspan="5" class="empty">Не удалось загрузить: ${esc(e.message)}</td></tr>`}
+  }
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-h]');if(b)load(Number(b.dataset.h))});
+  load(24);
+})();
+</script></body></html>

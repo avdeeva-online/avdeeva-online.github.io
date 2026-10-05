@@ -11,9 +11,10 @@ import { guardAdminApi } from './admin-auth.js';
 import { d1SchemaStatus } from './d1-schema-status.js';
 import { repairHubMedia } from './hub-resources.js';
 import { handleCodexProfilesRoute } from './codex-profiles.js';
+import { isLoggedAdminWrite, logAdminWrite, adminActivity } from './admin-activity.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
-const BUILD_INFO={build:'style-gallery',deployed_from:'main'};
+const BUILD_INFO={build:'admin-activity',deployed_from:'main'};
 const CONTENT_SECURITY_POLICY=["default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","form-action 'self'","img-src 'self' https: data: blob:","media-src 'self' https: blob:","style-src 'self' 'unsafe-inline'","script-src 'self' 'unsafe-inline'","connect-src 'self'","font-src 'self' data:"].join('; ');
 // CODEX hosts LoreKey, which calls the visitor's own AI provider (Gemini, OpenAI, OpenRouter… — any https API) straight
 // from the browser with the visitor's own key. Only that page may connect out; every other page stays 'self'.
@@ -79,6 +80,7 @@ async function routeRequest(request,env,ctx){
   }
   if(url.pathname==='/api/admin/import'){if(request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return forwardAdminImport(request,env,ctx,'/api/import')}
   if(url.pathname==='/api/admin/import/status'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return forwardAdminImport(request,env,ctx,'/api/import/status')}
+  if(url.pathname==='/api/admin/activity')return adminActivity(request,env);
   if(url.pathname==='/api/admin/schema-status'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return d1SchemaStatus(env)}
   if(url.pathname==='/api/admin/hub-media-audit'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return hubMediaAudit(env)}
   if(url.pathname==='/api/admin/hub-storage'){
@@ -94,4 +96,5 @@ async function routeRequest(request,env,ctx){
   const codexResponse=await handleCodexProfilesRoute(request,env);if(codexResponse)return codexResponse;
   let response=await sourceTruth.fetch(request,env,ctx);response=await transformUniversePublicResponse(request,response,env);return transformAdminHtmlResponse(request,response);
 }
-export default {async fetch(request,env,ctx){return withSecurityHeaders(await routeRequest(request,env,ctx),new URL(request.url).pathname)}};
+// Admin writes are recorded in the activity log after the response (Admin → Система → Журнал).
+export default {async fetch(request,env,ctx){const url=new URL(request.url),logged=isLoggedAdminWrite(request,url),copy=logged?request.clone():null;const response=await routeRequest(request,env,ctx);if(logged)ctx.waitUntil(logAdminWrite(env,copy,response,url));return withSecurityHeaders(response,url.pathname)}};

@@ -228,3 +228,16 @@ body.codex-lock{overflow:hidden}
 .codex-dots{position:absolute;left:0;right:0;bottom:7px;display:flex;justify-content:center;gap:5px;pointer-events:none}
 .codex-dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35);box-shadow:0 0 3px rgba(0,0,0,.6)}
 .codex-dots i.on{background:#cdb88a}
+
+/* Style card: picture larger (portrait 3:4), the text block compact (~4 lines, scrolls), a thin sand scrollbar. */
+.codex-style-img,.codex-style-gallery{aspect-ratio:3/4}
+.codex-style-body{gap:6px;padding:9px 11px 11px}
+.codex-style h3{font-size:17px}
+.codex-prompt{max-height:5.9em;padding:8px 10px;font-size:11.5px;line-height:1.5;scrollbar-width:thin;scrollbar-color:rgba(205,184,138,.45) transparent}
+.codex-prompt::-webkit-scrollbar{width:5px}
+.codex-prompt::-webkit-scrollbar-track{background:transparent}
+.codex-prompt::-webkit-scrollbar-thumb{background:rgba(205,184,138,.4);border-radius:5px}
+.codex-prompt::-webkit-scrollbar-thumb:hover{background:rgba(205,184,138,.7)}
+.codex-grid.codex-styles-grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+@media(max-width:760px){.codex-grid.codex-styles-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.codex-style h3{font-size:15px}.codex-prompt{font-size:10.5px;max-height:6.2em}.codex-style-meta span,.codex-style-meta a{font-size:9.5px;padding:1px 6px}}
+@media(max-width:760px){.codex-grid.codex-styles-grid{grid-template-columns:minmax(0,1fr);gap:10px}.codex-style h3{font-size:17px}.codex-prompt{font-size:11.5px;max-height:5.9em}.codex-style-meta span,.codex-style-meta a{font-size:10.5px;padding:2px 8px}}

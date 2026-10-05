@@ -77,7 +77,9 @@
   const els=Object.fromEntries(['settings','provider','model','baseUrlField','baseUrl','apiKey','remember','fileStatus','drop','file','fileBox','fileList','replace','clear','badges','primary','secondary','content','translate','hint','progressBox','progressText','pct','fill','stop','results','summary','collapse','entries','download','reset'].map(n=>[n,el(n)]));
   const settingsBox=root.querySelector('.lk-settings');
   /* Up to MAX_FILES lorebooks; each keeps its own original, output and review rows, and downloads as its own file. */
-  const state={books:[],stopped:false};
+  // cache: keys and texts already translated in this tab, so pressing «Перевести» again after a stop or a dropped
+  // connection continues where it stopped instead of starting over (and spending the key's limit twice).
+  const state={books:[],stopped:false,cache:new Map()};
   const newBook=(filename,size,original,stats)=>({filename,size,original,stats,output:null,rows:[],translated:0,skippedRegex:0,contentDone:0});
   const doneBooks=()=>state.books.filter(b=>b.output);
   const lorebooks=n=>`${n} ${n%10===1&&n%100!==11?'лорбук':n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?'лорбука':'лорбуков'}`;
@@ -137,12 +139,15 @@
   function buildTasks(book){
     const tasks=[];book.skippedRegex=0;
     for(const item of getEntries(book.original)){
-      const e=item.value||{},title=e.comment||e.name||`Entry ${item.id}`,context=String(e.content||'').replace(/\s+/g,' ').slice(0,850);
+      const e=item.value||{},title=e.comment||e.name||`Entry ${item.id}`,context=String(e.content||'').replace(/\s+/g,' ').slice(0,500);
       for(const kind of kinds()){const field=fieldName(e,kind);for(const key of keysOf(e[field])){if(isRegex(key)){book.skippedRegex++;continue}/* regex keys stay as they are */tasks.push({entryId:item.id,field,key,title,context,regex:isRegex(key)})}}
     }
     return tasks;
   }
-  function batches(tasks){const groups=[],byEntry=new Map();for(const t of tasks){if(!byEntry.has(t.entryId))byEntry.set(t.entryId,[]);byEntry.get(t.entryId).push(t)}let batch=[],chars=0;for(const g of byEntry.values()){const cost=JSON.stringify(g).length;if(batch.length&&chars+cost>(formMode()==='auto'?9000:4000)){groups.push(batch);batch=[];chars=0}batch.push(...g);chars+=cost}if(batch.length)groups.push(batch);return groups}
+  // One request carries many entries: an entry's context goes once (not once per key), and a batch holds up to
+  // 60 keys (30 when every key comes back in ~12 case forms) and ~14k characters. Earlier a 850-character context was
+  // repeated for every key, so a batch held one entry and a lorebook took a request per entry or so.
+  function batches(tasks){const groups=[],byEntry=new Map();for(const t of tasks){if(!byEntry.has(t.entryId))byEntry.set(t.entryId,[]);byEntry.get(t.entryId).push(t)}const maxKeys=formMode()==='auto'?60:30;let batch=[],chars=0;for(const g of byEntry.values()){for(let i=0;i<g.length;i+=maxKeys){const part=g.slice(i,i+maxKeys),cost=g[0].context.length+g[0].title.length+60+part.reduce((n,t)=>n+t.key.length+40,0);if(batch.length&&(chars+cost>14000||batch.length+part.length>maxKeys)){groups.push(batch);batch=[];chars=0}batch.push(...part);chars+=cost}}if(batch.length)groups.push(batch);return groups}
   const taskId=t=>`${t.entryId}::${t.field}::${t.key}`;
 
   async function translateAll(){
@@ -151,29 +156,35 @@
     if(els.provider.value==='openai'&&!/^https:\/\//i.test(els.baseUrl.value.trim())){toggleSettings(true);alert('Base URL должен начинаться с https://');return}
     const books=state.books,withContent=els.content.checked,plans=books.map(book=>{book.output=null;book.rows=[];book.translated=0;book.contentDone=0;return{book,tasks:buildTasks(book)}});
     if(!withContent&&!plans.some(p=>p.tasks.length)){alert('В выбранных полях нет ключей для перевода.');return}
-    persist();state.stopped=false;els.translate.disabled=true;els.progressBox.hidden=false;els.results.hidden=true;progress(0,'Собираю ключи…');
+    persist();state.stopped=false;els.translate.disabled=true;els.progressBox.hidden=false;els.results.hidden=true;progress(0,state.cache.size?'Продолжаю с места остановки…':'Собираю ключи…');
+    const lock=await keepAwake();
     // Overall progress: every lorebook gets an equal slice of 0–100%.
     const slice=100/books.length;
     try{
       for(let n=0;n<plans.length;n++){
         const {book,tasks}=plans[n],base=n*slice,label=books.length>1?`Лорбук ${n+1} из ${books.length} · `:'';
-        const output=structuredClone(book.original),map=new Map(),groups=batches(tasks),keysShare=withContent?40:92;
+        const output=structuredClone(book.original),map=new Map(),ck=t=>`${transMode()}|${formMode()}|${book.filename}|${book.size}|${taskId(t)}`;
+        for(const t of tasks)if(state.cache.has(ck(t)))map.set(taskId(t),state.cache.get(ck(t)));
+        const groups=batches(tasks.filter(t=>!map.has(taskId(t)))),keysShare=withContent?40:92;
         for(let i=0;i<groups.length;i++){
           if(state.stopped)throw new Error('остановлено');
           progress(Math.round(base+i/groups.length*keysShare*slice/100),`${label}Ключи: пакет ${i+1} из ${groups.length}…`);
-          for(const item of await translateBatch(groups[i]))map.set(item.id,Array.isArray(item.translations)?item.translations:[]);
+          const byId=new Map(groups[i].map(t=>[taskId(t),t]));
+          for(const item of await translateBatch(groups[i])){const tr=Array.isArray(item.translations)?item.translations:[];map.set(item.id,tr);const t=byId.get(item.id);if(t)state.cache.set(ck(t),tr)}
         }
         apply(book,output,tasks,map);
         if(withContent)await translateContent(book,output,keysShare,base,slice,label);
         book.output=output;
       }
-      progress(100,'Готово');renderResults();
+      progress(100,'Готово');renderResults();els.translate.textContent=books.length>1?`Перевести ключи · ${lorebooks(books.length)}`:'Перевести ключи';
       setTimeout(()=>els.results.scrollIntoView({behavior:'smooth',block:'start'}),80);
     }catch(err){
-      console.error(err);if(err.message!=='остановлено')alert(`Перевод остановлен: ${err.message}`);progress(0,err.message==='остановлено'?'Остановлено':'Ошибка перевода');
+      console.error(err);const resume=state.cache.size?'\n\nУже переведённое сохранено — нажми «Перевести» ещё раз, и я продолжу с места остановки.':'';
+      if(err.message!=='остановлено')alert(err.network?`Связь с ИИ оборвалась.${resume}\n\nНа телефоне не блокируй экран и не сворачивай браузер, пока идёт перевод.`:`Перевод остановлен: ${err.message}${resume}`);
+      progress(0,err.message==='остановлено'?'Остановлено':'Ошибка перевода');if(state.cache.size)els.translate.textContent='Продолжить перевод';
       if(doneBooks().length)renderResults();/* lorebooks finished before the stop stay downloadable */
     }
-    finally{els.translate.disabled=false}
+    finally{els.translate.disabled=false;lock?.release?.().catch(()=>{})}
   }
 
   // ---- «Основа»: stems computed here from the full case forms the AI returns, so every ending is covered ----
@@ -208,10 +219,11 @@
     const modeInstruction=mode==='exact'?'Return only the most natural Russian equivalent for each plaintext trigger. Do not generate declensions or synonyms.'
       :mode==='extended'?'Return the natural Russian translation plus useful Russian grammatical forms and a small number of high-value synonyms/aliases likely to literally appear in roleplay text. Avoid broad/noisy triggers.'
       :'Return the natural Russian translation plus useful grammatical forms likely to literally appear in Russian roleplay text. Add aliases only when clearly necessary. Avoid generic noisy triggers.';
-    const payload=tasks.map(t=>({id:taskId(t),key:t.key,regex:t.regex,entry_title:t.title,context:t.context}));
+    const byEntry=new Map();for(const t of tasks){if(!byEntry.has(t.entryId))byEntry.set(t.entryId,{entry_title:t.title,context:t.context,keys:[]});byEntry.get(t.entryId).keys.push({id:taskId(t),key:t.key,regex:t.regex})}
+    const payload=[...byEntry.values()];
     const forms=formMode(),grouped=forms!=='auto';
     const formsInstruction=grouped?`\n\nCASE FORMS (required): for EVERY Russian word or phrase you return, list ALL its case forms — nominative, genitive, dative, accusative, instrumental, prepositional — in singular and plural (skip forms that do not exist, e.g. plural of a personal name; keep ё where Russian spelling has it). For a phrase, inflect the whole phrase in agreement (\"чёрный рыцарь\", \"чёрного рыцаря\", …). Output {"items":[{"id":"...","groups":[["form",...],...]}]} — one group per Russian word or phrase, nominative singular first. Do not return "translations".`:'';
-    const prompt=`You translate SillyTavern Lorebook trigger keys from English to Russian.\n\n${modeInstruction}${formsInstruction}\n\nRules:\n- Output STRICT JSON only: {"items":[{"id":"...","translations":["..."]}]}\n- Never translate or alter template macros such as {{char}}, {{user}}, <START>, variables, code-like tokens, IDs. Preserve them exactly inside phrases.\n- Proper names: transliterate/adapt into readable Russian Cyrillic when appropriate; do not semantically translate surnames unless context clearly shows they are titles/common nouns.\n- Key translations are literal trigger strings, never explanations.\n- For Russian inflection forms, include only natural forms useful as literal triggers. Do not invent impossible forms.\n- Do not duplicate forms differing only by letter case.\n- Preserve meaningful punctuation.\n- If regex=true, preserve valid JavaScript regex syntax and translate only literal English text inside it. If unsafe or ambiguous, return the original regex unchanged.\n- Use entry context only to disambiguate the key. Never rewrite the lore content.\n\nINPUT:\n${JSON.stringify(payload)}`;
+    const prompt=`You translate SillyTavern Lorebook trigger keys from English to Russian.\n\n${modeInstruction}${formsInstruction}\n\nRules:\n- Output STRICT JSON only: {"items":[{"id":"...","translations":["..."]}]}\n- Never translate or alter template macros such as {{char}}, {{user}}, <START>, variables, code-like tokens, IDs. Preserve them exactly inside phrases.\n- Proper names: transliterate/adapt into readable Russian Cyrillic when appropriate; do not semantically translate surnames unless context clearly shows they are titles/common nouns.\n- Key translations are literal trigger strings, never explanations.\n- For Russian inflection forms, include only natural forms useful as literal triggers. Do not invent impossible forms.\n- Do not duplicate forms differing only by letter case.\n- Preserve meaningful punctuation.\n- If regex=true, preserve valid JavaScript regex syntax and translate only literal English text inside it. If unsafe or ambiguous, return the original regex unchanged.\n- INPUT is a list of lorebook entries; each has entry_title, context (the start of its text) and keys. Use the context only to disambiguate the keys. Never rewrite the lore content. Return one item per key id.\n\nINPUT:\n${JSON.stringify(payload)}`;
     const raw=await withRetry(()=>els.provider.value==='gemini'?callGemini(prompt):callOpenAI(prompt));
     const parsed=parseJson(raw);if(!Array.isArray(parsed.items))throw new Error('ИИ вернул ответ без списка items');
     if(!grouped)return parsed.items;
@@ -223,7 +235,10 @@
   async function translateContent(book,output,startPct,base=0,slice=100,label=''){
     const glossary=[];const seen=new Set();
     for(const r of state.books.flatMap(b=>b.rows)){const ru=r.values.find(v=>/[а-яё]/i.test(v));if(ru&&!seen.has(r.oldKey)){seen.add(r.oldKey);glossary.push(`${r.oldKey} → ${ru}`)}if(glossary.length>=150)break}
-    const items=getEntries(output).filter(x=>typeof x.value?.content==='string'&&/[a-z]/i.test(x.value.content)).map(x=>({id:x.id,text:x.value.content}));
+    const ck=it=>`content|${book.filename}|${book.size}|${it.id}|${it.text.length}|${it.text.slice(0,80)}`,byIdAll=new Map(getEntries(output).map(x=>[x.id,x.value]));
+    const all=getEntries(output).filter(x=>typeof x.value?.content==='string'&&/[a-z]/i.test(x.value.content)).map(x=>({id:x.id,text:x.value.content}));
+    for(const it of all)if(state.cache.has(ck(it))){byIdAll.get(it.id).content=state.cache.get(ck(it));book.contentDone++}
+    const items=all.filter(it=>!state.cache.has(ck(it))),source=new Map(items.map(it=>[it.id,it]));
     const groups=[];let batch=[],chars=0;
     for(const it of items){const cost=it.text.length;if(batch.length&&chars+cost>6000){groups.push(batch);batch=[];chars=0}batch.push(it);chars+=cost}
     if(batch.length)groups.push(batch);
@@ -234,21 +249,27 @@
       const prompt=`You translate SillyTavern / Tavo lorebook entry texts from English to Russian for Russian-language roleplay.\n\nRules:\n- Output STRICT JSON only: {"items":[{"id":"...","text":"..."}]} — one item per input id.\n- Translate the whole text faithfully and naturally; do not summarize, shorten, add or explain anything.\n- Never translate or alter template macros and tokens: {{char}}, {{user}}, <START>, {{random::…}}, variables, code, URLs, IDs. Keep them exactly.\n- Keep the formatting exactly: line breaks, lists, brackets, quotes, markdown, W++ / PList / JSON-like structure (translate only the human-language values inside it).\n- Proper names: use the Russian forms from the glossary when given; otherwise transliterate into readable Russian Cyrillic.\n\nGLOSSARY (English key → Russian):\n${glossary.join('\n')||'(none)'}\n\nINPUT:\n${JSON.stringify(groups[i])}`;
       const raw=await withRetry(()=>els.provider.value==='gemini'?callGemini(prompt):callOpenAI(prompt));
       const parsed=parseJson(raw);
-      for(const it of Array.isArray(parsed.items)?parsed.items:[]){const entry=byId.get(String(it.id));if(entry&&typeof it.text==='string'&&it.text.trim()){entry.content=it.text;book.contentDone++}}
+      for(const it of Array.isArray(parsed.items)?parsed.items:[]){const entry=byId.get(String(it.id)),src=source.get(String(it.id));if(entry&&typeof it.text==='string'&&it.text.trim()){entry.content=it.text;book.contentDone++;if(src)state.cache.set(ck(src),it.text)}}
     }
   }
   // "Too many requests" / temporary server errors: wait and retry (free Gemini keys hit per-minute limits).
-  async function withRetry(fn){let last;for(let i=0;i<4;i++){if(state.stopped)throw new Error('остановлено');try{return await fn()}catch(e){last=e;if(!e.retry)throw e;progress(null,`ИИ просит подождать… повтор через ${8*(i+1)} сек`);await new Promise(r=>setTimeout(r,8000*(i+1)))}}throw last}
-  async function failure(name,res){const body=(await res.text().catch(()=>'')).slice(0,300);const e=new Error(`${name}: ${res.status}${res.status===400||res.status===401||res.status===403?' — проверь ключ и модель':''} ${body}`);e.retry=res.status===429||res.status>=500;return e}
+  // Retries: "too many requests" (waits as long as the AI asks, when it says), server errors and dropped connections
+  // («Load failed» on a phone) — five tries with growing pauses before giving up.
+  async function withRetry(fn){let last;for(let i=0;i<5;i++){if(state.stopped)throw new Error('остановлено');try{return await fn()}catch(e){last=e;if(!e.retry||i===4)throw e;const wait=Math.min(90,Math.max(e.waitSec||0,[10,20,30,45,60][i]));for(let s=wait;s>0;s--){if(state.stopped)throw new Error('остановлено');progress(null,`${e.network?'Связь с ИИ оборвалась':'ИИ просит подождать'}… повтор через ${s} сек`);await new Promise(r=>setTimeout(r,1000))}}}throw last}
+  async function failure(name,res){const body=(await res.text().catch(()=>'')).slice(0,600);const e=new Error(`${name}: ${res.status}${res.status===400||res.status===401||res.status===403?' — проверь ключ и модель':res.status===429?' — лимит запросов ключа ИИ':''} ${body.slice(0,300)}`);e.retry=res.status===429||res.status>=500;const sec=Number((body.match(/"retryDelay"\s*:\s*"(\d+)/)||[])[1]||res.headers.get('retry-after')||0);if(sec)e.waitSec=sec;return e}
+  // fetch itself throws (TypeError) when the connection drops: that is worth retrying, unlike a refused key.
+  async function request(url,init){try{return await fetch(url,init)}catch(err){const e=new Error('связь с ИИ оборвалась');e.retry=true;e.network=true;throw e}}
+  // Keeps the phone screen on during a translation where the browser allows it (a locked screen drops requests).
+  async function keepAwake(){try{return await navigator.wakeLock?.request('screen')}catch{return null}}
   async function callGemini(prompt){
     // Key in a header, not in the URL, so it does not end up in address-bar style logs.
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(els.model.value.trim()||'gemini-2.5-flash')}:generateContent`,{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':els.apiKey.value.trim()},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.15,responseMimeType:'application/json'}})});
+    const res=await request(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(els.model.value.trim()||'gemini-2.5-flash')}:generateContent`,{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':els.apiKey.value.trim()},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.15,responseMimeType:'application/json'}})});
     if(!res.ok)throw await failure('Gemini',res);
     const data=await res.json();return data?.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
   }
   async function callOpenAI(prompt){
     const base=els.baseUrl.value.trim().replace(/\/$/,'');
-    const res=await fetch(`${base}/chat/completions`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${els.apiKey.value.trim()}`},body:JSON.stringify({model:els.model.value.trim(),temperature:.15,response_format:{type:'json_object'},messages:[{role:'system',content:'Return strict JSON only.'},{role:'user',content:prompt}]})});
+    const res=await request(`${base}/chat/completions`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${els.apiKey.value.trim()}`},body:JSON.stringify({model:els.model.value.trim(),temperature:.15,response_format:{type:'json_object'},messages:[{role:'system',content:'Return strict JSON only.'},{role:'user',content:prompt}]})});
     if(!res.ok)throw await failure('API',res);
     const data=await res.json();return data?.choices?.[0]?.message?.content||'';
   }

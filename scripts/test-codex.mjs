@@ -46,6 +46,13 @@ assert.equal(got.source_url,'https://t.me/floryhibi/400');assert.ok(got.image_ur
 assert.equal((await call(got.image_url)).res.headers.get('content-type'),'image/jpeg');
 assert.equal((await call('/api/admin/codex-styles',{action:'set',title:'Bad host',prompt:'x',image_url:'https://evil.example/a.jpg'})).status,400,'only the Telegram CDN is fetched');
 
+// Several models per style: list in, list out (duplicates and empties dropped); a plain string still works.
+const mm=await call('/api/admin/codex-styles',{action:'set',title:'Multi',prompt:'p',models:['NovelAI v4.5','NovelAI v5','novelai v5','']});
+let ms=(await call('/api/codex-styles')).data.styles.find(s=>s.id===mm.data.id);
+assert.deepEqual(ms.models,['NovelAI v4.5','NovelAI v5']);assert.equal(ms.model,'NovelAI v4.5, NovelAI v5');
+await call('/api/admin/codex-styles',{action:'set',id:mm.data.id,title:'Multi',prompt:'p',model:'Nano Banana'});
+ms=(await call('/api/codex-styles')).data.styles.find(s=>s.id===mm.data.id);assert.deepEqual(ms.models,['Nano Banana']);
+
 // Gallery: several pictures in order (upload + post photo), reorder / drop one keeps the rest, removed objects deleted.
 const g1=`data:image/png;base64,${Buffer.from([137,80,78,71,1,1]).toString('base64')}`,g2=`data:image/png;base64,${Buffer.from([137,80,78,71,2,2]).toString('base64')}`;
 const gal=await call('/api/admin/codex-styles',{action:'set',title:'Gallery',prompt:'p',images:[{data:g1},{url:'https://cdn4.telesco.pe/file/x.jpg'},{data:g2}]});

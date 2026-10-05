@@ -113,10 +113,12 @@ async function mutateProfile(request,env){
 }
 
 // ---- styles ----
+// A style can suit several models (e.g. NovelAI v4.5 and v5): stored as one comma-separated text, served as a list.
+const styleModels=v=>{const out=[],seen=new Set();for(const raw of Array.isArray(v)?v:String(v||'').split(',')){const m=clean(raw).slice(0,40),k=m.toLocaleLowerCase();if(!m||seen.has(k))continue;seen.add(k);out.push(m);if(out.length>=6)break}return out};
 // A style has up to 8 pictures (image_keys, first = cover); image_key mirrors the first one for older code.
 const MAX_STYLE_IMAGES=8;
 const styleKeys=r=>{let k=[];try{k=JSON.parse(r?.image_keys||'[]')}catch{}k=Array.isArray(k)?k.filter(x=>typeof x==='string'&&x):[];if(!k.length&&r?.image_key)k=[r.image_key];return k};
-const toStyle=r=>{const keys=styleKeys(r),urls=keys.map(k=>imageUrl(k,r.updated_at));return{id:r.id,title:r.title||'',prompt:r.prompt||'',model:r.model||'',author:r.author||'',author_link:r.author_link||'',source_url:r.source_url||'',image_url:urls[0]||'',image_urls:urls,image_keys:keys,sort:Number(r.sort||0)}};
+const toStyle=r=>{const keys=styleKeys(r),urls=keys.map(k=>imageUrl(k,r.updated_at)),models=styleModels(r.model);return{id:r.id,title:r.title||'',prompt:r.prompt||'',model:models.join(', '),models,author:r.author||'',author_link:r.author_link||'',source_url:r.source_url||'',image_url:urls[0]||'',image_urls:urls,image_keys:keys,sort:Number(r.sort||0)}};
 async function listStyles(env){
   await ensureStyles(env);
   const res=await env.DB.prepare('SELECT id,title,prompt,model,author,author_link,image_key,image_keys,sort,updated_at,source_url FROM codex_styles ORDER BY sort,created_at').all();
@@ -153,7 +155,7 @@ async function mutateStyle(request,env){
   if(action!=='set')return json({ok:false,error:'UNKNOWN_ACTION'},400);
   const title=clean(b?.title).slice(0,120),prompt=String(b?.prompt??'').replace(/\r/g,'').trim().slice(0,6000);
   if(!title||!prompt)return json({ok:false,error:'TITLE_AND_PROMPT_REQUIRED'},400);
-  const model=clean(b?.model).slice(0,60),author=clean(b?.author).replace(/^@+/,'').slice(0,80),authorLink=normalizeUrl(b?.author_link),sourceUrl=normalizeUrl(b?.source_url);
+  const model=styleModels(Array.isArray(b?.models)?b.models:b?.model).join(', '),author=clean(b?.author).replace(/^@+/,'').slice(0,80),authorLink=normalizeUrl(b?.author_link),sourceUrl=normalizeUrl(b?.source_url);
   const styleId=current?.id||crypto.randomUUID().replace(/-/g,'').slice(0,12);
   // The new picture list: b.images (gallery editor) or the older single-picture fields.
   let plan=null;

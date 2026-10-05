@@ -242,13 +242,16 @@ body.codex-lock{overflow:hidden}
 @media(max-width:760px){.codex-grid.codex-styles-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.codex-style h3{font-size:15px}.codex-prompt{font-size:10.5px;max-height:6.2em}.codex-style-meta span,.codex-style-meta a{font-size:9.5px;padding:1px 6px}}
 @media(max-width:760px){.codex-grid.codex-styles-grid{grid-template-columns:minmax(0,1fr);gap:10px}.codex-style h3{font-size:17px}.codex-prompt{font-size:11.5px;max-height:5.9em}.codex-style-meta span,.codex-style-meta a{font-size:10.5px;padding:2px 8px}}
 
-/* Hover: the picture zooms in a little inside its frame (the frame clips it, the card size stays the same). */
-.codex-style-frame{position:relative;aspect-ratio:3/4;overflow:hidden;border-bottom:1px solid var(--cx-line);background:#151814}
-.codex-style-frame .codex-style-img{height:100%;border-bottom:0}
-.codex-style-gallery{overflow:hidden}
-.codex-style-frame .codex-style-img,.codex-style-gallery .codex-style-img{transition:opacity .18s,transform .35s ease}
-@media(hover:hover){.codex-style:hover .codex-style-frame .codex-style-img,.codex-style:hover .codex-style-gallery .codex-style-img{transform:scale(1.06)}}
-@media(prefers-reduced-motion:reduce){.codex-style-frame .codex-style-img,.codex-style-gallery .codex-style-img{transition:opacity .18s}}
+/* Styles tab: 4 cards per row on a computer (the page is ~1140px wide), 2 on a phone; a slightly lower picture
+   (4:5 instead of 3:4) and a ~3-line text block keep the card compact while the text stays readable. */
+.codex-grid.codex-styles-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.codex-style-img,.codex-style-gallery{aspect-ratio:4/5}
+.codex-style-body{gap:6px;padding:9px 11px 11px}
+.codex-style h3{font-size:16.5px;line-height:1.15}
+.codex-style-meta{gap:5px}
+.codex-style-meta span,.codex-style-meta a{padding:2px 8px;font-size:10.5px}
+.codex-prompt{max-height:4.7em;padding:7px 9px;font-size:11.5px;line-height:1.5}
+.codex-dots{bottom:5px}.codex-dots i{width:5px;height:5px}
 /* Scrollbar without arrow buttons: Chrome/Edge draw arrows when the standard thin scrollbar is set, so they get the
    webkit styling only; Firefox (no ::-webkit-scrollbar) keeps the standard thin one. */
 .codex-prompt{scrollbar-width:auto;scrollbar-color:auto}
@@ -257,3 +260,4 @@ body.codex-lock{overflow:hidden}
 .codex-prompt::-webkit-scrollbar-track{background:transparent}
 .codex-prompt::-webkit-scrollbar-thumb{background:rgba(205,184,138,.45);border-radius:4px}
 @supports not selector(::-webkit-scrollbar){.codex-prompt{scrollbar-width:thin;scrollbar-color:rgba(205,184,138,.45) transparent}}
+@media(max-width:760px){.codex-grid.codex-styles-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.codex-style h3{font-size:14.5px}.codex-prompt{font-size:10.5px;max-height:4.7em;padding:6px 8px}.codex-style-meta span,.codex-style-meta a{font-size:9.5px;padding:1px 6px}}

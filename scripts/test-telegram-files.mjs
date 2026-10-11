@@ -71,7 +71,7 @@ async function press(data,fetchMock){
     const { extractEmbeddedCard } = await import('../src/janny-card.js');
     let calls=await press(`p:cj:${uuid}`,source),doc=calls.find(c=>c.method==='sendDocument');
     assert.ok(doc,'JSON card uploaded');assert.match(doc.filename,/^Vance.*\.json$/);assert.equal(doc.type,'application/json');
-    const card=JSON.parse(doc.text);assert.equal(card.spec,'chara_card_v2');assert.equal(card.data.description,'Full definition');assert.equal(card.data.first_mes,'Hello there');
+    const card=JSON.parse(doc.text);assert.equal(card.spec,'chara_card_v3','JSON carries the avatar (V3 icon asset)');assert.equal(card.data.assets?.[0]?.type,'icon');assert.match(card.data.assets[0].uri,/^data:image\//);assert.equal(card.data.description,'Full definition');assert.equal(card.data.first_mes,'Hello there');
     calls=await press(`p:cp:${uuid}`,source);doc=calls.find(c=>c.method==='sendDocument');
     assert.ok(doc,'PNG card uploaded');assert.match(doc.filename,/^Vance.*\.png$/);assert.equal(doc.type,'image/png');
     const embedded=extractEmbeddedCard(doc.bytes);assert.equal(embedded?.data?.name,'Vance');assert.equal(embedded.data.description,'Full definition');

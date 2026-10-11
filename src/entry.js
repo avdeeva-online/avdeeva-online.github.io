@@ -30,6 +30,28 @@ export async function navigationFailure(request,response){
   return new Response(html,{status:response.status,headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store',...(waiting?{'retry-after':'5'}:{})}});
 }
 async function pngDownload(request,env,ctx,uuid){const got=await getCard(request,env,ctx,uuid);if(got.response)return got.response;const janny=await fetchJannySource(uuid);if(janny.ok){try{return new Response(embedCard(janny.bytes,got.card),{headers:{'content-type':'image/png','content-disposition':attachment(`${cardBase(got.card)}.png`),'cache-control':'private, no-store'}})}catch{}}const avatar=got.card?.data?.extensions?.archive_exe?.avatar_url||'';if(!avatar)return json({ok:false,state:'PNG_SOURCE_NOT_AVAILABLE',janitorUuid:uuid,detail:{janny:janny.state||'UNKNOWN',avatar:'MISSING'}},502);const avatarSource=await fetchAvatarPng(avatar,env.IMAGES);if(avatarSource.ok){try{return new Response(embedCard(avatarSource.bytes,got.card),{headers:{'content-type':'image/png','content-disposition':attachment(`${cardBase(got.card)}.png`),'cache-control':'private, no-store'}})}catch{}}return json({ok:false,state:'PNG_SOURCE_NOT_AVAILABLE',janitorUuid:uuid,detail:{janny:janny.state||'UNKNOWN',avatar:avatarSource.state||'UNKNOWN'}},502)}
-async function jsonDownload(request,env,ctx,uuid){const got=await getCard(request,env,ctx,uuid);if(got.response)return got.response;return new Response(JSON.stringify(got.card,null,2),{headers:{'content-type':'application/json; charset=utf-8','content-disposition':attachment(`${cardBase(got.card)}.json`),'cache-control':'private, no-store'}})}
+// A JSON card is text only, so the avatar travels inside it the Character Card V3 way: data.assets holds the "icon"
+// as a data: URI (JPEG via the Images binding, else the source bytes), or as its https link if the picture can't be read.
+// V3 keeps every V2 field, so apps that read V2 still import the text.
+function base64(bytes){let s='';for(let i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));return btoa(s)}
+async function avatarAsset(url,images){
+  const allowed=allowedImageTarget(url);if(!allowed.ok)return null;
+  try{
+    const source=await fetch(allowed.target.toString(),{redirect:'follow',headers:{accept:'image/*','user-agent':'ARCHIVE.EXE/1.9'}});
+    if(!source.ok)return{type:'icon',uri:url,name:'main',ext:'webp'};
+    if(images?.input){try{const out=(await images.input(source.clone().body).transform({fit:'scale-down',width:1600,height:2400}).output({format:'image/jpeg',quality:90})).response();if(out.ok){const bytes=new Uint8Array(await out.arrayBuffer());if(bytes[0]===0xff&&bytes[1]===0xd8)return{type:'icon',uri:`data:image/jpeg;base64,${base64(bytes)}`,name:'main',ext:'jpeg'}}}catch{}}
+    const type=String(source.headers.get('content-type')||'').split(';')[0].trim().toLowerCase(),ext={'image/png':'png','image/jpeg':'jpeg','image/webp':'webp','image/gif':'gif'}[type];
+    const bytes=new Uint8Array(await source.arrayBuffer());
+    if(ext&&bytes.length&&bytes.length<=8*1024*1024)return{type:'icon',uri:`data:${type};base64,${base64(bytes)}`,name:'main',ext};
+  }catch{}
+  return{type:'icon',uri:url,name:'main',ext:'webp'};
+}
+export async function withAvatar(card,env){
+  const url=card?.data?.extensions?.archive_exe?.avatar_url||'',icon=url?await avatarAsset(url,env.IMAGES):null;
+  if(!icon)return card;
+  const data={...card.data,group_only_greetings:Array.isArray(card.data.group_only_greetings)?card.data.group_only_greetings:[],assets:[icon,...(Array.isArray(card.data.assets)?card.data.assets.filter(x=>x?.type!=='icon'):[])]};
+  return{...card,spec:'chara_card_v3',spec_version:'3.0',data};
+}
+async function jsonDownload(request,env,ctx,uuid){const got=await getCard(request,env,ctx,uuid);if(got.response)return got.response;const card=await withAvatar(got.card,env);return new Response(JSON.stringify(card,null,2),{headers:{'content-type':'application/json; charset=utf-8','content-disposition':attachment(`${cardBase(card)}.json`),'cache-control':'private, no-store'}})}
 
 export async function handleEntryRoute(request,env,ctx){const url=new URL(request.url);if(request.method==='GET'){if(url.pathname==='/api/image-proxy')return imageProxy(request);let m=url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})\/card\.png$/i);if(m)return navigationFailure(request,await pngDownload(request,env,ctx,m[1].toLowerCase()));m=url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})\/card$/i);if(m)return navigationFailure(request,await jsonDownload(request,env,ctx,m[1].toLowerCase()));if(url.pathname==='/api/debug/retrieval')return json({ok:false,state:'DEBUG_REEXTRACT_DISABLED'},410)}return null}

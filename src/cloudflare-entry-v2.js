@@ -12,9 +12,10 @@ import { d1SchemaStatus } from './d1-schema-status.js';
 import { repairHubMedia } from './hub-resources.js';
 import { handleCodexProfilesRoute } from './codex-profiles.js';
 import { isLoggedAdminWrite, logAdminWrite, adminActivity } from './admin-activity.js';
+import { CATALOG_PAGE } from './catalog-cache.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
-const BUILD_INFO={build:'service-hidden',deployed_from:'main'};
+const BUILD_INFO={build:'catalog-pages',deployed_from:'main'};
 const CONTENT_SECURITY_POLICY=["default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","form-action 'self'","img-src 'self' https: data: blob:","media-src 'self' https: blob:","style-src 'self' 'unsafe-inline'","script-src 'self' 'unsafe-inline'","connect-src 'self'","font-src 'self' data:"].join('; ');
 // CODEX hosts LoreKey, which calls the visitor's own AI provider (Gemini, OpenAI, OpenRouter… — any https API) straight
 // from the browser with the visitor's own key. Only that page may connect out; every other page stays 'self'.
@@ -59,10 +60,18 @@ async function publicImport(request,env,ctx,url){
   if(existing&&existing.status!=='published')return json({ok:false,error:'NOT_AVAILABLE',janitorUuid:uuid},404);
   return sourceTruth.fetch(isStatus?request:new Request(request.url,{method:'POST',headers:{'content-type':'application/json'},body}),env,ctx);
 }
+// The Telegram bot reads the same catalog pages the site does (one 10000-bot request goes over the CPU limit);
+// the pages usually come from the edge cache, so only the JSON parsing is left here.
+async function pagedCatalog(request,env,ctx){
+  const page=async offset=>{const r=await routeRequest(new Request(new URL(`/api/catalog?limit=${CATALOG_PAGE}&offset=${offset}`,request.url)),env,ctx);const d=await r.json().catch(()=>({}));if(!r.ok||!Array.isArray(d.characters))throw new Error(`CATALOG_${r.status}`);return d};
+  const first=await page(0),rest=[];for(let offset=CATALOG_PAGE;offset<Number(first.total||0);offset+=CATALOG_PAGE)rest.push(page(offset));
+  const characters=[first,...await Promise.all(rest)].flatMap(d=>d.characters);
+  return json({ok:true,count:characters.length,characters});
+}
 async function routeRequest(request,env,ctx){
   const url=new URL(request.url),blocked=await guardAdminApi(request,env,url);if(blocked)return blocked;
   if(url.pathname==='/telegram/admin')return handleAdminTelegramRoute(request,env);
-  if(url.pathname==='/telegram/public')return handlePublicTelegramFull(request,env,{catalog:()=>routeRequest(new Request(new URL('/api/catalog?limit=10000',request.url)),env,ctx),route:r=>routeRequest(r,env,ctx),waitUntil:p=>ctx?.waitUntil?.(p)});
+  if(url.pathname==='/telegram/public')return handlePublicTelegramFull(request,env,{catalog:()=>pagedCatalog(request,env,ctx),route:r=>routeRequest(r,env,ctx),waitUntil:p=>ctx?.waitUntil?.(p)});
   const mediaMatch=url.pathname.match(/^\/api\/admin\/hub-telegram-media\/([^/]+)\/(\d+)$/);
   if(mediaMatch)return serveTelegramDraftMedia(request,env,decodeURIComponent(mediaMatch[1]),mediaMatch[2]);
   if(url.pathname==='/api/build-info'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return json({ok:true,...BUILD_INFO})}

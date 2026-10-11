@@ -9,7 +9,7 @@ const env={PUBLICnode00bot:'public-token',DB:{prepare:sql=>stmt(sql)}};
 db.exec(`CREATE TABLE lorebooks(id TEXT PRIMARY KEY,title TEXT,script TEXT,content_hash TEXT);
 CREATE TABLE lorebook_blobs(content_hash TEXT PRIMARY KEY,script TEXT);
 CREATE TABLE character_lorebooks(character_uuid TEXT,lorebook_id TEXT,ordinal INTEGER);
-CREATE TABLE characters(janitor_uuid TEXT PRIMARY KEY,name TEXT,author TEXT,author_url TEXT,janitor_url TEXT,lorebook_url TEXT,short_description TEXT,universe TEXT,status TEXT,pov TEXT,image_url TEXT,description TEXT,public_about TEXT,scenario TEXT,updated_at TEXT);`);
+CREATE TABLE characters(janitor_uuid TEXT PRIMARY KEY,name TEXT,author TEXT,author_url TEXT,janitor_url TEXT,lorebook_url TEXT,short_description TEXT,universe TEXT,status TEXT,pov TEXT,image_url TEXT,description TEXT,public_about TEXT,scenario TEXT,service INTEGER NOT NULL DEFAULT 0,updated_at TEXT);`);
 const uuid='11111111-2222-3333-4444-555555555555';
 db.prepare("INSERT INTO characters(janitor_uuid,name,author,author_url,janitor_url,lorebook_url,short_description,universe,status) VALUES(?,?,?,?,?,?,?,?,?)").run(uuid,'Vance','Author','','https://janitorai.com/characters/'+uuid,'https://x/api/characters/'+uuid+'/lorebooks','Short','','published');
 db.prepare("INSERT INTO lorebooks VALUES(?,?,?,?)").run('a'.repeat(32),'Hale University','', 'h1');

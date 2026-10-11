@@ -35,6 +35,7 @@ h2{margin:0;font-size:18px;color:#efe4bd}.ava{display:flex;gap:12px;align-items:
   <section class="panel" id="editor"><div class="empty">Выбери вселенную или автора слева.</div></section>
 </div>
 </main>
+<script src="/catalog-pages.js?v=20261011-pages1"></script>
 <script>
 (()=>{
   const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -94,7 +95,7 @@ h2{margin:0;font-size:18px;color:#efe4bd}.ava{display:flex;gap:12px;align-items:
   $('#q').addEventListener('input',renderList);
   (async()=>{
     try{
-      const [cat,pr,hub]=await Promise.all([fetch('/api/catalog?limit=10000',{cache:'no-store'}).then(r=>r.json()),api(),fetch('/api/hub-resources?summary=1',{cache:'no-store'}).then(r=>r.json()).catch(()=>({}))]);
+      const [cat,pr,hub]=await Promise.all([window.archiveCatalogPages({fresh:true}),api(),fetch('/api/hub-resources?summary=1',{cache:'no-store'}).then(r=>r.json()).catch(()=>({}))]);
       // Authors = bot authors + TAVO HUB resource creators (same person = same name, "@" and case ignored).
       const canon=new Map(),addAuthor=raw=>{const n=String(raw||'').trim().replace(/^@+/,'').trim();if(!n)return;const k=key(n);if(!canon.has(k))canon.set(k,n);const name=canon.get(k);names.author.set(name,(names.author.get(name)||0)+1)};
       for(const b of cat.characters||[]){addAuthor(b.author);for(const u of b.universes||[])names.universe.set(u,(names.universe.get(u)||0)+1)}

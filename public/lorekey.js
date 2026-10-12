@@ -36,6 +36,9 @@
 
   <section class="lk-step">
     <div class="lk-head"><span class="lk-num">02</span><div><h3>Параметры</h3><p>Как сохранить русские ключи</p></div></div>
+    <div class="lk-label">Что переводить</div>
+    <div class="lk-seg"><label><input type="radio" name="lkScope" value="keys" checked><span>🔑 Только ключи</span></label><label><input type="radio" name="lkScope" value="all"><span>📖 Весь лорбук</span></label></div>
+    <p class="lk-hint lk-scope-hint" data-lk="scopeHint">Переводятся триггер-ключи, текст записей остаётся на английском.</p>
     <div class="lk-label">Результат</div>
     <div class="lk-seg"><label><input type="radio" name="lkOutput" value="ru"><span>Только RU</span></label><label><input type="radio" name="lkOutput" value="both" checked><span>EN + RU</span></label></div>
     <div class="lk-label">Перевод</div>
@@ -74,13 +77,13 @@
   </section>`;
 
   const el=name=>root.querySelector(`[data-lk="${name}"]`);
-  const els=Object.fromEntries(['settings','provider','model','baseUrlField','baseUrl','apiKey','remember','fileStatus','drop','file','fileBox','fileList','replace','clear','badges','primary','secondary','content','translate','hint','progressBox','progressText','pct','fill','stop','results','summary','collapse','entries','download','reset'].map(n=>[n,el(n)]));
+  const els=Object.fromEntries(['settings','provider','model','baseUrlField','baseUrl','apiKey','remember','fileStatus','drop','file','fileBox','fileList','replace','clear','badges','primary','secondary','content','scopeHint','translate','hint','progressBox','progressText','pct','fill','stop','results','summary','collapse','entries','download','reset'].map(n=>[n,el(n)]));
   const settingsBox=root.querySelector('.lk-settings');
   /* Up to MAX_FILES lorebooks; each keeps its own original, output and review rows, and downloads as its own file. */
   // cache: keys and texts already translated in this tab, so pressing «Перевести» again after a stop or a dropped
   // connection continues where it stopped instead of starting over (and spending the key's limit twice).
   const state={books:[],stopped:false,cache:new Map()};
-  const newBook=(filename,size,original,stats)=>({filename,size,original,stats,output:null,rows:[],translated:0,skippedRegex:0,contentDone:0});
+  const newBook=(filename,size,original,stats)=>({filename,size,original,stats,output:null,rows:[],translated:0,skippedRegex:0,contentDone:0,titlesDone:0});
   const doneBooks=()=>state.books.filter(b=>b.output);
   const lorebooks=n=>`${n} ${n%10===1&&n%100!==11?'лорбук':n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?'лорбука':'лорбуков'}`;
 
@@ -102,6 +105,11 @@
   const outputMode=()=>root.querySelector('input[name="lkOutput"]:checked')?.value||'both';
   const transMode=()=>root.querySelector('input[name="lkMode"]:checked')?.value||'normal';
   const formMode=()=>root.querySelector('input[name="lkForms"]:checked')?.value||'auto';
+  // «Весь лорбук» = keys + entry texts + entry titles + the lorebook's own name and description.
+  const wholeBook=()=>root.querySelector('input[name="lkScope"]:checked')?.value==='all';
+  const translateLabel=n=>`${wholeBook()?'Перевести лорбук':'Перевести ключи'}${n>1?` · ${lorebooks(n)}`:''}`;
+  function scopeChanged(){els.content.checked=wholeBook();syncScope()}
+  function syncScope(){els.scopeHint.textContent=wholeBook()?'Переводятся ключи, текст записей, названия записей и название лорбука — дольше и тратит больше лимита ключа ИИ.':els.content.checked?'Переводятся ключи и текст записей; названия остаются как есть.':'Переводятся триггер-ключи, текст записей остаётся на английском.';if(!els.translate.disabled&&!/Продолжить/.test(els.translate.textContent))els.translate.textContent=translateLabel(state.books.length)}
   const kinds=()=>[...(els.primary.checked?['primary']:[]),...(els.secondary.checked?['secondary']:[])];
 
   function badge(text,good){const b=document.createElement('span');b.className='lk-mini'+(good?' good':'');b.textContent=text;els.badges.appendChild(b)}
@@ -121,7 +129,7 @@
       if(state.books.some(b=>b.filename===file.name&&b.size===file.size)){errors.push(`${file.name}: уже добавлен`);continue}
       try{state.books.push(await readBook(file))}catch(err){errors.push(`${file.name}: ${err.message}`)}
     }
-    for(const b of state.books){b.output=null;b.rows=[];b.translated=0;b.skippedRegex=0;b.contentDone=0}
+    for(const b of state.books){b.output=null;b.rows=[];b.translated=0;b.skippedRegex=0;b.contentDone=0;b.titlesDone=0}
     els.file.value='';renderFiles();
     if(errors.length)alert(`Не удалось открыть часть файлов:\n${errors.join('\n')}`);
   }
@@ -132,7 +140,7 @@
     els.badges.innerHTML='';if(has){if(books.length>1)badge(lorebooks(books.length),true);badge(`${sum('entries')} записей`,true);badge(`${sum('primary')} основных ключей`);badge(`${sum('secondary')} дополнительных`);if(sum('regex'))badge(`${sum('regex')} regex`)}
     els.drop.hidden=has;els.fileBox.hidden=!has;els.replace.hidden=books.length>=MAX_FILES;
     els.fileStatus.textContent=has?`${books.length} из ${MAX_FILES}`:'Ждёт файл';els.fileStatus.classList.toggle('ok',has);
-    els.translate.disabled=!has;els.translate.textContent=books.length>1?`Перевести ключи · ${lorebooks(books.length)}`:'Перевести ключи';
+    els.translate.disabled=!has;els.translate.textContent=translateLabel(books.length);
     els.hint.textContent=has?'Готово к переводу':'Сначала выбери JSON-файл';els.results.hidden=true;els.progressBox.hidden=true;
   }
 
@@ -154,7 +162,7 @@
     if(!state.books.length)return;
     if(!els.apiKey.value.trim()){toggleSettings(true);els.apiKey.focus();alert('Нужен твой API key. Вставь его в «⚙ Ключ ИИ» — он хранится только в твоём браузере.');return}
     if(els.provider.value==='openai'&&!/^https:\/\//i.test(els.baseUrl.value.trim())){toggleSettings(true);alert('Base URL должен начинаться с https://');return}
-    const books=state.books,withContent=els.content.checked,plans=books.map(book=>{book.output=null;book.rows=[];book.translated=0;book.contentDone=0;return{book,tasks:buildTasks(book)}});
+    const books=state.books,withContent=els.content.checked,plans=books.map(book=>{book.output=null;book.rows=[];book.translated=0;book.contentDone=0;book.titlesDone=0;return{book,tasks:buildTasks(book)}});
     if(!withContent&&!plans.some(p=>p.tasks.length)){alert('В выбранных полях нет ключей для перевода.');return}
     persist();state.stopped=false;els.translate.disabled=true;els.progressBox.hidden=false;els.results.hidden=true;progress(0,state.cache.size?'Продолжаю с места остановки…':'Собираю ключи…');
     const lock=await keepAwake();
@@ -176,7 +184,7 @@
         if(withContent)await translateContent(book,output,keysShare,base,slice,label);
         book.output=output;
       }
-      progress(100,'Готово');renderResults();els.translate.textContent=books.length>1?`Перевести ключи · ${lorebooks(books.length)}`:'Перевести ключи';
+      progress(100,'Готово');renderResults();els.translate.textContent=translateLabel(books.length);
       setTimeout(()=>els.results.scrollIntoView({behavior:'smooth',block:'start'}),80);
     }catch(err){
       console.error(err);const resume=state.cache.size?'\n\nУже переведённое сохранено — нажми «Перевести» ещё раз, и я продолжу с места остановки.':'';
@@ -235,21 +243,26 @@
   async function translateContent(book,output,startPct,base=0,slice=100,label=''){
     const glossary=[];const seen=new Set();
     for(const r of state.books.flatMap(b=>b.rows)){const ru=r.values.find(v=>/[а-яё]/i.test(v));if(ru&&!seen.has(r.oldKey)){seen.add(r.oldKey);glossary.push(`${r.oldKey} → ${ru}`)}if(glossary.length>=150)break}
-    const ck=it=>`content|${book.filename}|${book.size}|${it.id}|${it.text.length}|${it.text.slice(0,80)}`,byIdAll=new Map(getEntries(output).map(x=>[x.id,x.value]));
-    const all=getEntries(output).filter(x=>typeof x.value?.content==='string'&&/[a-z]/i.test(x.value.content)).map(x=>({id:x.id,text:x.value.content}));
-    for(const it of all)if(state.cache.has(ck(it))){byIdAll.get(it.id).content=state.cache.get(ck(it));book.contentDone++}
+    // Every piece of text to translate, with where it goes back: entry texts always; with «Весь лорбук» also entry
+    // titles (comment / name) and the lorebook's own name and description. Ids: "<entry>", "t:<entry>", "book:<field>".
+    const ck=it=>`content|${book.filename}|${book.size}|${it.id}|${it.text.length}|${it.text.slice(0,80)}`;
+    const english=v=>typeof v==='string'&&/[a-z]/i.test(v);
+    const all=[];
+    for(const x of getEntries(output)){const e=x.value||{};if(english(e.content))all.push({id:x.id,text:e.content,put:t=>{e.content=t;book.contentDone++}});if(wholeBook()){const f=english(e.comment)?'comment':english(e.name)?'name':'';if(f)all.push({id:`t:${x.id}`,text:e[f],title:true,put:t=>{e[f]=t;book.titlesDone++}})}}
+    const bk=bookOf(output);if(wholeBook()&&bk)for(const f of ['name','description'])if(english(bk[f]))all.push({id:`book:${f}`,text:bk[f],title:f==='name',put:t=>{bk[f]=t;book.titlesDone++}});
+    for(const it of all)if(state.cache.has(ck(it)))it.put(state.cache.get(ck(it)));
     const items=all.filter(it=>!state.cache.has(ck(it))),source=new Map(items.map(it=>[it.id,it]));
+    const send=it=>it.title?{id:it.id,title:it.text}:{id:it.id,text:it.text};
     const groups=[];let batch=[],chars=0;
     for(const it of items){const cost=it.text.length;if(batch.length&&chars+cost>4000){groups.push(batch);batch=[];chars=0}batch.push(it);chars+=cost}
     if(batch.length)groups.push(batch);
-    const byId=new Map(getEntries(output).map(x=>[x.id,x.value]));
     for(let i=0;i<groups.length;i++){
       if(state.stopped)throw new Error('остановлено');
-      progress(Math.round(base+(startPct+i/groups.length*(95-startPct))*slice/100),`${label}Текст записей: пакет ${i+1} из ${groups.length}…`);
-      const prompt=`You translate SillyTavern / Tavo lorebook entry texts from English to Russian for Russian-language roleplay.\n\nRules:\n- Output STRICT JSON only: {"items":[{"id":"...","text":"..."}]} — one item per input id.\n- Translate the whole text faithfully and naturally; do not summarize, shorten, add or explain anything.\n- Never translate or alter template macros and tokens: {{char}}, {{user}}, <START>, {{random::…}}, variables, code, URLs, IDs. Keep them exactly.\n- Keep the formatting exactly: line breaks, lists, brackets, quotes, markdown, W++ / PList / JSON-like structure (translate only the human-language values inside it).\n- Proper names: use the Russian forms from the glossary when given; otherwise transliterate into readable Russian Cyrillic.\n\nGLOSSARY (English key → Russian):\n${glossary.join('\n')||'(none)'}\n\nINPUT:\n${JSON.stringify(groups[i])}`;
+      progress(Math.round(base+(startPct+i/groups.length*(95-startPct))*slice/100),`${label}${wholeBook()?'Текст и названия':'Текст записей'}: пакет ${i+1} из ${groups.length}…`);
+      const prompt=`You translate SillyTavern / Tavo lorebook entry texts from English to Russian for Russian-language roleplay.\n\nRules:\n- Output STRICT JSON only: {"items":[{"id":"...","text":"..."}]} — one item per input id.\n- Translate the whole text faithfully and naturally; do not summarize, shorten, add or explain anything.\n- Never translate or alter template macros and tokens: {{char}}, {{user}}, <START>, {{random::…}}, variables, code, URLs, IDs. Keep them exactly.\n- Keep the formatting exactly: line breaks, lists, brackets, quotes, markdown, W++ / PList / JSON-like structure (translate only the human-language values inside it).\n- Proper names: use the Russian forms from the glossary when given; otherwise transliterate into readable Russian Cyrillic.\n- An item with "title" instead of "text" is a short entry or lorebook title: translate it as a short natural title and return it in "text".\n\nGLOSSARY (English key → Russian):\n${glossary.join('\n')||'(none)'}\n\nINPUT:\n${JSON.stringify(groups[i].map(send))}`;
       const raw=await withRetry(()=>els.provider.value==='gemini'?callGemini(prompt):callOpenAI(prompt));
       const parsed=parseJson(raw);
-      for(const it of Array.isArray(parsed.items)?parsed.items:[]){const entry=byId.get(String(it.id)),src=source.get(String(it.id));if(entry&&typeof it.text==='string'&&it.text.trim()){entry.content=it.text;book.contentDone++;if(src)state.cache.set(ck(src),it.text)}}
+      for(const it of Array.isArray(parsed.items)?parsed.items:[]){const src=source.get(String(it.id));if(src&&typeof it.text==='string'&&it.text.trim()){src.put(it.text);state.cache.set(ck(src),it.text)}}
     }
   }
   // "Too many requests" / temporary server errors: wait and retry (free Gemini keys hit per-minute limits).
@@ -307,7 +320,7 @@
       return many?`<div class="lk-book-head"><b>${esc(book.filename)}</b><small>${book.translated} ключей переведено</small><button type="button" class="lk-ghost" data-download="${bi}">Скачать</button></div>${cards}`:cards;
     }).join('');
     const sum=k=>books.reduce((n,b)=>n+(k==='entries'?b.stats.entries:b[k]),0),rows=books.reduce((n,b)=>n+b.rows.length,0);
-    els.summary.innerHTML=[...(many?[[`${books.length}/${state.books.length}`,'лорбуков готово']]:[]),[sum('entries'),'записей'],[sum('translated'),'ключей переведено'],[rows,'ключей проверено'],[sum('skippedRegex'),'regex оставлено как есть'],...(sum('contentDone')?[[sum('contentDone'),'текстов переведено']]:[])].map(([v,l])=>`<div><b>${v}</b><span>${l}</span></div>`).join('');
+    els.summary.innerHTML=[...(many?[[`${books.length}/${state.books.length}`,'лорбуков готово']]:[]),[sum('entries'),'записей'],[sum('translated'),'ключей переведено'],[rows,'ключей проверено'],[sum('skippedRegex'),'regex оставлено как есть'],...(sum('contentDone')?[[sum('contentDone'),'текстов переведено']]:[]),...(sum('titlesDone')?[[sum('titlesDone'),'названий переведено']]:[])].map(([v,l])=>`<div><b>${v}</b><span>${l}</span></div>`).join('');
     els.download.textContent=books.length>1?`Скачать все · ${books.length} JSON`:'Скачать JSON';
     els.results.hidden=false;
   }
@@ -325,7 +338,7 @@
   // Each lorebook is saved as its own file (never zipped); a short pause lets the browser accept several downloads.
   function saveBook(book){
     const url=URL.createObjectURL(new Blob([JSON.stringify(book.output,null,2)],{type:'application/json;charset=utf-8'}));
-    const a=document.createElement('a');a.href=url;a.download=`${(book.filename||'lorebook.json').replace(/\.json$/i,'')}${outputMode()==='both'?'.ru-en-keys.json':'.ru-keys.json'}`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    const a=document.createElement('a');a.href=url;a.download=`${(book.filename||'lorebook.json').replace(/\.json$/i,'')}${wholeBook()?'.ru.json':outputMode()==='both'?'.ru-en-keys.json':'.ru-keys.json'}`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }
   async function download(){
     const books=doneBooks();
@@ -341,6 +354,8 @@
   els.provider.addEventListener('change',()=>{if(els.provider.value==='gemini'&&(!els.model.value||/^gpt|\//.test(els.model.value)))els.model.value='gemini-2.5-flash';if(els.provider.value==='openai'&&els.model.value.startsWith('gemini'))els.model.value='gpt-5-mini';syncProvider();persist()});
   [els.baseUrl,els.model,els.apiKey,els.remember].forEach(x=>x.addEventListener('change',persist));
   els.remember.addEventListener('change',()=>{if(!els.remember.checked)persist()});
+  root.querySelectorAll('input[name="lkScope"]').forEach(x=>x.addEventListener('change',scopeChanged));
+  els.content.addEventListener('change',()=>{if(!els.content.checked&&wholeBook())root.querySelector('input[name="lkScope"][value="keys"]').checked=true;syncScope()});
   ['dragenter','dragover'].forEach(ev=>els.drop.addEventListener(ev,e=>{e.preventDefault();els.drop.classList.add('drag')}));
   ['dragleave','drop'].forEach(ev=>els.drop.addEventListener(ev,e=>{e.preventDefault();els.drop.classList.remove('drag')}));
   els.drop.addEventListener('drop',e=>loadFiles(e.dataTransfer.files));

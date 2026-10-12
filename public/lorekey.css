@@ -94,3 +94,5 @@
 .lk-book-head b{flex:1;min-width:0;font:600 13px var(--font-text);color:var(--cx-sand);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lk-book-head small{font:11px var(--font-text);color:var(--cx-muted);white-space:nowrap}
 @media (max-width:520px){.lk-book-head small{display:none}}
+/* «Что переводить» hint sits under the switch, left-aligned like the labels */
+.lk-scope-hint{margin:6px 2px 12px;text-align:left}

@@ -259,3 +259,24 @@ body.codex-lock{overflow:hidden}
 .codex-prompt::-webkit-scrollbar-thumb{background:rgba(205,184,138,.45);border-radius:4px}
 @supports not selector(::-webkit-scrollbar){.codex-prompt{scrollbar-width:thin;scrollbar-color:rgba(205,184,138,.45) transparent}}
 @media(max-width:760px){.codex-grid.codex-styles-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.codex-style h3{font-size:13.5px}.codex-prompt{font-size:10px;max-height:4.7em}.codex-style-meta span,.codex-style-meta a{font-size:9px;padding:1px 5px}}
+/* Styles: model tabs (NovelAI 4.5 / 5 / …) as a quiet segmented control with counts. */
+.codex-mtabs{display:inline-flex;flex-wrap:wrap;gap:2px;padding:3px;border:1px solid var(--cx-line);border-radius:9px;background:rgba(5,7,5,.5)}
+.codex-filters .codex-mtabs button{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 12px;border:0;border-radius:6px;background:transparent;color:var(--cx-muted);font:500 11.5px var(--font-text);cursor:pointer;transition:background .15s,color .15s}
+.codex-filters .codex-mtabs button:hover{color:var(--cx-ink)}
+.codex-filters .codex-mtabs button.active{background:rgba(205,184,138,.13);color:#f1eadb}
+.codex-mtabs em{font:normal 9.5px var(--font-mono);color:var(--cx-dim)}
+.codex-mtabs button.active em{color:var(--cx-sand)}
+/* Style card: calm frame, the picture zooms in a little on hover, the prompt block is muted until hovered. */
+.codex-style{transition:border-color .2s,transform .2s}
+.codex-style:hover{border-color:var(--cx-line-strong)}
+.codex-style-frame{overflow:hidden;border-bottom:1px solid var(--cx-line);background:#151814}
+.codex-style-frame .codex-style-img{border-bottom:0}
+.codex-style-gallery{overflow:hidden}
+.codex-style-img{transition:transform .45s cubic-bezier(.2,.7,.2,1),opacity .18s}
+.codex-style:hover .codex-style-img{transform:scale(1.05)}
+.codex-prompt{border:1px solid rgba(160,150,120,.12);background:rgba(255,255,255,.015);color:var(--cx-muted);cursor:copy;transition:border-color .15s,background .15s,color .15s}
+.codex-prompt:hover{border-color:rgba(205,184,138,.3);background:rgba(205,184,138,.035);color:var(--cx-text)}
+.codex-prompt.copied{border-color:rgba(205,184,138,.45)}
+.codex-prompt.copied::after{background:rgba(205,184,138,.18);color:#f1eadb;font-weight:500}
+@media(prefers-reduced-motion:reduce){.codex-style-img{transition:opacity .18s}.codex-style:hover .codex-style-img{transform:none}}
+

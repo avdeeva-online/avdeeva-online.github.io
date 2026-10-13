@@ -6,7 +6,7 @@
   const key=s=>String(s||'').trim().toLocaleLowerCase();
   const plural=(n,one,many)=>`${n} ${n===1?one:many}`;
   const catalogUrl=params=>`characters.html?${new URLSearchParams(params)}`;
-  let universes=[],authors=[],styles=[],profiles=new Map(),modelFilter='all',tab='authors',authorFilter='all',sizeFilter='all',kindFilter='all',query='';
+  let universes=[],authors=[],styles=[],profiles=new Map(),modelFilter='',tab='authors',authorFilter='all',sizeFilter='all',kindFilter='all',query='';
   // Filter by how many bots a universe / author has.
   const SIZES=[['all','All'],['big','10+'],['mid','3–9'],['small','1–2']];
   const inSize=n=>sizeFilter==='all'||(sizeFilter==='big'?n>=10:sizeFilter==='mid'?n>=3&&n<10:n<3);
@@ -91,7 +91,8 @@
     const box=$('#codexFilters');const names=[...new Set(universes.map(u=>u.author))].filter(Boolean);
     const row=(label,items,attr,current)=>`<div class="codex-frow"><span>${label}</span>${items.map(([v,t])=>`<button type="button" ${attr}="${esc(v)}" class="${v===current?'active':''}">${esc(t)}</button>`).join('')}</div>`;
     box.hidden=false;
-    if(tab==='styles'){const models=[...new Set(styles.flatMap(modelsOf))];box.hidden=models.length<2;box.innerHTML=box.hidden?'':row('Model',[['all','All'],...models.map(m=>[m,m])],'data-model-filter',modelFilter);return}
+    // Styles: one tab per model (NovelAI 4.5, NovelAI 5, then any other), "All" last; a style made for both shows in both.
+    if(tab==='styles'){const models=styleModels();box.hidden=!models.length;box.innerHTML=box.hidden?'':`<div class="codex-mtabs" role="tablist">${[...models,'all'].map(m=>{const n=m==='all'?styles.length:styles.filter(s=>modelsOf(s).includes(m)).length;return`<button type="button" role="tab" data-model-filter="${esc(m)}" class="${m===currentModel()?'active':''}" aria-selected="${m===currentModel()}">${esc(m==='all'?'All':modelLabel(m))}<em>${n}</em></button>`}).join('')}</div>`;return}
     box.innerHTML=tab==='universes'
       ?row('Bots',SIZES,'data-size-filter',sizeFilter)+(names.length>1?row('Author',[['all','All'],...names.map(n=>[n,'@'+n])],'data-author-filter',authorFilter):'')
       :row('Makes',KINDS,'data-kind-filter',kindFilter)+row('Works',SIZES,'data-size-filter',sizeFilter);
@@ -99,10 +100,15 @@
   const nothing='<div class="codex-state">Nothing found.</div>';
   // A style can suit several models (e.g. NovelAI v4.5 and v5).
   const modelsOf=s=>Array.isArray(s.models)&&s.models.length?s.models:String(s.model||'').split(',').map(x=>x.trim()).filter(Boolean);
+  const MODEL_ORDER=['NovelAI v4.5','NovelAI v5','Nano Banana'];
+  const styleModels=()=>[...new Set(styles.flatMap(modelsOf))].sort((a,b)=>{const i=x=>{const n=MODEL_ORDER.indexOf(x);return n<0?99:n};return i(a)-i(b)||a.localeCompare(b)});
+  const modelLabel=m=>m.replace(/^NovelAI v/i,'NovelAI ');
+  // Until a tab is picked, the first model's tab is open.
+  const currentModel=()=>modelFilter||styleModels()[0]||'all';
   // Style: picture on top, title + model, and the prompt — one tap copies it.
   // Several pictures: hover across the picture (desktop) or swipe (phone) to flip through them; dots show where you are.
-  const styleGallery=s=>{const urls=(s.image_urls&&s.image_urls.length?s.image_urls:[s.image_url]).filter(Boolean);if(!urls.length)return'';if(urls.length===1)return`<img class="codex-style-img" src="${esc(urls[0])}" alt="${esc(s.title)}" loading="lazy" decoding="async">`;return`<div class="codex-style-gallery" data-gallery>${urls.map((u,i)=>`<img class="codex-style-img${i?'':' on'}" src="${esc(u)}" alt="${esc(s.title)} ${i+1}" loading="lazy" decoding="async">`).join('')}<div class="codex-dots">${urls.map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div></div>`};
-  const styleCard=s=>`<article class="codex-style">${styleGallery(s)}<div class="codex-style-body"><h3>${esc(s.title)}</h3><div class="codex-style-meta">${[...modelsOf(s).map(m=>`<span>${esc(m)}</span>`),s.author?(s.author_link?`<a href="${esc(s.author_link)}" target="_blank" rel="noopener noreferrer">@${esc(s.author)}</a>`:`<span>@${esc(s.author)}</span>`):'',s.source_url?`<a href="${esc(s.source_url)}" target="_blank" rel="noopener noreferrer">Post ↗</a>`:''].filter(Boolean).join('')}</div><button type="button" class="codex-prompt" data-copy="${esc(s.id)}" title="Tap to copy">${esc(s.prompt)}</button></div></article>`;
+  const styleGallery=s=>{const urls=(s.image_urls&&s.image_urls.length?s.image_urls:[s.image_url]).filter(Boolean);if(!urls.length)return'';if(urls.length===1)return`<div class="codex-style-frame"><img class="codex-style-img" src="${esc(urls[0])}" alt="${esc(s.title)}" loading="lazy" decoding="async"></div>`;return`<div class="codex-style-gallery" data-gallery>${urls.map((u,i)=>`<img class="codex-style-img${i?'':' on'}" src="${esc(u)}" alt="${esc(s.title)} ${i+1}" loading="lazy" decoding="async">`).join('')}<div class="codex-dots">${urls.map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div></div>`};
+  const styleCard=s=>`<article class="codex-style">${styleGallery(s)}<div class="codex-style-body"><h3>${esc(s.title)}</h3><div class="codex-style-meta">${[...modelsOf(s).filter(m=>m!==currentModel()).map(m=>`<span>${esc(m)}</span>`),s.author?(s.author_link?`<a href="${esc(s.author_link)}" target="_blank" rel="noopener noreferrer">@${esc(s.author)}</a>`:`<span>@${esc(s.author)}</span>`):'',s.source_url?`<a href="${esc(s.source_url)}" target="_blank" rel="noopener noreferrer">Post ↗</a>`:''].filter(Boolean).join('')}</div><button type="button" class="codex-prompt" data-copy="${esc(s.id)}" title="Tap to copy">${esc(s.prompt)}</button></div></article>`;
   async function copyText(text){try{await navigator.clipboard.writeText(text);return true}catch{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch{}ta.remove();return ok}}
   function render(){
     document.querySelectorAll('.codex-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
@@ -111,7 +117,7 @@
     if(lk){$('#codexFilters').hidden=true;if(!document.querySelector('script[data-lorekey]')){const s=document.createElement('script');s.src='lorekey.js?v=20261012-lk9';s.dataset.lorekey='1';document.body.appendChild(s)}return}
     renderFilters();
     const grid=$('#codexGrid');grid.classList.toggle('codex-styles-grid',tab==='styles');
-    if(tab==='styles'){const list=styles.filter(s=>(modelFilter==='all'||modelsOf(s).includes(modelFilter))&&matchesQuery([s.title,s.model,s.author,s.prompt].join(' ')));grid.innerHTML=list.length?list.map(styleCard).join(''):(styles.length?nothing:'<div class="codex-state">Styles are coming soon.</div>');return}
+    if(tab==='styles'){const model=currentModel(),list=styles.filter(s=>(model==='all'||modelsOf(s).includes(model))&&matchesQuery([s.title,s.model,s.author,s.prompt].join(' ')));grid.innerHTML=list.length?list.map(styleCard).join(''):(styles.length?nothing:'<div class="codex-state">Styles are coming soon.</div>');return}
     if(tab==='universes'){
       const list=universes.filter(u=>(authorFilter==='all'||u.author===authorFilter)&&inSize(cardBots(u).length)&&matchesQuery([u.name,u.author,...u.settings,...u.bots.map(b=>b.nameEn),...u.lorebooks.map(l=>l.title)].join(' ')));
       grid.innerHTML=list.length?list.map(universeCard).join(''):nothing;

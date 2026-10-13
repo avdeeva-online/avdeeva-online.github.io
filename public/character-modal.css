@@ -113,10 +113,9 @@
 #modal .cm-btn .ui-icon{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6}
 #modal .cm-btn.is-loading{opacity:.6;cursor:progress}
 #modal .cm-files-gap{flex:1 1 8px}
-/* Card file: DataCat and JannyAI joined as one segmented control with a small label in front. */
+/* Card file: DataCat and JannyAI joined as one small segmented control. */
 #modal .cm-ext{display:inline-flex;align-items:center;gap:10px;white-space:nowrap}
 #modal .cm-get{display:inline-flex;align-items:stretch;border:1px solid rgba(205,184,138,.55);border-radius:7px;overflow:hidden;background:rgba(205,184,138,.06)}
-#modal .cm-get-label{display:inline-flex;align-items:center;padding:0 12px;font:600 10px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--cm-text-soft);border-right:1px solid rgba(205,184,138,.3)}
 #modal .cm-get .cm-btn{border:0;border-radius:0}
 #modal .cm-get .cm-btn+.cm-btn{border-left:1px solid rgba(205,184,138,.3)}
 #modal .cm-link{color:var(--cm-text-soft);font:13px/1 var(--font-text);text-decoration:none;padding:10px 4px;white-space:nowrap}
@@ -237,7 +236,6 @@
   #modal .cm-link{padding:8px 2px;font-size:11px}
   #modal .cm-files-gap{display:none}
   #modal .cm-get{border-radius:6px}
-  #modal .cm-get-label{padding:0 9px;font-size:9px}
   /* Room on the right for the Close button, which floats over the stuck tab bar. */
   #modal .cm-tabs{top:0;margin:14px -16px 0;padding:14px 104px 0 16px;gap:16px}
   #modal .cm-tab{padding-bottom:9px;font:9px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase}
@@ -263,3 +261,10 @@
 #modal .cm-swipe-hint{font-family:var(--font-mono)}
 @media(max-width:760px){#modal .cm-facts{font-size:9px}#modal .cm-btn{font-size:10px}#modal .cm-tab{font-size:9px}#modal .cm-link{font-size:10px}}
 #modal a.cm-fact{text-decoration:none}#modal a.cm-fact:hover{color:var(--cm-title);text-decoration:underline;text-underline-offset:3px}
+/* Minimal file row: small buttons in one line, source links as quiet text on the right. */
+#modal .cm-files{gap:6px;margin-top:16px}
+#modal .cm-btn{height:28px;padding:0 10px;gap:5px;border-radius:5px;font-size:10px;letter-spacing:.05em}
+#modal .cm-btn .ui-icon{width:12px;height:12px}
+#modal .cm-get{border-radius:5px}
+#modal .cm-ext{gap:8px}
+#modal .cm-link{padding:6px 2px;font-size:10px}

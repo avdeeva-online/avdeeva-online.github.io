@@ -909,7 +909,7 @@ function renderModalHead(){
   const loreCount=Number(b.lorebookCount||1);
   $("#modalFiles").innerHTML=[
     // The card file (PNG / JSON) is downloaded on DataCat or JannyAI: both sit together as one "Card" control.
-    datacat||janny?`<span class="cm-get" role="group" aria-label="Download the card file"><span class="cm-get-label">Card ↓</span>${datacat?`<a id="downloadDatacat" class="cm-btn cm-btn-primary" href="${esc(datacat)}" target="_blank" rel="noopener" title="Card file (PNG / JSON) on DataCat">DataCat ↗</a>`:''}${janny?`<a id="openJanny" class="cm-btn cm-btn-primary" href="${esc(janny)}" target="_blank" rel="noopener" title="Card file on JannyAI — opens without signing in">JannyAI ↗</a>`:''}</span>`:'',
+    datacat||janny?`<span class="cm-get" role="group" aria-label="Download the card file">${datacat?`<a id="downloadDatacat" class="cm-btn cm-btn-primary" href="${esc(datacat)}" target="_blank" rel="noopener" title="Card file (PNG / JSON) on DataCat">DataCat ↗</a>`:''}${janny?`<a id="openJanny" class="cm-btn cm-btn-primary" href="${esc(janny)}" target="_blank" rel="noopener" title="Card file on JannyAI — opens without signing in">JannyAI ↗</a>`:''}</span>`:'',
     lore?`<a id="downloadLore" class="cm-btn" href="${esc(lore)}" download title="${loreCount} attached lorebook${loreCount===1?'':'s'}">${bookSvg}<span>Lorebook${loreCount>1?` · ${loreCount}`:''} ↓</span></a>`:'',
     `<span class="cm-files-gap"></span>`,
     // Source links stay together (and wrap together), after the download buttons.

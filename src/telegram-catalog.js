@@ -89,10 +89,10 @@ export function cardCaption(c){
 // ‹ 3 / 25 › under the card; the ends wrap around, so the arrows never dead-end.
 function navRow(nav){if(!nav||nav.total<2)return null;const at=i=>`p:n:${nav.f}:${nav.h}:${(i+nav.total)%nav.total}`;return[cb('‹',at(nav.i-1)),cb(`${nav.i+1} / ${nav.total}`,'p:noop'),cb('›',at(nav.i+1))]}
 export function cardKeyboard(c,nav=null){
-  /* The card file is downloaded on DataCat (its own page for this bot); lorebooks come as files from us. */
-  const files=[{text:'⬇ Файл · DataCat',url:datacatCardPage(c.uuid)}];if(c.lorebookCount)files.push(cb('📖 Лорбук',`p:lb:${c.uuid}`));
+  /* The card file is downloaded on DataCat or JannyAI (side by side); lorebooks come as files from us. */
+  const files=[url('⬇ DataCat',datacatCardPage(c.uuid)),url('⬇ JannyAI',jannyPage(c.url,c.uuid))];
   /* JanitorAI is the link on the bot's name in the caption, so it needs no button of its own. */
-  const rows=[files,[cb('📄 Описание',`p:d:${c.uuid}`),cb('🔗 Ссылка',`p:s:${c.uuid}`),url('JannyAI ↗',jannyPage(c.url,c.uuid))]];
+  const rows=[files,[...(c.lorebookCount?[cb('📖 Лорбук',`p:lb:${c.uuid}`)]:[]),cb('📄 Описание',`p:d:${c.uuid}`),cb('🔗 Ссылка',`p:s:${c.uuid}`)]];
   const more=[];if(c.author)more.push(cb(c.universes[0]?'👤 Ещё от автора':`👤 Ещё от ${short(c.author,20)}`,`p:fv:a:${valueHash(c.author)}:0`));if(c.universes[0])more.push(cb(`🌌 ${short(c.universes[0],13)}`,`p:fv:u:${valueHash(c.universes[0])}:0`));if(more.length)rows.push(more);
   const n=navRow(nav);if(n)rows.push(n);
   return{inline_keyboard:rows};

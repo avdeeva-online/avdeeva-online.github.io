@@ -908,12 +908,12 @@ function renderModalHead(){
   const datacat=datacatUrl(b),janny=jannyUrl(b),lore=String(b.lorebook||''),profile=externalUrl(b.authorUrl);
   const loreCount=Number(b.lorebookCount||1);
   $("#modalFiles").innerHTML=[
-    datacat?`<a id="downloadDatacat" class="cm-btn cm-btn-primary" href="${esc(datacat)}" target="_blank" rel="noopener" title="PNG / JSON card file on DataCat">Card file · DataCat ↗</a>`:'',
+    // The card file (PNG / JSON) is downloaded on DataCat or JannyAI: both sit together as one "Card" control.
+    datacat||janny?`<span class="cm-get" role="group" aria-label="Download the card file"><span class="cm-get-label">Card ↓</span>${datacat?`<a id="downloadDatacat" class="cm-btn cm-btn-primary" href="${esc(datacat)}" target="_blank" rel="noopener" title="Card file (PNG / JSON) on DataCat">DataCat ↗</a>`:''}${janny?`<a id="openJanny" class="cm-btn cm-btn-primary" href="${esc(janny)}" target="_blank" rel="noopener" title="Card file on JannyAI — opens without signing in">JannyAI ↗</a>`:''}</span>`:'',
     lore?`<a id="downloadLore" class="cm-btn" href="${esc(lore)}" download title="${loreCount} attached lorebook${loreCount===1?'':'s'}">${bookSvg}<span>Lorebook${loreCount>1?` · ${loreCount}`:''} ↓</span></a>`:'',
     `<span class="cm-files-gap"></span>`,
-    b.url?`<a id="openBot" class="cm-link" href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.platform==='JANITOR'?'JanitorAI':b.platform||'Source')} ↗</a>`:'',
-    janny?`<a id="openJanny" class="cm-link" href="${esc(janny)}" target="_blank" rel="noopener" title="The same bot on JannyAI — opens without signing in">JannyAI ↗</a>`:'',
-    profile?`<a id="openAuthor" class="cm-link" href="${esc(profile)}" target="_blank" rel="noopener noreferrer">@${esc(b.author)} ↗</a>`:''
+    // Source links stay together (and wrap together), after the download buttons.
+    (b.url||profile)?`<span class="cm-ext">${[b.url?`<a id="openBot" class="cm-link" href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.platform==='JANITOR'?'JanitorAI':b.platform||'Source')} ↗</a>`:'',profile?`<a id="openAuthor" class="cm-link" href="${esc(profile)}" target="_blank" rel="noopener noreferrer">@${esc(b.author)} ↗</a>`:''].join('')}</span>`:''
   ].join('');
   const tags=visibleBotTags(b),hashtags=visibleBotHashtags(b);
   $("#modalTags").innerHTML=`${tags.map(t=>`<button type="button" class="cm-tag" data-tag="${esc(t)}">${esc(tagLabel(t))}</button>`).join('')}${hashtags.map(h=>`<button type="button" class="cm-hashtag" data-hashtag="${esc(h)}">#${esc(cleanHashtag(h))}</button>`).join('')}`;

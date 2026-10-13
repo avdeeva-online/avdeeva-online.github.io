@@ -18,7 +18,10 @@ const card={spec:'chara_card_v2',data:{name:'Bot 1',creator:'Alice',description:
 const png=new Uint8Array([137,80,78,71,13,10,26,10,...chunk('IHDR',new Array(13).fill(0)),...chunk('tEXt',[...new TextEncoder().encode('chara\0'+Buffer.from(JSON.stringify(card)).toString('base64'))]),...chunk('IEND',[])]);
 const calls=[],og=globalThis.fetch;
 globalThis.fetch=async(url,init={})=>{const s=String(url);calls.push(s);
-  if(s==='https://api.jannyai.com/api/v1/download'){const id=JSON.parse(init.body).characterId;return Number(id.slice(-2))%3===0?Response.json({error:'Character not found'},{status:404}):Response.json({downloadUrl:`https://files.jannyai.com/${id}.png`})}
+  if(s==='https://api.jannyai.com/api/v1/download'){const id=JSON.parse(init.body).characterId,n=Number(id.slice(-2)),browser=/Chrome/.test(init.headers?.['user-agent']||'');
+    if(n===5)return new Response('<html><title>Just a moment...</title><body>Checking your browser</body></html>',{status:403,headers:{'content-type':'text/html; charset=UTF-8','server':'cloudflare','cf-mitigated':'challenge'}});
+    if(n===10&&!browser)return new Response('Forbidden',{status:403});
+    return Number(id.slice(-2))%3===0?Response.json({error:'Character not found'},{status:404}):Response.json({downloadUrl:`https://files.jannyai.com/${id}.png`})}
   if(s.startsWith('https://files.jannyai.com/'))return new Response(png,{headers:{'content-type':'image/png'}});
   throw new Error('unexpected '+s)};
 try{
@@ -27,6 +30,8 @@ try{
   const one=d.results.find(x=>x.uuid===U(1));assert.equal(one.found,true);assert.equal(one.downloadHost,'files.jannyai.com');assert.equal(one.ourLorebooks,1);assert.equal(one.ourAvatarHost,'media.datacat.run');
   assert.deepEqual({description:one.card.description,firstMes:one.card.firstMes,altGreetings:one.card.altGreetings,tags:one.card.tags,lorebookEntries:one.card.lorebookEntries,scenario:one.card.scenario},{description:true,firstMes:true,altGreetings:1,tags:1,lorebookEntries:0,scenario:false});
   const three=d.results.find(x=>x.uuid===U(3));assert.equal(three.found,false);assert.equal(three.error,'HTTP_404');assert.equal(three.detail,'Character not found');
+  const five=d.results.find(x=>x.uuid===U(5));assert.equal(five.error,'HTTP_403');assert.equal(five.browserStatus,403);assert.deepEqual(five.refusal,{server:'cloudflare',cfMitigated:'challenge',contentType:'text/html',snippet:'Just a moment... Checking your browser'},'a refusal says who refused and how');
+  const ten=d.results.find(x=>x.uuid===U(10));assert.equal(ten.found,true);assert.equal(ten.viaBrowserHeaders,true);assert.equal(ten.browserStatus,200,'a 403 is retried once with browser-like headers');
   r=await jannyCoverage(new Request('https://x/api/admin/janny-coverage?offset=15&limit=15&sample=0'),env);d=await r.json();
   assert.equal(d.results.length,2);assert.equal(d.next,null);assert.ok(d.results.every(x=>!x.card),'no file download without sample');
   assert.ok(calls.every(c=>c.startsWith('https://api.jannyai.com/')||c.startsWith('https://files.jannyai.com/')),'only JannyAI is contacted — never DataCat');

@@ -56,7 +56,7 @@ resetCatalogMemo();
   for(const s of ['Bot 11','от <a href="https://janitorai.com/profiles/alice">Bob</a>','Marvel, Avengers','Fantasy, Modern','AnyPOV','Action  Romance','2 лорбука','<i>xxx'])assert.ok(photo.caption.includes(s),s);
   assert.ok(photo.caption.length<=1024,`caption ${photo.caption.length}`);
   const cbs=photo.reply_markup.inline_keyboard.flat().map(b=>b.callback_data||b.url);
-  for(const k of [`https://datacat.run/characters/recent/janitor/${U(11)}`,`p:lb:${U(11)}`,`p:d:${U(11)}`,`p:fv:a:${valueHash('Bob')}:0`,`p:fv:u:${valueHash('Marvel')}:0`,`p:s:${U(11)}`])assert.ok(cbs.includes(k),k);
+  for(const k of [`https://datacat.run/characters/recent/janitor/${U(11)}`,`https://jannyai.com/characters/${U(11)}`,`p:lb:${U(11)}`,`p:d:${U(11)}`,`p:fv:a:${valueHash('Bob')}:0`,`p:fv:u:${valueHash('Marvel')}:0`,`p:s:${U(11)}`])assert.ok(cbs.includes(k),k);
   assert.ok(photo.caption.includes(`<a href="https://janitorai.com/characters/${U(11)}">Bot 11</a>`),'the name links to JanitorAI');
   assert.ok(photo.reply_markup.inline_keyboard.length<=4,'card keeps to three rows of buttons plus ‹ ›');
   assert.deepEqual(photo.reply_markup.inline_keyboard.at(-1).map(b=>b.text),['‹','11 / 11','›'],'opened from search/link: arrows walk the whole catalog');

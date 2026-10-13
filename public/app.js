@@ -877,6 +877,8 @@ async function hydrateModalDetail(b){
 // Author profile links come from the catalog (Janitor profile per author); only absolute http(s) URLs are used.
 function externalUrl(raw){const s=String(raw||'').trim();if(!s)return'';try{const u=new URL(/^[a-z][a-z0-9+.-]*:/i.test(s)?s:`https://${s}`);return /^https?:$/.test(u.protocol)&&u.origin!==location.origin?u.href:''}catch{return''}}
 // Card files are downloaded on the bot's DataCat page; our catalog keeps only the public text.
+// The same bot on JannyAI: the JanitorAI address with janitorai.com swapped for jannyai.com (slug kept).
+function jannyUrl(b){const m=String(b?.url||'').match(/^https?:\/\/(?:www\.)?janitorai\.com(\/characters\/[0-9a-f]{8}-[0-9a-f-]{27}[^\s?#]*)/i);if(m)return`https://jannyai.com${m[1]}`;const id=String(b?.janitorUuid||'').toLowerCase();return /^[0-9a-f-]{36}$/.test(id)?`https://jannyai.com/characters/${id}`:''}
 function datacatUrl(b){const u=String(b?.datacatUrl||'');if(/^https:\/\/datacat\.run\//i.test(u))return u;const id=String(b?.janitorUuid||'').toLowerCase();return /^[0-9a-f-]{36}$/.test(id)?`https://datacat.run/characters/recent/janitor/${id}`:''}
 // Plain text → paragraphs; single line breaks inside a paragraph stay line breaks.
 function textHtml(text){return String(text||'').trim().split(/\n{2,}/).filter(Boolean).map(p=>`<p>${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('')}
@@ -903,13 +905,14 @@ function renderModalHead(){
   $("#modalFacts").innerHTML=facts.join('<span class="cm-dot" aria-hidden="true">·</span>');
   $("#modalHook").innerHTML=textHtml(b.short);
   $("#modalHook").hidden=!String(b.short||'').trim();
-  const datacat=datacatUrl(b),lore=String(b.lorebook||''),profile=externalUrl(b.authorUrl);
+  const datacat=datacatUrl(b),janny=jannyUrl(b),lore=String(b.lorebook||''),profile=externalUrl(b.authorUrl);
   const loreCount=Number(b.lorebookCount||1);
   $("#modalFiles").innerHTML=[
     datacat?`<a id="downloadDatacat" class="cm-btn cm-btn-primary" href="${esc(datacat)}" target="_blank" rel="noopener" title="PNG / JSON card file on DataCat">Card file · DataCat ↗</a>`:'',
     lore?`<a id="downloadLore" class="cm-btn" href="${esc(lore)}" download title="${loreCount} attached lorebook${loreCount===1?'':'s'}">${bookSvg}<span>Lorebook${loreCount>1?` · ${loreCount}`:''} ↓</span></a>`:'',
     `<span class="cm-files-gap"></span>`,
     b.url?`<a id="openBot" class="cm-link" href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.platform==='JANITOR'?'JanitorAI':b.platform||'Source')} ↗</a>`:'',
+    janny?`<a id="openJanny" class="cm-link" href="${esc(janny)}" target="_blank" rel="noopener" title="The same bot on JannyAI — opens without signing in">JannyAI ↗</a>`:'',
     profile?`<a id="openAuthor" class="cm-link" href="${esc(profile)}" target="_blank" rel="noopener noreferrer">@${esc(b.author)} ↗</a>`:''
   ].join('');
   const tags=visibleBotTags(b),hashtags=visibleBotHashtags(b);

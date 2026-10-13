@@ -18,7 +18,7 @@
   <div class="sub"></div>
   <div id="status" class="status">Проверяю хранилище…</div>
   <div class="group"><b>Картинки HUB</b><span>Переносит картинки ресурсов в своё хранилище и заново скачивает протухшие картинки из исходных постов Telegram.</span><div class="actions"><button class="btn" id="tgCheck" type="button">Проверить</button><button class="btn primary" id="tgRepair" type="button">Починить</button></div></div>
-<div class="group"><b>Покрытие JannyAI</b><span>Только чтение. Проверяет каждого бота каталога в открытом API JannyAI (без ключа DataCat) и у первых ботов скачивает их файл, чтобы показать, что в нём есть. Ничего не меняет.</span><div class="actions"><button class="btn" id="jannyRun" type="button">Проверить покрытие</button><button class="btn" id="jannyStop" type="button" hidden>Остановить</button></div><div id="jannyOut" class="note"></div></div>
+<div class="group"><b>Покрытие JannyAI</b><span>Только чтение. Проверяет каждого бота каталога в открытом API JannyAI (без ключа DataCat) и у первых ботов скачивает их файл, чтобы показать, что в нём есть. Ничего не меняет.</span><div class="actions"><button class="btn" id="jannyQuick" type="button">Быстро: 15 ботов</button><button class="btn" id="jannyRun" type="button">Проверить покрытие</button><button class="btn" id="jannyStop" type="button" hidden>Остановить</button></div><div id="jannyOut" class="note"></div></div>
 <div class="group"><b>Ссылки на авторов</b><span>Заполняет пустые ссылки на профили авторов ботов по данным JanitorAI.</span><div class="actions"><button class="btn" id="authorCheck" type="button">Проверить</button><button class="btn primary" id="authorFill" type="button">Заполнить</button></div></div>
 <div class="group"><b>Старые файлы для скачивания</b><span>HUB больше не раздаёт пресеты, темы и плагины — их берут по ссылке на пост автора. Здесь можно удалить старые файлы (JSON, ZIP, TPG, THM…) из хранилища. Картинки — обложки и галерея — не трогаются. Удаление необратимо.</span><div class="actions"><button class="btn" id="dlCheck" type="button">Показать список</button><button class="btn primary" id="dlDelete" type="button" disabled>Удалить все</button></div></div>
 <script>
@@ -73,26 +73,31 @@
     out.innerHTML=`<b>${done?'Готово':'Проверяю…'}</b> ${st.checked} из ${st.total}<br>
       <b>Есть на JannyAI: ${st.found} (${pct(st.found,st.checked)})</b> · нет: ${st.checked-st.found}<br>
       Причины «нет»: ${errs}<br>
+      ${Object.keys(st.browser).length?`Повтор «как браузер» после 403: ${Object.entries(st.browser).map(([k,v])=>`HTTP_${esc(k)}: ${v}`).join(' · ')}${st.viaBrowser?` (сработал у ${st.viaBrowser})`:''}<br>`:''}
+      ${st.refusal?`Как отказали: сервер ${esc(st.refusal.server||'?')}${st.refusal.cfMitigated?` · проверка Cloudflare: ${esc(st.refusal.cfMitigated)}`:''} · ${esc(st.refusal.contentType||'?')} · «${esc(st.refusal.snippet)}»<br>`:''}
       Ответ API содержит поля: ${esc([...st.keys].join(', '))||'—'} · файлы с: ${esc([...st.hosts].join(', '))||'—'}<br><br>
       <b>Что в файле JannyAI</b> (скачано ${s.length}):<br>
       описание ${pct(f('description'),s.length)} · личность ${pct(f('personality'),s.length)} · сценарий ${pct(f('scenario'),s.length)} · первое сообщение ${pct(f('firstMes'),s.length)} · доп. приветствия ${pct(f('altGreetings'),s.length)} · примеры диалога ${pct(f('exampleDialogs'),s.length)} · заметки автора ${pct(f('creatorNotes'),s.length)} · теги ${pct(f('tags'),s.length)} · автор ${pct(f('creator'),s.length)} · лорбук внутри ${pct(f('lorebookEntries'),s.length)}<br>
       Лорбуки: у нас есть у ${withLore.length} из скачанных, в файле JannyAI сохранились у ${loreKept}.<br>
       ${st.missing.length?`<br><b>Нет на JannyAI</b> (первые ${Math.min(80,st.missing.length)}):<br>${st.missing.slice(0,80).map(x=>`${esc(x.name)} — ${esc(x.author)}${x.error?` <span style="color:var(--muted)">(${esc(x.error)})</span>`:''}`).join('<br>')}`:''}`;
   }
+  let quick=false;
+  $('#jannyQuick').onclick=()=>{quick=true;run.onclick()};
   run.onclick=async()=>{
     stopped=false;run.disabled=true;stop.hidden=false;
-    const st={total:0,checked:0,found:0,errors:{},keys:new Set(),hosts:new Set(),sampled:[],missing:[]};let offset=0;
+    const st={total:0,checked:0,found:0,browser:{},viaBrowser:0,errors:{},keys:new Set(),hosts:new Set(),sampled:[],missing:[],refusal:null};let offset=0;
     try{
       while(offset!=null&&!stopped){
         const r=await fetch(`/api/admin/janny-coverage?offset=${offset}&limit=15&sample=${st.sampled.length<60?1:0}`,{cache:'no-store'}),d=await r.json().catch(()=>({}));
         if(!r.ok||!d.ok)throw new Error(d.error||`HTTP_${r.status}`);
         st.total=d.total;
-        for(const x of d.results){st.checked++;(x.responseKeys||[]).forEach(k=>st.keys.add(k));if(x.downloadHost)st.hosts.add(x.downloadHost);if(x.found){st.found++;if(x.card)st.sampled.push(x)}else{st.missing.push(x);const k=x.error||'?';st.errors[k]=(st.errors[k]||0)+1}}
-        render(st,false);offset=d.next;
+        for(const x of d.results){st.checked++;(x.responseKeys||[]).forEach(k=>st.keys.add(k));if(x.downloadHost)st.hosts.add(x.downloadHost);if(x.browserStatus)st.browser[x.browserStatus]=(st.browser[x.browserStatus]||0)+1;if(x.viaBrowserHeaders)st.viaBrowser++;
+        if(x.found){st.found++;if(x.card)st.sampled.push(x)}else{st.missing.push(x);const k=x.error||'?';st.errors[k]=(st.errors[k]||0)+1;if(x.refusal&&!st.refusal)st.refusal=x.refusal}}
+        render(st,false);offset=quick?null:d.next;
       }
       render(st,true);
     }catch(e){out.insertAdjacentHTML('afterbegin',`<b style="color:var(--bad)">Ошибка: ${esc(e.message)}</b><br>`)}
-    finally{run.disabled=false;stop.hidden=true}
+    finally{run.disabled=false;stop.hidden=true;quick=false}
   };
   stop.onclick=()=>{stopped=true};
 })();

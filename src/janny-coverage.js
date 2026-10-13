@@ -7,15 +7,22 @@ import { extractEmbeddedCard } from './janny-card.js';
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const clean=v=>String(v??'').trim();
 const isPng=b=>b.length>8&&b[0]===137&&b[1]===80&&b[2]===78&&b[3]===71;
+const BROWSER={'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36','origin':'https://jannyai.com','referer':'https://jannyai.com/','accept-language':'en-US,en;q=0.9'};
 const has=v=>Array.isArray(v)?v.length>0:typeof v==='string'?v.trim().length>0:v!=null&&v!==false;
 
 async function probe(uuid,{sample}){
   const out={uuid,found:false,status:0};
+  const ask=headers=>fetch('https://api.jannyai.com/api/v1/download',{method:'POST',headers:{'content-type':'application/json','accept':'application/json',...headers},body:JSON.stringify({characterId:uuid}),redirect:'follow'});
   let res;
-  try{res=await fetch('https://api.jannyai.com/api/v1/download',{method:'POST',headers:{'content-type':'application/json','accept':'application/json','user-agent':'ARCHIVE.EXE/2.0'},body:JSON.stringify({characterId:uuid}),redirect:'follow'})}
-  catch(e){out.error=`FETCH_ERROR: ${clean(e?.message||e).slice(0,120)}`;return out}
+  try{
+    res=await ask({'user-agent':'ARCHIVE.EXE/2.0'});
+    // Refused: ask once more the way the jannyai.com page itself does, to tell "blocks servers" from "blocks this client".
+    if(res.status===403){const again=await ask(BROWSER);out.browserStatus=again.status;if(again.ok){res=again;out.viaBrowserHeaders=true}}
+  }catch(e){out.error=`FETCH_ERROR: ${clean(e?.message||e).slice(0,120)}`;return out}
   out.status=res.status;
-  let data=null;try{data=await res.json()}catch{}
+  // Who refused and how: a bot-protection page (Cloudflare challenge) looks different from an API "not found".
+  const text=await res.text().catch(()=>'');let data=null;try{data=JSON.parse(text)}catch{}
+  if(!res.ok)out.refusal={server:clean(res.headers.get('server')),cfMitigated:clean(res.headers.get('cf-mitigated')),contentType:clean(res.headers.get('content-type')).split(';')[0],snippet:clean(text.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ')).slice(0,140)};
   out.responseKeys=data&&typeof data==='object'?Object.keys(data).slice(0,20):[];
   const url=clean(data?.downloadUrl||data?.download_url);
   if(!res.ok||!url){out.error=res.ok?'NO_DOWNLOAD_URL':`HTTP_${res.status}`;if(data?.error||data?.message)out.detail=clean(data.error||data.message).slice(0,160);return out}

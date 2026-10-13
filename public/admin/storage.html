@@ -19,6 +19,7 @@
   <div id="status" class="status">Проверяю хранилище…</div>
   <div class="group"><b>Картинки HUB</b><span>Переносит картинки ресурсов в своё хранилище и заново скачивает протухшие картинки из исходных постов Telegram.</span><div class="actions"><button class="btn" id="tgCheck" type="button">Проверить</button><button class="btn primary" id="tgRepair" type="button">Починить</button></div></div>
 <div class="group"><b>Покрытие JannyAI</b><span>Только чтение. Проверяет каждого бота каталога в открытом API JannyAI (без ключа DataCat) и у первых ботов скачивает их файл, чтобы показать, что в нём есть. Ничего не меняет.</span><div class="actions"><button class="btn" id="jannyQuick" type="button">Быстро: 15 ботов</button><button class="btn" id="jannyRun" type="button">Проверить покрытие</button><button class="btn" id="jannyStop" type="button" hidden>Остановить</button></div><div id="jannyOut" class="note"></div></div>
+<div class="group"><b>Откуда лорбуки</b><span>Только чтение. Вставь ссылку на бота или на лорбук JanitorAI (janitorai.com/scripts/…): покажу, что DataCat пишет про лорбуки этого бота (без текста) и что лежит у нас. Ничего не меняет.</span><div class="actions"><input id="loreSrcQ" placeholder="https://janitorai.com/…" style="flex:1;min-width:220px"><button class="btn" id="loreSrcRun" type="button">Проверить</button><button class="btn" id="loreSrcCopy" type="button">Скопировать</button></div><pre id="loreSrcOut" style="white-space:pre-wrap;max-height:420px;overflow:auto;font-size:11px"></pre></div>
 <div class="group"><b>Ссылки на авторов</b><span>Заполняет пустые ссылки на профили авторов ботов по данным JanitorAI.</span><div class="actions"><button class="btn" id="authorCheck" type="button">Проверить</button><button class="btn primary" id="authorFill" type="button">Заполнить</button></div></div>
 <div class="group"><b>Старые файлы для скачивания</b><span>HUB больше не раздаёт пресеты, темы и плагины — их берут по ссылке на пост автора. Здесь можно удалить старые файлы (JSON, ZIP, TPG, THM…) из хранилища. Картинки — обложки и галерея — не трогаются. Удаление необратимо.</span><div class="actions"><button class="btn" id="dlCheck" type="button">Показать список</button><button class="btn primary" id="dlDelete" type="button" disabled>Удалить все</button></div></div>
 <script>
@@ -100,6 +101,11 @@
     finally{run.disabled=false;stop.hidden=true;quick=false}
   };
   stop.onclick=()=>{stopped=true};
+})();
+(()=>{
+  const q=document.getElementById('loreSrcQ'),out=document.getElementById('loreSrcOut');
+  document.getElementById('loreSrcRun').onclick=async()=>{out.textContent='Проверяю…';try{const r=await fetch(`/api/admin/lorebook-source?q=${encodeURIComponent(q.value)}`,{cache:'no-store'}),d=await r.json().catch(()=>({}));out.textContent=JSON.stringify(d.ok?d:{error:d.error||`HTTP_${r.status}`},null,2)}catch(e){out.textContent='Ошибка: '+e.message}};
+  document.getElementById('loreSrcCopy').onclick=()=>navigator.clipboard?.writeText(out.textContent).catch(()=>{});
 })();
 </script>
 </body>

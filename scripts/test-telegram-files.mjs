@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { handlePublicTelegramFull } from '../src/telegram-public-bot.js';
 
-// The public bot uploads lorebooks and cards as files (multipart sendDocument), never as a link for Telegram to fetch.
+// The public bot uploads lorebooks as files (multipart sendDocument), never as a link for Telegram to fetch.
 const db=new DatabaseSync(':memory:');
 const stmt=(sql,args=[])=>({bind:(...a)=>stmt(sql,a),async first(){return db.prepare(sql).get(...args)??null},async all(){return{results:db.prepare(sql).all(...args)}},async run(){db.prepare(sql).run(...args);return{}}});
 const env={PUBLICnode00bot:'public-token',DB:{prepare:sql=>stmt(sql)}};
@@ -51,32 +51,17 @@ async function press(data,fetchMock){
   assert.ok(!calls.some(c=>c.method==='sendDocument'&&typeof c.payload?.document==='string'),'never a URL document');
 }
 
-// Card the source cannot provide: a clear message with a retry button, not a broken file or a raw link.
+// Card files are taken on DataCat: the card has a link button to the bot's DataCat page, and old ⬇ PNG / ⬇ JSON
+// buttons answer with that link. The bot never builds a card file or asks DataCat for one.
 {
-  const calls=await press(`p:cp:${uuid}`);
-  assert.ok(!calls.some(c=>c.method==='sendDocument'),'no file when the card could not be built');
-  const msg=calls.find(c=>c.method==='sendMessage');assert.ok(msg,'explains the failure');
-  assert.match(msg.payload.text,/PNG/);assert.ok(!/https?:\/\//.test(msg.payload.text),'no raw API link');
-  assert.equal(msg.payload.reply_markup.inline_keyboard[0][0].callback_data,`p:cp:${uuid}`);
+  const card=await press(`p:c:${uuid}`),kb=card.find(c=>c.method==='sendMessage').payload.reply_markup.inline_keyboard.flat();
+  assert.ok(kb.some(b=>b.url===`https://datacat.run/characters/recent/janitor/${uuid}`),'card file button opens DataCat');
+  assert.ok(!kb.some(b=>/^p:c[pj]:/.test(b.callback_data||'')),'no PNG / JSON file buttons');
+  for(const k of ['cp','cj']){
+    const asked=[],calls=await press(`p:${k}:${uuid}`,u=>{asked.push(u);return new Response('',{status:404})});
+    assert.ok(!calls.some(c=>c.method==='sendDocument'),'no card file is built');assert.deepEqual(asked,[],'nothing is fetched from DataCat');
+    const msg=calls.find(c=>c.method==='sendMessage');assert.equal(msg.payload.reply_markup.inline_keyboard[0][0].url,`https://datacat.run/characters/recent/janitor/${uuid}`);
+  }
 }
 
-// Card built from the source: uploaded as a checked file with the real name — PNG with the card inside, JSON parsed.
-{
-  const u32=n=>[(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255],chunk=(t,d)=>[...u32(d.length),...new TextEncoder().encode(t),...d,0,0,0,0];
-  const avatar=new Uint8Array([137,80,78,71,13,10,26,10,...chunk('IHDR',new Array(13).fill(0)),...chunk('IEND',[])]);
-  const views={modal:{character:{name:'Vance',creator_name:'Author',description:'About',avatar:'https://media.datacat.run/a.png',tab_availability:{scenario:false,alt_greetings:false}}},personality:{personality:'Full definition'},greeting:{first_mes:'Hello there'}};
-  const source=u=>{if(u.startsWith('https://datacat.run/api/')){const v=new URL(u).searchParams.get('view');return views[v]?Response.json(views[v]):new Response('',{status:404})}if(u.startsWith('https://media.datacat.run/'))return new Response(avatar,{headers:{'content-type':'image/png'}});return new Response('',{status:404})};
-  env.DATACAT_DEVICE_TOKEN='d';env.DATACAT_SESSION_TOKEN='s';
-  try{
-    const { extractEmbeddedCard } = await import('../src/janny-card.js');
-    let calls=await press(`p:cj:${uuid}`,source),doc=calls.find(c=>c.method==='sendDocument');
-    assert.ok(doc,'JSON card uploaded');assert.match(doc.filename,/^Vance.*\.json$/);assert.equal(doc.type,'application/json');
-    const card=JSON.parse(doc.text);assert.equal(card.spec,'chara_card_v3','JSON carries the avatar (V3 icon asset)');assert.equal(card.data.assets?.[0]?.type,'icon');assert.match(card.data.assets[0].uri,/^data:image\//);assert.equal(card.data.description,'Full definition');assert.equal(card.data.first_mes,'Hello there');
-    calls=await press(`p:cp:${uuid}`,source);doc=calls.find(c=>c.method==='sendDocument');
-    assert.ok(doc,'PNG card uploaded');assert.match(doc.filename,/^Vance.*\.png$/);assert.equal(doc.type,'image/png');
-    const embedded=extractEmbeddedCard(doc.bytes);assert.equal(embedded?.data?.name,'Vance');assert.equal(embedded.data.description,'Full definition');
-    assert.ok(doc.caption.includes('PNG'));
-  }finally{delete env.DATACAT_DEVICE_TOKEN;delete env.DATACAT_SESSION_TOKEN}
-}
-
-console.log('Telegram files OK · public bot uploads lorebooks as World Info .json files (one per lorebook) and cards as checked files, never as links');
+console.log('Telegram files OK · public bot uploads lorebooks as World Info .json files (one per lorebook) card files are opened on DataCat');

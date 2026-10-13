@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { embedCard, navigationFailure } from '../src/entry.js';
+import { embedCard, navigationFailure, handleEntryRoute } from '../src/entry.js';
 import { extractEmbeddedCard } from '../src/janny-card.js';
 
 // PNG: our card replaces both the old V2 "chara" and V3 "ccv3" text chunks, so SillyTavern reads the card we serve.
@@ -32,4 +32,13 @@ const api=queued();assert.equal(await navigationFailure(fetchReq,api),api,'site 
 const js=fs.readFileSync(new URL('../public/png-download.js',import.meta.url),'utf8');
 assert.match(js,/pointer:coarse/);assert.match(js,/removeAttribute\("download"\)/);
 
-console.log('Card downloads OK · PNG carries only the served card (stale chara/ccv3 removed), phones download straight from the server, failures show a page instead of a saved JSON');
+// Card files are taken on DataCat: the old /card and /card.png links send the visitor to the bot's DataCat page,
+// without asking DataCat for anything ourselves.
+{const og=globalThis.fetch,asked=[];globalThis.fetch=async u=>{asked.push(String(u));return new Response('',{status:500})};
+try{for(const p of ['card','card.png']){const r=await handleEntryRoute(new Request(`https://x/api/characters/AAAAAAAA-0000-0000-0000-000000000001/${p}`),{},undefined);
+  assert.equal(r.status,302);assert.equal(r.headers.get('location'),'https://datacat.run/characters/recent/janitor/aaaaaaaa-0000-0000-0000-000000000001')}
+  assert.deepEqual(asked,[],'no request to DataCat')}finally{globalThis.fetch=og}}
+const app=fs.readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
+assert.match(app,/id="downloadDatacat"[^`]*target="_blank"/);assert.ok(!/id="downloadPng"|id="downloadBot"/.test(app),'no PNG / JSON buttons built by us');
+
+console.log('Card downloads OK · PNG carries only the served card (stale chara/ccv3 removed), phones download straight from the server, failures show a page instead of a saved JSON; card links now open the bot on DataCat');

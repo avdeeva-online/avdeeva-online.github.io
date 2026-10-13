@@ -2,7 +2,7 @@
 // (/api/catalog after universe curation), so a filter in the bot finds exactly what the site finds.
 // Telegram callback data is limited to 64 bytes, so a filter value travels as a short hash of itself.
 import { fetchAvatarPng } from './entry.js';
-import { datacatCardPage } from './datacat-link.js';
+import { datacatCardPage, jannyPage } from './datacat-link.js';
 
 const clean=v=>String(v??'').trim();
 const esc=s=>clean(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -92,7 +92,7 @@ export function cardKeyboard(c,nav=null){
   /* The card file is downloaded on DataCat (its own page for this bot); lorebooks come as files from us. */
   const files=[{text:'⬇ Файл · DataCat',url:datacatCardPage(c.uuid)}];if(c.lorebookCount)files.push(cb('📖 Лорбук',`p:lb:${c.uuid}`));
   /* JanitorAI is the link on the bot's name in the caption, so it needs no button of its own. */
-  const rows=[files,[cb('📄 Описание',`p:d:${c.uuid}`),cb('🔗 Ссылка',`p:s:${c.uuid}`)]];
+  const rows=[files,[cb('📄 Описание',`p:d:${c.uuid}`),cb('🔗 Ссылка',`p:s:${c.uuid}`),url('JannyAI ↗',jannyPage(c.url,c.uuid))]];
   const more=[];if(c.author)more.push(cb(c.universes[0]?'👤 Ещё от автора':`👤 Ещё от ${short(c.author,20)}`,`p:fv:a:${valueHash(c.author)}:0`));if(c.universes[0])more.push(cb(`🌌 ${short(c.universes[0],13)}`,`p:fv:u:${valueHash(c.universes[0])}:0`));if(more.length)rows.push(more);
   const n=navRow(nav);if(n)rows.push(n);
   return{inline_keyboard:rows};

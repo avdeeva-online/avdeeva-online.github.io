@@ -38,7 +38,12 @@ assert.match(js,/pointer:coarse/);assert.match(js,/removeAttribute\("download"\)
 try{for(const p of ['card','card.png']){const r=await handleEntryRoute(new Request(`https://x/api/characters/AAAAAAAA-0000-0000-0000-000000000001/${p}`),{},undefined);
   assert.equal(r.status,302);assert.equal(r.headers.get('location'),'https://datacat.run/characters/recent/janitor/aaaaaaaa-0000-0000-0000-000000000001')}
   assert.deepEqual(asked,[],'no request to DataCat')}finally{globalThis.fetch=og}}
+{const { jannyPage } = await import('../src/datacat-link.js');
+  assert.equal(jannyPage('https://janitorai.com/characters/e97c69cd-46e7-4c17-b1f0-019dcd389867_character-lars-anderson-beast','x'),'https://jannyai.com/characters/e97c69cd-46e7-4c17-b1f0-019dcd389867_character-lars-anderson-beast','JanitorAI link → JannyAI, slug kept');
+  assert.equal(jannyPage('https://www.janitorai.com/characters/e97c69cd-46e7-4c17-b1f0-019dcd389867?ref=1','x'),'https://jannyai.com/characters/e97c69cd-46e7-4c17-b1f0-019dcd389867');
+  assert.equal(jannyPage('','E97C69CD-46E7-4C17-B1F0-019DCD389867'),'https://jannyai.com/characters/e97c69cd-46e7-4c17-b1f0-019dcd389867','no JanitorAI link: built from the id');
+  assert.equal(jannyPage('https://evil.example/characters/x',''),'')}
 const app=fs.readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
-assert.match(app,/id="downloadDatacat"[^`]*target="_blank"/);assert.ok(!/id="downloadPng"|id="downloadBot"/.test(app),'no PNG / JSON buttons built by us');
+assert.match(app,/id="downloadDatacat"[^`]*target="_blank"/);assert.match(app,/id="openJanny"[^`]*target="_blank"/);assert.ok(!/id="downloadPng"|id="downloadBot"/.test(app),'no PNG / JSON buttons built by us');
 
 console.log('Card downloads OK · PNG carries only the served card (stale chara/ccv3 removed), phones download straight from the server, failures show a page instead of a saved JSON; card links now open the bot on DataCat');

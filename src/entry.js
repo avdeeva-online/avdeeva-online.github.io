@@ -1,5 +1,6 @@
 import worker from './worker.js';
 import { fetchJannySource } from './janny-card.js';
+import { datacatCardPage } from './datacat-link.js';
 
 function json(data,status=200){return new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}})}
 function safeFilename(v,f='character'){return String(v||f).replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,' ').trim().slice(0,100)||f}
@@ -54,4 +55,5 @@ export async function withAvatar(card,env){
 }
 async function jsonDownload(request,env,ctx,uuid){const got=await getCard(request,env,ctx,uuid);if(got.response)return got.response;const card=await withAvatar(got.card,env);return new Response(JSON.stringify(card,null,2),{headers:{'content-type':'application/json; charset=utf-8','content-disposition':attachment(`${cardBase(card)}.json`),'cache-control':'private, no-store'}})}
 
-export async function handleEntryRoute(request,env,ctx){const url=new URL(request.url);if(request.method==='GET'){if(url.pathname==='/api/image-proxy')return imageProxy(request);let m=url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})\/card\.png$/i);if(m)return navigationFailure(request,await pngDownload(request,env,ctx,m[1].toLowerCase()));m=url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})\/card$/i);if(m)return navigationFailure(request,await jsonDownload(request,env,ctx,m[1].toLowerCase()));if(url.pathname==='/api/debug/retrieval')return json({ok:false,state:'DEBUG_REEXTRACT_DISABLED'},410)}return null}
+export async function handleEntryRoute(request,env,ctx){const url=new URL(request.url);if(request.method==='GET'){if(url.pathname==='/api/image-proxy')return imageProxy(request);// Old card links (site, Telegram, saved bookmarks) lead to the bot's page on DataCat, where the file is downloaded.
+const m=url.pathname.match(/^\/api\/characters\/([0-9a-f-]{36})\/card(?:\.png)?$/i);if(m)return new Response(null,{status:302,headers:{location:datacatCardPage(m[1]),'cache-control':'no-store'}});if(url.pathname==='/api/debug/retrieval')return json({ok:false,state:'DEBUG_REEXTRACT_DISABLED'},410)}return null}

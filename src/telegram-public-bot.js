@@ -1,5 +1,6 @@
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
-import { sendCardFile, sendLorebookFiles } from './telegram-files.js';
+import { sendLorebookFiles } from './telegram-files.js';
+import { datacatCardPage } from './datacat-link.js';
 import { FACETS, bots, botsPage, editCard, resetCatalogMemo, filterItems, filterMenu, listContext, loadCatalog, plural, searchItems, sendCard, sendDescription, valuesPage } from './telegram-catalog.js';
 import { getHubResourcePublic } from './hub-public-media.js';
 import { askSuggest, confirmSuggest, firstLink, importFromChat, importReady, janitorUuid } from './telegram-submit.js';
@@ -91,7 +92,8 @@ async function showResource(token,chatId,messageId,env,id,origin){
 
 async function sendResourceFile(token,chatId,env,fileId,origin){const f=await env.DB.prepare("SELECT f.id,f.resource_id,f.name,r.source_url FROM hub_resource_files f LEFT JOIN hub_resources r ON r.id=f.resource_id WHERE f.id=? LIMIT 1").bind(fileId).first();if(!f)return send(token,chatId,'Файл не найден.');/* Old buttons in chats: downloads now live in the author's post. */if(!clean(f.name).startsWith('__extra__'))return send(token,chatId,f.source_url?`Файлы теперь берутся из поста автора:\n${esc(f.source_url)}`:'Файл больше не раздаётся — смотри пост автора.');const doc=`${origin}/api/hub-resources/${encodeURIComponent(f.resource_id)}/files/${encodeURIComponent(f.id)}`;try{return await tg(token,'sendDocument',{chat_id:chatId,document:doc,caption:short(clean(f.name).replace(/^__extra__/,''),900)})}catch{return send(token,chatId,`Не получилось отправить файл напрямую.\n${esc(doc)}`)}}
 /* Cards are built, checked and uploaded by the bot itself (telegram-files.js). */
-async function sendCharacterFile(token,chatId,env,uuid,kind,origin){return sendCardFile(token,chatId,env,origin,uuid,kind,keyboard([[cb(kind==='png'?'↻ Ещё раз PNG':'↻ Ещё раз JSON',`p:${kind==='png'?'cp':'cj'}:${uuid}`)]]))}
+// ⬇ PNG / ⬇ JSON buttons in cards sent before the switch: the file is now taken on DataCat.
+async function sendCharacterFile(token,chatId,uuid){if(!/^[0-9a-f-]{36}$/i.test(uuid))return;return tg(token,'sendMessage',{chat_id:chatId,text:'Файл карточки (PNG / JSON) скачивается на странице бота в DataCat:',reply_markup:{inline_keyboard:[[{text:'⬇ Открыть в DataCat',url:datacatCardPage(uuid)}]]}})}
 
 // ---- search: bots from the site's catalog (name, author, universe, tag) + HUB resources ----
 const SEARCH_HINT='Напиши в чат имя бота, автора, вселенную или тег — например, <i>Marvel</i> или <i>Vance</i>.';
@@ -174,8 +176,7 @@ async function handleCallback(token,q,env,origin,catalog=dbCatalog(env),opts={})
   m=data.match(/^p:type:([^:]+):(\d+)$/);if(m)return showResources(token,chatId,messageId,env,origin,{type:m[1],page:Number(m[2]),title:`📚 ${typeLabel(m[1])}`,key:`p:type:${m[1]}`});
   if(data.startsWith('p:r:'))return showResource(token,chatId,messageId,env,data.slice(4),origin);
   if(data.startsWith('p:f:'))return sendResourceFile(token,chatId,env,data.slice(4),origin);
-  if(data.startsWith('p:cp:'))return sendCharacterFile(token,chatId,env,data.slice(5),'png',origin);
-  if(data.startsWith('p:cj:'))return sendCharacterFile(token,chatId,env,data.slice(5),'json',origin);
+  if(data.startsWith('p:cp:')||data.startsWith('p:cj:'))return sendCharacterFile(token,chatId,data.slice(5));
   if(/^p:lb:[0-9a-f-]{36}$/i.test(data))return sendLorebookFiles(token,chatId,env,data.slice(5).toLowerCase());
 }
 

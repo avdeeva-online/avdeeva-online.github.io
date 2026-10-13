@@ -56,7 +56,7 @@ resetCatalogMemo();
   for(const s of ['Bot 11','от <a href="https://janitorai.com/profiles/alice">Bob</a>','Marvel, Avengers','Fantasy, Modern','AnyPOV','Action  Romance','2 лорбука','<i>xxx'])assert.ok(photo.caption.includes(s),s);
   assert.ok(photo.caption.length<=1024,`caption ${photo.caption.length}`);
   const cbs=photo.reply_markup.inline_keyboard.flat().map(b=>b.callback_data||b.url);
-  for(const k of [`p:cp:${U(11)}`,`p:cj:${U(11)}`,`p:lb:${U(11)}`,`p:d:${U(11)}`,`p:fv:a:${valueHash('Bob')}:0`,`p:fv:u:${valueHash('Marvel')}:0`,`p:s:${U(11)}`])assert.ok(cbs.includes(k),k);
+  for(const k of [`https://datacat.run/characters/recent/janitor/${U(11)}`,`p:lb:${U(11)}`,`p:d:${U(11)}`,`p:fv:a:${valueHash('Bob')}:0`,`p:fv:u:${valueHash('Marvel')}:0`,`p:s:${U(11)}`])assert.ok(cbs.includes(k),k);
   assert.ok(photo.caption.includes(`<a href="https://janitorai.com/characters/${U(11)}">Bot 11</a>`),'the name links to JanitorAI');
   assert.ok(photo.reply_markup.inline_keyboard.length<=4,'card keeps to three rows of buttons plus ‹ ›');
   assert.deepEqual(photo.reply_markup.inline_keyboard.at(-1).map(b=>b.text),['‹','11 / 11','›'],'opened from search/link: arrows walk the whole catalog');
@@ -64,7 +64,7 @@ resetCatalogMemo();
 // Bots without lorebooks get no lorebook button.
 {const photo=(await press(`p:c:${U(1)}`)).find(c=>c.method==='sendPhoto').payload;assert.ok(!photo.reply_markup.inline_keyboard.flat().some(b=>/^p:lb:/.test(b.callback_data||'')))}
 // Telegram cannot take the image and it cannot be converted: the card still arrives, as text with the same buttons.
-{const calls=await press(`p:c:${U(2)}`,{photoFails:true}),msg=calls.find(c=>c.method==='sendMessage')?.payload;assert.ok(msg);assert.match(msg.text,/Bot 2/);assert.ok(msg.reply_markup.inline_keyboard.flat().some(b=>b.callback_data===`p:cj:${U(2)}`))}
+{const calls=await press(`p:c:${U(2)}`,{photoFails:true}),msg=calls.find(c=>c.method==='sendMessage')?.payload;assert.ok(msg);assert.match(msg.text,/Bot 2/);assert.ok(msg.reply_markup.inline_keyboard.flat().some(b=>b.url===`https://datacat.run/characters/recent/janitor/${U(2)}`))}
 // Full description on request.
 {const msg=(await press(`p:d:${U(11)}`)).find(c=>c.method==='sendMessage').payload;assert.match(msg.text,/Bot 11/);assert.match(msg.text,/Full description of Bob/)}
 // Unknown bot: a clear message instead of an error.

@@ -1,6 +1,7 @@
 import { analyzeTelegramPost } from './hub-telegram.js';
 import { publishHubResource, deleteHubResourceFile, setHubResourcePrimary, deleteHubResource, hubDownloadsCleanup } from './hub-resources.js';
 import { jannyCoverage } from './janny-coverage.js';
+import { lorebookSourceCheck } from './lorebook-source-check.js';
 import { listAdminCharacters, getAdminCharacter, updateAdminCharacter, deleteAdminCharacter, backfillAuthorLinks } from './character-admin.js';
 import { submitHubSuggestion, listHubSuggestions, updateHubSuggestion } from './hub-suggestions.js';
 import { setupTelegramWebhooks, telegramWebhookStatus } from './telegram-webhooks.js';
@@ -33,6 +34,7 @@ export async function handleCloudflareRoute(request,env){
   const suggestionMatch=url.pathname.match(/^\/api\/admin\/hub-suggestions\/(\d+)$/);if(suggestionMatch)return updateHubSuggestion(request,env,suggestionMatch[1]);
   if(url.pathname==='/api/admin/health'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return adminHealth(env)}
   if(url.pathname==='/api/admin/janny-coverage')return jannyCoverage(request,env);
+  if(url.pathname==='/api/admin/lorebook-source')return lorebookSourceCheck(request,env);
   if(url.pathname==='/api/admin/author-links'){if(request.method!=='GET'&&request.method!=='POST')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return backfillAuthorLinks(request,env)}
   if(url.pathname==='/api/admin/characters'){if(request.method!=='GET')return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);return listAdminCharacters(request,env)}
   const adminCharacterMatch=url.pathname.match(/^\/api\/admin\/characters\/([0-9a-f-]{36})$/i);if(adminCharacterMatch){const uuid=adminCharacterMatch[1].toLowerCase();if(request.method==='PATCH'||request.method==='POST')return updateAdminCharacter(request,env,uuid);if(request.method==='DELETE')return deleteAdminCharacter(request,env,uuid);if(request.method==='GET')return getAdminCharacter(env,uuid);return json({ok:false,error:'METHOD_NOT_ALLOWED'},405)}

@@ -56,6 +56,7 @@ async function press(data,fetchMock){
 {
   const card=await press(`p:c:${uuid}`),kb=card.find(c=>c.method==='sendMessage').payload.reply_markup.inline_keyboard.flat();
   assert.ok(kb.some(b=>b.url===`https://datacat.run/characters/recent/janitor/${uuid}`),'card file button opens DataCat');
+  const row=card.find(c=>c.method==='sendMessage').payload.reply_markup.inline_keyboard[0];assert.deepEqual(row.map(b=>b.url.split('/')[2]),['datacat.run','jannyai.com'],'DataCat and JannyAI side by side in the first row');
   assert.ok(!kb.some(b=>/^p:c[pj]:/.test(b.callback_data||'')),'no PNG / JSON file buttons');
   for(const k of ['cp','cj']){
     const asked=[],calls=await press(`p:${k}:${uuid}`,u=>{asked.push(u);return new Response('',{status:404})});

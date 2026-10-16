@@ -7,7 +7,8 @@
 // Styles (image-generation prompts — NovelAI v4.5 / v5, Nano Banana…): picture + prompt copied on the site.
 //   GET  /api/codex-styles              → {ok, styles:[{id,title,prompt,model,author,author_link,image_url}]}
 //   GET  /api/admin/codex-styles        → same
-//   POST /api/admin/codex-styles        {action:'set', id?, title, prompt, model, author, author_link, image?} | {action:'delete', id} | {action:'move', id, dir:-1|1}
+// Looks (the CODEX "Looks" tab) are the same cards with kind:'look'; styles have kind:'style'.
+//   POST /api/admin/codex-styles        {action:'set', id?, kind?, title?, prompt, model, author, author_link, image?} | {action:'delete', id} | {action:'move', id, dir:-1|1}
 // Pictures live in R2 (HUB_FILES) under codex/…:  GET /api/codex-image?key=codex/…&v=…
 import { requireD1Schema } from './d1-schema.js';
 
@@ -17,7 +18,10 @@ const key=v=>clean(v).toLocaleLowerCase();
 const parse=v=>{try{const x=JSON.parse(v||'[]');return Array.isArray(x)?x:[]}catch{return[]}};
 const json=(data,status=200,cache='no-store')=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':cache}});
 const ensureProfiles=env=>requireD1Schema(env,'codex-profiles','SELECT kind,name_key,name,description,links,hashtags,avatar_key,updated_at FROM codex_profiles LIMIT 1');
-const ensureStyles=env=>requireD1Schema(env,'codex-styles','SELECT id,title,prompt,model,author,author_link,image_key,image_type,sort,source_url,image_keys FROM codex_styles LIMIT 1');
+const ensureStyles=env=>requireD1Schema(env,'codex-styles','SELECT id,title,prompt,model,author,author_link,image_key,image_type,sort,source_url,image_keys,kind FROM codex_styles LIMIT 1');
+// The same table holds two CODEX tabs: Styles ('style') and Looks ('look').
+const STYLE_KINDS=['style','look'];
+const styleKind=v=>STYLE_KINDS.includes(clean(v))?clean(v):'style';
 
 // ---- shared helpers ----
 function normalizeUrl(raw){
@@ -118,10 +122,10 @@ const styleModels=v=>{const out=[],seen=new Set();for(const raw of Array.isArray
 // A style has up to 8 pictures (image_keys, first = cover); image_key mirrors the first one for older code.
 const MAX_STYLE_IMAGES=8;
 const styleKeys=r=>{let k=[];try{k=JSON.parse(r?.image_keys||'[]')}catch{}k=Array.isArray(k)?k.filter(x=>typeof x==='string'&&x):[];if(!k.length&&r?.image_key)k=[r.image_key];return k};
-const toStyle=r=>{const keys=styleKeys(r),urls=keys.map(k=>imageUrl(k,r.updated_at)),models=styleModels(r.model);return{id:r.id,title:r.title||'',prompt:r.prompt||'',model:models.join(', '),models,author:r.author||'',author_link:r.author_link||'',source_url:r.source_url||'',image_url:urls[0]||'',image_urls:urls,image_keys:keys,sort:Number(r.sort||0)}};
+const toStyle=r=>{const keys=styleKeys(r),urls=keys.map(k=>imageUrl(k,r.updated_at)),models=styleModels(r.model);return{id:r.id,kind:styleKind(r.kind),title:r.title||'',prompt:r.prompt||'',model:models.join(', '),models,author:r.author||'',author_link:r.author_link||'',source_url:r.source_url||'',image_url:urls[0]||'',image_urls:urls,image_keys:keys,sort:Number(r.sort||0)}};
 async function listStyles(env){
   await ensureStyles(env);
-  const res=await env.DB.prepare('SELECT id,title,prompt,model,author,author_link,image_key,image_keys,sort,updated_at,source_url FROM codex_styles ORDER BY sort,created_at').all();
+  const res=await env.DB.prepare('SELECT id,title,prompt,model,author,author_link,image_key,image_keys,sort,updated_at,source_url,kind FROM codex_styles ORDER BY sort,created_at').all();
   return (res?.results||[]).map(toStyle);
 }
 // One picture of the new list: an already stored key (kept), a data: URL (uploaded) or a Telegram CDN URL (from a post).
@@ -137,7 +141,7 @@ async function mutateStyle(request,env){
   await ensureStyles(env);
   let b;try{b=await request.json()}catch{return json({ok:false,error:'INVALID_JSON'},400)}
   const action=clean(b?.action),id=clean(b?.id).replace(/[^a-z0-9-]/gi,'').slice(0,40);
-  const current=id?await env.DB.prepare('SELECT id,image_key,image_keys,sort FROM codex_styles WHERE id=?').bind(id).first():null;
+  const current=id?await env.DB.prepare('SELECT id,image_key,image_keys,sort,kind FROM codex_styles WHERE id=?').bind(id).first():null;
   const currentKeys=styleKeys(current);
   if(action==='delete'){
     if(!current)return json({ok:false,error:'STYLE_NOT_FOUND'},404);
@@ -147,14 +151,17 @@ async function mutateStyle(request,env){
   }
   if(action==='move'){
     if(!current)return json({ok:false,error:'STYLE_NOT_FOUND'},404);
-    const all=(await env.DB.prepare('SELECT id FROM codex_styles ORDER BY sort,created_at').all()).results||[];
+    // Moves among cards of the same tab only.
+    const all=(await env.DB.prepare('SELECT id FROM codex_styles WHERE kind=? ORDER BY sort,created_at').bind(styleKind(current.kind)).all()).results||[];
     const i=all.findIndex(x=>x.id===id),j=i+(Number(b?.dir)<0?-1:1);
     if(j>=0&&j<all.length){[all[i],all[j]]=[all[j],all[i]];await env.DB.batch(all.map((x,n)=>env.DB.prepare('UPDATE codex_styles SET sort=? WHERE id=?').bind(n,x.id)))}
     return json({ok:true,action,id});
   }
   if(action!=='set')return json({ok:false,error:'UNKNOWN_ACTION'},400);
   const title=clean(b?.title).slice(0,120),prompt=String(b?.prompt??'').replace(/\r/g,'').trim().slice(0,6000);
-  if(!title||!prompt)return json({ok:false,error:'TITLE_AND_PROMPT_REQUIRED'},400);
+  // The title is optional (the site no longer shows it; the admin list falls back to the text).
+  if(!prompt)return json({ok:false,error:'PROMPT_REQUIRED'},400);
+  const kind=current?styleKind(b?.kind??current.kind):styleKind(b?.kind);
   const model=styleModels(Array.isArray(b?.models)?b.models:b?.model).join(', '),author=clean(b?.author).replace(/^@+/,'').slice(0,80),authorLink=normalizeUrl(b?.author_link),sourceUrl=normalizeUrl(b?.source_url);
   const styleId=current?.id||crypto.randomUUID().replace(/-/g,'').slice(0,12);
   // The new picture list: b.images (gallery editor) or the older single-picture fields.
@@ -172,14 +179,14 @@ async function mutateStyle(request,env){
     keys=out;
   }
   if(current){
-    await env.DB.prepare('UPDATE codex_styles SET title=?,prompt=?,model=?,author=?,author_link=?,source_url=?,image_key=?,image_keys=?,updated_at=CURRENT_TIMESTAMP WHERE id=?')
-      .bind(title,prompt,model,author,authorLink,sourceUrl,keys[0]||'',JSON.stringify(keys),styleId).run();
+    await env.DB.prepare('UPDATE codex_styles SET kind=?,title=?,prompt=?,model=?,author=?,author_link=?,source_url=?,image_key=?,image_keys=?,updated_at=CURRENT_TIMESTAMP WHERE id=?')
+      .bind(kind,title,prompt,model,author,authorLink,sourceUrl,keys[0]||'',JSON.stringify(keys),styleId).run();
   }else{
     const last=await env.DB.prepare('SELECT COALESCE(MAX(sort),-1)+1 AS n FROM codex_styles').first();
-    await env.DB.prepare('INSERT INTO codex_styles(id,title,prompt,model,author,author_link,source_url,image_key,image_keys,sort) VALUES(?,?,?,?,?,?,?,?,?,?)')
-      .bind(styleId,title,prompt,model,author,authorLink,sourceUrl,keys[0]||'',JSON.stringify(keys),Number(last?.n||0)).run();
+    await env.DB.prepare('INSERT INTO codex_styles(id,kind,title,prompt,model,author,author_link,source_url,image_key,image_keys,sort) VALUES(?,?,?,?,?,?,?,?,?,?,?)')
+      .bind(styleId,kind,title,prompt,model,author,authorLink,sourceUrl,keys[0]||'',JSON.stringify(keys),Number(last?.n||0)).run();
   }
-  return json({ok:true,action,id:styleId,images:keys.length});
+  return json({ok:true,action,id:styleId,kind,images:keys.length});
 }
 export async function handleCodexProfilesRoute(request,env){
   const path=new URL(request.url).pathname;

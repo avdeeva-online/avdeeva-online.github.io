@@ -67,6 +67,19 @@ const pub=(await call('/api/codex-styles')).data.styles.find(s=>s.id===gal.data.
 assert.equal(pub.image_urls.length,2);assert.equal('image_keys' in pub,false,'storage keys stay private');
 assert.equal((await call('/api/admin/codex-styles',{action:'set',id:gal.data.id,title:'Gallery',prompt:'p',images:[{key:'codex/styles/someone-else'}]})).status,400,'only own pictures can be kept');
 
+// Looks: same cards with kind 'look', no title needed; styles stay 'style'; moving stays inside the tab.
+const lk1=await call('/api/admin/codex-styles',{action:'set',kind:'look',prompt:'look one'});assert.equal(lk1.status,200);
+const lk2=await call('/api/admin/codex-styles',{action:'set',kind:'look',prompt:'look two'});
+let all=(await call('/api/codex-styles')).data.styles;
+assert.deepEqual(all.filter(s=>s.kind==='look').map(s=>s.prompt),['look one','look two']);
+assert.ok(all.filter(s=>s.prompt!=='look one'&&s.prompt!=='look two').every(s=>s.kind==='style'),'older cards are styles');
+await call('/api/admin/codex-styles',{action:'move',id:lk2.data.id,dir:-1});
+all=(await call('/api/codex-styles')).data.styles;
+assert.deepEqual(all.filter(s=>s.kind==='look').map(s=>s.prompt),['look two','look one']);
+await call('/api/admin/codex-styles',{action:'set',id:lk1.data.id,prompt:'look one edited'});
+assert.equal((await call('/api/codex-styles')).data.styles.find(s=>s.id===lk1.data.id).kind,'look','kind kept when not sent');
+assert.equal((await call('/api/admin/codex-styles',{action:'set',kind:'evil',prompt:'x'})).data.kind,'style','unknown kind → style');
+
 // Author avatar: set, kept when omitted on a later save, removed with ''.
 await call('/api/admin/codex-profiles',{action:'set',kind:'author',name:'floryhibi',description:'Hi',avatar:png});
 let p=(await call('/api/codex-profiles')).data.profiles.find(x=>x.name==='floryhibi');assert.ok(p.avatar_url);

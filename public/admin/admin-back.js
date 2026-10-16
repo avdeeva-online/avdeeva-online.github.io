@@ -21,7 +21,8 @@
       {id:'hub-suggestions',label:'Предложения',href:'/admin/hub/suggestions.html',count:'suggestions'}]},
     {id:'codex',label:'CODEX',tabs:[
       {id:'codex-profiles',label:'Описания и ссылки',href:'/admin/codex.html'},
-      {id:'codex-styles',label:'Стили',href:'/admin/codex-styles.html'}]},
+      {id:'codex-styles',label:'Стили',href:'/admin/codex-styles.html'},
+      {id:'codex-looks',label:'Образы',href:'/admin/codex-styles.html?kind=look'}]},
     {id:'system',label:'Система',tabs:[
       {id:'sys-activity',label:'Журнал',href:'/admin/activity.html'},
       {id:'sys-maintenance',label:'Обслуживание',href:'/admin/storage.html'},
@@ -38,7 +39,9 @@
       ?{tab:'bot-audit',title:'Проверка архива',sub:'Перепроверка всех ботов по источнику: теги, сеттинги, вселенные, лорбуки.',hide:['#authorPanel','#linksPanel','#recordsPanel','#universePanel','.tabs'],show:['#auditPanel']}
       :{tab:'bot-import',title:'Импорт ботов',sub:'Все боты автора по ссылке на его профиль DataCat — или список ссылок JanitorAI.',hide:['#auditPanel','#universePanel','[data-mode="universes"]','[data-bot-editor-link]','.tabs a']},
     '/admin/codex.html':{tab:'codex-profiles',title:'CODEX: описания и ссылки',sub:'Аватарка, описание, ссылки (сайт, соцсети) и хэштеги для вселенных и авторов — ботов и ресурсов HUB. Показываются в окнах CODEX на сайте.'},
-    '/admin/codex-styles.html':{tab:'codex-styles',title:'Стили',sub:'Стили для генерации картинок (NovelAI v4.5 / v5, Nano Banana…): картинка-пример и текст, который на сайте копируется одним нажатием.'},
+    '/admin/codex-styles.html':new URLSearchParams(location.search).get('kind')==='look'
+      ?{tab:'codex-looks',title:'Образы',sub:'Образы: картинка и текст образа, который на сайте копируется одним нажатием.'}
+      :{tab:'codex-styles',title:'Стили',sub:'Стили для генерации картинок (NovelAI v4.5 / v5, Nano Banana…): картинка-пример и текст, который на сайте копируется одним нажатием.'},
     '/admin/hub/edit.html':{tab:'hub-resources',title:'Ресурсы HUB',sub:'Опубликованные ресурсы. «Изменить» открывает обычную форму и обновляет ресурс на месте.',hide:['.tabs']},
     '/admin/hub/':{tab:'hub-new',title:'Новый ресурс',sub:'Ссылка на пост в Telegram → черновик → проверка → публикация. Автоматически ничего не публикуется.',hide:['.tabs','#jsonPreview','.json-preview']},
     '/admin/drafts.html':{tab:'hub-drafts',title:'Черновики',sub:'Незаконченные ресурсы из Telegram-бота. Открой черновик в форме нового ресурса, допиши и опубликуй.',hide:['.system-note']},

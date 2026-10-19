@@ -115,10 +115,11 @@
     const s=styles.find(x=>x.id===id);if(!s)return;
     const urls=(s.image_urls&&s.image_urls.length?s.image_urls:[s.image_url]).filter(Boolean),many=urls.length>1;
     const pics=urls.length?`<div class="codex-sv-pics" data-gallery>${urls.map((u,i)=>`<img class="codex-sv-img${i?'':' on'}" src="${esc(u)}" alt="" decoding="async">`).join('')}${many?`<button type="button" class="codex-sv-arrow prev" data-pic-step="-1" aria-label="Previous picture">‹</button><button type="button" class="codex-sv-arrow next" data-pic-step="1" aria-label="Next picture">›</button><div class="codex-dots">${urls.map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div>`:''}</div>`:'';
-    show(`<div class="codex-sv">${pics}
+    // The window takes the picture's own size (no dark bars); the strip under it follows that width.
+    show(`<div class="codex-sv">${pics}<div class="codex-sv-foot">
       <div class="codex-sv-row"><div class="codex-style-meta" id="codexModalTitle">${styleMeta(s)}</div><button type="button" class="codex-btn" data-copy="${esc(s.id)}" data-copy-label>Copy text</button></div>
       <button type="button" class="codex-prompt codex-sv-text" data-copy="${esc(s.id)}" title="Tap to copy">${esc(s.prompt)}</button>
-      </div>`,'codex-modal-style');
+      </div></div>`,'codex-modal-style');
     setHash({style:s.id});
   }
   async function copyText(text){try{await navigator.clipboard.writeText(text);return true}catch{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch{}ta.remove();return ok}}

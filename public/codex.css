@@ -259,27 +259,30 @@ body.codex-lock{overflow:hidden}
 .codex-prompt::-webkit-scrollbar-thumb{background:rgba(205,184,138,.45);border-radius:4px}
 @supports not selector(::-webkit-scrollbar){.codex-prompt{scrollbar-width:thin;scrollbar-color:rgba(205,184,138,.45) transparent}}
 @media(max-width:760px){.codex-grid.codex-styles-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.codex-style h3{font-size:13.5px}.codex-prompt{font-size:10px;max-height:4.7em}.codex-style-meta span,.codex-style-meta a{font-size:9px;padding:1px 5px}}
-/* ---- Style / look window: the picture is the main thing; under it a compact row and a short text box ---- */
+/* ---- Style / look window: sized by the picture itself (no dark bars), a slim strip under it ---- */
 .codex-style[data-style]{cursor:pointer}
 .codex-style[data-style]:focus-visible{outline:2px solid var(--cx-sand);outline-offset:2px}
-.codex-modal-card.codex-modal-style{width:min(460px,100%);max-height:100%;padding:10px}
+.codex-modal-card.codex-modal-style{width:auto;min-width:280px;max-width:calc(100vw - 32px);max-height:100%;padding:0;overflow-x:hidden;border-radius:14px}
 .codex-modal-style #codexModalBody{padding-top:0}
-.codex-modal-style .codex-close{position:absolute;top:18px;right:18px;z-index:3;float:none;margin:0;width:30px;height:30px;border:1px solid var(--cx-line-strong);border-radius:50%;background:rgba(8,10,8,.72);color:#efe4c8}
-.codex-sv{display:flex;flex-direction:column;gap:8px}
-.codex-sv-pics{position:relative;height:min(68vh,620px);border-radius:8px;background:#0b0d0a;overflow:hidden;touch-action:pan-y}
-.codex-sv-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .18s}
+.codex-modal-style .codex-close{position:absolute;top:10px;right:10px;z-index:3;float:none;margin:0;width:30px;height:30px;padding:0;border:0;border-radius:50%;background:rgba(6,8,6,.55);color:#f1eadb;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.codex-sv{display:flex;flex-direction:column}
+/* All pictures sit in one grid cell: the cell takes the size of the picture, flipping just cross-fades. */
+.codex-sv-pics{position:relative;display:grid;background:#0b0d0a;touch-action:pan-y}
+.codex-sv-img{grid-area:1/1;display:block;width:auto;height:auto;max-width:min(520px,calc(100vw - 32px));max-height:min(74vh,700px);margin:auto;opacity:0;transition:opacity .18s}
 .codex-sv-img.on{opacity:1}
-.codex-sv-arrow{position:absolute;top:50%;width:30px;height:30px;margin-top:-15px;padding:0;border:1px solid var(--cx-line-strong);border-radius:50%;background:rgba(8,10,8,.66);color:#efe4c8;font:18px/1 var(--font-text);cursor:pointer}
-.codex-sv-arrow:hover{background:rgba(205,184,138,.2)}
-.codex-sv-arrow.prev{left:8px}.codex-sv-arrow.next{right:8px}
+.codex-sv-arrow{position:absolute;top:50%;width:30px;height:30px;margin-top:-15px;padding:0;border:0;border-radius:50%;background:rgba(6,8,6,.55);color:#f1eadb;font:18px/1 var(--font-text);cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.codex-sv-arrow:hover{background:rgba(205,184,138,.3)}
+.codex-sv-arrow.prev{left:10px}.codex-sv-arrow.next{right:10px}
+/* The strip follows the picture's width instead of widening the window. */
+.codex-sv-foot{width:0;min-width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;padding:10px 12px 12px;border-top:1px solid var(--cx-line)}
 .codex-sv-row{display:flex;align-items:center;gap:8px;min-width:0}
 .codex-sv-row .codex-style-meta{flex:1;min-width:0}
 .codex-sv button.codex-btn{flex:0 0 auto;height:28px;cursor:pointer}
 .codex-sv .codex-btn.copied{border-color:var(--cx-sand);background:rgba(205,184,138,.2)}
-.codex-sv .codex-prompt.codex-sv-text{margin-top:0;max-height:4.8em;padding:7px 9px;font-size:11.5px;line-height:1.55}
+/* Only the start of the text — two lines; the whole text is copied. */
+.codex-sv .codex-prompt.codex-sv-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;margin:0;max-height:none;overflow:hidden;padding:0;border:0;background:none;color:var(--cx-muted);font-size:11px;line-height:1.5}
+.codex-sv .codex-prompt.codex-sv-text:hover{color:var(--cx-text)}
 @media(max-width:760px){
-  .codex-modal-card.codex-modal-style{padding:8px;border-radius:12px}
-  .codex-modal-style .codex-close{position:absolute;top:14px;right:14px}
-  .codex-sv-pics{height:min(62vh,560px)}
-  .codex-sv .codex-prompt.codex-sv-text{max-height:4.8em;font-size:11px}
+  .codex-modal-card.codex-modal-style{max-width:calc(100vw - 20px);border-radius:12px}
+  .codex-sv-img{max-width:calc(100vw - 20px);max-height:64vh}
 }

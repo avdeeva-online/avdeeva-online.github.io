@@ -285,4 +285,10 @@ body.codex-lock{overflow:hidden}
 @media(max-width:760px){
   .codex-modal-card.codex-modal-style{max-width:calc(100vw - 20px);border-radius:12px}
   .codex-sv-img{max-width:calc(100vw - 20px);max-height:64vh}
-}
+}/* Note under the title on the Styles / Looks tabs: quiet, italic, a small sand spark and a thin line on the left. */
+.codex-note{position:relative;margin:10px 0 0;max-width:520px;padding:1px 0 1px 14px;border-left:1px solid rgba(205,184,138,.32);font:italic 400 14.5px/1.45 var(--font-title);letter-spacing:.01em;color:rgba(214,203,178,.62)}
+.codex-note[hidden]{display:none}
+.codex-note::before{content:'✦';position:absolute;left:-5px;top:-7px;padding:1px 0;background:transparent;color:rgba(205,184,138,.7);font:normal 9px/1 var(--font-text)}
+.codex-note span{display:block;color:rgba(214,203,178,.46)}
+.codex-note b{font-weight:600;font-style:normal;color:rgba(205,184,138,.8)}
+@media(max-width:760px){.codex-note{font-size:13.5px}}

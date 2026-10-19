@@ -103,6 +103,11 @@
   const CARD_TABS={styles:'style',looks:'look'};
   const cardTab=()=>CARD_TABS[tab];
   const tabCards=()=>styles.filter(s=>(s.kind||'style')===cardTab());
+  // A quiet note under the title: where the cards of this tab come from.
+  const TAB_NOTES={
+    styles:'Styles on this page are collected from open sources. <span>Know the author of one? Let me know — I’ll credit them.</span>',
+    looks:'Looks are made by me, <b>@node_00</b>, from Pinterest references.'
+  };
   // Style / look: picture on top, model and author, and the text — one tap copies it. No title on the site.
   // Several pictures: hover across the picture (desktop) or swipe (phone) to flip through them; dots show where you are.
   const styleGallery=s=>{const urls=(s.image_urls&&s.image_urls.length?s.image_urls:[s.image_url]).filter(Boolean);if(!urls.length)return'';if(urls.length===1)return`<img class="codex-style-img" src="${esc(urls[0])}" alt="${esc(s.title)}" loading="lazy" decoding="async">`;return`<div class="codex-style-gallery" data-gallery>${urls.map((u,i)=>`<img class="codex-style-img${i?'':' on'}" src="${esc(u)}" alt="${esc(s.title)} ${i+1}" loading="lazy" decoding="async">`).join('')}<div class="codex-dots">${urls.map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div></div>`};
@@ -125,6 +130,7 @@
   async function copyText(text){try{await navigator.clipboard.writeText(text);return true}catch{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch{}ta.remove();return ok}}
   function render(){
     document.querySelectorAll('.codex-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+    const note=$('#codexNote');if(note){note.hidden=!TAB_NOTES[tab];note.innerHTML=TAB_NOTES[tab]||''}
     // LoreKey: a tool, not a list — hide the grid, filters and search; load the translator on first open.
     const lk=tab==='lorekey',panel=$('#lorekeyPanel');$('#codexGrid').hidden=lk;$('.codex-search').style.visibility=lk?'hidden':'';if(panel)panel.hidden=!lk;
     if(lk){$('#codexFilters').hidden=true;if(!document.querySelector('script[data-lorekey]')){const s=document.createElement('script');s.src='lorekey.js?v=20261012-lk9';s.dataset.lorekey='1';document.body.appendChild(s)}return}

@@ -107,7 +107,23 @@
   // Several pictures: hover across the picture (desktop) or swipe (phone) to flip through them; dots show where you are.
   const styleGallery=s=>{const urls=(s.image_urls&&s.image_urls.length?s.image_urls:[s.image_url]).filter(Boolean);if(!urls.length)return'';if(urls.length===1)return`<img class="codex-style-img" src="${esc(urls[0])}" alt="${esc(s.title)}" loading="lazy" decoding="async">`;return`<div class="codex-style-gallery" data-gallery>${urls.map((u,i)=>`<img class="codex-style-img${i?'':' on'}" src="${esc(u)}" alt="${esc(s.title)} ${i+1}" loading="lazy" decoding="async">`).join('')}<div class="codex-dots">${urls.map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div></div>`};
   const styleMeta=s=>[...modelsOf(s).map(m=>`<span>${esc(m)}</span>`),s.author?(s.author_link?`<a href="${esc(s.author_link)}" target="_blank" rel="noopener noreferrer">@${esc(s.author)}</a>`:`<span>@${esc(s.author)}</span>`):'',s.source_url?`<a href="${esc(s.source_url)}" target="_blank" rel="noopener noreferrer">Post ↗</a>`:''].filter(Boolean).join('');
-  const styleCard=s=>`<article class="codex-style">${styleGallery(s)}<div class="codex-style-body">${styleMeta(s)?`<div class="codex-style-meta">${styleMeta(s)}</div>`:''}<button type="button" class="codex-prompt" data-copy="${esc(s.id)}" title="Tap to copy">${esc(s.prompt)}</button></div></article>`;
+  // Tapping the card (not the text, not a link) opens it in a window; tapping the text still copies it right away.
+  const styleCard=s=>`<article class="codex-style" data-style="${esc(s.id)}" tabindex="0">${styleGallery(s)}<div class="codex-style-body">${styleMeta(s)?`<div class="codex-style-meta">${styleMeta(s)}</div>`:''}<button type="button" class="codex-prompt" data-copy="${esc(s.id)}" title="Tap to copy">${esc(s.prompt)}</button></div></article>`;
+  // Style / look window: the whole picture (not cropped) with arrows and thumbnails, then the full text and a Copy button.
+  function openStyle(id){
+    const s=styles.find(x=>x.id===id);if(!s)return;
+    const urls=(s.image_urls&&s.image_urls.length?s.image_urls:[s.image_url]).filter(Boolean),many=urls.length>1;
+    const pics=urls.length?`<div class="codex-sv-pics" data-gallery>${urls.map((u,i)=>`<img class="codex-sv-img${i?'':' on'}" src="${esc(u)}" alt="" decoding="async">`).join('')}${many?`<button type="button" class="codex-sv-arrow prev" data-pic-step="-1" aria-label="Previous picture">‹</button><button type="button" class="codex-sv-arrow next" data-pic-step="1" aria-label="Next picture">›</button><div class="codex-dots">${urls.map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div>`:''}</div>${many?`<div class="codex-sv-thumbs">${urls.map((u,i)=>`<button type="button" class="${i?'':'on'}" data-pic-go="${i}" aria-label="Picture ${i+1}"><img src="${esc(u)}" alt="" loading="lazy" decoding="async"></button>`).join('')}</div>`:''}`:'';
+    show(`<div class="codex-sv">
+      <div class="codex-sv-media">${pics}</div>
+      <div class="codex-sv-info">
+        <div class="codex-kicker" id="codexModalTitle">// ${s.kind==='look'?'look':'style'}</div>
+        ${styleMeta(s)?`<div class="codex-style-meta">${styleMeta(s)}</div>`:''}
+        <button type="button" class="codex-prompt codex-sv-text" data-copy="${esc(s.id)}" title="Tap to copy">${esc(s.prompt)}</button>
+        <div class="codex-actions"><button type="button" class="codex-btn" data-copy="${esc(s.id)}" data-copy-label>Copy text</button></div>
+      </div></div>`,'codex-modal-style');
+    setHash({style:s.id});
+  }
   async function copyText(text){try{await navigator.clipboard.writeText(text);return true}catch{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch{}ta.remove();return ok}}
   function render(){
     document.querySelectorAll('.codex-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
@@ -200,7 +216,7 @@
     setHash({author:a.name});
   }
   let lastFocus=null;
-  function show(html){const m=$('#codexModal');if(m.hidden)lastFocus=document.activeElement;$('#codexModalBody').innerHTML=html;m.hidden=false;document.body.classList.add('codex-lock');m.querySelector('.codex-modal-card').scrollTop=0;m.scrollTop=0;requestAnimationFrame(()=>m.querySelector('.codex-close')?.focus())}
+  function show(html,variant=''){const m=$('#codexModal');if(m.hidden)lastFocus=document.activeElement;$('#codexModalBody').innerHTML=html;m.querySelector('.codex-modal-card').className=`codex-modal-card ${variant}`.trim();m.hidden=false;document.body.classList.add('codex-lock');m.querySelector('.codex-modal-card').scrollTop=0;m.scrollTop=0;requestAnimationFrame(()=>m.querySelector('.codex-close')?.focus())}
   function close(){const m=$('#codexModal');if(m.hidden)return;m.hidden=true;document.body.classList.remove('codex-lock');setHash({tab});lastFocus?.focus?.()}
   function setHash(params){history.replaceState(null,'',`${location.pathname}${location.search}#${new URLSearchParams(params)}`)}
 
@@ -218,24 +234,32 @@
     const f=e.target.closest('[data-author-filter]');if(f){authorFilter=f.dataset.authorFilter;render();return}
     const sf=e.target.closest('[data-size-filter]');if(sf){sizeFilter=sf.dataset.sizeFilter;render();return}
     const mf=e.target.closest('[data-model-filter]');if(mf){modelFilter=mf.dataset.modelFilter;render();return}
-    const cp=e.target.closest('[data-copy]');if(cp){const s=styles.find(x=>x.id===cp.dataset.copy);if(s)copyText(s.prompt).then(ok=>{cp.dataset.copied=ok?'Copied ✓':'Copy failed';cp.classList.add('copied');clearTimeout(cp._t);cp._t=setTimeout(()=>cp.classList.remove('copied'),1400)});return}
+    const cp=e.target.closest('[data-copy]');if(cp){const s=styles.find(x=>x.id===cp.dataset.copy);if(s)copyText(s.prompt).then(ok=>{const msg=ok?'Copied ✓':'Copy failed';cp.dataset.copied=msg;cp.classList.add('copied');
+      // The window's Copy button shows the result in its own label for a moment.
+      if(cp.hasAttribute('data-copy-label')){cp._label??=cp.textContent;cp.textContent=msg}
+      clearTimeout(cp._t);cp._t=setTimeout(()=>{cp.classList.remove('copied');if(cp._label)cp.textContent=cp._label},1400)});return}
+    const step=e.target.closest('[data-pic-step]');if(step){const g=$('.codex-sv-pics'),n=g.querySelectorAll('img').length;showPic(g,((g._i||0)+Number(step.dataset.picStep)+n)%n);return}
+    const go=e.target.closest('[data-pic-go]');if(go){showPic($('.codex-sv-pics'),Number(go.dataset.picGo));return}
     const kf=e.target.closest('[data-kind-filter]');if(kf){kindFilter=kf.dataset.kindFilter;render();return}
     const more=e.target.closest('[data-more]');if(more){more.nextElementSibling.hidden=false;more.remove();return}
     const ou=e.target.closest('[data-open-universe]');if(ou){openUniverse(ou.dataset.openUniverse);return}
     const oa=e.target.closest('[data-open-author]');if(oa){openAuthor(oa.dataset.openAuthor);return}
     if(e.target.closest('[data-close]')){close();return}
+    const sc=e.target.closest('.codex-style[data-style]');if(sc&&!e.target.closest('a')){openStyle(sc.dataset.style);return}
     const card=e.target.closest('.codex-card');if(card){card.dataset.universe?openUniverse(card.dataset.universe):openAuthor(card.dataset.author)}
   });
-  // Style galleries: pointer position picks the picture; leaving goes back to the cover; a horizontal swipe flips on touch.
-  const showPic=(g,i)=>{const imgs=g.querySelectorAll('img'),dots=g.querySelectorAll('.codex-dots i');i=Math.max(0,Math.min(imgs.length-1,i));if(g._i===i)return;g._i=i;imgs.forEach((im,k)=>im.classList.toggle('on',k===i));dots.forEach((d,k)=>d.classList.toggle('on',k===i))};
-  document.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;const g=e.target.closest?.('[data-gallery]');if(!g)return;const r=g.getBoundingClientRect(),n=g.querySelectorAll('img').length;showPic(g,Math.floor((e.clientX-r.left)/r.width*n))});
-  document.addEventListener('pointerout',e=>{if(e.pointerType!=='mouse')return;const g=e.target.closest?.('[data-gallery]');if(g&&!g.contains(e.relatedTarget))showPic(g,0)});
+  // Style galleries: on a card the pointer position picks the picture and leaving goes back to the cover;
+  // in the window — arrows, thumbnails and ← → keys. A horizontal swipe flips on touch in both.
+  const showPic=(g,i)=>{const imgs=g.querySelectorAll('img'),dots=g.querySelectorAll('.codex-dots i'),thumbs=g.nextElementSibling?.matches?.('.codex-sv-thumbs')?g.nextElementSibling.querySelectorAll('button'):[];i=Math.max(0,Math.min(imgs.length-1,i));if(g._i===i)return;g._i=i;imgs.forEach((im,k)=>im.classList.toggle('on',k===i));dots.forEach((d,k)=>d.classList.toggle('on',k===i));thumbs.forEach((b,k)=>b.classList.toggle('on',k===i))};
+  document.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;const g=e.target.closest?.('.codex-style [data-gallery]');if(!g)return;const r=g.getBoundingClientRect(),n=g.querySelectorAll('img').length;showPic(g,Math.floor((e.clientX-r.left)/r.width*n))});
+  document.addEventListener('pointerout',e=>{if(e.pointerType!=='mouse')return;const g=e.target.closest?.('.codex-style [data-gallery]');if(g&&!g.contains(e.relatedTarget))showPic(g,0)});
   let swipe=null;
   document.addEventListener('touchstart',e=>{const g=e.target.closest?.('[data-gallery]');swipe=g&&e.touches.length===1?{g,x:e.touches[0].clientX,y:e.touches[0].clientY}:null},{passive:true});
   document.addEventListener('touchend',e=>{if(!swipe)return;const t=e.changedTouches[0],dx=t.clientX-swipe.x,dy=t.clientY-swipe.y,g=swipe.g;swipe=null;if(Math.abs(dx)>35&&Math.abs(dx)>Math.abs(dy)*1.5)showPic(g,(g._i||0)+(dx<0?1:-1))},{passive:true});
   document.addEventListener('keydown',e=>{
     if(e.key==='Escape')close();
-    if((e.key==='Enter'||e.key===' ')&&e.target.matches?.('.codex-card')){e.preventDefault();e.target.click()}
+    if((e.key==='Enter'||e.key===' ')&&e.target.matches?.('.codex-card,.codex-style')){e.preventDefault();e.target.click()}
+    const g=!$('#codexModal').hidden&&$('.codex-sv-pics');if(g&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){const n=g.querySelectorAll('img').length;showPic(g,((g._i||0)+(e.key==='ArrowRight'?1:-1)+n)%n)}
   });
   $('#codexSearch').addEventListener('input',e=>{query=key(e.target.value);render()});
 
@@ -250,8 +274,10 @@
       $('#countUniverses').textContent=universes.filter(u=>!u.other).length;$('#countAuthors').textContent=authors.length;const kindCount=k=>styles.filter(s=>(s.kind||'style')===k).length||'';const cs=$('#countStyles');if(cs)cs.textContent=kindCount('style');const cl=$('#countLooks');if(cl)cl.textContent=kindCount('look');
       const h=new URLSearchParams(location.hash.slice(1));
       /* Authors is the default tab; a universe link or #tab=universes opens the universes list. */if(h.get('tab')==='universes'||h.get('universe'))tab='universes';if(CARD_TABS[h.get('tab')])tab=h.get('tab'); if(h.get('tab')==='lorekey')tab='lorekey';
+      // #style=<id> — a shared link to one style / look: open its tab, then its window.
+      const linked=h.get('style')&&styles.find(s=>s.id===h.get('style'));if(linked)tab=linked.kind==='look'?'looks':'styles';
       render();
-      if(h.get('universe'))openUniverse(h.get('universe'));else if(h.get('author'))openAuthor(h.get('author'));
+      if(linked)openStyle(linked.id);else if(h.get('universe'))openUniverse(h.get('universe'));else if(h.get('author'))openAuthor(h.get('author'));
     }catch(err){$('#codexGrid').innerHTML=`<div class="codex-state">The codex is temporarily unavailable. ${esc(err.message)}</div>`}
   })();
 })();

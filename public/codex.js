@@ -109,19 +109,16 @@
   const styleMeta=s=>[...modelsOf(s).map(m=>`<span>${esc(m)}</span>`),s.author?(s.author_link?`<a href="${esc(s.author_link)}" target="_blank" rel="noopener noreferrer">@${esc(s.author)}</a>`:`<span>@${esc(s.author)}</span>`):'',s.source_url?`<a href="${esc(s.source_url)}" target="_blank" rel="noopener noreferrer">Post ↗</a>`:''].filter(Boolean).join('');
   // Tapping the card (not the text, not a link) opens it in a window; tapping the text still copies it right away.
   const styleCard=s=>`<article class="codex-style" data-style="${esc(s.id)}" tabindex="0">${styleGallery(s)}<div class="codex-style-body">${styleMeta(s)?`<div class="codex-style-meta">${styleMeta(s)}</div>`:''}<button type="button" class="codex-prompt" data-copy="${esc(s.id)}" title="Tap to copy">${esc(s.prompt)}</button></div></article>`;
-  // Style / look window: the whole picture (not cropped) with arrows and thumbnails, then the full text and a Copy button.
+  // Style / look window: the picture is the main thing (whole, not cropped; arrows + dots when there are several),
+  // under it one compact row — model / author and Copy — and a short text box that scrolls and also copies on tap.
   function openStyle(id){
     const s=styles.find(x=>x.id===id);if(!s)return;
     const urls=(s.image_urls&&s.image_urls.length?s.image_urls:[s.image_url]).filter(Boolean),many=urls.length>1;
-    const pics=urls.length?`<div class="codex-sv-pics" data-gallery>${urls.map((u,i)=>`<img class="codex-sv-img${i?'':' on'}" src="${esc(u)}" alt="" decoding="async">`).join('')}${many?`<button type="button" class="codex-sv-arrow prev" data-pic-step="-1" aria-label="Previous picture">‹</button><button type="button" class="codex-sv-arrow next" data-pic-step="1" aria-label="Next picture">›</button><div class="codex-dots">${urls.map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div>`:''}</div>${many?`<div class="codex-sv-thumbs">${urls.map((u,i)=>`<button type="button" class="${i?'':'on'}" data-pic-go="${i}" aria-label="Picture ${i+1}"><img src="${esc(u)}" alt="" loading="lazy" decoding="async"></button>`).join('')}</div>`:''}`:'';
-    show(`<div class="codex-sv">
-      <div class="codex-sv-media">${pics}</div>
-      <div class="codex-sv-info">
-        <div class="codex-kicker" id="codexModalTitle">// ${s.kind==='look'?'look':'style'}</div>
-        ${styleMeta(s)?`<div class="codex-style-meta">${styleMeta(s)}</div>`:''}
-        <button type="button" class="codex-prompt codex-sv-text" data-copy="${esc(s.id)}" title="Tap to copy">${esc(s.prompt)}</button>
-        <div class="codex-actions"><button type="button" class="codex-btn" data-copy="${esc(s.id)}" data-copy-label>Copy text</button></div>
-      </div></div>`,'codex-modal-style');
+    const pics=urls.length?`<div class="codex-sv-pics" data-gallery>${urls.map((u,i)=>`<img class="codex-sv-img${i?'':' on'}" src="${esc(u)}" alt="" decoding="async">`).join('')}${many?`<button type="button" class="codex-sv-arrow prev" data-pic-step="-1" aria-label="Previous picture">‹</button><button type="button" class="codex-sv-arrow next" data-pic-step="1" aria-label="Next picture">›</button><div class="codex-dots">${urls.map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div>`:''}</div>`:'';
+    show(`<div class="codex-sv">${pics}
+      <div class="codex-sv-row"><div class="codex-style-meta" id="codexModalTitle">${styleMeta(s)}</div><button type="button" class="codex-btn" data-copy="${esc(s.id)}" data-copy-label>Copy text</button></div>
+      <button type="button" class="codex-prompt codex-sv-text" data-copy="${esc(s.id)}" title="Tap to copy">${esc(s.prompt)}</button>
+      </div>`,'codex-modal-style');
     setHash({style:s.id});
   }
   async function copyText(text){try{await navigator.clipboard.writeText(text);return true}catch{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch{}ta.remove();return ok}}
@@ -238,9 +235,7 @@
       // The window's Copy button shows the result in its own label for a moment.
       if(cp.hasAttribute('data-copy-label')){cp._label??=cp.textContent;cp.textContent=msg}
       clearTimeout(cp._t);cp._t=setTimeout(()=>{cp.classList.remove('copied');if(cp._label)cp.textContent=cp._label},1400)});return}
-    const step=e.target.closest('[data-pic-step]');if(step){const g=$('.codex-sv-pics'),n=g.querySelectorAll('img').length;showPic(g,((g._i||0)+Number(step.dataset.picStep)+n)%n);return}
-    const go=e.target.closest('[data-pic-go]');if(go){showPic($('.codex-sv-pics'),Number(go.dataset.picGo));return}
-    const kf=e.target.closest('[data-kind-filter]');if(kf){kindFilter=kf.dataset.kindFilter;render();return}
+    const step=e.target.closest('[data-pic-step]');if(step){const g=$('.codex-sv-pics'),n=g.querySelectorAll('img').length;showPic(g,((g._i||0)+Number(step.dataset.picStep)+n)%n);return}    const kf=e.target.closest('[data-kind-filter]');if(kf){kindFilter=kf.dataset.kindFilter;render();return}
     const more=e.target.closest('[data-more]');if(more){more.nextElementSibling.hidden=false;more.remove();return}
     const ou=e.target.closest('[data-open-universe]');if(ou){openUniverse(ou.dataset.openUniverse);return}
     const oa=e.target.closest('[data-open-author]');if(oa){openAuthor(oa.dataset.openAuthor);return}
@@ -249,8 +244,8 @@
     const card=e.target.closest('.codex-card');if(card){card.dataset.universe?openUniverse(card.dataset.universe):openAuthor(card.dataset.author)}
   });
   // Style galleries: on a card the pointer position picks the picture and leaving goes back to the cover;
-  // in the window — arrows, thumbnails and ← → keys. A horizontal swipe flips on touch in both.
-  const showPic=(g,i)=>{const imgs=g.querySelectorAll('img'),dots=g.querySelectorAll('.codex-dots i'),thumbs=g.nextElementSibling?.matches?.('.codex-sv-thumbs')?g.nextElementSibling.querySelectorAll('button'):[];i=Math.max(0,Math.min(imgs.length-1,i));if(g._i===i)return;g._i=i;imgs.forEach((im,k)=>im.classList.toggle('on',k===i));dots.forEach((d,k)=>d.classList.toggle('on',k===i));thumbs.forEach((b,k)=>b.classList.toggle('on',k===i))};
+  // in the window — arrows and ← → keys. A horizontal swipe flips on touch in both.
+  const showPic=(g,i)=>{const imgs=g.querySelectorAll('img'),dots=g.querySelectorAll('.codex-dots i');i=Math.max(0,Math.min(imgs.length-1,i));if(g._i===i)return;g._i=i;imgs.forEach((im,k)=>im.classList.toggle('on',k===i));dots.forEach((d,k)=>d.classList.toggle('on',k===i))};
   document.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;const g=e.target.closest?.('.codex-style [data-gallery]');if(!g)return;const r=g.getBoundingClientRect(),n=g.querySelectorAll('img').length;showPic(g,Math.floor((e.clientX-r.left)/r.width*n))});
   document.addEventListener('pointerout',e=>{if(e.pointerType!=='mouse')return;const g=e.target.closest?.('.codex-style [data-gallery]');if(g&&!g.contains(e.relatedTarget))showPic(g,0)});
   let swipe=null;

@@ -259,31 +259,27 @@ body.codex-lock{overflow:hidden}
 .codex-prompt::-webkit-scrollbar-thumb{background:rgba(205,184,138,.45);border-radius:4px}
 @supports not selector(::-webkit-scrollbar){.codex-prompt{scrollbar-width:thin;scrollbar-color:rgba(205,184,138,.45) transparent}}
 @media(max-width:760px){.codex-grid.codex-styles-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.codex-style h3{font-size:13.5px}.codex-prompt{font-size:10px;max-height:4.7em}.codex-style-meta span,.codex-style-meta a{font-size:9px;padding:1px 5px}}
-/* ---- Style / look window: the whole picture + the full text to copy ---- */
+/* ---- Style / look window: the picture is the main thing; under it a compact row and a short text box ---- */
 .codex-style[data-style]{cursor:pointer}
 .codex-style[data-style]:focus-visible{outline:2px solid var(--cx-sand);outline-offset:2px}
-.codex-modal-card.codex-modal-style{width:min(980px,100%);max-height:min(92vh,900px)}
-.codex-sv{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px;align-items:start}
-.codex-sv-media{min-width:0}
-.codex-sv-pics{position:relative;height:min(74vh,720px);border:1px solid var(--cx-line);border-radius:9px;background:#0b0d0a;overflow:hidden;touch-action:pan-y}
+.codex-modal-card.codex-modal-style{width:min(460px,100%);max-height:100%;padding:10px}
+.codex-modal-style #codexModalBody{padding-top:0}
+.codex-modal-style .codex-close{position:absolute;top:18px;right:18px;z-index:3;float:none;margin:0;width:30px;height:30px;border:1px solid var(--cx-line-strong);border-radius:50%;background:rgba(8,10,8,.72);color:#efe4c8}
+.codex-sv{display:flex;flex-direction:column;gap:8px}
+.codex-sv-pics{position:relative;height:min(68vh,620px);border-radius:8px;background:#0b0d0a;overflow:hidden;touch-action:pan-y}
 .codex-sv-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .18s}
 .codex-sv-img.on{opacity:1}
-.codex-sv-arrow{position:absolute;top:50%;width:34px;height:34px;margin-top:-17px;padding:0;border:1px solid var(--cx-line-strong);border-radius:50%;background:rgba(8,10,8,.72);color:#efe4c8;font:20px/1 var(--font-text);cursor:pointer}
+.codex-sv-arrow{position:absolute;top:50%;width:30px;height:30px;margin-top:-15px;padding:0;border:1px solid var(--cx-line-strong);border-radius:50%;background:rgba(8,10,8,.66);color:#efe4c8;font:18px/1 var(--font-text);cursor:pointer}
 .codex-sv-arrow:hover{background:rgba(205,184,138,.2)}
 .codex-sv-arrow.prev{left:8px}.codex-sv-arrow.next{right:8px}
-.codex-sv-thumbs{display:flex;gap:6px;margin-top:8px;overflow-x:auto;scrollbar-width:thin}
-.codex-sv-thumbs button{flex:0 0 auto;width:48px;height:60px;padding:0;border:2px solid transparent;border-radius:6px;background:#151814;overflow:hidden;cursor:pointer;opacity:.65}
-.codex-sv-thumbs button.on{border-color:var(--cx-sand);opacity:1}
-.codex-sv-thumbs img{width:100%;height:100%;object-fit:cover;display:block}
-.codex-sv-info{display:flex;flex-direction:column;gap:10px;min-width:0;padding-top:2px}
-.codex-sv-info .codex-kicker{margin-right:36px}
-.codex-sv .codex-prompt.codex-sv-text{margin-top:0;max-height:min(52vh,480px);padding:12px 13px;font-size:12.5px;line-height:1.6}
-.codex-sv .codex-actions{margin:0}
-.codex-sv button.codex-btn{cursor:pointer}
+.codex-sv-row{display:flex;align-items:center;gap:8px;min-width:0}
+.codex-sv-row .codex-style-meta{flex:1;min-width:0}
+.codex-sv button.codex-btn{flex:0 0 auto;height:28px;cursor:pointer}
 .codex-sv .codex-btn.copied{border-color:var(--cx-sand);background:rgba(205,184,138,.2)}
+.codex-sv .codex-prompt.codex-sv-text{margin-top:0;max-height:4.8em;padding:7px 9px;font-size:11.5px;line-height:1.55}
 @media(max-width:760px){
-  .codex-sv{grid-template-columns:1fr;gap:12px}
-  .codex-sv-pics{height:auto;max-height:62vh;aspect-ratio:3/4}
-  .codex-sv .codex-prompt.codex-sv-text{max-height:40vh;font-size:12px}
-  .codex-sv .codex-btn{width:100%;justify-content:center;height:38px}
+  .codex-modal-card.codex-modal-style{padding:8px;border-radius:12px}
+  .codex-modal-style .codex-close{position:absolute;top:14px;right:14px}
+  .codex-sv-pics{height:min(62vh,560px)}
+  .codex-sv .codex-prompt.codex-sv-text{max-height:4.8em;font-size:11px}
 }
